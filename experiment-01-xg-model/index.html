@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment 01 · xG Model · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:18px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.lab-grid{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start}
+canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block;cursor:crosshair}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
+.sv.sm{font-size:15px}
+.legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.lgbar{width:80px;height:5px;background:linear-gradient(to right,#4080ff,#ffcc00,#ff2244);border-radius:3px}
+.shot-log{max-height:140px;overflow-y:auto;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:10px;background:#0d150d}
+.sli{display:flex;justify-content:space-between;padding:5px 10px;font-size:10px;font-family:'Space Mono',monospace;color:#7a9a7a;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.sli:last-child{border-bottom:none}
+.brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:230px;position:relative}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.rstat:last-child{border-bottom:none}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
+.interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
+.thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
+.talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.reply-sec{margin-top:12px;display:none}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+@media(max-width:680px){.lab-grid{grid-template-columns:1fr}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}canvas#pitch{max-width:100%;height:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">← portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL · EXPERIMENT 01 OF 07 · COMPUTATIONAL STATISTICS</div>
+<div class="exp-title">Where do goals come from?<br>The xG Model.</div>
+<div class="exp-sub">Professional clubs use Expected Goals (xG) — a probability assigned to every shot based on where it was taken from. You'll build a geometric model, place shots on a real pitch, run 500 Monte Carlo simulations, and discover what the data actually says about scoring.</div>
+
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> Before placing any shots, write down what you predict. Where do you think goals come from? What effect does angle vs distance have? Be specific — you'll compare this against what the model shows.</div>
+    <textarea id="hypText" placeholder="e.g. I predict that shots taken centrally and close to goal will have the highest xG because the angle to the goal is widest from there. Shots from the corners of the penalty box will score less even at the same distance because the angle becomes too narrow. I think past 20 metres the probability drops sharply..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin →</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The pitch lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <div class="lab-grid">
+      <div>
+        <canvas id="pitch" width="460" height="360"></canvas>
+        <div class="legend">
+          <span>low xG</span>
+          <div class="lgbar"></div>
+          <span>high xG</span>
+          <span style="margin-left:8px">— click pitch to place shots</span>
+        </div>
+      </div>
+      <div>
+        <div class="sl">xG at cursor</div>
+        <div class="sv green" id="hXG">—</div>
+        <div class="sl">angle to goal</div>
+        <div class="sv sm" id="hAng">—</div>
+        <div class="sl">distance</div>
+        <div class="sv sm" id="hDist">—</div>
+        <div class="sl" style="margin-top:4px">shots placed · total xG</div>
+        <div class="sv sm" id="totXG" style="color:#e8f0e8">0 shots · 0.000</div>
+        <div class="shot-log" id="shotLog">
+          <div class="sli" style="color:#4a6a4a">no shots placed yet</div>
+        </div>
+        <div class="brow">
+          <button id="simBtn" onclick="runMC()" disabled>Run 500 simulations →</button>
+          <button class="danger" onclick="clearShots()">Clear shots</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Monte Carlo results</span>
+    <span class="shint">500 simulated matches with your exact shots</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="sl" style="margin-bottom:10px">goals per simulated match (500 runs)</div>
+        <div class="chart-wrap"><canvas id="mcChart"></canvas></div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:12px">simulation summary</div>
+        <div class="rstat"><span class="rl">Expected xG (sum of shots)</span><span class="rv" id="rXG">—</span></div>
+        <div class="rstat"><span class="rl">Average goals per simulation</span><span class="rv" id="rAvg">—</span></div>
+        <div class="rstat"><span class="rl">Maximum goals in one run</span><span class="rv" id="rMax">—</span></div>
+        <div class="rstat"><span class="rl">Probability of 0 goals</span><span class="rv" id="rP0">—</span></div>
+        <div class="rstat"><span class="rl">Probability of 2+ goals</span><span class="rv" id="rP2">—</span></div>
+        <div class="model-note">This model uses geometry only — distance and shot angle. Real professional xG models also include: foot vs head, assisted vs solo, game state, and pressure from defenders. Your model captures the most important factors.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results — what do they actually mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">your interpretation</div>
+        <textarea id="interpText" placeholder="What did the simulation show? Did it match your hypothesis? What surprised you? What patterns do you see in where goals come from? What are the limitations of this model — what does it NOT capture?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach →</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply →</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" — your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const cvs=document.getElementById('pitch'),ctx=cvs.getContext('2d');
+const W=460,H=360,SC=6.5;
+const GY=28,GX=W/2,GHW=Math.round(3.66*SC);
+const PY=GY+Math.round(11*SC),PBY2=GY+Math.round(16.5*SC),PBHW=Math.round(20.16*SC);
+const SYY2=GY+Math.round(5.5*SC),SYHW=Math.round(9.16*SC);
+const DRAD=Math.round(9.15*SC);
+let shots=[],locked=false,hx=null,hy=null,mcInst=null,convHist=[];
+
+function dp(){
+  for(let i=0;i<7;i++){ctx.fillStyle=i%2===0?'#061a0a':'#071e0c';ctx.fillRect(i*(W/7),0,Math.ceil(W/7)+1,H)}
+  ctx.lineWidth=1.2;ctx.strokeStyle='rgba(60,160,60,.35)';
+  ctx.strokeRect(10,GY,W-20,H-GY-8);
+  ctx.beginPath();ctx.moveTo(10,H/2);ctx.lineTo(W-10,H/2);ctx.stroke();
+  ctx.strokeRect(GX-PBHW,GY,PBHW*2,PBY2-GY);
+  ctx.strokeRect(GX-SYHW,GY,SYHW*2,SYY2-GY);
+  ctx.fillStyle='rgba(60,160,60,.6)';ctx.beginPath();ctx.arc(GX,PY,3,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.beginPath();ctx.rect(0,PBY2,W,H);ctx.clip();
+  ctx.beginPath();ctx.arc(GX,PY,DRAD,0,Math.PI*2);ctx.stroke();ctx.restore();
+  ctx.lineWidth=2;ctx.strokeStyle='rgba(255,255,255,.7)';
+  ctx.beginPath();ctx.moveTo(GX-GHW,GY);ctx.lineTo(GX-GHW,GY-12);ctx.lineTo(GX+GHW,GY-12);ctx.lineTo(GX+GHW,GY);ctx.stroke();
+  ctx.lineWidth=.4;ctx.strokeStyle='rgba(255,255,255,.08)';
+  for(let x=GX-GHW+7;x<GX+GHW;x+=7){ctx.beginPath();ctx.moveTo(x,GY);ctx.lineTo(x,GY-12);ctx.stroke()}
+  ctx.beginPath();ctx.moveTo(GX-GHW,GY-6);ctx.lineTo(GX+GHW,GY-6);ctx.stroke();
+}
+
+function calcXG(x,y){
+  if(y<=GY)return{xg:0,d:0,a:0};
+  const dx=x-GX,dy=y-GY,dp=Math.sqrt(dx*dx+dy*dy),dm=dp/SC;
+  if(dm<.8)return{xg:.96,d:dm,a:180};
+  const lx=(GX-GHW)-x,ly=GY-y,rx=(GX+GHW)-x,ry=GY-y;
+  const ll=Math.sqrt(lx*lx+ly*ly),rl=Math.sqrt(rx*rx+ry*ry);
+  const dot=(lx*rx+ly*ry)/(ll*rl);
+  const ar=Math.acos(Math.max(-1,Math.min(1,dot)));
+  const xg=Math.min(.96,(ar/Math.PI)*Math.exp(-dm/14)*3.5);
+  return{xg,d:dm,a:ar*180/Math.PI};
+}
+
+function xgCol(xg){
+  const t=Math.min(1,xg/.7);
+  if(t<.5){const s=t*2;return`rgb(${Math.round(64+s*191)},${Math.round(128+s*92)},${Math.round(255-s*255)})`}
+  const s=(t-.5)*2;return`rgb(255,${Math.round(220-s*220)},0)`;
+}
+
+function redraw(){
+  dp();
+  shots.forEach((s,i)=>{
+    const c=xgCol(s.xg);
+    ctx.beginPath();ctx.arc(s.x,s.y,10,0,Math.PI*2);ctx.fillStyle=c+'22';ctx.fill();
+    ctx.beginPath();ctx.arc(s.x,s.y,5.5,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();
+    ctx.font='bold 7px monospace';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(i+1,s.x,s.y);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  });
+  if(hx!==null&&locked){
+    const{xg}=calcXG(hx,hy);
+    if(xg>0){const c=xgCol(xg);ctx.beginPath();ctx.arc(hx,hy,9,0,Math.PI*2);ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([])}
+  }
+}
+
+cvs.addEventListener('mousemove',e=>{
+  if(!locked)return;
+  const r=cvs.getBoundingClientRect(),scaleX=cvs.width/r.width,scaleY=cvs.height/r.height;
+  hx=(e.clientX-r.left)*scaleX;hy=(e.clientY-r.top)*scaleY;
+  const{xg,d,a}=calcXG(hx,hy);
+  document.getElementById('hXG').textContent=xg>0?xg.toFixed(3):'—';
+  document.getElementById('hXG').style.color=xg>0?xgCol(xg):'#7dd87d';
+  document.getElementById('hAng').textContent=xg>0?a.toFixed(1)+'°':'—';
+  document.getElementById('hDist').textContent=xg>0?d.toFixed(1)+'m':'—';
+  redraw();
+});
+cvs.addEventListener('mouseleave',()=>{hx=null;hy=null;document.getElementById('hXG').textContent='—';document.getElementById('hXG').style.color='#7dd87d';document.getElementById('hAng').textContent='—';document.getElementById('hDist').textContent='—';redraw()});
+cvs.addEventListener('click',e=>{
+  if(!locked)return;
+  const r=cvs.getBoundingClientRect(),scaleX=cvs.width/r.width,scaleY=cvs.height/r.height;
+  const x=(e.clientX-r.left)*scaleX,y=(e.clientY-r.top)*scaleY;
+  const{xg,d,a}=calcXG(x,y);if(xg===0)return;
+  shots.push({x,y,xg,d,a});updateLog();redraw();
+  document.getElementById('simBtn').disabled=false;
+  saveState();
+});
+
+function updateLog(){
+  const tot=shots.reduce((s,sh)=>s+sh.xg,0);
+  document.getElementById('totXG').textContent=`${shots.length} shot${shots.length!==1?'s':''} · ${tot.toFixed(3)}`;
+  const log=document.getElementById('shotLog');
+  if(shots.length===0){log.innerHTML='<div class="sli" style="color:#4a6a4a">no shots placed yet</div>';return}
+  log.innerHTML=shots.map((s,i)=>`<div class="sli"><span>#${i+1} · ${s.d.toFixed(1)}m · ${s.a.toFixed(0)}°</span><span style="color:${xgCol(s.xg)};font-weight:700">${s.xg.toFixed(3)}</span></div>`).join('');
+}
+
+function clearShots(){shots=[];updateLog();redraw();document.getElementById('simBtn').disabled=true;document.getElementById('stepRes').style.display='none';saveState()}
+
+function lockHyp(){
+  const t=document.getElementById('hypText').value.trim();
+  if(t.length<20){document.getElementById('hypText').style.borderColor='#e24b4a';return}
+  locked=true;
+  const ta=document.getElementById('hypText');
+  ta.disabled=true;ta.style.borderColor='rgba(60,160,60,0.6)';
+  ta.style.boxShadow='0 0 0 2px rgba(60,160,60,0.2)';
+  const ts=document.getElementById('hypTS');
+  ts.style.display='block';
+  ts.textContent='locked · '+new Date().toLocaleString();
+  const lb=document.getElementById('lockBtn');lb.textContent='✓ Hypothesis locked';lb.disabled=true;
+  document.getElementById('labHint').textContent='Click on the pitch to place shots';
+  localStorage.setItem('alexey_exp_01_hypothesis',t);
+  localStorage.setItem('alexey_exp_01_timestamp',new Date().toISOString());
+  redraw();
+}
+
+function saveState(){
+  localStorage.setItem('alexey_exp_01_shots',JSON.stringify(shots));
+}
+
+function runMC(){
+  if(shots.length===0)return;
+  const N=500,counts=new Array(shots.length+2).fill(0);
+  for(let i=0;i<N;i++){let g=0;shots.forEach(s=>{if(Math.random()<s.xg)g++});if(g<counts.length)counts[g]++}
+  const tot=shots.reduce((s,sh)=>s+sh.xg,0);
+  const avg=counts.reduce((s,c,i)=>s+c*i,0)/N;
+  const mx=counts.length-1-[...counts].reverse().findIndex(c=>c>0);
+  document.getElementById('rXG').textContent=tot.toFixed(3);
+  document.getElementById('rAvg').textContent=avg.toFixed(2);
+  document.getElementById('rMax').textContent=mx;
+  document.getElementById('rP0').textContent=(counts[0]/N*100).toFixed(1)+'%';
+  document.getElementById('rP2').textContent=(counts.slice(2).reduce((a,b)=>a+b,0)/N*100).toFixed(1)+'%';
+  const el=document.getElementById('stepRes');el.style.display='';
+  const cc=document.getElementById('mcChart');
+  if(mcInst)mcInst.destroy();
+  const maxC=counts.reduce((a,b)=>Math.max(a,b),0);
+  const labels=counts.map((_,i)=>i===1?`${i} goal`:`${i} goals`);
+  mcInst=new Chart(cc,{type:'bar',data:{labels,datasets:[{data:counts,backgroundColor:counts.map((_,i)=>{const t=i/Math.max(1,mx);return`rgba(${Math.round(60+t*166)},${Math.round(160-t*100)},60,0.75)`}),borderWidth:0,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} runs (${(c.raw/N*100).toFixed(1)}%)`},backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}}});
+  localStorage.setItem('alexey_exp_01_results',JSON.stringify({xg:tot,avg,max:mx,p0:counts[0]/N,p2:counts.slice(2).reduce((a,b)=>a+b,0)/N}));
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function askCoach(){
+  const interp=document.getElementById('interpText').value.trim();
+  if(interp.length<20){document.getElementById('interpText').style.borderColor='#e24b4a';return}
+  const hyp=document.getElementById('hypText').value;
+  const tot=shots.reduce((s,sh)=>s+sh.xg,0);
+  const sd=shots.length>0?shots.map((s,i)=>`Shot ${i+1}: ${s.d.toFixed(1)}m from goal, angle ${s.a.toFixed(0)}°, xG=${s.xg.toFixed(3)}`).join('\n'):'No shots placed.';
+  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nShot data:\n${sd}\nTotal xG: ${tot.toFixed(3)}\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById('askBtn').disabled=true;
+  convHist=[{role:'user',content:userMsg}];
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH — a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has just run a computational xG (Expected Goals) model for football. He placed shots on a pitch, calculated geometric probabilities, and ran 500 Monte Carlo simulations to see the distribution of possible match outcomes. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Reference his specific data and his own words back to him. Accessible language for a bright 14-year-old. No effusive praise. End every response with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_01_dialogue',JSON.stringify(convHist));
+    document.getElementById('replySec').style.display='block';
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
+  document.getElementById('askBtn').disabled=false;
+}
+
+async function sendReply(){
+  const reply=document.getElementById('replyText').value.trim();if(reply.length<3)return;
+  const prevQ=document.getElementById('aiQ').innerText;
+  const thr=document.getElementById('thread');
+  thr.innerHTML+=`<div class="tcoach"><div class="tcoach-lbl">coach's question</div>${prevQ}</div><div class="talex"><div class="talex-lbl">alexey</div>${reply}</div>`;
+  document.getElementById('replyText').value='';
+  convHist.push({role:'user',content:reply});
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his football xG experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_01_dialogue',JSON.stringify(convHist));
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue — try again.</span>'}
+}
+
+redraw();
+</script>
+</body>
+</html>
