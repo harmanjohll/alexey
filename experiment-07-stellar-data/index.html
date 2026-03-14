@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment 07 · HR Diagram · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:18px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
+.sv.sm{font-size:15px}
+.brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.rstat:last-child{border-bottom:none}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
+.interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
+.thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
+.talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.reply-sec{margin-top:12px;display:none}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+/* HR diagram specific */
+.hr-svg{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block;width:100%}
+.hr-svg text{font-family:'Space Mono',monospace}
+.hr-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+.hr-controls label{font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace;display:flex;align-items:center;gap:4px;cursor:pointer}
+.hr-controls input[type=checkbox]{accent-color:#3ca03c;cursor:pointer}
+.hr-controls select,.hr-controls input[type=text]{background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:10px;padding:4px 8px;border-radius:4px}
+.hr-controls select:focus,.hr-controls input[type=text]:focus{outline:none;border-color:#3ca03c}
+.star-card{background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:12px;margin-top:10px;display:none}
+.star-card .sc-name{font-size:15px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace;margin-bottom:8px}
+.star-card .sc-row{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.star-card .sc-row:last-child{border-bottom:none}
+.star-card .sc-lbl{color:#7a9a7a}
+.star-card .sc-val{color:#e8f0e8;font-family:'Space Mono',monospace;font-weight:600}
+.pred-legend{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0;font-size:10px;font-family:'Space Mono',monospace;color:#7a9a7a}
+.pred-legend span{display:flex;align-items:center;gap:4px}
+.pred-btn-active{background:rgba(60,160,60,0.2)!important;border-color:#3ca03c!important}
+@media(max-width:680px){.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 07 OF 07 &middot; ASTROPHYSICS &amp; DATA SCIENCE</div>
+<div class="exp-title">Reading starlight &mdash;<br>The HR Diagram.</div>
+<div class="exp-sub">Every star tells a story through its light. You'll plot real data from the Hipparcos space telescope &mdash; temperature vs luminosity for hundreds of stars &mdash; and watch structure emerge: the Main Sequence, Red Giants, White Dwarfs. This is data science applied to the universe itself.</div>
+
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before seeing the data</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> Before seeing any star data, write down what you predict. If you plot star temperature against luminosity, what pattern do you expect? Where will different types of stars fall? Be specific &mdash; you'll place predictions on the diagram and compare against real data.</div>
+    <textarea id="hypText" placeholder="e.g. I predict that most stars will cluster along a diagonal line from hot-bright to cool-dim — the Main Sequence. Red giants will be in the upper-right (cool but very bright). White dwarfs will be in the lower-left (hot but very dim). I think the Sun will be somewhere in the middle of the Main Sequence..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The stellar lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <div id="predPhase">
+      <div class="note"><b>Phase A &mdash; Predict first:</b> Before seeing real data, click on the diagram to predict where each star type falls. Cycle through categories with the button, then click to place your prediction marker.</div>
+      <div id="predCatWrap" style="margin-bottom:8px">
+        <button id="predCatBtn" onclick="cyclePredCat()" disabled>Placing: Hot bright stars</button>
+        <span style="font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-left:8px" id="predCount">0 predictions placed</span>
+      </div>
+      <div class="pred-legend" id="predLegend">
+        <span><svg width="10" height="10"><polygon points="5,0 10,5 5,10 0,5" fill="#4488ff" stroke="#4488ff"/></svg> Hot bright</span>
+        <span><svg width="10" height="10"><polygon points="5,0 10,5 5,10 0,5" fill="#ff4444" stroke="#ff4444"/></svg> Cool dim</span>
+        <span><svg width="10" height="10"><polygon points="5,0 10,5 5,10 0,5" fill="#ffdd44" stroke="#ffdd44"/></svg> The Sun</span>
+        <span><svg width="10" height="10"><polygon points="5,0 10,5 5,10 0,5" fill="#ff8844" stroke="#ff8844"/></svg> Red giants</span>
+        <span><svg width="10" height="10"><polygon points="5,0 10,5 5,10 0,5" fill="#dddddd" stroke="#dddddd"/></svg> White dwarfs</span>
+      </div>
+    </div>
+    <div id="hrContainer"></div>
+    <div class="hr-controls" id="hrControls" style="display:none">
+      <label>Color: <select id="colorMode" onchange="updateChart()">
+        <option value="temperature">By temperature</option>
+        <option value="spectral">By spectral class</option>
+        <option value="distance">By distance</option>
+      </select></label>
+      <label><input type="checkbox" id="togMS" checked onchange="updateChart()"> Main Sequence</label>
+      <label><input type="checkbox" id="togRG" checked onchange="updateChart()"> Red Giants</label>
+      <label><input type="checkbox" id="togWD" checked onchange="updateChart()"> White Dwarfs</label>
+      <label><input type="checkbox" id="togSG" checked onchange="updateChart()"> Supergiants</label>
+      <label><input type="checkbox" id="togEvo" onchange="updateChart()"> Evolution track</label>
+      <label>Search: <input type="text" id="starSearch" placeholder="star name..." oninput="updateChart()"></label>
+    </div>
+    <div class="brow" id="labButtons">
+      <button id="lockPredBtn" onclick="lockPredictions()" disabled>Lock predictions and reveal data &rarr;</button>
+      <button class="danger" id="clearPredBtn" onclick="clearPredictions()" disabled>Clear predictions</button>
+      <button id="resetViewBtn" onclick="resetView()" style="display:none">Reset view</button>
+      <button class="danger" id="resetAllBtn" onclick="resetAll()" style="display:none">Reset all</button>
+    </div>
+    <div class="star-card" id="starCard">
+      <div class="sc-name" id="scName"></div>
+      <div class="sc-row"><span class="sc-lbl">Temperature</span><span class="sc-val" id="scTemp"></span></div>
+      <div class="sc-row"><span class="sc-lbl">Luminosity</span><span class="sc-val" id="scLum"></span></div>
+      <div class="sc-row"><span class="sc-lbl">Spectral class</span><span class="sc-val" id="scSpec"></span></div>
+      <div class="sc-row"><span class="sc-lbl">Luminosity class</span><span class="sc-val" id="scLumCl"></span></div>
+      <div class="sc-row"><span class="sc-lbl">Distance</span><span class="sc-val" id="scDist"></span></div>
+      <div class="sc-row"><span class="sc-lbl">Apparent mag</span><span class="sc-val" id="scAppMag"></span></div>
+      <div class="sc-row"><span class="sc-lbl">Absolute mag</span><span class="sc-val" id="scAbsMag"></span></div>
+      <div class="sc-row"><span class="sc-lbl">Population</span><span class="sc-val" id="scPop"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Results</span>
+    <span class="shint">What the real star data reveals</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="sl" style="margin-bottom:12px">population statistics</div>
+        <div class="rstat"><span class="rl">Main Sequence stars</span><span class="rv" id="rMS">—</span></div>
+        <div class="rstat"><span class="rl">MS temperature range</span><span class="rv" id="rMSTemp">—</span></div>
+        <div class="rstat"><span class="rl">MS luminosity range</span><span class="rv" id="rMSLum">—</span></div>
+        <div class="rstat"><span class="rl">Red Giant stars</span><span class="rv" id="rRG">—</span></div>
+        <div class="rstat"><span class="rl">Avg Red Giant temp</span><span class="rv" id="rRGTemp">—</span></div>
+        <div class="rstat"><span class="rl">White Dwarf stars</span><span class="rv" id="rWD">—</span></div>
+        <div class="rstat"><span class="rl">Avg White Dwarf temp</span><span class="rv" id="rWDTemp">—</span></div>
+        <div class="rstat"><span class="rl">Supergiant stars</span><span class="rv" id="rSG">—</span></div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:12px">your predictions vs reality</div>
+        <div id="predResults" style="font-size:12px;color:#7a9a7a;line-height:1.8"></div>
+        <div class="model-note">This data comes from the Hipparcos space telescope, which measured precise distances to over 100,000 stars. The HR diagram was independently discovered by Ejnar Hertzsprung and Henry Norris Russell around 1910. The Main Sequence exists because of hydrogen fusion &mdash; stars on it are all burning hydrogen, just at different rates depending on their mass.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">your interpretation</div>
+        <textarea id="interpText" placeholder="What patterns do you see in the HR diagram? Why do you think most stars fall along the Main Sequence? What surprised you about where Red Giants and White Dwarfs are? How close were your predictions? What does this tell you about stellar physics?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+/* ── Star data: [name, temp, luminosity, spectralClass, lumClass, dist_pc, appMag, absMag, population] ── */
+const STARS=[
+["Sun",5778,1,"G2","V",0.0000048,-26.74,4.83,"main_sequence"],
+["Sirius A",9940,25.4,"A1","V",2.64,-1.46,1.42,"main_sequence"],
+["Vega",9602,40.1,"A0","V",7.68,0.03,0.58,"main_sequence"],
+["Procyon A",6530,6.93,"F5","IV-V",3.51,0.34,2.66,"main_sequence"],
+["Alpha Centauri A",5790,1.52,"G2","V",1.34,-0.01,4.38,"main_sequence"],
+["Tau Ceti",5344,0.52,"G8","V",3.65,3.49,5.68,"main_sequence"],
+["Proxima Centauri",3042,0.0017,"M5","V",1.30,11.05,15.53,"main_sequence"],
+["Barnard's Star",3134,0.0035,"M4","V",1.83,9.51,13.22,"main_sequence"],
+["Ross 128",3192,0.0036,"M4","V",3.37,11.13,13.51,"main_sequence"],
+["61 Cygni A",4526,0.153,"K5","V",3.48,5.21,7.49,"main_sequence"],
+["Epsilon Eridani",5084,0.34,"K2","V",3.22,3.73,6.19,"main_sequence"],
+["Altair",7670,10.6,"A7","V",5.13,0.76,2.21,"main_sequence"],
+["Fomalhaut",8590,16.6,"A3","V",7.70,1.16,1.72,"main_sequence"],
+["Spica",25300,12100,"B1","III-IV",77,0.97,-3.55,"main_sequence"],
+["Regulus",12460,288,"B7","V",24.3,1.40,-0.52,"main_sequence"],
+["Wolf 359",2800,0.0011,"M6","V",2.39,13.44,16.64,"main_sequence"],
+["Lalande 21185",3828,0.021,"M2","V",2.55,7.52,10.48,"main_sequence"],
+["Lacaille 9352",3626,0.013,"M1","V",3.29,7.34,10.68,"main_sequence"],
+["Groombridge 34 A",3730,0.026,"M1","V",3.56,8.09,10.33,"main_sequence"],
+["EZ Aquarii A",2960,0.0013,"M5","V",3.45,13.33,16.58,"main_sequence"],
+["Kruger 60 A",3590,0.010,"M3","V",4.03,9.85,11.76,"main_sequence"],
+["70 Ophiuchi A",5300,0.43,"K0","V",5.09,4.22,5.50,"main_sequence"],
+["Sigma Draconis",5299,0.39,"G9","V",5.77,4.67,5.87,"main_sequence"],
+["82 Eridani",5401,0.65,"G8","V",6.05,4.27,5.35,"main_sequence"],
+["Delta Pavonis",5604,1.22,"G8","IV",6.11,3.55,4.62,"main_sequence"],
+["Beta Hydri",5873,3.53,"G2","IV",7.46,2.80,3.43,"main_sequence"],
+["Mu Cassiopeiae A",5308,0.44,"G5","V",7.54,5.17,5.78,"main_sequence"],
+["Chi Draconis A",6150,1.07,"F7","V",7.88,3.57,4.05,"main_sequence"],
+["Eta Cassiopeiae A",5941,1.23,"G0","V",5.95,3.44,4.59,"main_sequence"],
+["HR 7722",5040,0.19,"K3","V",4.97,5.73,7.24,"main_sequence"],
+["Pi3 Orionis",6516,2.82,"F6","V",8.07,3.19,3.67,"main_sequence"],
+["Zeta Tucanae",5956,1.26,"F9","V",8.59,4.23,4.67,"main_sequence"],
+["107 Piscium",5242,0.46,"K1","V",7.47,5.24,5.87,"main_sequence"],
+["54 Piscium",5129,0.29,"K0","V",11.07,5.88,5.67,"main_sequence"],
+["Betelgeuse",3500,126000,"M1","Ia",197,0.42,-5.85,"red_giant"],
+["Aldebaran",3910,518,"K5","III",20.43,0.85,-0.63,"red_giant"],
+["Arcturus",4286,170,"K1","III",11.26,-0.05,-0.31,"red_giant"],
+["Pollux",4666,32.7,"K0","III",10.36,1.14,1.09,"red_giant"],
+["Mira",3050,8400,"M7","III",92,3.04,-3.58,"red_giant"],
+["Antares",3660,57500,"M1","Iab",170,1.09,-5.28,"red_giant"],
+["Gacrux",3626,820,"M3","III",26.7,1.63,-0.56,"red_giant"],
+["Hamal",4480,91,"K2","III",20.2,2.00,-0.14,"red_giant"],
+["Dubhe",4660,316,"K0","II-III",37.8,1.79,-1.10,"red_giant"],
+["Kochab",4030,390,"K4","III",38.7,2.08,-0.87,"red_giant"],
+["Scheat",3689,1500,"M2","II-III",60,2.42,-1.49,"red_giant"],
+["Eltanin",3930,600,"K5","III",44.5,2.23,-1.04,"red_giant"],
+["Rasalhague",8000,25.1,"A5","III",14.9,2.08,1.30,"red_giant"],
+["Mirfak",6350,5000,"F5","Ib",180,1.79,-4.50,"supergiant"],
+["Sirius B",25200,0.056,"DA","VII",2.64,8.44,11.18,"white_dwarf"],
+["Procyon B",7740,0.00055,"DQZ","VII",3.51,10.7,13.04,"white_dwarf"],
+["40 Eridani B",16500,0.014,"DA","VII",4.98,9.52,11.01,"white_dwarf"],
+["Van Maanen's Star",6220,0.00017,"DZ","VII",4.29,12.38,14.21,"white_dwarf"],
+["Stein 2051 B",5400,0.00030,"DC","VII",5.50,12.44,13.11,"white_dwarf"],
+["G 240-72",4000,0.000052,"DQ","VII",4.58,14.83,16.55,"white_dwarf"],
+["LP 145-141",8500,0.0038,"DQ","VII",4.60,11.50,13.20,"white_dwarf"],
+["BPM 6502",10200,0.0095,"DA","VII",5.30,13.40,12.80,"white_dwarf"],
+["Deneb",8525,196000,"A2","Ia",802,1.25,-8.38,"supergiant"],
+["Rigel",12100,120000,"B8","Ia",264,0.13,-7.84,"supergiant"],
+["Canopus",7350,10700,"A9","II",95,-0.74,-5.71,"supergiant"],
+["Polaris",6015,2500,"F7","Ib-II",133,1.98,-3.6,"supergiant"],
+["Alnilam",27000,275000,"B0","Ia",411,1.69,-6.89,"supergiant"],
+["Alnitak A",29500,250000,"O9","Iab",387,1.77,-6.0,"supergiant"],
+["Naos",42000,800000,"O5","Iaf",460,2.25,-6.0,"supergiant"],
+["Sadr",5790,33000,"F8","Ib",560,2.23,-6.12,"supergiant"]
+];
+/* ── Generate ~140 more synthetic stars to fill the HR diagram ── */
+(function(){
+const rng=function(a,b){return a+Math.random()*(b-a)};
+const MS_PARAMS=[
+  ["O",30000,50000,30000,800000,"main_sequence",5],
+  ["B",10000,30000,25,30000,"main_sequence",18],
+  ["A",7500,10000,5,25,"main_sequence",15],
+  ["F",6000,7500,1.5,5,"main_sequence",18],
+  ["G",5200,6000,0.6,1.5,"main_sequence",20],
+  ["K",3700,5200,0.08,0.6,"main_sequence",25],
+  ["M",2400,3700,0.0008,0.08,"main_sequence",30]
+];
+let idx=1;
+MS_PARAMS.forEach(([sp,tLo,tHi,lLo,lHi,pop,n])=>{
+  for(let i=0;i<n;i++){
+    const t=Math.round(rng(tLo,tHi));
+    const logL=rng(Math.log10(lLo),Math.log10(lHi));
+    const L=Math.pow(10,logL);
+    const d=rng(2,200);
+    const absMag=4.83-2.5*logL;
+    const appMag=absMag+5*Math.log10(d/10);
+    STARS.push(["MS-"+sp+idx,t,parseFloat(L.toPrecision(3)),sp,"V",parseFloat(d.toFixed(1)),parseFloat(appMag.toFixed(1)),parseFloat(absMag.toFixed(1)),pop]);
+    idx++;
+  }
+});
+/* Red giant fill */
+for(let i=0;i<10;i++){
+  const t=Math.round(rng(3200,5000));
+  const logL=rng(1.5,3.5);const L=Math.pow(10,logL);
+  const d=rng(30,300);const absMag=4.83-2.5*logL;const appMag=absMag+5*Math.log10(d/10);
+  STARS.push(["RG-"+idx,t,parseFloat(L.toPrecision(3)),t>4500?"K":"M","III",parseFloat(d.toFixed(1)),parseFloat(appMag.toFixed(1)),parseFloat(absMag.toFixed(1)),"red_giant"]);
+  idx++;
+}
+/* White dwarf fill */
+for(let i=0;i<8;i++){
+  const t=Math.round(rng(4000,30000));
+  const logL=rng(-4.5,-1);const L=Math.pow(10,logL);
+  const d=rng(3,20);const absMag=4.83-2.5*logL;const appMag=absMag+5*Math.log10(d/10);
+  STARS.push(["WD-"+idx,t,parseFloat(L.toPrecision(3)),"DA","VII",parseFloat(d.toFixed(1)),parseFloat(appMag.toFixed(1)),parseFloat(absMag.toFixed(1)),"white_dwarf"]);
+  idx++;
+}
+})();
+
+/* ── State ── */
+let locked=false,predsLocked=false,dataRevealed=false;
+let predictions=[],predCatIdx=0,convHist=[];
+const predCats=[
+  {name:"Hot bright stars",color:"#4488ff"},
+  {name:"Cool dim stars",color:"#ff4444"},
+  {name:"The Sun",color:"#ffdd44"},
+  {name:"Red giants",color:"#ff8844"},
+  {name:"White dwarfs",color:"#dddddd"}
+];
+
+/* ── D3 Setup ── */
+const margin={top:20,right:30,bottom:50,left:65};
+const fullW=880,fullH=480;
+const W=fullW-margin.left-margin.right,H=fullH-margin.top-margin.bottom;
+
+const svg=d3.select("#hrContainer").append("svg")
+  .attr("viewBox",`0 0 ${fullW} ${fullH}`)
+  .attr("class","hr-svg")
+  .style("cursor","crosshair");
+
+const g=svg.append("g").attr("transform",`translate(${margin.left},${margin.top})`);
+
+const xScale=d3.scaleLog().domain([40000,2000]).range([0,W]);
+const yScale=d3.scaleLog().domain([0.00005,1000000]).range([H,0]);
+
+/* Clip */
+g.append("defs").append("clipPath").attr("id","clip").append("rect").attr("width",W).attr("height",H);
+
+const plotArea=g.append("g").attr("clip-path","url(#clip)");
+
+/* Axes */
+const xAxis=d3.axisBottom(xScale).tickValues([40000,20000,10000,5000,3000,2000]).tickFormat(d=>d>=1000?(d/1000)+"k":d);
+const yAxis=d3.axisLeft(yScale).tickValues([0.0001,0.001,0.01,0.1,1,10,100,1000,10000,100000,1000000]).tickFormat(d=>{if(d>=1)return d3.format(",")(d);return d});
+
+const gX=g.append("g").attr("transform",`translate(0,${H})`).call(xAxis);
+const gY=g.append("g").call(yAxis);
+
+[gX,gY].forEach(ax=>{
+  ax.selectAll("text").style("fill","#7a9a7a").style("font-size","9px").style("font-family","'Space Mono',monospace");
+  ax.selectAll("line").style("stroke","rgba(60,160,60,0.2)");
+  ax.select(".domain").style("stroke","rgba(60,160,60,0.3)");
+});
+
+/* Grid lines */
+g.append("g").attr("class","grid-x").attr("transform",`translate(0,${H})`).call(d3.axisBottom(xScale).tickValues([40000,20000,10000,5000,3000,2000]).tickSize(-H).tickFormat("")).selectAll("line").style("stroke","rgba(60,160,60,0.06)");
+g.append("g").attr("class","grid-y").call(d3.axisLeft(yScale).tickValues([0.0001,0.001,0.01,0.1,1,10,100,1000,10000,100000,1000000]).tickSize(-W).tickFormat("")).selectAll("line").style("stroke","rgba(60,160,60,0.06)");
+g.selectAll(".grid-x .domain,.grid-y .domain").style("stroke","none");
+
+/* Axis labels */
+g.append("text").attr("x",W/2).attr("y",H+42).attr("text-anchor","middle").style("fill","#7a9a7a").style("font-size","11px").text("Temperature (K) — hotter →");
+g.append("text").attr("transform","rotate(-90)").attr("x",-H/2).attr("y",-50).attr("text-anchor","middle").style("fill","#7a9a7a").style("font-size","11px").text("Luminosity (L☉) — brighter →");
+
+/* Zoom */
+let currentTransform=d3.zoomIdentity;
+const zoom=d3.zoom().scaleExtent([1,20]).on("zoom",function(e){
+  currentTransform=e.transform;
+  const newX=e.transform.rescaleX(xScale);
+  const newY=e.transform.rescaleY(yScale);
+  gX.call(xAxis.scale(newX));gY.call(yAxis.scale(newY));
+  [gX,gY].forEach(ax=>{ax.selectAll("text").style("fill","#7a9a7a").style("font-size","9px").style("font-family","'Space Mono',monospace");ax.selectAll("line").style("stroke","rgba(60,160,60,0.2)");ax.select(".domain").style("stroke","rgba(60,160,60,0.3)")});
+  updatePositions(newX,newY);
+});
+svg.call(zoom);
+
+function getScales(){
+  const newX=currentTransform.rescaleX(xScale);
+  const newY=currentTransform.rescaleY(yScale);
+  return{sx:newX,sy:newY};
+}
+
+/* ── Tooltip ── */
+const tooltip=d3.select("body").append("div").style("position","absolute").style("background","#162016").style("border","0.5px solid rgba(60,160,60,0.4)").style("border-radius","4px").style("padding","4px 8px").style("font-size","10px").style("font-family","'Space Mono',monospace").style("color","#e8f0e8").style("pointer-events","none").style("opacity",0).style("z-index",999);
+
+/* ── Color functions ── */
+function tempColor(t){
+  if(t>20000)return"#9bb0ff";
+  if(t>10000)return"#aabfff";
+  if(t>7500)return"#cad7ff";
+  if(t>6000)return"#f8f7ff";
+  if(t>5200)return"#fff4ea";
+  if(t>3700)return"#ffcc6f";
+  return"#ffaa33";
+}
+function spectralColor(sp){
+  const c=sp.charAt(0);
+  return{O:"#9bb0ff",B:"#aabfff",A:"#cad7ff",F:"#f8f7ff",G:"#fff4ea",K:"#ffcc6f",M:"#ffaa33",D:"#ccc"}[c]||"#7a9a7a";
+}
+function distColor(d,maxD){
+  const t=Math.min(1,d/maxD);
+  const r=Math.round(60+t*0);const g_=Math.round(200-t*140);const b=Math.round(60+t*0);
+  return`rgb(${r},${g_},${b})`;
+}
+function getStarColor(s){
+  const mode=document.getElementById("colorMode").value;
+  if(mode==="spectral")return spectralColor(s[3]);
+  if(mode==="distance"){const maxD=Math.max(...STARS.map(x=>x[5]));return distColor(s[5],maxD)}
+  return tempColor(s[1]);
+}
+
+/* ── Prediction click handling ── */
+svg.on("click",function(e){
+  if(!locked||predsLocked)return;
+  const[mx,my]=d3.pointer(e,g.node());
+  if(mx<0||mx>W||my<0||my>H)return;
+  const{sx,sy}=getScales();
+  const temp=sx.invert(mx),lum=sy.invert(my);
+  if(temp<2000||temp>40000||lum<0.00005||lum>1000000)return;
+  predictions.push({cat:predCatIdx,temp,lum});
+  document.getElementById("predCount").textContent=predictions.length+" prediction"+(predictions.length!==1?"s":"")+" placed";
+  document.getElementById("lockPredBtn").disabled=false;
+  localStorage.setItem("alexey_exp_07_predictions",JSON.stringify(predictions));
+  drawPredictions();
+});
+
+function drawPredictions(){
+  plotArea.selectAll(".pred-marker").remove();
+  const{sx,sy}=getScales();
+  predictions.forEach(p=>{
+    const x=sx(p.temp),y=sy(p.lum);
+    plotArea.append("polygon").attr("class","pred-marker")
+      .attr("points",diamondPts(x,y,7))
+      .attr("fill",predsLocked?"none":predCats[p.cat].color)
+      .attr("stroke",predCats[p.cat].color)
+      .attr("stroke-width",predsLocked?1.5:1)
+      .attr("stroke-dasharray",predsLocked?"3,2":"none")
+      .attr("opacity",predsLocked?0.7:0.9);
+  });
+}
+
+function diamondPts(cx,cy,r){
+  return`${cx},${cy-r} ${cx+r},${cy} ${cx},${cy+r} ${cx-r},${cy}`;
+}
+
+function cyclePredCat(){
+  predCatIdx=(predCatIdx+1)%predCats.length;
+  document.getElementById("predCatBtn").textContent="Placing: "+predCats[predCatIdx].name;
+  document.getElementById("predCatBtn").style.borderColor=predCats[predCatIdx].color;
+  document.getElementById("predCatBtn").style.color=predCats[predCatIdx].color;
+}
+
+function clearPredictions(){
+  predictions=[];predCatIdx=0;
+  document.getElementById("predCount").textContent="0 predictions placed";
+  document.getElementById("lockPredBtn").disabled=true;
+  document.getElementById("predCatBtn").textContent="Placing: "+predCats[0].name;
+  document.getElementById("predCatBtn").style.borderColor="";
+  document.getElementById("predCatBtn").style.color="";
+  plotArea.selectAll(".pred-marker").remove();
+  localStorage.removeItem("alexey_exp_07_predictions");
+}
+
+/* ── Reveal real data ── */
+function lockPredictions(){
+  predsLocked=true;dataRevealed=true;
+  localStorage.setItem("alexey_exp_07_predictions_locked","true");
+  document.getElementById("predCatBtn").disabled=true;
+  document.getElementById("lockPredBtn").style.display="none";
+  document.getElementById("clearPredBtn").style.display="none";
+  document.getElementById("hrControls").style.display="flex";
+  document.getElementById("resetViewBtn").style.display="";
+  document.getElementById("resetAllBtn").style.display="";
+  document.getElementById("predPhase").querySelector(".note").innerHTML="<b>Phase B &mdash; Real data revealed:</b> Your predictions are shown as hollow diamond outlines. The colored dots are real stars from the Hipparcos catalogue. Explore the diagram using the controls below.";
+  svg.style("cursor","grab");
+  drawStars();
+  drawPredictions();
+  showResults();
+}
+
+/* ── Draw stars ── */
+function drawStars(){
+  plotArea.selectAll(".star-dot").remove();
+  plotArea.selectAll(".search-ring").remove();
+  plotArea.selectAll(".evo-path").remove();
+  plotArea.selectAll(".region-label").remove();
+  const{sx,sy}=getScales();
+  const showMS=document.getElementById("togMS").checked;
+  const showRG=document.getElementById("togRG").checked;
+  const showWD=document.getElementById("togWD").checked;
+  const showSG=document.getElementById("togSG").checked;
+  const searchVal=(document.getElementById("starSearch").value||"").toLowerCase().trim();
+  const showEvo=document.getElementById("togEvo").checked;
+  const filtered=STARS.filter(s=>{
+    if(s[8]==="main_sequence"&&!showMS)return false;
+    if(s[8]==="red_giant"&&!showRG)return false;
+    if(s[8]==="white_dwarf"&&!showWD)return false;
+    if(s[8]==="supergiant"&&!showSG)return false;
+    return true;
+  });
+  filtered.forEach(s=>{
+    const x=sx(s[1]),y=sy(s[2]);
+    const col=getStarColor(s);
+    const dot=plotArea.append("circle").attr("class","star-dot")
+      .attr("cx",x).attr("cy",y).attr("r",s[8]==="supergiant"?5:s[8]==="red_giant"?4:3.5)
+      .attr("fill",col).attr("opacity",0.85).style("cursor","pointer");
+    dot.on("mouseover",function(e){
+      d3.select(this).attr("r",7).attr("opacity",1);
+      tooltip.style("opacity",1).html(s[0]+"<br>"+s[1]+"K · "+s[2]+" L☉");
+    }).on("mousemove",function(e){
+      tooltip.style("left",(e.pageX+12)+"px").style("top",(e.pageY-20)+"px");
+    }).on("mouseout",function(){
+      d3.select(this).attr("r",s[8]==="supergiant"?5:s[8]==="red_giant"?4:3.5).attr("opacity",0.85);
+      tooltip.style("opacity",0);
+    }).on("click",function(e){
+      e.stopPropagation();showStarCard(s);
+    });
+    /* Search highlight */
+    if(searchVal&&s[0].toLowerCase().includes(searchVal)){
+      plotArea.append("circle").attr("class","search-ring")
+        .attr("cx",x).attr("cy",y).attr("r",10)
+        .attr("fill","none").attr("stroke","#7dd87d").attr("stroke-width",2)
+        .attr("stroke-dasharray","3,2")
+        .append("animate").attr("attributeName","r").attr("values","8;12;8").attr("dur","1.5s").attr("repeatCount","indefinite");
+    }
+  });
+  /* Region labels */
+  if(showMS){plotArea.append("text").attr("class","region-label").attr("x",sx(7000)).attr("y",sy(3)).style("fill","rgba(60,160,60,0.3)").style("font-size","11px").text("Main Sequence")}
+  if(showRG){plotArea.append("text").attr("class","region-label").attr("x",sx(4000)).attr("y",sy(800)).style("fill","rgba(60,160,60,0.3)").style("font-size","11px").text("Red Giants")}
+  if(showWD){plotArea.append("text").attr("class","region-label").attr("x",sx(15000)).attr("y",sy(0.0003)).style("fill","rgba(60,160,60,0.3)").style("font-size","11px").text("White Dwarfs")}
+  if(showSG){plotArea.append("text").attr("class","region-label").attr("x",sx(8000)).attr("y",sy(100000)).style("fill","rgba(60,160,60,0.3)").style("font-size","11px").text("Supergiants")}
+  /* Stellar evolution track */
+  if(showEvo){
+    const evoPoints=[
+      [4500,2],      // pre-main-sequence (T Tauri)
+      [5778,1],      // Main sequence (Sun)
+      [5000,5],      // subgiant
+      [4200,200],    // ascending red giant
+      [3800,2000],   // tip of RGB
+      [5000,50],     // horizontal branch
+      [3600,5000],   // AGB
+      [100000,3000], // planetary nebula central star
+      [30000,0.01],  // cooling white dwarf
+      [10000,0.001]  // cool white dwarf
+    ];
+    const line=d3.line().x(d=>sx(d[0])).y(d=>sy(d[1])).curve(d3.curveCatmullRom.alpha(0.5));
+    plotArea.append("path").attr("class","evo-path")
+      .attr("d",line(evoPoints))
+      .attr("fill","none").attr("stroke","#f0b429").attr("stroke-width",1.5)
+      .attr("stroke-dasharray","6,3").attr("opacity",0.7);
+    /* Arrow at end */
+    const last=evoPoints[evoPoints.length-1],prev=evoPoints[evoPoints.length-2];
+    const lx=sx(last[0]),ly=sy(last[1]);
+    plotArea.append("polygon").attr("class","evo-path")
+      .attr("points",`${lx},${ly-4} ${lx+6},${ly} ${lx},${ly+4}`)
+      .attr("fill","#f0b429").attr("opacity",0.7);
+    /* Label */
+    plotArea.append("text").attr("class","evo-path")
+      .attr("x",sx(5778)+8).attr("y",sy(1)-8)
+      .style("fill","#f0b429").style("font-size","9px").text("1 M☉ evolution");
+  }
+}
+
+function updatePositions(sx,sy){
+  if(!dataRevealed)return;
+  /* Redraw everything at new positions */
+  drawStars();
+  drawPredictions();
+}
+
+function updateChart(){
+  if(!dataRevealed)return;
+  drawStars();
+  drawPredictions();
+}
+
+function showStarCard(s){
+  const card=document.getElementById("starCard");
+  card.style.display="block";
+  document.getElementById("scName").textContent=s[0];
+  document.getElementById("scTemp").textContent=s[1].toLocaleString()+" K";
+  document.getElementById("scLum").textContent=s[2]<0.01?s[2].toExponential(2)+" L☉":parseFloat(s[2].toPrecision(4)).toLocaleString()+" L☉";
+  document.getElementById("scSpec").textContent=s[3];
+  document.getElementById("scLumCl").textContent=s[4];
+  document.getElementById("scDist").textContent=s[5]<1?(s[5]*206265).toFixed(0)+" AU":s[5].toFixed(1)+" pc ("+Math.round(s[5]*3.262)+" ly)";
+  document.getElementById("scAppMag").textContent=s[6].toFixed(2);
+  document.getElementById("scAbsMag").textContent=s[7].toFixed(2);
+  document.getElementById("scPop").textContent=s[8].replace(/_/g," ");
+}
+
+function resetView(){
+  svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity);
+}
+
+function resetAll(){
+  predictions=[];predsLocked=false;dataRevealed=false;predCatIdx=0;
+  plotArea.selectAll("*").remove();
+  document.getElementById("predCount").textContent="0 predictions placed";
+  document.getElementById("predCatBtn").disabled=false;
+  document.getElementById("predCatBtn").textContent="Placing: "+predCats[0].name;
+  document.getElementById("predCatBtn").style.borderColor="";
+  document.getElementById("predCatBtn").style.color="";
+  document.getElementById("lockPredBtn").style.display="";
+  document.getElementById("lockPredBtn").disabled=true;
+  document.getElementById("clearPredBtn").style.display="";
+  document.getElementById("hrControls").style.display="none";
+  document.getElementById("resetViewBtn").style.display="none";
+  document.getElementById("resetAllBtn").style.display="none";
+  document.getElementById("starCard").style.display="none";
+  document.getElementById("stepRes").style.display="none";
+  document.getElementById("predPhase").querySelector(".note").innerHTML='<b>Phase A &mdash; Predict first:</b> Before seeing real data, click on the diagram to predict where each star type falls. Cycle through categories with the button, then click to place your prediction marker.';
+  svg.style("cursor","crosshair");
+  svg.call(zoom.transform,d3.zoomIdentity);
+  localStorage.removeItem("alexey_exp_07_predictions");
+  localStorage.removeItem("alexey_exp_07_predictions_locked");
+}
+
+/* ── Show results ── */
+function showResults(){
+  const ms=STARS.filter(s=>s[8]==="main_sequence");
+  const rg=STARS.filter(s=>s[8]==="red_giant");
+  const wd=STARS.filter(s=>s[8]==="white_dwarf");
+  const sg=STARS.filter(s=>s[8]==="supergiant");
+  document.getElementById("rMS").textContent=ms.length;
+  const msTemps=ms.map(s=>s[1]);
+  document.getElementById("rMSTemp").textContent=Math.min(...msTemps).toLocaleString()+" – "+Math.max(...msTemps).toLocaleString()+" K";
+  const msLums=ms.map(s=>s[2]);
+  document.getElementById("rMSLum").textContent=Math.min(...msLums).toPrecision(2)+" – "+Math.max(...msLums).toPrecision(2)+" L☉";
+  document.getElementById("rRG").textContent=rg.length;
+  document.getElementById("rRGTemp").textContent=Math.round(rg.reduce((a,s)=>a+s[1],0)/rg.length).toLocaleString()+" K";
+  document.getElementById("rWD").textContent=wd.length;
+  document.getElementById("rWDTemp").textContent=Math.round(wd.reduce((a,s)=>a+s[1],0)/wd.length).toLocaleString()+" K";
+  document.getElementById("rSG").textContent=sg.length;
+  /* Prediction comparison */
+  const predRes=document.getElementById("predResults");
+  const catNames=["Hot bright stars","Cool dim stars","The Sun","Red giants","White dwarfs"];
+  const catTargets=[
+    {tLo:10000,tHi:40000,lLo:100,lHi:1000000},
+    {tLo:2000,tHi:4000,lLo:0.00005,lHi:0.1},
+    {tLo:5000,tHi:6500,lLo:0.5,lHi:2},
+    {tLo:3000,tHi:5000,lLo:30,lHi:200000},
+    {tLo:4000,tHi:40000,lLo:0.00005,lHi:0.1}
+  ];
+  let html="";
+  catNames.forEach((name,i)=>{
+    const preds=predictions.filter(p=>p.cat===i);
+    if(preds.length===0){html+=`<div style="margin-bottom:6px"><span style="color:${predCats[i].color}">&#x25C6;</span> <b>${name}:</b> no prediction placed</div>`;return}
+    const tgt=catTargets[i];
+    const close=preds.some(p=>p.temp>=tgt.tLo&&p.temp<=tgt.tHi&&p.lum>=tgt.lLo&&p.lum<=tgt.lHi);
+    html+=`<div style="margin-bottom:6px"><span style="color:${predCats[i].color}">&#x25C6;</span> <b>${name}:</b> ${close?'<span style="color:#7dd87d">Good prediction!</span>':'<span style="color:#f0b429">Compare with real data</span>'}</div>`;
+  });
+  predRes.innerHTML=html;
+  document.getElementById("stepRes").style.display="";
+  localStorage.setItem("alexey_exp_07_results",JSON.stringify({
+    ms_count:ms.length,rg_count:rg.length,wd_count:wd.length,sg_count:sg.length,
+    predictions:predictions.length
+  }));
+  document.getElementById("stepRes").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ── Hypothesis lock ── */
+function lockHyp(){
+  const t=document.getElementById("hypText").value.trim();
+  if(t.length<20){document.getElementById("hypText").style.borderColor="#e24b4a";return}
+  locked=true;
+  const ta=document.getElementById("hypText");
+  ta.disabled=true;ta.style.borderColor="rgba(60,160,60,0.6)";
+  ta.style.boxShadow="0 0 0 2px rgba(60,160,60,0.2)";
+  const ts=document.getElementById("hypTS");
+  ts.style.display="block";
+  ts.textContent="locked \u00b7 "+new Date().toLocaleString();
+  const lb=document.getElementById("lockBtn");lb.textContent="\u2713 Hypothesis locked";lb.disabled=true;
+  document.getElementById("labHint").textContent="Place your predictions on the HR diagram";
+  document.getElementById("predCatBtn").disabled=false;
+  document.getElementById("clearPredBtn").disabled=false;
+  localStorage.setItem("alexey_exp_07_hypothesis",t);
+  localStorage.setItem("alexey_exp_07_timestamp",new Date().toISOString());
+}
+
+/* ── AI Coach ── */
+async function askCoach(){
+  const interp=document.getElementById("interpText").value.trim();
+  if(interp.length<20){document.getElementById("interpText").style.borderColor="#e24b4a";return}
+  const hyp=document.getElementById("hypText").value;
+  const ms=STARS.filter(s=>s[8]==="main_sequence").length;
+  const rg=STARS.filter(s=>s[8]==="red_giant").length;
+  const wd=STARS.filter(s=>s[8]==="white_dwarf").length;
+  const sg=STARS.filter(s=>s[8]==="supergiant").length;
+  const predSummary=predictions.map(p=>`${predCats[p.cat].name} at ~${Math.round(p.temp)}K, ~${p.lum.toPrecision(2)} L☉`).join("; ");
+  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nHR Diagram data: ${STARS.length} stars total. ${ms} Main Sequence, ${rg} Red Giants, ${wd} White Dwarfs, ${sg} Supergiants.\nAlexey's predictions placed: ${predSummary||"none"}\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl=document.getElementById("aiQ");
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById("askBtn").disabled=true;
+  convHist=[{role:"user",content:userMsg}];
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:"You are COACH — a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has explored a Hertzsprung-Russell diagram with real Hipparcos star data. He predicted where different types of stars would fall on the temperature-luminosity plot, then compared his predictions against real stars. He toggled stellar populations (Main Sequence, Red Giants, White Dwarfs, Supergiants), examined individual star properties, and explored how color coding reveals physical structure. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Never explain the science to him — make him work it out. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.",messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:"assistant",content:q});
+    localStorage.setItem("alexey_exp_07_dialogue",JSON.stringify(convHist));
+    document.getElementById("replySec").style.display="block";
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
+  document.getElementById("askBtn").disabled=false;
+}
+
+async function sendReply(){
+  const reply=document.getElementById("replyText").value.trim();if(reply.length<3)return;
+  const prevQ=document.getElementById("aiQ").innerText;
+  const thr=document.getElementById("thread");
+  thr.innerHTML+=`<div class="tcoach"><div class="tcoach-lbl">coach's question</div>${prevQ}</div><div class="talex"><div class="talex-lbl">alexey</div>${reply}</div>`;
+  document.getElementById("replyText").value="";
+  convHist.push({role:"user",content:reply});
+  const aiEl=document.getElementById("aiQ");
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,system:"You are COACH in a continuing Socratic dialogue with Alexey, 14, about his HR diagram exploration of real star data. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.",messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:"assistant",content:q});
+    localStorage.setItem("alexey_exp_07_dialogue",JSON.stringify(convHist));
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue — try again.</span>'}
+}
+</script>
+</body>
+</html>
