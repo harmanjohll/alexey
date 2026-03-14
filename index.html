@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alexey Mikhail Johll · Computational Science Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+
+.hero{text-align:center;padding:4rem 1rem 3rem}
+.hero-name{font-family:'Space Mono',monospace;font-size:clamp(22px,4vw,36px);font-weight:700;color:#e8f0e8;letter-spacing:2px;margin-bottom:8px}
+.hero-sub{font-family:'Space Mono',monospace;font-size:clamp(13px,2vw,16px);color:#7a9a7a;margin-bottom:6px}
+.hero-loc{font-size:12px;color:#4a6a4a;font-family:'Space Mono',monospace}
+
+.section-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:16px;padding-left:2px}
+
+.grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:3rem}
+
+.card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:border-color .15s,background .15s}
+.card:hover{border-color:rgba(60,160,60,0.5);background:#162016}
+.card-inner{padding:16px 18px}
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.card-num{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.card-status{font-size:9px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:4px;margin-left:auto;white-space:nowrap}
+.status-not-started{background:rgba(74,106,74,0.15);color:#4a6a4a;border:0.5px solid rgba(74,106,74,0.3)}
+.status-in-progress{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.status-complete{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4)}
+.card-title{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:#e8f0e8;margin-bottom:4px;line-height:1.3}
+.card-desc{font-size:13px;color:#7a9a7a;line-height:1.6;margin-bottom:10px}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;padding:2px 7px;border:0.5px solid rgba(60,160,60,0.15);border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+
+.about{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:24px;margin-bottom:2rem}
+.about p{font-size:14px;color:#7a9a7a;line-height:1.8}
+
+.logbook-link{display:inline-block;font-size:12px;color:#7dd87d;font-family:'Space Mono',monospace;text-decoration:none;border:0.5px solid rgba(60,160,60,0.3);padding:8px 16px;border-radius:4px;transition:all .15s}
+.logbook-link:hover{background:rgba(60,160,60,0.1);border-color:#3ca03c}
+
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-name">ALEXEY MIKHAIL JOHLL</div>
+  <div class="hero-sub">Computational Science Portfolio</div>
+  <div class="hero-loc">Singapore · 2025–2026</div>
+</div>
+
+<div class="section-label">Experiments</div>
+<div class="grid" id="expGrid"></div>
+
+<div class="section-label">About this portfolio</div>
+<div class="about">
+  <p>Each experiment begins with a question Alexey writes himself. The computation amplifies his thinking — it does not replace it. Every hypothesis, every interpretation, every dialogue with the AI coach is logged and timestamped. The ideas are his.</p>
+</div>
+
+<a href="logbook.html" class="logbook-link">View full logbook →</a>
+
+</div>
+
+<script>
+const experiments = [
+  {
+    num: '01',
+    folder: 'experiment-01-xg-model',
+    title: 'Where Do Goals Come From?',
+    subtitle: 'The xG Model',
+    desc: 'Build a geometric expected-goals model, place shots on a real pitch, and run 500 Monte Carlo simulations.',
+    tags: ['statistics', 'probability', 'monte carlo'],
+    lsKey: 'alexey_exp_01'
+  },
+  {
+    num: '02',
+    folder: 'experiment-02-orbital-mechanics',
+    title: 'Planets That Never Collide',
+    subtitle: 'Orbital Mechanics',
+    desc: 'Simulate a 2D solar system with Newtonian gravity. Add planets, set velocities, watch orbits form or destabilise.',
+    tags: ['physics', 'newtonian mechanics', 'simulation'],
+    lsKey: 'alexey_exp_02'
+  },
+  {
+    num: '03',
+    folder: 'experiment-03-chaos-logistic',
+    title: 'The Edge of Chaos',
+    subtitle: 'Logistic Map',
+    desc: 'One equation, one parameter, completely deterministic — yet it produces chaos. Explore the bifurcation diagram.',
+    tags: ['dynamical systems', 'chaos theory'],
+    lsKey: 'alexey_exp_03'
+  },
+  {
+    num: '04',
+    folder: 'experiment-04-fractal-coastline',
+    title: 'How Long Is a Coastline?',
+    subtitle: 'Fractal Dimension',
+    desc: 'Discover the coastline paradox: measured length depends on ruler size. Generate Koch snowflakes and estimate area with Monte Carlo.',
+    tags: ['fractal geometry', 'monte carlo'],
+    lsKey: 'alexey_exp_04'
+  },
+  {
+    num: '05',
+    folder: 'experiment-05-random-walk',
+    title: "The Drunkard's Walk",
+    subtitle: 'Random Walk',
+    desc: 'Simulate hundreds of random walkers and discover that spread grows as √N, not N.',
+    tags: ['probability', 'statistical physics', 'monte carlo'],
+    lsKey: 'alexey_exp_05'
+  },
+  {
+    num: '06',
+    folder: 'experiment-06-double-pendulum',
+    title: 'Two Pendulums, Two Futures',
+    subtitle: 'Double Pendulum',
+    desc: 'Two nearly identical starting conditions diverge completely. A visual introduction to sensitive dependence.',
+    tags: ['classical mechanics', 'chaos theory'],
+    lsKey: 'alexey_exp_06'
+  },
+  {
+    num: '07',
+    folder: 'experiment-07-stellar-data',
+    title: 'Reading Starlight',
+    subtitle: 'HR Diagram',
+    desc: 'Plot real Hipparcos star data by temperature vs luminosity. The Main Sequence emerges from the data.',
+    tags: ['astrophysics', 'data science'],
+    lsKey: 'alexey_exp_07'
+  }
+];
+
+function getStatus(lsKey) {
+  const dialogue = localStorage.getItem(lsKey + '_dialogue');
+  const hypothesis = localStorage.getItem(lsKey + '_hypothesis');
+  if (dialogue) return 'COMPLETE';
+  if (hypothesis) return 'IN PROGRESS';
+  return 'NOT STARTED';
+}
+
+function statusClass(status) {
+  if (status === 'COMPLETE') return 'status-complete';
+  if (status === 'IN PROGRESS') return 'status-in-progress';
+  return 'status-not-started';
+}
+
+const grid = document.getElementById('expGrid');
+experiments.forEach(exp => {
+  const status = getStatus(exp.lsKey);
+  const card = document.createElement('a');
+  card.className = 'card';
+  card.href = exp.folder + '/index.html';
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">EXP ${exp.num}</span>
+        <span class="card-status ${statusClass(status)}">${status}</span>
+      </div>
+      <div class="card-title">${exp.title}</div>
+      <div class="card-desc">${exp.desc}</div>
+      <div class="card-tags">${exp.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    </div>`;
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>
