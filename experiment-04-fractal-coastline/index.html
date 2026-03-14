@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment 04 · Fractal Coastline · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:18px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.lab-grid{display:grid;grid-template-columns:400px 1fr;gap:22px;align-items:start}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
+.sv.sm{font-size:15px}
+.brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:230px;position:relative}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.rstat:last-child{border-bottom:none}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
+.interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
+.thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
+.talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.reply-sec{margin-top:12px;display:none}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+/* Experiment-specific styles */
+#fracSvg{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block}
+.ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.ctrl-row label{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.6px;text-transform:uppercase;min-width:80px}
+.ctrl-row input[type=range]{flex:1;accent-color:#3ca03c;max-width:180px}
+.ctrl-row select{background:#0d150d;border:0.5px solid rgba(60,160,60,0.3);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+.ctrl-row .cv{font-size:13px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace;min-width:40px}
+.ptable{width:100%;border-collapse:collapse;margin-top:8px;font-size:10px;font-family:'Space Mono',monospace}
+.ptable th{color:#4a6a4a;text-transform:uppercase;letter-spacing:.5px;padding:4px 6px;border-bottom:0.5px solid rgba(60,160,60,0.2);text-align:left;font-weight:700}
+.ptable td{color:#7a9a7a;padding:4px 6px;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.ptable td.hi{color:#7dd87d;font-weight:700}
+.section-lbl{font-size:11px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin:16px 0 8px;padding-bottom:4px;border-bottom:0.5px solid rgba(60,160,60,0.15)}
+.mc-stat{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace;margin:4px 0}
+.mc-stat span{color:#7dd87d;font-weight:700}
+@media(max-width:680px){.lab-grid{grid-template-columns:1fr}#fracSvg{max-width:100%;height:auto}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 04 OF 07 &middot; FRACTAL GEOMETRY &amp; MONTE CARLO</div>
+<div class="exp-title">How long is a coastline?<br>Fractal Dimension.</div>
+<div class="exp-sub">The coastline paradox: the length you measure depends on the size of your ruler. As the ruler shrinks, the measured length grows without bound. You'll generate fractal shapes, measure them with different ruler sizes, and discover that fractals have dimensions between 1 and 2.</div>
+
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> Before generating any fractals, write down what you predict. How will perimeter change as detail increases? What happens when you measure with smaller rulers? Will the area change as much as the perimeter? Be specific.</div>
+    <textarea id="hypText" placeholder="e.g. I predict that as I increase the detail level of the Koch snowflake, the perimeter will keep growing but the area will stay roughly the same. If I measure the perimeter with a smaller ruler, I think I'll get a longer measurement. I'm not sure if there's a pattern to how fast the length grows..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The fractal lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <div class="lab-grid">
+      <div>
+        <svg id="fracSvg" width="400" height="400" viewBox="0 0 400 400"></svg>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace">
+          <span style="width:8px;height:8px;background:#3ca03c;border-radius:50%;display:inline-block"></span> fractal boundary
+          <span style="width:8px;height:8px;background:#f0b429;border-radius:50%;display:inline-block;margin-left:8px"></span> ruler walk
+        </div>
+      </div>
+      <div>
+        <div class="ctrl-row">
+          <label>Fractal</label>
+          <select id="fracType" onchange="changeFractal()" disabled>
+            <option value="koch">Koch Snowflake</option>
+            <option value="anti">Koch Antisnowflake</option>
+            <option value="sierpinski">Sierpinski Triangle</option>
+          </select>
+        </div>
+        <div class="section-lbl">Part A &mdash; Fractal Generation</div>
+        <div class="ctrl-row">
+          <label>Iteration</label>
+          <input type="range" id="iterSlider" min="0" max="6" value="0" oninput="setIter(+this.value)" disabled>
+          <span class="cv" id="iterVal">0</span>
+        </div>
+        <div class="sl">Perimeter growth</div>
+        <table class="ptable" id="perimTable">
+          <thead><tr><th>Iter</th><th>Segments</th><th>Seg Length</th><th>Perimeter</th></tr></thead>
+          <tbody id="perimBody"></tbody>
+        </table>
+        <div class="chart-wrap" style="height:170px;margin-top:10px"><canvas id="perimChart"></canvas></div>
+
+        <div class="section-lbl">Part B &mdash; Ruler Measurement</div>
+        <div class="ctrl-row">
+          <label>Ruler size</label>
+          <input type="range" id="rulerSlider" min="0" max="9" value="0" oninput="measureRuler(+this.value)" disabled>
+          <span class="cv" id="rulerVal">--</span>
+        </div>
+        <div class="mc-stat">Rulers used: <span id="rulerCount">--</span></div>
+        <div class="mc-stat">Measured length: <span id="rulerLen">--</span></div>
+        <div class="mc-stat">Fractal dimension D &asymp; <span id="fracDim">--</span></div>
+        <div class="chart-wrap" style="height:170px;margin-top:10px"><canvas id="loglogChart"></canvas></div>
+
+        <div class="section-lbl">Part C &mdash; Monte Carlo Area</div>
+        <div class="ctrl-row">
+          <label>Points</label>
+          <input type="range" id="mcSlider" min="500" max="10000" step="500" value="2000" disabled>
+          <span class="cv" id="mcVal">2000</span>
+        </div>
+        <div class="brow">
+          <button id="mcBtn" onclick="runMonteCarlo()" disabled>Run Monte Carlo &rarr;</button>
+          <button class="danger" onclick="resetAll()" disabled id="resetBtn">Reset all</button>
+        </div>
+        <div class="mc-stat">Inside / Total: <span id="mcInside">--</span></div>
+        <div class="mc-stat">Estimated area: <span id="mcArea">--</span></div>
+        <div class="mc-stat">Theoretical area: <span id="mcTheo">--</span></div>
+        <div class="chart-wrap" style="height:170px;margin-top:10px"><canvas id="convChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Results</span>
+    <span class="shint">Fractal measurement summary</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="sl" style="margin-bottom:12px">measurement summary</div>
+        <div class="rstat"><span class="rl">Fractal dimension (measured)</span><span class="rv" id="resDim">--</span></div>
+        <div class="rstat"><span class="rl">Fractal dimension (theoretical)</span><span class="rv" id="resTheo">--</span></div>
+        <div class="rstat"><span class="rl">Perimeter at iteration 0</span><span class="rv" id="resP0">--</span></div>
+        <div class="rstat"><span class="rl">Perimeter at iteration 6</span><span class="rv" id="resP6">--</span></div>
+        <div class="rstat"><span class="rl">Perimeter growth factor</span><span class="rv" id="resGrow">--</span></div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:12px">monte carlo area</div>
+        <div class="rstat"><span class="rl">Monte Carlo area estimate</span><span class="rv" id="resMC">--</span></div>
+        <div class="rstat"><span class="rl">Theoretical area</span><span class="rv" id="resMCT">--</span></div>
+        <div class="rstat"><span class="rl">Ruler 3x smaller &rarr; length grows by</span><span class="rv" id="resRatio">--</span></div>
+        <div class="model-note">Benoit Mandelbrot showed in 1967 that coastlines have fractal properties &mdash; their measured length depends on the ruler size. The Koch snowflake is a mathematical idealization, but real coastlines behave similarly. Britain's coastline has a fractal dimension of approximately 1.25.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">your interpretation</div>
+        <textarea id="interpText" placeholder="What did the fractal measurements show? Did the perimeter behave as you predicted? What does a fractal dimension between 1 and 2 mean? Why does the measured length depend on the ruler size? What are the limitations of this model?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* --- State --- */
+let locked=false,curIter=0,fracPoints=[],convHist=[];
+let perimChartInst=null,loglogInst=null,convChartInst=null;
+let rulerData=[],mcRan=false,maxIterReached=0;
+const SVG_W=400,SVG_H=400,SIDE=240;
+const svg=d3.select('#fracSvg');
+
+/* --- Koch snowflake generation --- */
+function kochSubdivide(pts,inward){
+  const out=[];
+  for(let i=0;i<pts.length;i++){
+    const a=pts[i],b=pts[(i+1)%pts.length];
+    const dx=b[0]-a[0],dy=b[1]-a[1];
+    const p1=[a[0]+dx/3,a[1]+dy/3];
+    const p2=[a[0]+2*dx/3,a[1]+2*dy/3];
+    const dir=inward?-1:1;
+    const peak=[a[0]+dx/2+dir*dy*Math.sqrt(3)/6,a[1]+dy/2-dir*dx*Math.sqrt(3)/6];
+    out.push(a,p1,peak,p2);
+  }
+  return out;
+}
+
+function genKoch(iter,inward){
+  const cx=SVG_W/2,cy=SVG_H/2+20;
+  const h=SIDE*Math.sqrt(3)/2;
+  let pts=[[cx,cy-h*2/3],[cx+SIDE/2,cy+h/3],[cx-SIDE/2,cy+h/3]];
+  for(let i=0;i<iter;i++) pts=kochSubdivide(pts,inward);
+  return pts;
+}
+
+function genSierpinski(iter){
+  const cx=SVG_W/2,cy=SVG_H/2+20;
+  const h=SIDE*Math.sqrt(3)/2;
+  const top=[cx,cy-h*2/3],bl=[cx-SIDE/2,cy+h/3],br=[cx+SIDE/2,cy+h/3];
+  if(iter===0) return [top,bl,br];
+  let triangles=[[top,bl,br]];
+  for(let i=0;i<iter;i++){
+    const next=[];
+    triangles.forEach(([a,b,c])=>{
+      const ab=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+      const bc=[(b[0]+c[0])/2,(b[1]+c[1])/2];
+      const ac=[(a[0]+c[0])/2,(a[1]+c[1])/2];
+      next.push([a,ab,ac],[ab,b,bc],[ac,bc,c]);
+    });
+    triangles=next;
+  }
+  // Return boundary points of all triangles as one path (outline each sub-triangle)
+  const pts=[];
+  triangles.forEach(t=>{pts.push(...t)});
+  return {triangles,type:'sierpinski'};
+}
+
+function generateFractal(){
+  const type=document.getElementById('fracType').value;
+  if(type==='koch') fracPoints=genKoch(curIter,false);
+  else if(type==='anti') fracPoints=genKoch(curIter,true);
+  else {
+    const res=genSierpinski(curIter);
+    fracPoints=res;
+    renderSierpinski(res.triangles);
+    return;
+  }
+  renderPath(fracPoints);
+}
+
+function renderPath(pts){
+  svg.selectAll('*').remove();
+  if(pts.length<2) return;
+  const d='M'+pts.map(p=>p[0]+','+p[1]).join('L')+'Z';
+  svg.append('path').attr('d',d).attr('fill','rgba(60,160,60,0.08)').attr('stroke','#3ca03c').attr('stroke-width',1.2);
+}
+
+function renderSierpinski(triangles){
+  svg.selectAll('*').remove();
+  triangles.forEach(t=>{
+    const d='M'+t.map(p=>p[0]+','+p[1]).join('L')+'Z';
+    svg.append('path').attr('d',d).attr('fill','rgba(60,160,60,0.08)').attr('stroke','#3ca03c').attr('stroke-width',0.6);
+  });
+}
+
+/* --- Perimeter calculations --- */
+function getPerimInfo(iter){
+  const type=document.getElementById('fracType').value;
+  if(type==='sierpinski'){
+    // Sierpinski: 3 outer edges, each iter multiplies segments by 2 but halves length; perimeter = 3*SIDE*(but stays same in outline)
+    // Actually Sierpinski perimeter: at iter n, perimeter = 3 * SIDE * (3/2)^n ... but let's compute boundary
+    // Simpler: total perimeter of all sub-triangles = 3 * SIDE * (3/2)^n
+    const segs=3*Math.pow(3,iter);
+    const segLen=SIDE/Math.pow(2,iter);
+    const perim=segs*segLen;
+    return {segs,segLen,perim};
+  }
+  // Koch / Anti: segments = 3*4^n, segLen = SIDE/3^n, perim = 3*SIDE*(4/3)^n
+  const segs=3*Math.pow(4,iter);
+  const segLen=SIDE/Math.pow(3,iter);
+  const perim=segs*segLen;
+  return {segs,segLen,perim};
+}
+
+function updatePerimTable(){
+  const body=document.getElementById('perimBody');
+  let html='';
+  for(let i=0;i<=curIter;i++){
+    const info=getPerimInfo(i);
+    const isCur=i===curIter;
+    html+=`<tr><td${isCur?' class="hi"':''}>n=${i}</td><td${isCur?' class="hi"':''}>${info.segs}</td><td>${info.segLen.toFixed(2)}</td><td${isCur?' class="hi"':''}>${info.perim.toFixed(1)}</td></tr>`;
+  }
+  body.innerHTML=html;
+}
+
+function updatePerimChart(){
+  const labels=[],data=[],theoData=[];
+  for(let i=0;i<=6;i++){
+    labels.push('n='+i);
+    const info=getPerimInfo(i);
+    if(i<=curIter) data.push(info.perim); else data.push(null);
+    theoData.push(info.perim);
+  }
+  const cc=document.getElementById('perimChart');
+  if(perimChartInst) perimChartInst.destroy();
+  perimChartInst=new Chart(cc,{type:'bar',data:{labels,datasets:[
+    {data,backgroundColor:'rgba(60,160,60,0.6)',borderWidth:0,borderRadius:2,label:'Explored'},
+    {data:theoData,type:'line',borderColor:'rgba(125,216,125,0.3)',borderWidth:1,pointRadius:0,borderDash:[4,3],label:'Theoretical',fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}}});
+}
+
+/* --- Ruler measurement --- */
+function getBoundaryPoints(){
+  const type=document.getElementById('fracType').value;
+  if(type==='sierpinski'){
+    // For sierpinski, use the outer boundary at current iteration
+    // Simplification: generate Koch-like boundary; for measurement use outer triangle perimeter
+    // Actually let's just measure the boundary of all sub-triangles concatenated
+    if(fracPoints.type==='sierpinski'){
+      const allPts=[];
+      fracPoints.triangles.forEach(t=>{allPts.push(...t,t[0]);}); // close each triangle
+      return allPts;
+    }
+    return [];
+  }
+  return fracPoints;
+}
+
+function measureWithRuler(rulerSize){
+  const pts=getBoundaryPoints();
+  if(pts.length<2) return {count:0,length:0,steps:[]};
+  const steps=[];
+  let count=0,acc=0,cur=pts[0];
+  steps.push([...cur]);
+  for(let i=1;i<=pts.length;i++){
+    const next=pts[i%pts.length];
+    const dx=next[0]-cur[0],dy=next[1]-cur[1];
+    const segLen=Math.sqrt(dx*dx+dy*dy);
+    acc+=segLen;
+    while(acc>=rulerSize){
+      acc-=rulerSize;
+      count++;
+      // Place ruler endpoint along the path
+      const backDist=acc;
+      const nx=next[0]-dx/segLen*backDist,ny=next[1]-dy/segLen*backDist;
+      steps.push([nx,ny]);
+    }
+    cur=next;
+  }
+  if(acc>rulerSize*0.01){count++;steps.push([...pts[0]]);}
+  return {count,length:count*rulerSize,steps};
+}
+
+function getRulerSizes(){
+  const sizes=[];
+  const basePerim=getPerimInfo(0).perim;
+  for(let i=0;i<10;i++){
+    sizes.push(basePerim/Math.pow(1.5,i+1));
+  }
+  return sizes;
+}
+
+function measureRuler(idx){
+  const sizes=getRulerSizes();
+  const rs=sizes[idx];
+  document.getElementById('rulerVal').textContent=rs.toFixed(1);
+  const res=measureWithRuler(rs);
+  document.getElementById('rulerCount').textContent=res.count;
+  document.getElementById('rulerLen').textContent=res.length.toFixed(1);
+
+  // Draw ruler walk on SVG
+  svg.selectAll('.ruler-walk').remove();
+  if(res.steps.length>1){
+    const d='M'+res.steps.map(p=>p[0]+','+p[1]).join('L');
+    svg.append('path').attr('class','ruler-walk').attr('d',d).attr('fill','none').attr('stroke','#f0b429').attr('stroke-width',1.5).attr('stroke-dasharray','4,2').attr('opacity',0.8);
+  }
+
+  // Update rulerData for log-log plot
+  const existing=rulerData.find(r=>r.idx===idx);
+  if(!existing) rulerData.push({idx,size:rs,count:res.count,length:res.length});
+  else {existing.size=rs;existing.count=res.count;existing.length=res.length;}
+  rulerData.sort((a,b)=>b.size-a.size);
+
+  updateLogLog();
+}
+
+function updateLogLog(){
+  if(rulerData.length<2){document.getElementById('fracDim').textContent='need 2+ ruler sizes';return}
+  const xs=rulerData.map(r=>Math.log(1/r.size));
+  const ys=rulerData.map(r=>Math.log(r.length));
+  // Linear regression
+  const n=xs.length;
+  const sx=xs.reduce((a,b)=>a+b,0),sy=ys.reduce((a,b)=>a+b,0);
+  const sxx=xs.reduce((a,b)=>a+b*b,0),sxy=xs.map((x,i)=>x*ys[i]).reduce((a,b)=>a+b,0);
+  const slope=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+  const intercept=(sy-slope*sx)/n;
+  document.getElementById('fracDim').textContent=slope.toFixed(4);
+
+  const cc=document.getElementById('loglogChart');
+  if(loglogInst) loglogInst.destroy();
+  const fitXs=[Math.min(...xs)-0.2,Math.max(...xs)+0.2];
+  const fitYs=fitXs.map(x=>slope*x+intercept);
+  loglogInst=new Chart(cc,{type:'scatter',data:{datasets:[
+    {data:xs.map((x,i)=>({x,y:ys[i]})),backgroundColor:'#7dd87d',pointRadius:4,label:'Measurements'},
+    {data:fitXs.map((x,i)=>({x,y:fitYs[i]})),type:'line',borderColor:'rgba(240,180,41,0.6)',borderWidth:1.5,pointRadius:0,label:'Fit (slope=D)',fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},scales:{x:{title:{display:true,text:'ln(1/ruler)',color:'#4a6a4a',font:{family:'Space Mono',size:9}},grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{title:{display:true,text:'ln(length)',color:'#4a6a4a',font:{family:'Space Mono',size:9}},grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}}});
+}
+
+/* --- Monte Carlo area --- */
+function pointInPolygon(x,y,pts){
+  // Ray casting - works for Koch (simple closed polygon)
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i][0],yi=pts[i][1],xj=pts[j][0],yj=pts[j][1];
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+function getTheoArea(){
+  const type=document.getElementById('fracType').value;
+  const baseArea=SIDE*SIDE*Math.sqrt(3)/4;
+  if(type==='koch'){
+    // Koch snowflake area = (2*sqrt(3)/5) * s^2 where s=SIDE
+    return baseArea*(8/5);
+  }
+  if(type==='anti'){
+    // Anti-snowflake: area = baseArea * (2/5)
+    return baseArea*(2/5);
+  }
+  // Sierpinski: at iter n, area = baseArea * (3/4)^n
+  return baseArea*Math.pow(3/4,curIter);
+}
+
+function getPolyForMC(){
+  const type=document.getElementById('fracType').value;
+  if(type==='sierpinski'&&fracPoints.type==='sierpinski') return fracPoints.triangles;
+  return fracPoints;
+}
+
+function runMonteCarlo(){
+  const nPts=+document.getElementById('mcSlider').value;
+  const type=document.getElementById('fracType').value;
+  const bbox={x:0,y:0,w:SVG_W,h:SVG_H};
+  const bboxArea=bbox.w*bbox.h;
+  let inside=0;
+  const convData=[];
+  const greenPts=[],redPts=[];
+
+  // Remove old MC points
+  svg.selectAll('.mc-pt').remove();
+
+  if(type==='sierpinski'&&fracPoints.type==='sierpinski'){
+    const tris=fracPoints.triangles;
+    for(let i=0;i<nPts;i++){
+      const px=Math.random()*SVG_W,py=Math.random()*SVG_H;
+      let hit=false;
+      for(const t of tris){if(pointInPolygon(px,py,t)){hit=true;break;}}
+      if(hit){inside++;greenPts.push([px,py]);}else{redPts.push([px,py]);}
+      if((i+1)%50===0||i===nPts-1) convData.push({n:i+1,area:inside/(i+1)*bboxArea});
+    }
+  } else {
+    for(let i=0;i<nPts;i++){
+      const px=Math.random()*SVG_W,py=Math.random()*SVG_H;
+      if(pointInPolygon(px,py,fracPoints)){inside++;greenPts.push([px,py]);}
+      else{redPts.push([px,py]);}
+      if((i+1)%50===0||i===nPts-1) convData.push({n:i+1,area:inside/(i+1)*bboxArea});
+    }
+  }
+
+  const estArea=inside/nPts*bboxArea;
+  const theoArea=getTheoArea();
+  document.getElementById('mcInside').textContent=`${inside} / ${nPts}`;
+  document.getElementById('mcArea').textContent=estArea.toFixed(1)+' px\u00B2';
+  document.getElementById('mcTheo').textContent=theoArea.toFixed(1)+' px\u00B2';
+
+  // Render points (batched for performance)
+  const g=svg.append('g').attr('class','mc-pt');
+  greenPts.forEach(p=>{g.append('circle').attr('cx',p[0]).attr('cy',p[1]).attr('r',1).attr('fill','rgba(60,160,60,0.5)')});
+  redPts.forEach(p=>{g.append('circle').attr('cx',p[0]).attr('cy',p[1]).attr('r',1).attr('fill','rgba(226,75,74,0.3)')});
+
+  // Convergence chart
+  const cc=document.getElementById('convChart');
+  if(convChartInst) convChartInst.destroy();
+  convChartInst=new Chart(cc,{type:'line',data:{labels:convData.map(d=>d.n),datasets:[
+    {data:convData.map(d=>d.area),borderColor:'#3ca03c',borderWidth:1.5,pointRadius:0,label:'Estimate',fill:false},
+    {data:convData.map(()=>theoArea),borderColor:'rgba(240,180,41,0.5)',borderWidth:1,borderDash:[4,3],pointRadius:0,label:'Theoretical',fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},scales:{x:{title:{display:true,text:'Points',color:'#4a6a4a',font:{family:'Space Mono',size:9}},grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9},maxTicksLimit:6}},y:{title:{display:true,text:'Area',color:'#4a6a4a',font:{family:'Space Mono',size:9}},grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}}});
+
+  mcRan=true;
+  checkShowResults();
+  localStorage.setItem('alexey_exp_04_mc',JSON.stringify({inside,total:nPts,estArea,theoArea}));
+}
+
+/* --- Controls --- */
+function setIter(n){
+  curIter=n;
+  if(n>maxIterReached) maxIterReached=n;
+  document.getElementById('iterVal').textContent=n;
+  rulerData=[];
+  svg.selectAll('.ruler-walk,.mc-pt').remove();
+  document.getElementById('rulerSlider').value=0;
+  document.getElementById('rulerVal').textContent='--';
+  document.getElementById('rulerCount').textContent='--';
+  document.getElementById('rulerLen').textContent='--';
+  document.getElementById('fracDim').textContent='--';
+  if(loglogInst){loglogInst.destroy();loglogInst=null;}
+  generateFractal();
+  updatePerimTable();
+  updatePerimChart();
+  document.getElementById('mcSlider').disabled=false;
+  document.getElementById('mcBtn').disabled=false;
+  document.getElementById('rulerSlider').disabled=false;
+  document.getElementById('resetBtn').disabled=false;
+}
+
+function changeFractal(){
+  curIter=0;maxIterReached=0;
+  document.getElementById('iterSlider').value=0;
+  document.getElementById('iterVal').textContent='0';
+  rulerData=[];mcRan=false;
+  svg.selectAll('*').remove();
+  if(loglogInst){loglogInst.destroy();loglogInst=null;}
+  if(convChartInst){convChartInst.destroy();convChartInst=null;}
+  document.getElementById('rulerVal').textContent='--';
+  document.getElementById('rulerCount').textContent='--';
+  document.getElementById('rulerLen').textContent='--';
+  document.getElementById('fracDim').textContent='--';
+  document.getElementById('mcInside').textContent='--';
+  document.getElementById('mcArea').textContent='--';
+  document.getElementById('mcTheo').textContent='--';
+  document.getElementById('stepRes').style.display='none';
+  generateFractal();
+  updatePerimTable();
+  updatePerimChart();
+}
+
+function resetAll(){
+  changeFractal();
+}
+
+function checkShowResults(){
+  if(maxIterReached>=3&&mcRan){
+    const el=document.getElementById('stepRes');
+    el.style.display='';
+    // Populate results
+    const type=document.getElementById('fracType').value;
+    let theoDim='--';
+    if(type==='koch'||type==='anti') theoDim=(Math.log(4)/Math.log(3)).toFixed(4);
+    else theoDim=(Math.log(3)/Math.log(2)).toFixed(4);
+    const measDim=document.getElementById('fracDim').textContent;
+    document.getElementById('resDim').textContent=measDim;
+    document.getElementById('resTheo').textContent=theoDim;
+    const p0=getPerimInfo(0).perim;
+    const p6=getPerimInfo(6).perim;
+    document.getElementById('resP0').textContent=p0.toFixed(1);
+    document.getElementById('resP6').textContent=p6.toFixed(1);
+    document.getElementById('resGrow').textContent=(p6/p0).toFixed(2)+'x';
+    document.getElementById('resMC').textContent=document.getElementById('mcArea').textContent;
+    document.getElementById('resMCT').textContent=document.getElementById('mcTheo').textContent;
+    // Ruler ratio: when ruler is 3x smaller, length grows by ~4/3 for Koch
+    if(rulerData.length>=2){
+      // Find two ruler sizes roughly 3x apart
+      const r0=rulerData[0],r1=rulerData[rulerData.length-1];
+      const sizeRatio=r0.size/r1.size;
+      const lenRatio=r1.length/r0.length;
+      const perSizeTriple=Math.pow(lenRatio,Math.log(3)/Math.log(sizeRatio));
+      document.getElementById('resRatio').textContent=perSizeTriple.toFixed(3)+'x';
+    } else {
+      document.getElementById('resRatio').textContent='--';
+    }
+    localStorage.setItem('alexey_exp_04_results',JSON.stringify({measDim,theoDim,p0,p6,growFactor:(p6/p0)}));
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+
+/* --- Hypothesis lock --- */
+function lockHyp(){
+  const t=document.getElementById('hypText').value.trim();
+  if(t.length<20){document.getElementById('hypText').style.borderColor='#e24b4a';return}
+  locked=true;
+  const ta=document.getElementById('hypText');
+  ta.disabled=true;ta.style.borderColor='rgba(60,160,60,0.6)';
+  ta.style.boxShadow='0 0 0 2px rgba(60,160,60,0.2)';
+  const ts=document.getElementById('hypTS');
+  ts.style.display='block';
+  ts.textContent='locked \u00B7 '+new Date().toLocaleString();
+  const lb=document.getElementById('lockBtn');lb.textContent='\u2713 Hypothesis locked';lb.disabled=true;
+  document.getElementById('labHint').textContent='Select fractal type and adjust iteration depth';
+  // Enable controls
+  document.getElementById('fracType').disabled=false;
+  document.getElementById('iterSlider').disabled=false;
+  document.getElementById('mcSlider').disabled=false;
+  localStorage.setItem('alexey_exp_04_hypothesis',t);
+  localStorage.setItem('alexey_exp_04_timestamp',new Date().toISOString());
+  generateFractal();
+  updatePerimTable();
+  updatePerimChart();
+}
+
+/* --- AI Coach --- */
+async function askCoach(){
+  const interp=document.getElementById('interpText').value.trim();
+  if(interp.length<20){document.getElementById('interpText').style.borderColor='#e24b4a';return}
+  const hyp=document.getElementById('hypText').value;
+  const dim=document.getElementById('fracDim').textContent;
+  const p0=getPerimInfo(0).perim.toFixed(1);
+  const pN=getPerimInfo(curIter).perim.toFixed(1);
+  const mcA=document.getElementById('mcArea').textContent;
+  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nFractal data:\nType: ${document.getElementById('fracType').value}\nIteration depth explored: ${maxIterReached}\nPerimeter at iter 0: ${p0}\nPerimeter at iter ${curIter}: ${pN}\nMeasured fractal dimension: ${dim}\nMonte Carlo area estimate: ${mcA}\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById('askBtn').disabled=true;
+  convHist=[{role:'user',content:userMsg}];
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has explored the coastline paradox using fractal geometry. He generated Koch snowflakes at increasing iteration depths, measured perimeters with different ruler sizes, computed fractal dimension from a log-log plot, and estimated fractal area using Monte Carlo random sampling with thousands of points. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Never explain the science to him \u2014 make him work it out. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_04_dialogue',JSON.stringify(convHist));
+    document.getElementById('replySec').style.display='block';
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
+  document.getElementById('askBtn').disabled=false;
+}
+
+async function sendReply(){
+  const reply=document.getElementById('replyText').value.trim();if(reply.length<3)return;
+  const prevQ=document.getElementById('aiQ').innerText;
+  const thr=document.getElementById('thread');
+  thr.innerHTML+=`<div class="tcoach"><div class="tcoach-lbl">coach's question</div>${prevQ}</div><div class="talex"><div class="talex-lbl">alexey</div>${reply}</div>`;
+  document.getElementById('replyText').value='';
+  convHist.push({role:'user',content:reply});
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his fractal coastline experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_04_dialogue',JSON.stringify(convHist));
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue \u2014 try again.</span>'}
+}
+
+/* --- MC slider label update --- */
+document.getElementById('mcSlider').addEventListener('input',function(){
+  document.getElementById('mcVal').textContent=this.value;
+});
+
+/* --- Initial render --- */
+generateFractal();
+updatePerimTable();
+updatePerimChart();
+</script>
+</body>
+</html>
