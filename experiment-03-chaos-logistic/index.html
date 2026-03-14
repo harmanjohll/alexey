@@ -73,6 +73,7 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .ctrl-val{font-size:13px;color:#7dd87d;font-family:'Space Mono',monospace;font-weight:700}
 .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
 canvas.sim-cvs{width:100%;border:0.5px solid rgba(60,160,60,0.2);border-radius:4px;display:block;background:#060a06}
+canvas#bifCvs{cursor:crosshair}
 .readouts{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px}
 .rdout{text-align:center}
 .rdout .sl{margin-bottom:2px}
@@ -135,6 +136,7 @@ canvas.sim-cvs{width:100%;border:0.5px solid rgba(60,160,60,0.2);border-radius:4
       <div class="note" style="margin-top:14px"><b>Bifurcation diagram:</b> Each column shows where the population settles for that value of r. Drag the r slider and watch the time series and cobweb diagram update live.</div>
       <canvas id="bifCvs" class="sim-cvs" width="700" height="350"></canvas>
       <div class="prog-bar" id="bifProg"><div class="prog-fill" id="bifFill"></div></div>
+      <div style="font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:3px">click and drag on diagram to zoom into a region of r</div>
       <div class="brow" style="margin-top:6px">
         <button id="zoomRstBtn" onclick="resetZoom()">Reset zoom</button>
         <button onclick="resetSim()" class="danger">Reset simulation</button>
@@ -321,21 +323,44 @@ function drawRLine(){
   bCtx.textAlign='left';bCtx.fillText('x=1',4,12);bCtx.fillText('x=0',4,bifCvs.height-14);
 }
 
-// --- Zoom ---
-let zoomStart=null;
-bifCvs.addEventListener('mousedown',e=>{if(!handDone)return;const r=bifCvs.getBoundingClientRect();zoomStart=(e.clientX-r.left)/r.width});
+// --- Zoom with visual selection ---
+let zoomStart=null,zoomCurrent=null;
+bifCvs.addEventListener('mousedown',e=>{
+  if(!handDone)return;
+  const r=bifCvs.getBoundingClientRect();
+  zoomStart=(e.clientX-r.left)/r.width;zoomCurrent=zoomStart;
+});
+bifCvs.addEventListener('mousemove',e=>{
+  if(!handDone||zoomStart===null)return;
+  const r=bifCvs.getBoundingClientRect();
+  zoomCurrent=(e.clientX-r.left)/r.width;
+  // Draw selection overlay
+  if(bifData){
+    bCtx.putImageData(bifData,0,0);
+    drawRLine();
+    const W=bifCvs.width;
+    const sx=Math.min(zoomStart,zoomCurrent)*W,ex=Math.max(zoomStart,zoomCurrent)*W;
+    bCtx.fillStyle='rgba(60,160,60,0.12)';
+    bCtx.fillRect(sx,0,ex-sx,bifCvs.height);
+    bCtx.strokeStyle='rgba(125,216,125,0.5)';bCtx.lineWidth=1;
+    bCtx.strokeRect(sx,0,ex-sx,bifCvs.height);
+  }
+});
 bifCvs.addEventListener('mouseup',e=>{
   if(!handDone||zoomStart===null)return;
   const r=bifCvs.getBoundingClientRect();const zoomEnd=(e.clientX-r.left)/r.width;
   const s=Math.min(zoomStart,zoomEnd),en=Math.max(zoomStart,zoomEnd);
-  zoomStart=null;
-  if(en-s<0.02)return;
+  zoomStart=null;zoomCurrent=null;
+  if(en-s<0.02){drawRLine();return}
   const newMin=rMin+(rMax-rMin)*s,newMax=rMin+(rMax-rMin)*en;
   rMin=Math.max(0.5,newMin);rMax=Math.min(4.05,newMax);
   const sl=document.getElementById('rSlider');sl.min=rMin;sl.max=rMax;
   if(parseFloat(sl.value)<rMin)sl.value=rMin;
   if(parseFloat(sl.value)>rMax)sl.value=rMax;
   renderBif();
+});
+bifCvs.addEventListener('mouseleave',()=>{
+  if(zoomStart!==null){zoomStart=null;zoomCurrent=null;if(bifData){bCtx.putImageData(bifData,0,0);drawRLine()}}
 });
 
 function resetZoom(){rMin=1;rMax=4;const sl=document.getElementById('rSlider');sl.min=1;sl.max=4;renderBif();drawRLine()}
@@ -464,9 +489,14 @@ function replayCobweb(){
 
 // --- Results ---
 function showResults(){
-  document.getElementById('stepRes').style.display='';
+  const el=document.getElementById('stepRes');
+  if(el.style.display==='none'){el.style.display='';el.scrollIntoView({behavior:'smooth',block:'start'})}
   document.getElementById('rExpN').textContent=exploredR.size;
-  localStorage.setItem('alexey_exp_03_results',JSON.stringify({explored:exploredR.size,rValues:[...exploredR]}));
+  localStorage.setItem('alexey_exp_03_results',JSON.stringify({
+    explored:exploredR.size,
+    rValues:[...exploredR].sort((a,b)=>a-b),
+    timestamp:new Date().toISOString()
+  }));
 }
 
 // --- Reset ---
