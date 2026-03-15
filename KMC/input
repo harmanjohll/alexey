@@ -1,0 +1,8 @@
+-381791011			      ! seed
+0,0				      ! runtype,envt
+100,20000                             ! scale niter2 as lattz
+0.2                                   ! theta
+0.1,1.0,0.0                           ! pdes,pge,psi
+500.0                                 ! temp
+-1.6835,-1.534,-1.365,0.37375,0       ! esisi,esige,egege,esivc,egevc
+4800,4500      		              ! zstop  zlo
