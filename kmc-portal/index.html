@@ -30,15 +30,18 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
 .param-row:last-child{margin-bottom:0}
 .param-lbl{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace}
 .param-lbl .unit{color:#4a6a4a;font-size:9px}
-input[type=number]{width:100px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
+input[type=number],input[type=range]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
+input[type=number]{width:100px}
 input[type=number]:focus{outline:none;border-color:#3ca03c}
 input[type=number]:disabled{opacity:.4;cursor:not-allowed}
+input[type=range]{width:100px;padding:0;border:none;background:transparent;-webkit-appearance:auto}
 
 .controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
 button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
 button:disabled{opacity:.35;cursor:not-allowed}
 button.active{background:rgba(60,160,60,0.15);border-color:#3ca03c}
+button.sm{padding:4px 10px;font-size:10px}
 button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
 button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .progress-wrap{flex:1;min-width:200px;display:flex;align-items:center;gap:8px}
@@ -49,19 +52,32 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .dashboard{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
 .dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .dash-row.wide{grid-template-columns:2fr 1fr}
+.dash-row.triple{grid-template-columns:1fr 1fr 1fr}
 .dash-card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:14px;overflow:hidden}
 .card-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.card-hdr .card-label{margin-bottom:0}
 .chart-wrap{height:220px;position:relative}
-.lattice-wrap{position:relative;overflow-x:auto;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
-.lattice-wrap canvas{display:block;width:100%;image-rendering:pixelated}
+
+.lattice-section{margin-bottom:14px}
+.lattice-controls{display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.lattice-controls label{display:flex;align-items:center;gap:4px}
+.lattice-wrap{position:relative;overflow:auto;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;max-height:400px}
+.lattice-wrap canvas{display:block;image-rendering:pixelated}
+.lattice-tooltip{position:absolute;background:#162016;border:0.5px solid rgba(60,160,60,0.4);border-radius:4px;padding:4px 8px;font-size:10px;color:#e8f0e8;font-family:'Space Mono',monospace;pointer-events:none;display:none;z-index:10;white-space:nowrap}
 .legend{display:flex;align-items:center;gap:12px;margin-top:8px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
 .legend-swatch{width:12px;height:12px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:4px}
+.heightmap-wrap{margin-top:8px;overflow:auto;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
+.heightmap-wrap canvas{display:block;width:100%;image-rendering:pixelated}
 
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-grid.four{grid-template-columns:1fr 1fr 1fr 1fr}
 .stat-item{padding:8px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
 .stat-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
 .stat-value{font-size:18px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
 .stat-value.sm{font-size:13px}
+
+.beta-display{font-size:13px;font-weight:700;color:#f0b429;font-family:'Space Mono',monospace;padding:4px 10px;background:rgba(240,180,41,0.08);border:0.5px solid rgba(240,180,41,0.3);border-radius:4px}
 
 .events-table{width:100%;border-collapse:collapse}
 .events-table th{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:4px 8px;border-bottom:0.5px solid rgba(60,160,60,0.15)}
@@ -69,16 +85,16 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .events-table td.num{text-align:right;color:#7dd87d;font-weight:700}
 
 .snap-strip{display:flex;gap:10px;overflow-x:auto;padding:4px 0}
-.snap-item{flex:0 0 auto;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;padding:6px;text-align:center;min-width:120px}
+.snap-item{flex:0 0 auto;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;padding:6px;text-align:center;min-width:140px}
 .snap-item .snap-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-bottom:4px}
-.snap-item canvas{display:block;width:120px;height:60px;image-rendering:pixelated;border-radius:2px}
+.snap-item canvas{display:block;width:140px;height:70px;image-rendering:pixelated;border-radius:2px}
 .snap-item .snap-stats{font-size:9px;color:#7a9a7a;font-family:'Space Mono',monospace;margin-top:4px}
 
 .preset-btn{font-size:10px;padding:4px 10px;margin-right:6px;margin-bottom:4px}
 .preset-btn.active{background:rgba(60,160,60,0.2)}
 
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row{grid-template-columns:1fr}.dash-row.wide{grid-template-columns:1fr}}
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.stat-grid.four{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -148,45 +164,68 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 
 <!-- DASHBOARD -->
 <div class="dashboard">
-  <!-- Row 1: Lattice + Stats -->
-  <div class="dash-row wide">
+  <!-- Lattice visualization (full width) -->
+  <div class="lattice-section">
     <div class="dash-card">
-      <div class="card-label">Lattice Cross-Section (surface region)</div>
+      <div class="card-hdr">
+        <span class="card-label">Lattice Cross-Section</span>
+        <button class="sm" id="viewCross" onclick="setView('cross')" style="background:rgba(60,160,60,0.15)">Cross-section</button>
+        <button class="sm" id="viewHmap" onclick="setView('hmap')">Height map</button>
+        <label style="margin-left:auto">Zoom <input type="range" id="zoomSlider" min="1" max="8" value="2" step="1" oninput="applyZoom()"><span id="zoomVal">2x</span></label>
+      </div>
       <div class="lattice-wrap" id="latticeWrap">
         <canvas id="latticeCanvas" width="1000" height="150"></canvas>
+        <div class="lattice-tooltip" id="latticeTip"></div>
+      </div>
+      <div class="heightmap-wrap" id="hmapWrap" style="display:none">
+        <canvas id="hmapCanvas" width="1000" height="40"></canvas>
       </div>
       <div class="legend">
         <span><span class="legend-swatch" style="background:#26A69A"></span>Si</span>
         <span><span class="legend-swatch" style="background:#FF7043"></span>Ge</span>
         <span><span class="legend-swatch" style="background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2)"></span>Vacancy</span>
+        <span style="margin-left:auto;color:#4a6a4a">hover for details</span>
       </div>
     </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="dash-row wide">
     <div class="dash-card">
-      <div class="card-label">Live Statistics</div>
-      <div class="stat-grid">
+      <div class="card-label">Surface Statistics</div>
+      <div class="stat-grid four">
         <div class="stat-item"><div class="stat-label">Iteration</div><div class="stat-value" id="stIter">—</div></div>
         <div class="stat-item"><div class="stat-label">Avg Height</div><div class="stat-value" id="stAveht">—</div></div>
         <div class="stat-item"><div class="stat-label">RMS Roughness</div><div class="stat-value" id="stRms">—</div></div>
+        <div class="stat-item"><div class="stat-label">Std Dev</div><div class="stat-value" id="stStd">—</div></div>
+        <div class="stat-item"><div class="stat-label">Skewness</div><div class="stat-value" id="stSkew">—</div></div>
+        <div class="stat-item"><div class="stat-label">Kurtosis (excess)</div><div class="stat-value" id="stKurt">—</div></div>
         <div class="stat-item"><div class="stat-label">Height Range</div><div class="stat-value sm" id="stRange">—</div></div>
+        <div class="stat-item"><div class="stat-label">Surface Width</div><div class="stat-value sm" id="stWidth">—</div></div>
       </div>
-      <div style="margin-top:12px">
-        <div class="card-label">Events (cumulative)</div>
-        <table class="events-table">
-          <tr><th>Type</th><th style="text-align:right">Count</th></tr>
-          <tr><td>Desorptions</td><td class="num" id="evDes">0</td></tr>
-          <tr><td>  — Ge</td><td class="num" id="evGeD">0</td></tr>
-          <tr><td>  — Si</td><td class="num" id="evSiD">0</td></tr>
-          <tr><td>Surface diffusion</td><td class="num" id="evSdf">0</td></tr>
-          <tr><td>Bulk diffusion</td><td class="num" id="evBdf">0</td></tr>
-        </table>
-      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Events (cumulative)</div>
+      <table class="events-table">
+        <tr><th>Type</th><th style="text-align:right">Count</th></tr>
+        <tr><td>Desorptions</td><td class="num" id="evDes">0</td></tr>
+        <tr><td>  — Ge</td><td class="num" id="evGeD">0</td></tr>
+        <tr><td>  — Si</td><td class="num" id="evSiD">0</td></tr>
+        <tr><td>Surface diffusion</td><td class="num" id="evSdf">0</td></tr>
+        <tr><td>Bulk diffusion</td><td class="num" id="evBdf">0</td></tr>
+      </table>
     </div>
   </div>
 
   <!-- Row 2: Roughness + Height -->
   <div class="dash-row">
     <div class="dash-card">
-      <div class="card-label">RMS Roughness vs Iteration (log-log)</div>
+      <div class="card-hdr">
+        <span class="card-label">RMS Roughness (log-log)</span>
+        <button class="sm active" id="logLinBtn" onclick="setLogMode('linear')">log₁₀ linear</button>
+        <button class="sm" id="logScaleBtn" onclick="setLogMode('logscale')">log-scale axes</button>
+        <span class="beta-display" id="betaDisp">β = —</span>
+      </div>
       <div class="chart-wrap"><canvas id="roughnessChart"></canvas></div>
     </div>
     <div class="dash-card">
@@ -195,7 +234,19 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
     </div>
   </div>
 
-  <!-- Row 3: Surface + Concentration -->
+  <!-- Row 3: Statistics evolution + Height distribution -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Statistics vs Iteration</div>
+      <div class="chart-wrap"><canvas id="statsChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Height Distribution (current)</div>
+      <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Surface + Concentration -->
   <div class="dash-row">
     <div class="dash-card">
       <div class="card-label">Surface Profile — ht(x)</div>
@@ -217,7 +268,7 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   </div>
   <div class="panel-body">
     <div class="snap-strip" id="snapStrip">
-      <div style="font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;padding:20px">Snapshots will appear at iterations 1, 10, 20, 50, 100, 200, 500</div>
+      <div style="font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>
     </div>
   </div>
 </div>
@@ -227,8 +278,8 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   WEB WORKER CODE (inline, created as Blob URL)
-   Full 2D KMC algorithm — faithful translation of 2d.f
+   WEB WORKER CODE — Full 2D KMC algorithm (translation of 2d.f)
+   Now also computes stdev, skewness, kurtosis, height histogram
    ═══════════════════════════════════════════════════════════════ */
 const workerSource = `
 const ZTOP = 20, ZBUFF = 20;
@@ -246,7 +297,6 @@ let ndes, nsdf, bdiff, ngedes, nsides;
 let rng, paused = false, cancelled = false;
 let currentIter = 0;
 
-// Mulberry32 seeded PRNG
 function createRng(seed) {
   let a = seed >>> 0;
   return function() {
@@ -257,7 +307,6 @@ function createRng(seed) {
   };
 }
 
-// Pre-allocated bond counting arrays
 const tmpA = new Int32Array(5);
 const tmpB = new Int32Array(5);
 
@@ -281,37 +330,20 @@ function countBonds(x, z, out) {
 }
 
 function metropolisSwap(x1, z1, x2, z2) {
-  // Count initial bonds for both sites
   countBonds(x1, z1, tmpA);
   const i0=tmpA[0], i1=tmpA[1], i2=tmpA[2], i3=tmpA[3], i4=tmpA[4];
   countBonds(x2, z2, tmpB);
   const isisi=i0+tmpB[0], igege=i1+tmpB[1], isige_=i2+tmpB[2], isivc=i3+tmpB[3], igevc=i4+tmpB[4];
-
-  // Temporary swap
   const o1 = x1 * lattz + z1, o2 = x2 * lattz + z2;
   const v1 = oc[o1], v2 = oc[o2];
   oc[o1] = v2; oc[o2] = v1;
-
-  // Count final bonds
   countBonds(x1, z1, tmpA);
   countBonds(x2, z2, tmpB);
   const fsisi=tmpA[0]+tmpB[0], fgege=tmpA[1]+tmpB[1], fsige_=tmpA[2]+tmpB[2], fsivc=tmpA[3]+tmpB[3], fgevc=tmpA[4]+tmpB[4];
-
-  // Swap back
   oc[o1] = v1; oc[o2] = v2;
-
-  // Compute deltaE
   const dE = esisi*(fsisi-isisi) + egege*(fgege-igege) + esige*(fsige_-isige_) + esivc*(fsivc-isivc) + egevc*(fgevc-igevc);
-
-  if (dE <= 0.0) {
-    oc[o1] = v2; oc[o2] = v1;
-    return true;
-  } else {
-    if (rng() <= Math.exp(-dE)) {
-      oc[o1] = v2; oc[o2] = v1;
-      return true;
-    }
-  }
+  if (dE <= 0.0) { oc[o1] = v2; oc[o2] = v1; return true; }
+  if (rng() <= Math.exp(-dE)) { oc[o1] = v2; oc[o2] = v1; return true; }
   return false;
 }
 
@@ -321,56 +353,65 @@ function initialize(params) {
   totalInner = params.niter2 * lattx;
   theta = params.theta; pdes = params.pdes; pge = params.pge; psi = params.psi;
   envt = params.envt; zstop = params.zstop; zlo = params.zlo;
-
-  // Convert energies: kcal/mol -> dimensionless Boltzmann
   const conv = 23.0 * 4184.0 / (8.314 * params.temp);
   esisi = params.esisi * conv;
   esige = params.esige * conv;
   egege = params.egege * conv;
   esivc = params.esivc * conv;
   egevc = params.egevc * conv;
-
   rng = createRng(Math.abs(params.seed));
   oc = new Uint8Array(lattx * lattz);
   ht = new Int32Array(lattx);
   hadd = 0; ndes = 0; nsdf = 0; bdiff = 0; ngedes = 0; nsides = 0;
-
-  // Initialize lattice: vacuum above ZTOP, random Si/Ge below
   for (let x = 0; x < lattx; x++) {
     ht[x] = ZTOP;
     const ox = x * lattz;
     for (let z = 0; z < ZTOP; z++) oc[ox + z] = 0;
-    for (let z = ZTOP; z < lattz; z++) {
-      oc[ox + z] = rng() <= theta ? 2 : 1;
-    }
+    for (let z = ZTOP; z < lattz; z++) oc[ox + z] = rng() <= theta ? 2 : 1;
   }
-
-  currentIter = 0;
-  paused = false; cancelled = false;
+  currentIter = 0; paused = false; cancelled = false;
 }
 
 function computeOutput(iiter1) {
-  // Average height
   let aveht = 0;
   for (let x = 0; x < lattx; x++) aveht += ht[x];
   aveht /= lattx;
 
-  // RMS roughness
-  let rmsht = 0;
+  // RMS, stdev, skewness, kurtosis
+  let m2 = 0, m3 = 0, m4 = 0;
   for (let x = 0; x < lattx; x++) {
     const d = ht[x] - aveht;
-    rmsht += d * d;
+    const d2 = d * d;
+    m2 += d2;
+    m3 += d2 * d;
+    m4 += d2 * d2;
   }
-  rmsht = Math.sqrt(rmsht / lattx);
+  m2 /= lattx; m3 /= lattx; m4 /= lattx;
+  const rmsht = Math.sqrt(m2);
+  const stdev = rmsht; // same as RMS for mean-centered data
+  const skewness = m2 > 0 ? m3 / (m2 * Math.sqrt(m2)) : 0;
+  const kurtosis = m2 > 0 ? m4 / (m2 * m2) - 3 : 0;
 
-  // zmin (max ht = most etched), zmax (min ht = least etched)
   let zmin = 0, zmax = lattz;
   for (let x = 0; x < lattx; x++) {
     if (ht[x] > zmin) zmin = ht[x];
     if (ht[x] < zmax) zmax = ht[x];
   }
 
-  // Concentration profile (sample every 5th layer around surface)
+  // Height histogram (40 bins)
+  const hBins = 40;
+  const hMin = zmax, hMax = zmin;
+  const hRange = hMax - hMin || 1;
+  const hBw = hRange / hBins;
+  const htHistCounts = new Int32Array(hBins);
+  const htHistLabels = new Float64Array(hBins);
+  for (let b = 0; b < hBins; b++) htHistLabels[b] = hMin + (b + 0.5) * hBw + hadd;
+  for (let x = 0; x < lattx; x++) {
+    const b = Math.min(hBins - 1, Math.max(0, Math.floor((ht[x] - hMin) / hBw)));
+    htHistCounts[b]++;
+  }
+
+  // Concentration profile
   const concZ = [], concGe = [];
   const cStart = Math.max(0, zmax - 10);
   const cEnd = Math.min(lattz, zmin + 50);
@@ -378,41 +419,33 @@ function computeOutput(iiter1) {
     let nSi = 0, nGe = 0;
     for (let x = 0; x < lattx; x++) {
       const v = oc[x * lattz + z];
-      if (v === 1) nSi++;
-      else if (v === 2) nGe++;
+      if (v === 1) nSi++; else if (v === 2) nGe++;
     }
-    if (nSi + nGe > 0) {
-      concZ.push(z + hadd);
-      concGe.push(nGe / (nSi + nGe));
-    }
+    if (nSi + nGe > 0) { concZ.push(z + hadd); concGe.push(nGe / (nSi + nGe)); }
   }
 
-  // Surface height array (downsampled for chart)
+  // Surface height array (downsampled)
   const htStep = Math.max(1, Math.floor(lattx / 500));
   const htX = [], htY = [];
-  for (let x = 0; x < lattx; x += htStep) {
-    htX.push(x);
-    htY.push(ht[x] + hadd);
-  }
+  for (let x = 0; x < lattx; x += htStep) { htX.push(x); htY.push(ht[x] + hadd); }
 
-  // Lattice slice for rendering
-  const sliceStart = Math.max(0, zmax - 20);
-  const sliceEnd = Math.min(lattz, zmin + 30);
+  // Lattice slice — larger window for better visualization
+  const sliceStart = Math.max(0, zmax - 50);
+  const sliceEnd = Math.min(lattz, zmin + 100);
   const sliceH = sliceEnd - sliceStart;
   const sliceData = new Uint8Array(lattx * sliceH);
   for (let x = 0; x < lattx; x++) {
     const ox = x * lattz;
-    for (let z = 0; z < sliceH; z++) {
-      sliceData[x * sliceH + z] = oc[ox + sliceStart + z];
-    }
+    for (let z = 0; z < sliceH; z++) sliceData[x * sliceH + z] = oc[ox + sliceStart + z];
   }
 
   return {
     type: 'iteration', iter: iiter1,
-    aveht: aveht + hadd, rmsht: rmsht,
-    zmin: zmin + hadd, zmax: zmax + hadd,
+    aveht: aveht + hadd, rmsht, stdev, skewness, kurtosis,
+    zmin: zmin + hadd, zmax: zmax + hadd, surfWidth: zmin - zmax,
     events: { ndes, nsdf, bdiff, ngedes, nsides },
     concZ, concGe, htX, htY,
+    htHistCounts: Array.from(htHistCounts), htHistLabels: Array.from(htHistLabels),
     sliceData: sliceData.buffer, sliceStart, sliceH,
     htRaw: new Int32Array(ht).buffer
   };
@@ -424,26 +457,17 @@ function doShift() {
     if (ht[x] > zmin) zmin = ht[x];
     if (ht[x] < zmax) zmax = ht[x];
   }
-
   if (zmin > zlo) {
     const shift = zmax - ZTOP - 2;
     if (shift <= 0) return;
-
-    // Copy content upward
     for (let z = zmax - 1; z < lattz; z++) {
       const destZ = z - shift;
       if (destZ < 0 || destZ >= lattz) continue;
-      for (let x = 0; x < lattx; x++) {
-        oc[x * lattz + destZ] = oc[x * lattz + z];
-      }
+      for (let x = 0; x < lattx; x++) oc[x * lattz + destZ] = oc[x * lattz + z];
     }
-    // Fill bottom with fresh random material
     for (let z = lattz - shift; z < lattz; z++) {
-      for (let x = 0; x < lattx; x++) {
-        oc[x * lattz + z] = rng() < theta ? 2 : 1;
-      }
+      for (let x = 0; x < lattx; x++) oc[x * lattz + z] = rng() < theta ? 2 : 1;
     }
-    // Update heights
     for (let x = 0; x < lattx; x++) ht[x] -= shift;
     hadd += shift;
   }
@@ -451,7 +475,6 @@ function doShift() {
 
 function runInnerLoop() {
   for (let i = 0; i < totalInner; i++) {
-    // Pick random site (retry if vacuum) — matches FORTRAN go to 101
     let xpick, zpick;
     for (;;) {
       xpick = (rng() * lattx) | 0;
@@ -460,116 +483,74 @@ function runInnerLoop() {
       if (zpick >= lattz) zpick = lattz - 1;
       if (zpick >= ht[xpick]) break;
     }
-
     if (zpick === ht[xpick]) {
-      // SURFACE SITE
       const ox = xpick * lattz;
       const species = oc[ox + zpick];
-      if (species === 0) continue; // safety check
-
+      if (species === 0) continue;
       if (rng() <= pdes) {
-        // DESORPTION
-        if (species === 2) { // Ge
+        if (species === 2) {
           if (rng() <= pge) {
-            // Check envt: count non-Si neighbors
-            let dumcount = 0;
+            let dc = 0;
             for (let n = 0; n < 8; n++) {
               let xn = xpick + XDEL[n];
               if (xn < 0) xn += lattx; else if (xn >= lattx) xn -= lattx;
               const zn = zpick + ZDEL[n];
-              if (zn < 0 || zn >= lattz) { dumcount++; continue; }
-              if (oc[xn * lattz + zn] !== 1) dumcount++;
+              if (zn < 0 || zn >= lattz) { dc++; continue; }
+              if (oc[xn * lattz + zn] !== 1) dc++;
             }
-            if (dumcount >= envt) {
-              oc[ox + zpick] = 0;
-              ht[xpick]++;
-              ndes++; ngedes++;
-            }
+            if (dc >= envt) { oc[ox + zpick] = 0; ht[xpick]++; ndes++; ngedes++; }
           }
-        } else if (species === 1) { // Si
+        } else if (species === 1) {
           if (rng() <= psi) {
-            let dumcount = 0;
+            let dc = 0;
             for (let n = 0; n < 8; n++) {
               let xn = xpick + XDEL[n];
               if (xn < 0) xn += lattx; else if (xn >= lattx) xn -= lattx;
               const zn = zpick + ZDEL[n];
-              if (zn < 0 || zn >= lattz) { dumcount++; continue; }
-              if (oc[xn * lattz + zn] !== 1) dumcount++;
+              if (zn < 0 || zn >= lattz) { dc++; continue; }
+              if (oc[xn * lattz + zn] !== 1) dc++;
             }
-            if (dumcount >= envt) {
-              oc[ox + zpick] = 0;
-              ht[xpick]++;
-              ndes++; nsides++;
-            }
+            if (dc >= envt) { oc[ox + zpick] = 0; ht[xpick]++; ndes++; nsides++; }
           }
         }
       } else {
-        // SURFACE DIFFUSION
-        let ndum;
-        do { ndum = (rng() * 2) | 0; } while (ndum < 0 || ndum > 1);
-        let xpick2 = xpick + XDIFF[ndum];
-        if (xpick2 >= lattx) xpick2 -= lattx;
-        else if (xpick2 < 0) xpick2 += lattx;
-        const zpick2 = ht[xpick2] - 1;
-        if (zpick2 < 0) continue;
-
-        const o1 = ox + zpick;
-        const o2 = xpick2 * lattz + zpick2;
+        let nd; do { nd = (rng() * 2) | 0; } while (nd < 0 || nd > 1);
+        let xp2 = xpick + XDIFF[nd];
+        if (xp2 >= lattx) xp2 -= lattx; else if (xp2 < 0) xp2 += lattx;
+        const zp2 = ht[xp2] - 1;
+        if (zp2 < 0) continue;
+        const o1 = ox + zpick, o2 = xp2 * lattz + zp2;
         if (oc[o1] !== oc[o2]) {
-          // Check no overhang: site below zpick2 (= at ht[xpick2]) must be filled
-          if (oc[xpick2 * lattz + zpick2 + 1] !== 0) {
-            const oc1 = oc[o1], oc2 = oc[o2];
-            if (metropolisSwap(xpick, zpick, xpick2, zpick2)) {
+          if (oc[xp2 * lattz + zp2 + 1] !== 0) {
+            const oc2 = oc[o2];
+            if (metropolisSwap(xpick, zpick, xp2, zp2)) {
               nsdf++;
-              if (oc2 === 0) {
-                ht[xpick]++;
-                ht[xpick2]--;
-              }
+              if (oc2 === 0) { ht[xpick]++; ht[xp2]--; }
             }
           }
         }
       }
-
     } else if (zpick < lattz - ZBUFF) {
-      // BULK DIFFUSION
-      let ndum;
-      do { ndum = (rng() * 8) | 0; } while (ndum < 0 || ndum > 7);
-      let xpick2 = xpick + XDEL[ndum];
-      if (xpick2 >= lattx) xpick2 -= lattx;
-      else if (xpick2 < 0) xpick2 += lattx;
-      const zpick2 = zpick + ZDEL[ndum];
-      if (zpick2 < 0 || zpick2 >= lattz) continue;
-
-      const v1 = oc[xpick * lattz + zpick];
-      const v2 = oc[xpick2 * lattz + zpick2];
-      if (v1 !== 0 && v2 !== 0 && v1 !== v2) {
-        if (metropolisSwap(xpick, zpick, xpick2, zpick2)) {
-          bdiff++;
-        }
-      }
-
+      let nd; do { nd = (rng() * 8) | 0; } while (nd < 0 || nd > 7);
+      let xp2 = xpick + XDEL[nd];
+      if (xp2 >= lattx) xp2 -= lattx; else if (xp2 < 0) xp2 += lattx;
+      const zp2 = zpick + ZDEL[nd];
+      if (zp2 < 0 || zp2 >= lattz) continue;
+      const v1 = oc[xpick * lattz + zpick], v2 = oc[xp2 * lattz + zp2];
+      if (v1 !== 0 && v2 !== 0 && v1 !== v2) { if (metropolisSwap(xpick, zpick, xp2, zp2)) bdiff++; }
     } else {
-      // BUFFER ZONE: re-randomize
       oc[xpick * lattz + zpick] = rng() < theta ? 2 : 1;
     }
   }
 }
 
 function runNextIteration() {
-  if (currentIter >= niter1 || cancelled) {
-    self.postMessage({ type: 'done' });
-    return;
-  }
+  if (currentIter >= niter1 || cancelled) { self.postMessage({ type: 'done' }); return; }
   if (paused) return;
-
   currentIter++;
   runInnerLoop();
-
-  // Compute output
   const out = computeOutput(currentIter);
   const transfers = [out.sliceData, out.htRaw];
-
-  // Check zstop
   let zmin = 0;
   for (let x = 0; x < lattx; x++) if (ht[x] > zmin) zmin = ht[x];
   if (zmin > zstop) {
@@ -578,44 +559,32 @@ function runNextIteration() {
     self.postMessage({ type: 'done', reason: 'zstop reached' });
     return;
   }
-
-  // Snapshot check
-  if (SNAP_ITERS.includes(currentIter)) {
-    out.isSnapshot = true;
-  }
-
+  if (SNAP_ITERS.includes(currentIter)) out.isSnapshot = true;
   self.postMessage(out, transfers);
-
-  // Shift
   doShift();
-
-  // Schedule next
   setTimeout(runNextIteration, 0);
 }
 
 self.onmessage = function(e) {
   const d = e.data;
-  if (d.type === 'start') {
-    initialize(d.params);
-    runNextIteration();
-  } else if (d.type === 'pause') {
-    paused = true;
-  } else if (d.type === 'resume') {
-    paused = false;
-    runNextIteration();
-  } else if (d.type === 'cancel') {
-    cancelled = true;
-  }
+  if (d.type === 'start') { initialize(d.params); runNextIteration(); }
+  else if (d.type === 'pause') { paused = true; }
+  else if (d.type === 'resume') { paused = false; runNextIteration(); }
+  else if (d.type === 'cancel') { cancelled = true; }
 };
 `;
 
 /* ═══════════════════════════════════════════════════════════════
    MAIN THREAD
    ═══════════════════════════════════════════════════════════════ */
-let worker = null;
-let running = false, pausedState = false;
+let worker = null, running = false, pausedState = false;
 let roughnessChart = null, heightChart = null, surfaceChart = null, concChart = null;
+let statsChart = null, histChart = null;
 let roughnessData = [], heightData = [];
+let rmsHistory = [], skewHistory = [], kurtHistory = [];
+let logMode = 'linear'; // 'linear' = log10 values on linear axes, 'logscale' = Chart.js log axes
+let viewMode = 'cross'; // 'cross' or 'hmap'
+let lastSliceData = null, lastSliceH = 0, lastLattx = 1000, lastHtRaw = null;
 
 const chartDefaults = {
   responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
@@ -630,39 +599,124 @@ const chartDefaults = {
   }
 };
 
+function mkChart(id, label, xLabel, yLabel, color, scaleType) {
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = { display:true, text:xLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  opts.scales.y.title = { display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  if (scaleType === 'log') { opts.scales.x.type = 'logarithmic'; opts.scales.y.type = 'logarithmic'; }
+  return new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels:[], datasets:[{ label, data:[], borderColor:color, borderWidth:1.5, pointRadius:0, fill:false, tension:0.2 }] },
+    options: opts
+  });
+}
+
 function initCharts() {
-  const mk = (id, label, xLabel, yLabel, color, xType) => {
-    const opts = JSON.parse(JSON.stringify(chartDefaults));
-    opts.scales.x.title = { display: true, text: xLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
-    opts.scales.y.title = { display: true, text: yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
-    if (xType === 'log') { opts.scales.x.type = 'logarithmic'; opts.scales.y.type = 'logarithmic'; }
-    return new Chart(document.getElementById(id), {
-      type: 'line',
-      data: { labels: [], datasets: [{ label, data: [], borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
-      options: opts
-    });
-  };
-  roughnessChart = mk('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
-  heightChart = mk('heightChart', 'Avg Height', 'iteration', 'avg height', '#4a9aaa', '');
-  surfaceChart = mk('surfaceChart', 'ht(x)', 'x', 'height', '#7dd87d', '');
-  concChart = mk('concChart', 'Ge fraction', 'depth (z)', 'Ge/(Si+Ge)', '#FF7043', '');
+  if (logMode === 'linear') {
+    roughnessChart = mkChart('roughnessChart', 'log₁₀(RMS)', 'log₁₀(iteration)', 'log₁₀(RMS roughness)', '#7dd87d', '');
+  } else {
+    roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
+  }
+  // Add regression line dataset
+  roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
+  roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
+
+  heightChart = mkChart('heightChart', 'Avg Height', 'iteration', 'avg height', '#4a9aaa', '');
+  surfaceChart = mkChart('surfaceChart', 'ht(x)', 'x', 'height', '#7dd87d', '');
+  concChart = mkChart('concChart', 'Ge fraction', 'depth (z)', 'Ge/(Si+Ge)', '#FF7043', '');
+
+  // Stats evolution chart (RMS, skewness, kurtosis)
+  const sOpts = JSON.parse(JSON.stringify(chartDefaults));
+  sOpts.scales.x.title = { display:true, text:'iteration', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  sOpts.scales.y.title = { display:true, text:'value', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  sOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
+  statsChart = new Chart(document.getElementById('statsChart'), {
+    type:'line',
+    data:{ labels:[], datasets:[
+      { label:'RMS', data:[], borderColor:'#7dd87d', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y' },
+      { label:'Skewness', data:[], borderColor:'#f0b429', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y2' },
+      { label:'Kurtosis', data:[], borderColor:'#e24b4a', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y2' }
+    ]},
+    options: { ...sOpts, scales: { ...sOpts.scales,
+      y: { ...sOpts.scales.y, position:'left', title:{display:true,text:'RMS',color:'#7dd87d',font:{family:'Space Mono',size:9}} },
+      y2: { position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'skew / kurt',color:'#f0b429',font:{family:'Space Mono',size:9}} }
+    }}
+  });
+
+  // Height distribution histogram
+  const hOpts = JSON.parse(JSON.stringify(chartDefaults));
+  hOpts.scales.x.title = { display:true, text:'height', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  hOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  histChart = new Chart(document.getElementById('histChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(60,160,60,0.5)', borderWidth:0, borderRadius:2 }] },
+    options: hOpts
+  });
 }
 
 function destroyCharts() {
-  [roughnessChart, heightChart, surfaceChart, concChart].forEach(c => { if(c) c.destroy(); });
-  roughnessChart = heightChart = surfaceChart = concChart = null;
+  [roughnessChart, heightChart, surfaceChart, concChart, statsChart, histChart].forEach(c => { if(c) c.destroy(); });
+  roughnessChart = heightChart = surfaceChart = concChart = statsChart = histChart = null;
+}
+
+// Power-law regression on log-log data
+function fitPowerLaw(data) {
+  const valid = data.filter(d => d.x > 0 && d.y > 0);
+  if (valid.length < 3) return null;
+  const logD = valid.map(d => ({ x: Math.log10(d.x), y: Math.log10(d.y) }));
+  const n = logD.length;
+  let sx=0, sy=0, sxy=0, sxx=0;
+  for (let i = 0; i < n; i++) { sx += logD[i].x; sy += logD[i].y; sxy += logD[i].x*logD[i].y; sxx += logD[i].x*logD[i].x; }
+  const denom = n*sxx - sx*sx;
+  if (Math.abs(denom) < 1e-15) return null;
+  const beta = (n*sxy - sx*sy) / denom;
+  const intercept = (sy - beta*sx) / n;
+  return { beta, intercept };
 }
 
 function updateCharts(d) {
-  // Roughness log-log
+  // Roughness
   roughnessData.push({ x: d.iter, y: d.rmsht });
-  roughnessChart.data.datasets[0].data = roughnessData;
+  const fit = fitPowerLaw(roughnessData);
+  if (logMode === 'linear') {
+    const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x: Math.log10(p.x), y: Math.log10(p.y) }));
+    roughnessChart.data.datasets[0].data = logData;
+    if (fit) {
+      const xMin = logData[0].x, xMax = logData[logData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:xMin,y:fit.intercept+fit.beta*xMin},{x:xMax,y:fit.intercept+fit.beta*xMax}];
+    }
+  } else {
+    roughnessChart.data.datasets[0].data = roughnessData;
+    if (fit) {
+      const xMin = roughnessData[0].x, xMax = roughnessData[roughnessData.length-1].x;
+      const yMin = Math.pow(10, fit.intercept + fit.beta*Math.log10(xMin));
+      const yMax = Math.pow(10, fit.intercept + fit.beta*Math.log10(xMax));
+      roughnessChart.data.datasets[1].data = [{x:xMin,y:yMin},{x:xMax,y:yMax}];
+    }
+  }
   roughnessChart.update();
+  document.getElementById('betaDisp').textContent = fit ? `β = ${fit.beta.toFixed(4)}` : 'β = —';
 
   // Height
   heightData.push({ x: d.iter, y: d.aveht });
   heightChart.data.datasets[0].data = heightData;
   heightChart.update();
+
+  // Stats evolution
+  rmsHistory.push(d.rmsht);
+  skewHistory.push(d.skewness);
+  kurtHistory.push(d.kurtosis);
+  const sLabels = rmsHistory.map((_, i) => i + 1);
+  statsChart.data.labels = sLabels;
+  statsChart.data.datasets[0].data = rmsHistory;
+  statsChart.data.datasets[1].data = skewHistory;
+  statsChart.data.datasets[2].data = kurtHistory;
+  statsChart.update();
+
+  // Height histogram
+  histChart.data.labels = d.htHistLabels.map(v => v.toFixed(0));
+  histChart.data.datasets[0].data = d.htHistCounts;
+  histChart.update();
 
   // Surface profile
   surfaceChart.data.labels = d.htX;
@@ -675,97 +729,166 @@ function updateCharts(d) {
   concChart.update();
 }
 
+function setLogMode(mode) {
+  logMode = mode;
+  document.getElementById('logLinBtn').classList.toggle('active', mode === 'linear');
+  document.getElementById('logScaleBtn').classList.toggle('active', mode === 'logscale');
+  // Rebuild roughness chart
+  if (roughnessChart) roughnessChart.destroy();
+  if (logMode === 'linear') {
+    roughnessChart = mkChart('roughnessChart', 'log₁₀(RMS)', 'log₁₀(iteration)', 'log₁₀(RMS roughness)', '#7dd87d', '');
+  } else {
+    roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
+  }
+  roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
+  roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
+  // Replay data
+  const fit = fitPowerLaw(roughnessData);
+  if (logMode === 'linear') {
+    const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x:Math.log10(p.x), y:Math.log10(p.y) }));
+    roughnessChart.data.datasets[0].data = logData;
+    if (fit && logData.length > 0) {
+      const xMin = logData[0].x, xMax = logData[logData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:xMin,y:fit.intercept+fit.beta*xMin},{x:xMax,y:fit.intercept+fit.beta*xMax}];
+    }
+  } else {
+    roughnessChart.data.datasets[0].data = roughnessData;
+    if (fit && roughnessData.length > 0) {
+      const xMin = roughnessData[0].x, xMax = roughnessData[roughnessData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:xMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMin))},{x:xMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMax))}];
+    }
+  }
+  roughnessChart.update();
+  document.getElementById('betaDisp').textContent = fit ? `β = ${fit.beta.toFixed(4)}` : 'β = —';
+}
+
+// Lattice rendering
 function renderLattice(sliceBuffer, sliceH, lattx) {
+  lastSliceData = new Uint8Array(sliceBuffer.slice(0));
+  lastSliceH = sliceH;
+  lastLattx = lattx;
+  const zoom = +document.getElementById('zoomSlider').value;
   const cvs = document.getElementById('latticeCanvas');
   cvs.width = lattx;
   cvs.height = sliceH;
+  cvs.style.width = (lattx * zoom) + 'px';
+  cvs.style.height = (sliceH * zoom) + 'px';
   const ctx = cvs.getContext('2d');
   const img = ctx.createImageData(lattx, sliceH);
   const slice = new Uint8Array(sliceBuffer);
   for (let x = 0; x < lattx; x++) {
     for (let z = 0; z < sliceH; z++) {
-      const species = slice[x * sliceH + z];
+      const sp = slice[x * sliceH + z];
       const idx = (z * lattx + x) * 4;
-      if (species === 1) { img.data[idx]=38; img.data[idx+1]=166; img.data[idx+2]=154; img.data[idx+3]=255; }
-      else if (species === 2) { img.data[idx]=255; img.data[idx+1]=112; img.data[idx+2]=67; img.data[idx+3]=255; }
+      if (sp === 1) { img.data[idx]=38; img.data[idx+1]=166; img.data[idx+2]=154; img.data[idx+3]=255; }
+      else if (sp === 2) { img.data[idx]=255; img.data[idx+1]=112; img.data[idx+2]=67; img.data[idx+3]=255; }
       else { img.data[idx]=10; img.data[idx+1]=15; img.data[idx+2]=10; img.data[idx+3]=255; }
     }
   }
   ctx.putImageData(img, 0, 0);
 }
 
-function addSnapshot(d, sliceBuffer, sliceH, lattx) {
+function renderHeightMap(htBuffer, lattx) {
+  const ht = new Int32Array(htBuffer);
+  lastHtRaw = new Int32Array(ht);
+  let hMin = Infinity, hMax = -Infinity;
+  for (let x = 0; x < lattx; x++) { if (ht[x] < hMin) hMin = ht[x]; if (ht[x] > hMax) hMax = ht[x]; }
+  const range = hMax - hMin || 1;
+  const cvs = document.getElementById('hmapCanvas');
+  cvs.width = lattx; cvs.height = 40;
+  const ctx = cvs.getContext('2d');
+  const img = ctx.createImageData(lattx, 40);
+  for (let x = 0; x < lattx; x++) {
+    const t = (ht[x] - hMin) / range; // 0=least etched, 1=most etched
+    const r = Math.round(30 + t * 225);
+    const g = Math.round(80 + (1 - Math.abs(t - 0.5) * 2) * 120);
+    const b = Math.round(200 * (1 - t));
+    for (let y = 0; y < 40; y++) {
+      const idx = (y * lattx + x) * 4;
+      img.data[idx] = r; img.data[idx+1] = g; img.data[idx+2] = b; img.data[idx+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+function applyZoom() {
+  const zoom = +document.getElementById('zoomSlider').value;
+  document.getElementById('zoomVal').textContent = zoom + 'x';
+  const cvs = document.getElementById('latticeCanvas');
+  cvs.style.width = (lastLattx * zoom) + 'px';
+  cvs.style.height = (lastSliceH * zoom) + 'px';
+}
+
+function setView(mode) {
+  viewMode = mode;
+  document.getElementById('viewCross').style.background = mode === 'cross' ? 'rgba(60,160,60,0.15)' : '';
+  document.getElementById('viewHmap').style.background = mode === 'hmap' ? 'rgba(60,160,60,0.15)' : '';
+  document.getElementById('latticeWrap').style.display = mode === 'cross' ? '' : 'none';
+  document.getElementById('hmapWrap').style.display = mode === 'hmap' ? '' : 'none';
+}
+
+// Hover tooltip for lattice
+document.getElementById('latticeCanvas').addEventListener('mousemove', function(e) {
+  if (!lastSliceData || lastSliceH === 0) return;
+  const rect = this.getBoundingClientRect();
+  const zoom = +document.getElementById('zoomSlider').value;
+  const x = Math.floor((e.clientX - rect.left) / zoom);
+  const z = Math.floor((e.clientY - rect.top) / zoom);
+  if (x < 0 || x >= lastLattx || z < 0 || z >= lastSliceH) { document.getElementById('latticeTip').style.display = 'none'; return; }
+  const sp = lastSliceData[x * lastSliceH + z];
+  const names = ['Vacancy', 'Si', 'Ge'];
+  const tip = document.getElementById('latticeTip');
+  tip.textContent = `x=${x} z=${z} · ${names[sp] || '?'}`;
+  tip.style.display = 'block';
+  tip.style.left = (e.clientX - document.getElementById('latticeWrap').getBoundingClientRect().left + 12) + 'px';
+  tip.style.top = (e.clientY - document.getElementById('latticeWrap').getBoundingClientRect().top - 10) + 'px';
+});
+document.getElementById('latticeCanvas').addEventListener('mouseleave', function() {
+  document.getElementById('latticeTip').style.display = 'none';
+});
+
+// Snapshot helper
+function addSnapshotFromCanvas(srcCanvas, d) {
   const strip = document.getElementById('snapStrip');
-  if (d.iter === 1) strip.innerHTML = '';
+  if (!strip.querySelector('.snap-item') && strip.children.length === 1) strip.innerHTML = '';
   const div = document.createElement('div');
   div.className = 'snap-item';
-  div.innerHTML = `<div class="snap-label">iter ${d.iter}</div><canvas width="${lattx}" height="${sliceH}"></canvas><div class="snap-stats">ht=${d.aveht.toFixed(1)} rms=${d.rmsht.toFixed(3)}</div>`;
+  const snapCvs = document.createElement('canvas');
+  snapCvs.width = srcCanvas.width; snapCvs.height = srcCanvas.height;
+  snapCvs.getContext('2d').drawImage(srcCanvas, 0, 0);
+  div.innerHTML = `<div class="snap-label">iter ${d.iter}</div>`;
+  div.appendChild(snapCvs);
+  div.innerHTML += `<div class="snap-stats">rms=${d.rmsht.toFixed(3)} skew=${d.skewness.toFixed(2)}</div>`;
   strip.appendChild(div);
-  const cvs = div.querySelector('canvas');
-  const ctx = cvs.getContext('2d');
-  const img = ctx.createImageData(lattx, sliceH);
-  const slice = new Uint8Array(sliceBuffer);
-  for (let x = 0; x < lattx; x++) {
-    for (let z = 0; z < sliceH; z++) {
-      const species = slice[x * sliceH + z];
-      const idx = (z * lattx + x) * 4;
-      if (species === 1) { img.data[idx]=38; img.data[idx+1]=166; img.data[idx+2]=154; img.data[idx+3]=255; }
-      else if (species === 2) { img.data[idx]=255; img.data[idx+1]=112; img.data[idx+2]=67; img.data[idx+3]=255; }
-      else { img.data[idx]=10; img.data[idx+1]=15; img.data[idx+2]=10; img.data[idx+3]=255; }
-    }
-  }
-  ctx.putImageData(img, 0, 0);
 }
 
+// Parameters
 function readParams() {
   return {
-    theta: +document.getElementById('pTheta').value,
-    pdes: +document.getElementById('pPdes').value,
-    pge: +document.getElementById('pPge').value,
-    psi: +document.getElementById('pPsi').value,
-    envt: +document.getElementById('pEnvt').value,
-    esisi: +document.getElementById('pEsisi').value,
-    esige: +document.getElementById('pEsige').value,
-    egege: +document.getElementById('pEgege').value,
-    esivc: +document.getElementById('pEsivc').value,
-    egevc: +document.getElementById('pEgevc').value,
-    temp: +document.getElementById('pTemp').value,
-    niter1: +document.getElementById('pNiter1').value,
-    niter2: +document.getElementById('pNiter2').value,
-    lattx: +document.getElementById('pLattx').value,
-    lattz: +document.getElementById('pLattz').value,
-    zstop: +document.getElementById('pZstop').value,
-    zlo: +document.getElementById('pZlo').value,
-    seed: +document.getElementById('pSeed').value
+    theta:+document.getElementById('pTheta').value, pdes:+document.getElementById('pPdes').value,
+    pge:+document.getElementById('pPge').value, psi:+document.getElementById('pPsi').value,
+    envt:+document.getElementById('pEnvt').value,
+    esisi:+document.getElementById('pEsisi').value, esige:+document.getElementById('pEsige').value,
+    egege:+document.getElementById('pEgege').value, esivc:+document.getElementById('pEsivc').value,
+    egevc:+document.getElementById('pEgevc').value,
+    temp:+document.getElementById('pTemp').value, niter1:+document.getElementById('pNiter1').value,
+    niter2:+document.getElementById('pNiter2').value, lattx:+document.getElementById('pLattx').value,
+    lattz:+document.getElementById('pLattz').value, zstop:+document.getElementById('pZstop').value,
+    zlo:+document.getElementById('pZlo').value, seed:+document.getElementById('pSeed').value
   };
 }
 
 function setParams(p) {
-  document.getElementById('pTheta').value = p.theta;
-  document.getElementById('pPdes').value = p.pdes;
-  document.getElementById('pPge').value = p.pge;
-  document.getElementById('pPsi').value = p.psi;
-  document.getElementById('pEnvt').value = p.envt;
-  document.getElementById('pEsisi').value = p.esisi;
-  document.getElementById('pEsige').value = p.esige;
-  document.getElementById('pEgege').value = p.egege;
-  document.getElementById('pEsivc').value = p.esivc;
-  document.getElementById('pEgevc').value = p.egevc;
-  document.getElementById('pTemp').value = p.temp;
-  document.getElementById('pNiter1').value = p.niter1;
-  document.getElementById('pNiter2').value = p.niter2;
-  document.getElementById('pLattx').value = p.lattx;
-  document.getElementById('pLattz').value = p.lattz;
-  document.getElementById('pZstop').value = p.zstop;
-  document.getElementById('pZlo').value = p.zlo;
-  document.getElementById('pSeed').value = p.seed;
+  const ids = ['pTheta','pPdes','pPge','pPsi','pEnvt','pEsisi','pEsige','pEgege','pEsivc','pEgevc','pTemp','pNiter1','pNiter2','pLattx','pLattz','pZstop','pZlo','pSeed'];
+  const vals = [p.theta,p.pdes,p.pge,p.psi,p.envt,p.esisi,p.esige,p.egege,p.esivc,p.egevc,p.temp,p.niter1,p.niter2,p.lattx,p.lattz,p.zstop,p.zlo,p.seed];
+  ids.forEach((id, i) => document.getElementById(id).value = vals[i]);
 }
 
 const PRESETS = {
-  default: { theta:0.2, pdes:0.1, pge:1.0, psi:0.0, envt:0, esisi:-1.6835, esige:-1.534, egege:-1.365, esivc:0.37375, egevc:0.0, temp:500, niter1:100, niter2:20000, lattx:1000, lattz:5000, zstop:4800, zlo:4500, seed:-381791011 },
-  highGe: { theta:0.5, pdes:0.1, pge:1.0, psi:0.0, envt:0, esisi:-1.6835, esige:-1.534, egege:-1.365, esivc:0.37375, egevc:0.0, temp:500, niter1:100, niter2:20000, lattx:1000, lattz:5000, zstop:4800, zlo:4500, seed:-381791011 },
-  highTemp: { theta:0.2, pdes:0.1, pge:1.0, psi:0.0, envt:0, esisi:-1.6835, esige:-1.534, egege:-1.365, esivc:0.37375, egevc:0.0, temp:800, niter1:100, niter2:20000, lattx:1000, lattz:5000, zstop:4800, zlo:4500, seed:-381791011 },
-  noDesorp: { theta:0.2, pdes:0.0, pge:1.0, psi:0.0, envt:0, esisi:-1.6835, esige:-1.534, egege:-1.365, esivc:0.37375, egevc:0.0, temp:500, niter1:100, niter2:20000, lattx:1000, lattz:5000, zstop:4800, zlo:4500, seed:-381791011 }
+  default: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:100,niter2:20000,lattx:1000,lattz:5000,zstop:4800,zlo:4500,seed:-381791011},
+  highGe: {theta:0.5,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:100,niter2:20000,lattx:1000,lattz:5000,zstop:4800,zlo:4500,seed:-381791011},
+  highTemp: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:800,niter1:100,niter2:20000,lattx:1000,lattz:5000,zstop:4800,zlo:4500,seed:-381791011},
+  noDesorp: {theta:0.2,pdes:0.0,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:100,niter2:20000,lattx:1000,lattz:5000,zstop:4800,zlo:4500,seed:-381791011}
 };
 
 function loadPreset(name) {
@@ -783,12 +906,10 @@ function startSim() {
   if (running) return;
   const params = readParams();
   if (params.lattx < 10 || params.lattz < 100) { alert('Lattice too small'); return; }
-
   running = true; pausedState = false;
-  roughnessData = []; heightData = [];
+  roughnessData = []; heightData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
   destroyCharts(); initCharts();
   document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:#4a6a4a;font-family:\'Space Mono\',monospace;padding:20px">Running...</div>';
-
   setInputsEnabled(false);
   document.getElementById('runBtn').disabled = true;
   document.getElementById('pauseBtn').disabled = false;
@@ -796,7 +917,6 @@ function startSim() {
   document.getElementById('progText').textContent = 'Initializing...';
   document.getElementById('progFill').style.width = '0%';
 
-  // Create worker
   const blob = new Blob([workerSource], { type: 'application/javascript' });
   const url = URL.createObjectURL(blob);
   worker = new Worker(url);
@@ -805,39 +925,33 @@ function startSim() {
   worker.onmessage = function(e) {
     const d = e.data;
     if (d.type === 'iteration') {
-      const niter1 = params.niter1;
-      const pct = (d.iter / niter1 * 100).toFixed(0);
+      const pct = (d.iter / params.niter1 * 100).toFixed(0);
       document.getElementById('progFill').style.width = pct + '%';
-      document.getElementById('progText').textContent = `iter ${d.iter} / ${niter1}`;
-
-      // Stats
+      document.getElementById('progText').textContent = `iter ${d.iter} / ${params.niter1}`;
       document.getElementById('stIter').textContent = d.iter;
       document.getElementById('stAveht').textContent = d.aveht.toFixed(2);
       document.getElementById('stRms').textContent = d.rmsht.toFixed(4);
+      document.getElementById('stStd').textContent = d.stdev.toFixed(4);
+      document.getElementById('stSkew').textContent = d.skewness.toFixed(4);
+      document.getElementById('stKurt').textContent = d.kurtosis.toFixed(4);
       document.getElementById('stRange').textContent = d.zmax + ' – ' + d.zmin;
+      document.getElementById('stWidth').textContent = d.surfWidth;
       document.getElementById('evDes').textContent = d.events.ndes.toLocaleString();
       document.getElementById('evGeD').textContent = d.events.ngedes.toLocaleString();
       document.getElementById('evSiD').textContent = d.events.nsides.toLocaleString();
       document.getElementById('evSdf').textContent = d.events.nsdf.toLocaleString();
       document.getElementById('evBdf').textContent = d.events.bdiff.toLocaleString();
 
-      // Charts
       updateCharts(d);
-
-      // Lattice
       renderLattice(d.sliceData, d.sliceH, params.lattx);
+      if (d.htRaw) renderHeightMap(d.htRaw, params.lattx);
 
-      // Snapshot
       if (d.isSnapshot) {
-        // Re-render slice for snapshot (need to re-create data since buffer was transferred)
-        const htRaw = new Int32Array(d.htRaw);
-        // Create a small snapshot from the main lattice canvas
-        const mainCvs = document.getElementById('latticeCanvas');
-        addSnapshotFromCanvas(mainCvs, d);
+        addSnapshotFromCanvas(document.getElementById('latticeCanvas'), d);
       }
     } else if (d.type === 'done') {
       running = false; pausedState = false;
-      document.getElementById('progText').textContent = d.reason ? d.reason : 'Complete';
+      document.getElementById('progText').textContent = d.reason || 'Complete';
       document.getElementById('runBtn').disabled = false;
       document.getElementById('pauseBtn').disabled = true;
       document.getElementById('resumeBtn').style.display = 'none';
@@ -845,23 +959,7 @@ function startSim() {
       worker.terminate(); worker = null;
     }
   };
-
   worker.postMessage({ type: 'start', params });
-}
-
-function addSnapshotFromCanvas(srcCanvas, d) {
-  const strip = document.getElementById('snapStrip');
-  if (strip.querySelector('.snap-item') === null && strip.children.length === 1) strip.innerHTML = '';
-  const div = document.createElement('div');
-  div.className = 'snap-item';
-  const snapCvs = document.createElement('canvas');
-  snapCvs.width = srcCanvas.width;
-  snapCvs.height = srcCanvas.height;
-  snapCvs.getContext('2d').drawImage(srcCanvas, 0, 0);
-  div.innerHTML = `<div class="snap-label">iter ${d.iter}</div>`;
-  div.appendChild(snapCvs);
-  div.innerHTML += `<div class="snap-stats">ht=${d.aveht.toFixed(1)} rms=${d.rmsht.toFixed(3)}</div>`;
-  strip.appendChild(div);
 }
 
 function pauseSim() {
@@ -887,7 +985,8 @@ function resumeSim() {
 function resetSim() {
   if (worker) { worker.postMessage({ type: 'cancel' }); worker.terminate(); worker = null; }
   running = false; pausedState = false;
-  roughnessData = []; heightData = [];
+  roughnessData = []; heightData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
+  lastSliceData = null; lastSliceH = 0;
   destroyCharts(); initCharts();
   document.getElementById('runBtn').disabled = false;
   document.getElementById('pauseBtn').disabled = true;
@@ -895,13 +994,13 @@ function resetSim() {
   document.getElementById('resumeBtn').style.display = 'none';
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('progText').textContent = 'Ready';
-  ['stIter','stAveht','stRms','stRange'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('betaDisp').textContent = 'β = —';
+  ['stIter','stAveht','stRms','stStd','stSkew','stKurt','stRange','stWidth'].forEach(id => document.getElementById(id).textContent = '—');
   ['evDes','evGeD','evSiD','evSdf','evBdf'].forEach(id => document.getElementById(id).textContent = '0');
   setInputsEnabled(true);
-  // Clear lattice canvas
-  const cvs = document.getElementById('latticeCanvas');
-  cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
-  document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:#4a6a4a;font-family:\'Space Mono\',monospace;padding:20px">Snapshots will appear at iterations 1, 10, 20, 50, 100, 200, 500</div>';
+  document.getElementById('latticeCanvas').getContext('2d').clearRect(0, 0, 1000, 150);
+  document.getElementById('hmapCanvas').getContext('2d').clearRect(0, 0, 1000, 40);
+  document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:#4a6a4a;font-family:\'Space Mono\',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>';
 }
 
 function togglePanel(id) {
@@ -911,7 +1010,6 @@ function togglePanel(id) {
   if (toggle) toggle.textContent = panel.classList.contains('collapsed') ? '▶ expand' : '▼ collapse';
 }
 
-// Initialize charts on load
 initCharts();
 </script>
 </body>
