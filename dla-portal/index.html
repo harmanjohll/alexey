@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLA Portal &middot; Diffusion-Limited Aggregation</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:1100px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.portal-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,120,0.2);color:#7dddb0;border:0.5px solid rgba(60,160,120,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.portal-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.portal-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:750px;margin-bottom:2rem}
+.panel{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.panel-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d;cursor:pointer;user-select:none}
+.panel-hdr .snum{font-size:10px;font-weight:700;background:rgba(60,160,120,0.15);color:#7dddb0;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,120,0.4)}
+.panel-hdr .sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.panel-hdr .toggle{margin-left:auto;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.panel-body{padding:16px}
+.panel.collapsed .panel-body{display:none}
+.param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.param-group{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px}
+.group-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.param-row:last-child{margin-bottom:0}
+.param-lbl{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace}
+select,input[type=number]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
+select{width:130px;text-align:left}
+input[type=number]{width:100px}
+input:focus,select:focus{outline:none;border-color:#3ca03c}
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.progress-wrap{flex:1;min-width:200px;display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:6px;background:#0d150d;border-radius:3px;border:0.5px solid rgba(60,160,60,0.15);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3ca078,#7dddb0);width:0%;transition:width .3s}
+.progress-text{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;white-space:nowrap}
+.dashboard{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-row.wide{grid-template-columns:2fr 1fr}
+.dash-card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:14px;overflow:hidden}
+.card-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.chart-wrap{height:280px;position:relative}
+.chart-wrap.tall{height:350px}
+.canvas-wrap{position:relative;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;overflow:hidden}
+.canvas-wrap canvas{display:block;width:100%}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-item{padding:8px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
+.stat-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.stat-value{font-size:18px;font-weight:700;color:#7dddb0;font-family:'Space Mono',monospace}
+.stat-value.sm{font-size:13px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca078;background:rgba(60,160,120,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dddb0;font-weight:600}
+.sweep-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
+.sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.sweep-item input{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px}
+.mode-tab{padding:6px 16px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.mode-tab.active{background:rgba(60,160,120,0.15);color:#7dddb0;border-color:rgba(60,160,120,0.5)}
+.mode-tab:hover:not(.active){color:#7a9a7a}
+.mode-section{display:none}
+.mode-section.active{display:block}
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="portal-tag">DLA PORTAL &middot; FRACTAL GROWTH</div>
+<div class="portal-title">Diffusion-Limited Aggregation</div>
+<div class="portal-sub">Random walkers diffuse and stick to a growing cluster, producing beautiful fractal structures. The resulting aggregate has fractal dimension D &asymp; 1.71, emerging purely from the dynamics of diffusion.</div>
+
+<div class="note"><b>Physics:</b> DLA models growth processes limited by diffusion: electrodeposition, mineral dendrites, lightning patterns, bacterial colonies. Particles launched from afar random-walk until they touch the cluster and stick. The outer tips grow fastest because they intercept walkers first, producing branching fractal structures.</div>
+
+<!-- PARAMETERS -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">DLA</span>
+    <span class="sname">Simulation Parameters</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Growth</div>
+        <div class="param-row"><span class="param-lbl">Max particles</span><input type="number" id="pMaxP" value="5000" min="100" max="50000" step="500"></div>
+        <div class="param-row"><span class="param-lbl">Grid size</span><input type="number" id="pGrid" value="500" min="200" max="1000" step="50"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Physics</div>
+        <div class="param-row"><span class="param-lbl">Sticking prob</span><input type="number" id="pStick" value="1.0" min="0.01" max="1.0" step="0.05"></div>
+        <div class="param-row"><span class="param-lbl">Seed type</span><select id="pSeed"><option value="point">Single point</option><option value="line">Line (bottom)</option><option value="circle">Circle</option></select></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Walker</div>
+        <div class="param-row"><span class="param-lbl">Launch radius &times;</span><input type="number" id="pLaunch" value="2.0" min="1.5" max="5.0" step="0.5"></div>
+        <div class="param-row"><span class="param-lbl">Kill radius &times;</span><input type="number" id="pKill" value="3.0" min="2.0" max="10.0" step="0.5"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Grow Aggregate</div>
+  <div class="mode-tab" onclick="setMode('sweep')">Sticking Sweep</div>
+</div>
+
+<!-- SINGLE -->
+<div class="mode-section active" id="modeSingle">
+<div class="controls">
+  <button onclick="runDLA()">&#9654; Grow Aggregate</button>
+  <button onclick="cancelDLA()" class="danger">&#9632; Stop</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    <span class="progress-text" id="progText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- STICKING SWEEP -->
+<div class="mode-section" id="modeSweep">
+<div class="note"><b>Investigation:</b> How does sticking probability change the fractal dimension? Low sticking probability lets walkers penetrate deeper, producing denser aggregates with higher D.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>Stick min</label><input type="number" id="swSmin" value="0.05" step="0.05"></div>
+  <div class="sweep-item"><label>Stick max</label><input type="number" id="swSmax" value="1.0" step="0.1"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="swPts" value="6" min="3" max="10"></div>
+  <div class="sweep-item"><label>Particles</label><input type="number" id="swParticles" value="3000" step="500"></div>
+</div>
+<div class="controls">
+  <button onclick="runStickSweep()">&#9654; Run Sweep</button>
+  <button onclick="cancelDLA()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="swProgFill"></div></div>
+    <span class="progress-text" id="swProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SINGLE DASHBOARD -->
+<div class="dashboard" id="singleDash">
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">Aggregate (colored by arrival time)</div>
+      <div class="canvas-wrap"><canvas id="dlaCanvas" width="500" height="500"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Statistics</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Particles</div><div class="stat-value" id="stCount">0</div></div>
+        <div class="stat-item"><div class="stat-label">Fractal Dim D</div><div class="stat-value" id="stFracD">--</div></div>
+        <div class="stat-item"><div class="stat-label">Max Radius</div><div class="stat-value sm" id="stRadius">--</div></div>
+        <div class="stat-item"><div class="stat-label">Sticking Prob</div><div class="stat-value sm" id="stStick">--</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="card-label">M(r) vs r (log-log)</div>
+        <div class="chart-wrap"><canvas id="massChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SWEEP DASHBOARD -->
+<div class="dashboard" id="sweepDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Fractal Dimension vs Sticking Probability</div>
+      <div class="chart-wrap tall"><canvas id="swDimChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Results</div>
+      <div id="sweepTable"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DLA PORTAL — Diffusion-Limited Aggregation
+   ═══════════════════════════════════════════════════════════════ */
+
+let running = false, cancelled = false;
+let massChartInst = null, swDimChartInst = null;
+let currentMode = 'single';
+
+const chartDefaults = {
+  responsive:true, maintainAspectRatio:false, animation:{duration:0},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(60,160,120,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},
+  scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}
+};
+
+function setMode(m) {
+  if (running) return;
+  currentMode = m;
+  document.querySelectorAll('.mode-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['single','sweep'][i] === m);
+  });
+  document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
+  document.getElementById(m === 'single' ? 'modeSingle' : 'modeSweep').classList.add('active');
+  document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('sweepDash').style.display = m === 'sweep' ? '' : 'none';
+}
+
+function togglePanel(id) {
+  const p = document.getElementById(id);
+  p.classList.toggle('collapsed');
+  const t = p.querySelector('.toggle');
+  if (t) t.innerHTML = p.classList.contains('collapsed') ? '&#9654; expand' : '&darr; collapse';
+}
+
+/* ── DLA Core ── */
+function growDLA(gridSize, maxParticles, stickProb, seedType, launchMul, killMul, onProgress) {
+  const grid = new Uint16Array(gridSize * gridSize); // 0=empty, >0=arrival order
+  const cx = Math.floor(gridSize / 2), cy = Math.floor(gridSize / 2);
+  const particles = []; // {x, y, order}
+
+  // Plant seed
+  if (seedType === 'point') {
+    grid[cy * gridSize + cx] = 1;
+    particles.push({x: cx, y: cy, order: 0});
+  } else if (seedType === 'line') {
+    for (let x = 0; x < gridSize; x++) {
+      grid[(gridSize-1) * gridSize + x] = 1;
+      particles.push({x, y: gridSize-1, order: 0});
+    }
+  } else if (seedType === 'circle') {
+    const r = 20;
+    for (let a = 0; a < 360; a += 2) {
+      const x = cx + Math.round(r * Math.cos(a * Math.PI / 180));
+      const y = cy + Math.round(r * Math.sin(a * Math.PI / 180));
+      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+        grid[y * gridSize + x] = 1;
+        particles.push({x, y, order: 0});
+      }
+    }
+  }
+
+  let maxR = seedType === 'circle' ? 25 : (seedType === 'line' ? gridSize/2 : 5);
+  let count = 0;
+
+  function hasNeighbor(x, y) {
+    const dx = [-1,0,1,0], dy = [0,-1,0,1];
+    for (let d = 0; d < 4; d++) {
+      const nx = x + dx[d], ny = y + dy[d];
+      if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny * gridSize + nx] > 0) return true;
+    }
+    return false;
+  }
+
+  return { grid, particles, maxR, cx, cy, gridSize,
+    step() {
+      if (count >= maxParticles) return false;
+      const launchR = Math.max(maxR * launchMul, 30);
+      const killR = launchR * killMul;
+      if (launchR >= gridSize / 2 - 5) return false;
+
+      // Launch random walker on circle of radius launchR
+      const angle = Math.random() * 2 * Math.PI;
+      let x = Math.round(cx + launchR * Math.cos(angle));
+      let y = Math.round(cy + launchR * Math.sin(angle));
+
+      const maxSteps = 100000;
+      for (let s = 0; s < maxSteps; s++) {
+        // Random walk
+        const dir = Math.floor(Math.random() * 4);
+        const dx = [-1,0,1,0][dir], dy = [0,-1,0,1][dir];
+        x += dx; y += dy;
+
+        // Kill if too far
+        const dist = Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy));
+        if (dist > killR || x < 0 || x >= gridSize || y < 0 || y >= gridSize) return true; // killed, try next
+
+        // Check for neighbor
+        if (hasNeighbor(x, y)) {
+          if (Math.random() < stickProb) {
+            count++;
+            grid[y * gridSize + x] = count + 1;
+            particles.push({x, y, order: count});
+            const r = Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy));
+            if (r > maxR) maxR = r;
+            return true;
+          }
+        }
+      }
+      return true; // timed out
+    },
+    getCount() { return count; },
+    getMaxR() { return maxR; }
+  };
+}
+
+function computeFractalDim(particles, cx, cy) {
+  if (particles.length < 10) return {D: 0, data: []};
+  // M(r) = number of particles within radius r
+  const distances = particles.map(p => Math.sqrt((p.x-cx)*(p.x-cx)+(p.y-cy)*(p.y-cy))).sort((a,b)=>a-b);
+  const maxR = distances[distances.length - 1];
+  if (maxR < 5) return {D: 0, data: []};
+
+  const nBins = 20;
+  const data = [];
+  for (let i = 1; i <= nBins; i++) {
+    const r = maxR * i / nBins;
+    const M = distances.filter(d => d <= r).length;
+    if (r > 0 && M > 0) data.push({r, M});
+  }
+
+  // Linear regression on log-log
+  if (data.length < 3) return {D: 0, data};
+  const logData = data.map(d => ({x: Math.log10(d.r), y: Math.log10(d.M)}));
+  const n = logData.length;
+  const sx = logData.reduce((a,d)=>a+d.x,0), sy = logData.reduce((a,d)=>a+d.y,0);
+  const sxy = logData.reduce((a,d)=>a+d.x*d.y,0), sxx = logData.reduce((a,d)=>a+d.x*d.x,0);
+  const D = (n*sxy - sx*sy) / (n*sxx - sx*sx);
+
+  return {D, data};
+}
+
+/* ── Drawing ── */
+function drawAggregate(dla) {
+  const cvs = document.getElementById('dlaCanvas');
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width, h = cvs.height;
+  const img = ctx.createImageData(w, h);
+  const gs = dla.gridSize;
+  const scale = w / gs;
+  const maxOrder = dla.getCount();
+
+  // Background
+  for (let i = 0; i < w*h*4; i += 4) { img.data[i]=10; img.data[i+1]=15; img.data[i+2]=10; img.data[i+3]=255; }
+
+  dla.particles.forEach(p => {
+    const t = maxOrder > 0 ? p.order / maxOrder : 0;
+    // Color by arrival time: dark green -> bright cyan -> white
+    const r = Math.round(20 + t * 200);
+    const g = Math.round(60 + t * 160);
+    const b = Math.round(80 + t * 176);
+    const x0 = Math.floor(p.x * scale), y0 = Math.floor(p.y * scale);
+    const x1 = Math.max(x0+1, Math.floor((p.x+1)*scale));
+    const y1 = Math.max(y0+1, Math.floor((p.y+1)*scale));
+    for (let y = y0; y < y1 && y < h; y++) {
+      for (let x = x0; x < x1 && x < w; x++) {
+        const idx = (y*w+x)*4;
+        img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b;
+      }
+    }
+  });
+
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ── Main run ── */
+async function runDLA() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+
+  const gridSize = +document.getElementById('pGrid').value;
+  const maxP = +document.getElementById('pMaxP').value;
+  const stick = +document.getElementById('pStick').value;
+  const seed = document.getElementById('pSeed').value;
+  const launch = +document.getElementById('pLaunch').value;
+  const kill = +document.getElementById('pKill').value;
+
+  document.getElementById('stStick').textContent = stick.toFixed(2);
+  const dla = growDLA(gridSize, maxP, stick, seed, launch, kill);
+
+  // Grow in batches for UI updates
+  const batchSize = 50;
+  let done = false;
+  while (!done && !cancelled) {
+    for (let i = 0; i < batchSize; i++) {
+      if (!dla.step()) { done = true; break; }
+    }
+    const count = dla.getCount();
+    document.getElementById('progText').textContent = `${count} / ${maxP} particles`;
+    document.getElementById('progFill').style.width = (count/maxP*100)+'%';
+    document.getElementById('stCount').textContent = count;
+    document.getElementById('stRadius').textContent = dla.getMaxR().toFixed(1);
+
+    if (count % 200 === 0 || done) {
+      drawAggregate(dla);
+      const {D, data} = computeFractalDim(dla.particles, dla.cx, dla.cy);
+      document.getElementById('stFracD').textContent = D.toFixed(3);
+      updateMassChart(data, D);
+    }
+    await new Promise(r => setTimeout(r, 1));
+  }
+
+  drawAggregate(dla);
+  const {D, data} = computeFractalDim(dla.particles, dla.cx, dla.cy);
+  document.getElementById('stFracD').textContent = D.toFixed(3);
+  updateMassChart(data, D);
+
+  document.getElementById('progText').textContent = cancelled ? 'Stopped' : 'Complete';
+  document.getElementById('progFill').style.width = '100%';
+  running = false;
+}
+
+function updateMassChart(data, D) {
+  if (massChartInst) massChartInst.destroy();
+  if (data.length === 0) return;
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x = {type:'logarithmic', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'Radius r',color:'#4a6a4a',font:{family:'Space Mono',size:9}}};
+  opts.scales.y = {type:'logarithmic', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'M(r)',color:'#4a6a4a',font:{family:'Space Mono',size:9}}};
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+  opts.plugins.title = {display:true, text:`D = ${D.toFixed(3)}`, color:'#7dddb0', font:{family:'Space Mono',size:11}};
+
+  // Fit line
+  const fitLine = data.map(d => ({x:d.r, y:Math.pow(d.r/data[0].r, D)*data[0].M}));
+
+  massChartInst = new Chart(document.getElementById('massChart'), {
+    type:'scatter',
+    data:{datasets:[
+      {label:'M(r) data', data:data.map(d=>({x:d.r,y:d.M})), backgroundColor:'#7dddb0', pointRadius:4},
+      {label:`r^${D.toFixed(2)} fit`, data:fitLine.map(d=>({x:d.x,y:d.y})), borderColor:'#f0b429', borderWidth:1.5, borderDash:[4,2], pointRadius:0, showLine:true, fill:false}
+    ]},
+    options:opts
+  });
+}
+
+/* ── Sticking sweep ── */
+async function runStickSweep() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('sweepDash').style.display = '';
+
+  const sMin = +document.getElementById('swSmin').value;
+  const sMax = +document.getElementById('swSmax').value;
+  const pts = +document.getElementById('swPts').value;
+  const maxP = +document.getElementById('swParticles').value;
+  const gridSize = +document.getElementById('pGrid').value;
+  const seed = document.getElementById('pSeed').value;
+  const launch = +document.getElementById('pLaunch').value;
+  const kill = +document.getElementById('pKill').value;
+
+  const results = [];
+  for (let i = 0; i < pts; i++) {
+    if (cancelled) break;
+    const stick = sMin + (sMax - sMin) * i / (pts - 1);
+    document.getElementById('swProgText').textContent = `stick=${stick.toFixed(2)} (${i+1}/${pts})`;
+    document.getElementById('swProgFill').style.width = ((i+1)/pts*100)+'%';
+
+    const dla = growDLA(gridSize, maxP, stick, seed, launch, kill);
+    let done = false;
+    while (!done && !cancelled) {
+      for (let j = 0; j < 100; j++) { if (!dla.step()) { done = true; break; } }
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    const {D} = computeFractalDim(dla.particles, dla.cx, dla.cy);
+    results.push({stick, D, count: dla.getCount(), maxR: dla.getMaxR()});
+  }
+
+  if (!cancelled) {
+    document.getElementById('swProgText').textContent = 'Complete';
+    displayStickSweep(results);
+  }
+  running = false;
+}
+
+function displayStickSweep(results) {
+  if (swDimChartInst) swDimChartInst.destroy();
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'Sticking Probability', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Fractal Dimension D', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+
+  swDimChartInst = new Chart(document.getElementById('swDimChart'), {
+    type:'line',
+    data:{labels:results.map(r=>r.stick.toFixed(2)), datasets:[
+      {label:'Measured D', data:results.map(r=>r.D), borderColor:'#7dddb0', backgroundColor:'rgba(125,221,176,0.2)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#7dddb0', fill:true},
+      {label:'D=1.71 (theory)', data:results.map(()=>1.71), borderColor:'#f0b429', borderWidth:1, borderDash:[5,3], pointRadius:0, fill:false}
+    ]},
+    options:opts
+  });
+
+  const table = document.getElementById('sweepTable');
+  table.innerHTML = '<div style="font-size:10px;font-family:\'Space Mono\',monospace">' +
+    results.map(r => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)"><span style="color:#7a9a7a">p=${r.stick.toFixed(2)}</span><span style="color:#7dddb0;font-weight:700">D=${r.D.toFixed(3)}</span><span style="color:#4a6a4a">${r.count} pts</span></div>`).join('') +
+    '</div>';
+}
+
+function cancelDLA() { cancelled = true; }
+</script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Percolation Portal &middot; Phase Transition</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:1100px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.portal-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(160,120,60,0.2);color:#ddb07d;border:0.5px solid rgba(160,120,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.portal-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.portal-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:750px;margin-bottom:2rem}
+.panel{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.panel-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d;cursor:pointer;user-select:none}
+.panel-hdr .snum{font-size:10px;font-weight:700;background:rgba(160,120,60,0.15);color:#ddb07d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(160,120,60,0.4)}
+.panel-hdr .sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.panel-hdr .toggle{margin-left:auto;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.panel-body{padding:16px}
+.panel.collapsed .panel-body{display:none}
+.param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.param-group{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px}
+.group-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.param-row:last-child{margin-bottom:0}
+.param-lbl{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace}
+select,input[type=number],input[type=range]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
+select{width:130px;text-align:left}
+input[type=number]{width:100px}
+input[type=range]{width:120px;padding:0;border:none;background:transparent}
+input:focus,select:focus{outline:none;border-color:#3ca03c}
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.progress-wrap{flex:1;min-width:200px;display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:6px;background:#0d150d;border-radius:3px;border:0.5px solid rgba(60,160,60,0.15);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#a07d3c,#ddb07d);width:0%;transition:width .3s}
+.progress-text{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;white-space:nowrap}
+.dashboard{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-row.wide{grid-template-columns:2fr 1fr}
+.dash-card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:14px;overflow:hidden}
+.card-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.chart-wrap{height:280px;position:relative}
+.chart-wrap.tall{height:350px}
+.canvas-wrap{position:relative;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;overflow:hidden}
+.canvas-wrap canvas{display:block;width:100%}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-item{padding:8px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
+.stat-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.stat-value{font-size:18px;font-weight:700;color:#ddb07d;font-family:'Space Mono',monospace}
+.stat-value.sm{font-size:13px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #a07d3c;background:rgba(160,120,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#ddb07d;font-weight:600}
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px}
+.mode-tab{padding:6px 16px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.mode-tab.active{background:rgba(160,120,60,0.15);color:#ddb07d;border-color:rgba(160,120,60,0.5)}
+.mode-tab:hover:not(.active){color:#7a9a7a}
+.mode-section{display:none}
+.mode-section.active{display:block}
+.sweep-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
+.sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.sweep-item input{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+.p-display{font-size:22px;font-weight:700;color:#ddb07d;font-family:'Space Mono',monospace;text-align:center;margin:8px 0}
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="portal-tag">PERCOLATION PORTAL &middot; CRITICAL PHENOMENA</div>
+<div class="portal-title">2D Site Percolation</div>
+<div class="portal-sub">Occupy sites on a square lattice with probability p. At a critical threshold p<sub>c</sub> &asymp; 0.5927, a connected cluster spanning the entire lattice suddenly appears. Explore this geometric phase transition.</div>
+
+<div class="note"><b>Physics:</b> Percolation is one of the simplest models showing a phase transition. Below p<sub>c</sub>, only small isolated clusters exist. At p<sub>c</sub>, a fractal spanning cluster emerges with dimension D &asymp; 91/48 &asymp; 1.896. Above p<sub>c</sub>, most occupied sites belong to one giant connected component.</div>
+
+<!-- PARAMETERS -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">PERC</span>
+    <span class="sname">Simulation Parameters</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Lattice</div>
+        <div class="param-row"><span class="param-lbl">Size L&times;L</span><input type="number" id="pSize" value="200" min="20" max="500" step="10"></div>
+        <div class="param-row"><span class="param-lbl">Type</span><select id="pType"><option value="site">Site percolation</option><option value="bond">Bond percolation</option></select></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Occupation</div>
+        <div class="param-row" style="flex-direction:column;align-items:stretch">
+          <span class="param-lbl">Probability p</span>
+          <input type="range" id="pSlider" min="0" max="1" step="0.005" value="0.593" oninput="updatePDisplay()">
+          <div class="p-display" id="pDisplay">p = 0.593</div>
+        </div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Analysis</div>
+        <div class="param-row"><span class="param-lbl">Realizations</span><input type="number" id="pReal" value="10" min="1" max="100" step="1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Configuration</div>
+  <div class="mode-tab" onclick="setMode('sweep')">p Sweep</div>
+</div>
+
+<!-- SINGLE -->
+<div class="mode-section active" id="modeSingle">
+<div class="controls">
+  <button onclick="runPercolation()">&#9654; Generate Lattice</button>
+  <button onclick="resetPerc()" class="danger">&#8634; Reset</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    <span class="progress-text" id="progText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- P SWEEP -->
+<div class="mode-section" id="modeSweep">
+<div class="note"><b>Investigation:</b> At what probability does a path appear across the lattice? Sweep p from 0 to 1 and measure spanning probability, average cluster size, and the largest cluster fraction.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>p min</label><input type="number" id="swPmin" value="0.3" step="0.05"></div>
+  <div class="sweep-item"><label>p max</label><input type="number" id="swPmax" value="0.9" step="0.05"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="swPts" value="20" min="5" max="50"></div>
+  <div class="sweep-item"><label>Realizations</label><input type="number" id="swReal" value="5" min="1" max="20"></div>
+</div>
+<div class="controls">
+  <button onclick="runPSweep()">&#9654; Run p Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="swProgFill"></div></div>
+    <span class="progress-text" id="swProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SINGLE DASHBOARD -->
+<div class="dashboard" id="singleDash">
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">Lattice (clusters colored)</div>
+      <div class="canvas-wrap"><canvas id="latticeCanvas" width="500" height="500"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Statistics</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Occupied Sites</div><div class="stat-value sm" id="stOcc">--</div></div>
+        <div class="stat-item"><div class="stat-label">Spanning?</div><div class="stat-value sm" id="stSpan">--</div></div>
+        <div class="stat-item"><div class="stat-label">Largest Cluster</div><div class="stat-value sm" id="stLargest">--</div></div>
+        <div class="stat-item"><div class="stat-label">Num Clusters</div><div class="stat-value sm" id="stNum">--</div></div>
+        <div class="stat-item"><div class="stat-label">Avg Cluster Size</div><div class="stat-value sm" id="stAvg">--</div></div>
+        <div class="stat-item"><div class="stat-label">Occupation p</div><div class="stat-value sm" id="stP">--</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Cluster Size Distribution</div>
+      <div class="chart-wrap"><canvas id="distChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Cluster Info</div>
+      <div class="note"><b>Spanning cluster:</b> A connected cluster that touches both the top and bottom edges (or left and right). At p<sub>c</sub>, the spanning cluster is a fractal. Its mass scales as M ~ L<sup>D</sup> with D &asymp; 91/48.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SWEEP DASHBOARD -->
+<div class="dashboard" id="sweepDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Spanning Probability vs p</div>
+      <div class="chart-wrap tall"><canvas id="swSpanChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Largest Cluster Fraction vs p</div>
+      <div class="chart-wrap tall"><canvas id="swLargestChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Average Cluster Size vs p</div>
+      <div class="chart-wrap"><canvas id="swAvgChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Number of Clusters vs p</div>
+      <div class="chart-wrap"><canvas id="swNumChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   PERCOLATION PORTAL — 2D Site/Bond Percolation
+   ═══════════════════════════════════════════════════════════════ */
+
+let running = false, cancelled = false;
+let distChartInst = null;
+let swSpanChart = null, swLargestChart = null, swAvgChart = null, swNumChart = null;
+let currentMode = 'single';
+
+const chartDefaults = {
+  responsive:true, maintainAspectRatio:false, animation:{duration:0},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(160,120,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},
+  scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}
+};
+
+function setMode(m) {
+  if (running) return;
+  currentMode = m;
+  document.querySelectorAll('.mode-tab').forEach((el,i) => {
+    const modes = ['single','sweep'];
+    el.classList.toggle('active', modes[i] === m);
+  });
+  document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
+  document.getElementById(m === 'single' ? 'modeSingle' : 'modeSweep').classList.add('active');
+  document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('sweepDash').style.display = m === 'sweep' ? '' : 'none';
+}
+
+function togglePanel(id) {
+  const p = document.getElementById(id);
+  p.classList.toggle('collapsed');
+  const t = p.querySelector('.toggle');
+  if (t) t.innerHTML = p.classList.contains('collapsed') ? '&#9654; expand' : '&darr; collapse';
+}
+
+function updatePDisplay() {
+  const v = +document.getElementById('pSlider').value;
+  document.getElementById('pDisplay').textContent = 'p = ' + v.toFixed(3);
+}
+
+/* ── Percolation core ── */
+function generateLattice(L, p) {
+  const grid = new Uint8Array(L * L);
+  for (let i = 0; i < L * L; i++) grid[i] = Math.random() < p ? 1 : 0;
+  return grid;
+}
+
+// Union-Find for cluster labeling
+function findClusters(grid, L) {
+  const label = new Int32Array(L * L).fill(-1);
+  const parent = [];
+  const size = [];
+  let nextLabel = 0;
+
+  function find(x) {
+    while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+    return x;
+  }
+  function union(a, b) {
+    a = find(a); b = find(b);
+    if (a === b) return;
+    if (size[a] < size[b]) { const t = a; a = b; b = t; }
+    parent[b] = a;
+    size[a] += size[b];
+  }
+
+  for (let i = 0; i < L; i++) {
+    for (let j = 0; j < L; j++) {
+      const idx = i * L + j;
+      if (!grid[idx]) continue;
+
+      const neighbors = [];
+      if (i > 0 && grid[(i-1)*L+j]) neighbors.push(label[(i-1)*L+j]);
+      if (j > 0 && grid[i*L+j-1]) neighbors.push(label[i*L+j-1]);
+
+      const validNeighbors = neighbors.filter(n => n >= 0);
+      if (validNeighbors.length === 0) {
+        label[idx] = nextLabel;
+        parent.push(nextLabel);
+        size.push(1);
+        nextLabel++;
+      } else {
+        const minLabel = validNeighbors.reduce((a,b) => find(a) < find(b) ? a : b);
+        label[idx] = find(minLabel);
+        validNeighbors.forEach(n => union(minLabel, n));
+      }
+    }
+  }
+
+  // Flatten labels
+  for (let i = 0; i < L * L; i++) {
+    if (label[i] >= 0) label[i] = find(label[i]);
+  }
+
+  // Compute cluster sizes
+  const clusterSizes = {};
+  for (let i = 0; i < L * L; i++) {
+    if (label[i] >= 0) {
+      const root = label[i];
+      clusterSizes[root] = (clusterSizes[root] || 0) + 1;
+    }
+  }
+
+  // Check spanning
+  const topLabels = new Set();
+  const bottomLabels = new Set();
+  for (let j = 0; j < L; j++) {
+    if (label[j] >= 0) topLabels.add(label[j]);
+    if (label[(L-1)*L+j] >= 0) bottomLabels.add(label[(L-1)*L+j]);
+  }
+  let spanningLabel = -1;
+  for (const lb of topLabels) {
+    if (bottomLabels.has(lb)) { spanningLabel = lb; break; }
+  }
+
+  return { label, clusterSizes, spanningLabel };
+}
+
+function analyze(grid, L) {
+  const { label, clusterSizes, spanningLabel } = findClusters(grid, L);
+  const sizes = Object.values(clusterSizes);
+  const numClusters = sizes.length;
+  const occupied = grid.reduce((a,b) => a+b, 0);
+  const largest = sizes.length > 0 ? Math.max(...sizes) : 0;
+  const avgSize = sizes.length > 0 ? sizes.reduce((a,b)=>a+b,0)/sizes.length : 0;
+  const spanning = spanningLabel >= 0;
+
+  return { label, clusterSizes, spanningLabel, numClusters, occupied, largest, avgSize, spanning, sizes };
+}
+
+/* ── Drawing ── */
+function drawLattice(grid, L, label, clusterSizes, spanningLabel) {
+  const cvs = document.getElementById('latticeCanvas');
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width, h = cvs.height;
+  const img = ctx.createImageData(w, h);
+  const px = w / L;
+
+  // Generate colors for clusters
+  const colors = {};
+  const sortedClusters = Object.entries(clusterSizes).sort((a,b) => b[1]-a[1]);
+  sortedClusters.forEach(([id], i) => {
+    if (+id === spanningLabel) {
+      colors[id] = [255, 200, 50]; // spanning cluster = gold
+    } else {
+      const hue = (i * 137.5) % 360;
+      const s = 0.6, l = 0.5;
+      const c = (1 - Math.abs(2*l-1)) * s;
+      const x = c * (1 - Math.abs((hue/60)%2-1));
+      const m = l - c/2;
+      let r,g,b;
+      if(hue<60){r=c;g=x;b=0}else if(hue<120){r=x;g=c;b=0}else if(hue<180){r=0;g=c;b=x}
+      else if(hue<240){r=0;g=x;b=c}else if(hue<300){r=x;g=0;b=c}else{r=c;g=0;b=x}
+      colors[id] = [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+    }
+  });
+
+  for (let i = 0; i < L; i++) {
+    for (let j = 0; j < L; j++) {
+      const gIdx = i * L + j;
+      const x0 = Math.floor(j*px), y0 = Math.floor(i*px);
+      const x1 = Math.floor((j+1)*px), y1 = Math.floor((i+1)*px);
+      let r=10, g=15, b=10;
+      if (grid[gIdx]) {
+        const lb = label[gIdx];
+        if (colors[lb]) { [r,g,b] = colors[lb]; }
+        else { r=100; g=100; b=100; }
+      }
+      for (let y = y0; y < y1 && y < h; y++) {
+        for (let x = x0; x < x1 && x < w; x++) {
+          const idx = (y*w+x)*4;
+          img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b; img.data[idx+3]=255;
+        }
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ── Single run ── */
+async function runPercolation() {
+  if (running) return;
+  running = true;
+  document.getElementById('progText').textContent = 'Generating...';
+  document.getElementById('progFill').style.width = '50%';
+  const L = +document.getElementById('pSize').value;
+  const p = +document.getElementById('pSlider').value;
+
+  await new Promise(r => setTimeout(r, 10));
+  const grid = generateLattice(L, p);
+  const result = analyze(grid, L);
+
+  drawLattice(grid, L, result.label, result.clusterSizes, result.spanningLabel);
+  document.getElementById('stOcc').textContent = result.occupied + ' (' + (result.occupied/(L*L)*100).toFixed(1) + '%)';
+  document.getElementById('stSpan').textContent = result.spanning ? 'YES' : 'NO';
+  document.getElementById('stSpan').style.color = result.spanning ? '#7dd87d' : '#e24b4a';
+  document.getElementById('stLargest').textContent = result.largest + ' sites';
+  document.getElementById('stNum').textContent = result.numClusters;
+  document.getElementById('stAvg').textContent = result.avgSize.toFixed(1);
+  document.getElementById('stP').textContent = p.toFixed(3);
+
+  // Cluster size distribution (log-log)
+  if (distChartInst) distChartInst.destroy();
+  const sizeCounts = {};
+  result.sizes.forEach(s => { sizeCounts[s] = (sizeCounts[s]||0)+1; });
+  const distData = Object.entries(sizeCounts).map(([s,c]) => ({x:+s, y:c})).sort((a,b)=>a.x-b.x);
+  const dopts = JSON.parse(JSON.stringify(chartDefaults));
+  dopts.scales.x = {type:'logarithmic', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'Cluster size',color:'#4a6a4a',font:{family:'Space Mono',size:9}}};
+  dopts.scales.y = {type:'logarithmic', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'Count',color:'#4a6a4a',font:{family:'Space Mono',size:9}}};
+  distChartInst = new Chart(document.getElementById('distChart'), {
+    type:'scatter', data:{datasets:[{data:distData, backgroundColor:'#ddb07d', pointRadius:3}]}, options:dopts
+  });
+
+  document.getElementById('progText').textContent = 'Complete';
+  document.getElementById('progFill').style.width = '100%';
+  running = false;
+}
+
+/* ── p Sweep ── */
+async function runPSweep() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('sweepDash').style.display = '';
+
+  const pMin = +document.getElementById('swPmin').value;
+  const pMax = +document.getElementById('swPmax').value;
+  const pts = +document.getElementById('swPts').value;
+  const real = +document.getElementById('swReal').value;
+  const L = +document.getElementById('pSize').value;
+  const results = [];
+
+  for (let i = 0; i < pts; i++) {
+    if (cancelled) break;
+    const p = pMin + (pMax - pMin) * i / (pts - 1);
+    document.getElementById('swProgText').textContent = `p=${p.toFixed(3)} (${i+1}/${pts})`;
+    document.getElementById('swProgFill').style.width = ((i+1)/pts*100)+'%';
+
+    let spanCount = 0, totalLargest = 0, totalAvg = 0, totalNum = 0;
+    for (let r = 0; r < real; r++) {
+      await new Promise(res => setTimeout(res, 2));
+      const grid = generateLattice(L, p);
+      const result = analyze(grid, L);
+      if (result.spanning) spanCount++;
+      totalLargest += result.largest / (L*L);
+      totalAvg += result.avgSize;
+      totalNum += result.numClusters;
+    }
+    results.push({
+      p,
+      spanProb: spanCount / real,
+      largestFrac: totalLargest / real,
+      avgSize: totalAvg / real,
+      numClusters: totalNum / real
+    });
+  }
+
+  if (!cancelled) {
+    document.getElementById('swProgText').textContent = 'Complete';
+    displayPSweep(results);
+  }
+  running = false;
+}
+
+function displayPSweep(results) {
+  [swSpanChart, swLargestChart, swAvgChart, swNumChart].forEach(c => { if(c) c.destroy(); });
+  const labels = results.map(r => r.p.toFixed(3));
+  const PC = 0.5927;
+
+  function makeChart(canvasId, data, yLabel, color) {
+    const opts = JSON.parse(JSON.stringify(chartDefaults));
+    opts.scales.x.title = {display:true, text:'Occupation probability p', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    opts.scales.y.title = {display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    return new Chart(document.getElementById(canvasId), {
+      type:'line',
+      data:{labels, datasets:[{data, borderColor:color, backgroundColor:color+'33', borderWidth:2, pointRadius:3, pointBackgroundColor:color, fill:true}]},
+      options:opts,
+      plugins:[{
+        id:'pcLine',
+        afterDraw(chart) {
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y;
+          const idx = results.findIndex(r => r.p >= PC);
+          if (idx <= 0) return;
+          const frac = (PC - results[idx-1].p) / (results[idx].p - results[idx-1].p);
+          const px = xScale.getPixelForValue(idx-1+frac);
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.strokeStyle = '#7dd87d';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4,4]);
+          ctx.beginPath(); ctx.moveTo(px, yScale.top); ctx.lineTo(px, yScale.bottom); ctx.stroke();
+          ctx.fillStyle = '#7dd87d';
+          ctx.font = '9px "Space Mono"';
+          ctx.textAlign = 'center';
+          ctx.fillText('pc', px, yScale.top - 4);
+          ctx.restore();
+        }
+      }]
+    });
+  }
+
+  swSpanChart = makeChart('swSpanChart', results.map(r=>r.spanProb), 'Spanning probability', '#ddb07d');
+  swLargestChart = makeChart('swLargestChart', results.map(r=>r.largestFrac), 'Largest cluster / N', '#7da0dd');
+  swAvgChart = makeChart('swAvgChart', results.map(r=>r.avgSize), 'Avg cluster size', '#dd7d7d');
+  swNumChart = makeChart('swNumChart', results.map(r=>r.numClusters), 'Number of clusters', '#a07ddd');
+}
+
+function cancelSweep() { cancelled = true; }
+function resetPerc() {
+  [distChartInst, swSpanChart, swLargestChart, swAvgChart, swNumChart].forEach(c => { if(c) c.destroy(); });
+  distChartInst = swSpanChart = swLargestChart = swAvgChart = swNumChart = null;
+  const cvs = document.getElementById('latticeCanvas');
+  cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
+  ['stOcc','stSpan','stLargest','stNum','stAvg','stP'].forEach(id => document.getElementById(id).textContent = '--');
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progText').textContent = 'Ready';
+}
+</script>
+</body>
+</html>
