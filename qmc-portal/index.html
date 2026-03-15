@@ -100,8 +100,40 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .mode-section{display:none}
 .mode-section.active{display:block}
 
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:#0d150d;border:0.5px solid rgba(60,80,160,0.2);border-left:3px solid rgba(60,80,160,0.5);border-radius:0 6px 6px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:700;color:#7da0dd;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:11px;color:#7a9a7a;line-height:1.5;margin-bottom:4px}
+.inv-card-q b{color:#7da0dd;font-weight:600}
+.inv-card-method{font-size:10px;color:#4a6a4a;line-height:1.5;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:#3c60a0}
+.inv-card textarea::placeholder{color:#4a6a4a}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:rgba(60,160,60,0.5)}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,80,160,0.15);color:#7da0dd;border:0.5px solid rgba(60,80,160,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3);background:transparent;cursor:pointer}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3c60a0}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -112,6 +144,59 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 <div class="portal-sub">Variational and Diffusion Monte Carlo for the quantum particle-in-a-box problem. Compute ground-state and excited-state energies in 1D, 2D, and 3D. Optionally introduce fractal boundaries (Koch, Sierpinski) to explore how geometry changes quantum confinement. All energies in units of ℏ²/(2mL²).</div>
 
 <div class="note"><b>Physics:</b> A quantum particle confined in a box has discrete energy levels. In 1D: E_n = n²π²ℏ²/(2mL²). Monte Carlo methods — Variational (VMC) and Diffusion (DMC) — find these energies numerically by sampling wavefunctions. With fractal boundaries, the eigenvalues shift in non-trivial ways governed by the fractal dimension.</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">Does more sampling give better answers?</div>
+        <div class="inv-card-q"><b>Question:</b> How does the number of Monte Carlo walkers affect accuracy and statistical error?</div>
+        <div class="inv-card-method"><b>Method:</b> Sweep walkers from 50 to 5000 (7 points), 1D ground state, 5000 steps. <b>Look for:</b> Error drops as 1/&radic;N. At what walker count is the result "good enough"?</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard1()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs1" placeholder="Your observations: how did error change with walker count? Was there a point of diminishing returns?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">Variational vs exact</div>
+        <div class="inv-card-q"><b>Question:</b> Does VMC always overestimate the energy? Is DMC closer to the exact answer?</div>
+        <div class="inv-card-method"><b>Method:</b> Run VMC and DMC with identical parameters (1000 walkers, 5000 steps). <b>Look for:</b> VMC energy &ge; exact energy (variational principle). DMC should converge closer to the true ground state.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard2()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs2" placeholder="Your observations: which method was more accurate? Did VMC always give E >= exact?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">Fractal walls</div>
+        <div class="inv-card-q"><b>Question:</b> How does making the boundary fractal change quantum confinement energy?</div>
+        <div class="inv-card-method"><b>Method:</b> Sweep fractal iterations from 0 (standard box) to 5 (deeply fractal Koch boundary), 2D. <b>Look for:</b> Energy increases as the boundary gets more complex — the particle is more confined. The scaling reveals the spectral dimension.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard3()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs3" placeholder="Your observations: how did the energy change as the boundary became more fractal? Why?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the sweep tools to explore your own question. What parameter do you want to vary, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- DIMENSION TABS -->
 <div class="dim-tabs">
@@ -394,6 +479,32 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
     <div class="dash-card">
       <div class="card-label">Computed vs Exact</div>
       <div id="levelsTable" style="max-height:400px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1707,6 +1818,155 @@ updateSweepInputs();
 ['pNx','pNy','pNz','pL','pLy','pLz'].forEach(id => {
   document.getElementById(id).addEventListener('change', updateTheory);
 });
+
+/* ── Investigation Card Runners ── */
+function runInvCard1() {
+  // Walker convergence sweep: 50 → 5000, 7 points
+  setDim(1);
+  setMode('sweep');
+  document.getElementById('sweepParam').value = 'walkers';
+  updateSweepInputs();
+  document.getElementById('sweepMin').value = 50;
+  document.getElementById('sweepMax').value = 5000;
+  document.getElementById('sweepPts').value = 7;
+  document.getElementById('pMethod').value = 'vmc';
+  document.getElementById('pSteps').value = 5000;
+  document.getElementById('pNx').value = 1;
+  document.getElementById('pL').value = 1.0;
+  updateTheory();
+  setTimeout(() => runSweep(), 100);
+}
+
+function runInvCard2() {
+  // VMC vs DMC comparison
+  setDim(1);
+  setMode('compare');
+  document.getElementById('pWalkers').value = 1000;
+  document.getElementById('pSteps').value = 5000;
+  document.getElementById('pNx').value = 1;
+  document.getElementById('pL').value = 1.0;
+  document.getElementById('pFractal').value = 'none';
+  updateFractalUI();
+  updateTheory();
+  setTimeout(() => runComparison(), 100);
+}
+
+function runInvCard3() {
+  // Fractal iteration sweep: 0 → 5
+  setDim(2);
+  setMode('sweep');
+  document.getElementById('sweepParam').value = 'fracIter';
+  updateSweepInputs();
+  document.getElementById('sweepMin').value = 0;
+  document.getElementById('sweepMax').value = 5;
+  document.getElementById('sweepPts').value = 6;
+  document.getElementById('pFractal').value = 'koch';
+  document.getElementById('pMethod').value = 'vmc';
+  document.getElementById('pWalkers').value = 500;
+  document.getElementById('pSteps').value = 3000;
+  updateFractalUI();
+  updateTheory();
+  setTimeout(() => runSweep(), 100);
+}
+
+/* ── Logbook system ── */
+const LOGBOOK_KEY = 'alexey_qmc_logbook';
+
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveLogEntries(entries) {
+  localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries));
+}
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `<div class="log-entry">
+      <div class="log-entry-hdr">
+        <span class="log-type-tag ${typeClass}">${typeLabel}</span>
+        <span class="log-entry-ts">${ts}</span>
+        <div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div>
+      </div>
+      <div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      ${e.context ? '<div class="log-entry-ctx">' + e.context + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'Does more sampling give better answers?', 2:'Variational vs exact', 3:'Fractal walls', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({
+    id: Date.now().toString(36),
+    timestamp: new Date().toISOString(),
+    type: 'obs',
+    text,
+    context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')
+  });
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#3c60a0';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# QMC Portal — Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += `## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`;
+    md += e.text + '\n\n';
+    if (e.context) md += `> Context: ${e.context}\n\n`;
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'qmc-logbook.md';
+  a.click();
+}
+
+// Initialize logbook on load, collapse by default
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
 </script>
 </body>
 </html>

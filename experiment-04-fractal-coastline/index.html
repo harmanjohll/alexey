@@ -74,6 +74,24 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .mc-stat{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace;margin:4px 0}
 .mc-stat span{color:#7dd87d;font-weight:700}
 @media(max-width:680px){.lab-grid{grid-template-columns:1fr}#fracSvg{max-width:100%;height:auto}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
 </style>
 </head>
 <body>
@@ -222,6 +240,30 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
             <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLog">
+  <div class="step-hdr">
+    <span class="snum">logbook</span>
+    <span class="sname">Experiment Logbook</span>
+  </div>
+  <div class="sbody">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
       </div>
     </div>
   </div>
@@ -699,6 +741,34 @@ document.getElementById('mcSlider').addEventListener('input',function(){
 generateFractal();
 updatePerimTable();
 updatePerimChart();
+
+const LOGBOOK_KEY='alexey_exp_04_logbook';
+function getLogEntries(){try{return JSON.parse(localStorage.getItem(LOGBOOK_KEY))||[];}catch(e){return[];}}
+function saveLogEntries(entries){localStorage.setItem(LOGBOOK_KEY,JSON.stringify(entries));}
+function renderLogbook(){
+  const entries=getLogEntries();const el=document.getElementById('logbookEntries');
+  if(entries.length===0){el.innerHTML='<div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>';return;}
+  el.innerHTML=entries.map((e,i)=>{
+    const typeClass=e.type==='obs'?'obs':e.type==='quest'?'quest':'conc';
+    const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';
+    const date=new Date(e.timestamp);const ts=date.toLocaleDateString()+' '+date.toLocaleTimeString();
+    return `<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag ${typeClass}">${typeLabel}</span><span class="log-entry-ts">${ts}</span><div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div></div><div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${e.context?'<div class="log-entry-ctx">'+e.context+'</div>':''}</div>`;
+  }).join('');
+}
+function addLogEntry(){
+  const text=document.getElementById('logText').value.trim();if(!text)return;
+  const type=document.getElementById('logType').value;const entries=getLogEntries();
+  entries.push({id:Date.now().toString(36),timestamp:new Date().toISOString(),type,text,context:''});
+  saveLogEntries(entries);document.getElementById('logText').value='';renderLogbook();
+}
+function deleteLogEntry(idx){const entries=getLogEntries();entries.splice(idx,1);saveLogEntries(entries);renderLogbook();}
+function exportLogbook(){
+  const entries=getLogEntries();if(entries.length===0)return;
+  let md='# Experiment 04 - Fractal Coastline — Logbook\n\n';
+  entries.forEach(e=>{const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';const date=new Date(e.timestamp);md+=`## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`+e.text+'\n\n';if(e.context)md+=`> Context: ${e.context}\n\n`;md+='---\n\n';});
+  const blob=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fractal-coastline-logbook.md';a.click();
+}
+renderLogbook();
 </script>
 </body>
 </html>
