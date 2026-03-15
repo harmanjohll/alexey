@@ -70,6 +70,10 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .sweep-item input{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
 #viewer3d{width:100%;height:400px;background:#050805;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;cursor:grab}
 #viewer3d:active{cursor:grabbing}
+.render-modes{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.render-modes button{font-size:10px;padding:4px 10px;background:transparent;border:0.5px solid rgba(60,160,60,0.3);color:#7a9a7a;font-family:'Space Mono',monospace;border-radius:4px;cursor:pointer;transition:all .15s}
+.render-modes button:hover{color:#ddb84d;border-color:rgba(200,160,40,0.4)}
+.render-modes button.active{background:rgba(200,160,40,0.15);color:#ddb84d;border-color:rgba(200,160,40,0.5)}
 .color-legend{display:flex;gap:16px;margin-top:8px;font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace}
 .color-legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
 .inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -177,7 +181,7 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
         <div class="param-row"><span class="param-lbl">Cells x</span><input type="number" id="pNcx" value="2" min="1" max="4" step="1"></div>
         <div class="param-row"><span class="param-lbl">Cells y</span><input type="number" id="pNcy" value="2" min="1" max="4" step="1"></div>
         <div class="param-row"><span class="param-lbl">Cells z</span><input type="number" id="pNcz" value="3" min="2" max="6" step="1"></div>
-        <div class="param-row"><span class="param-lbl">Total atoms</span><span class="stat-value sm" id="atomCount" style="font-size:13px">96</span></div>
+        <div class="param-row"><span class="param-lbl">Total atoms</span><span class="stat-value sm" id="atomCount" style="font-size:13px">112</span></div>
         <div class="param-row"><span class="param-lbl">&theta; <span class="unit">(Ge frac)</span></span><input type="number" id="pTheta" value="0.0" min="0" max="1" step="0.1"></div>
       </div>
       <div class="param-group">
@@ -270,8 +274,14 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   <div class="dash-row wide">
     <div class="dash-card">
       <div class="card-label">3D Structure</div>
+      <div class="render-modes" id="renderModes">
+        <button class="active" data-style="bs" onclick="setRenderStyle('bs')">Ball &amp; Stick</button>
+        <button data-style="vdw" onclick="setRenderStyle('vdw')">VDW</button>
+        <button data-style="stick" onclick="setRenderStyle('stick')">Stick</button>
+        <button data-style="layer" onclick="setRenderStyle('layer')">Layer Color</button>
+      </div>
       <div id="viewer3d"></div>
-      <div class="color-legend">
+      <div class="color-legend" id="colorLegend">
         <span><span class="dot" style="background:#3ca0a0"></span>Silicon</span>
         <span><span class="dot" style="background:#dd8844"></span>Germanium</span>
         <span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>
@@ -452,17 +462,29 @@ function buildSlab(ncx, ncy, ncz, theta) {
       let y = (iy + basis[b][1]) * latty;
       let z = (iz + basis[b][2]) * lattz + lattz; // offset by 1 cell for vacuum
 
-      // Dimer reconstruction for top surface (iz == ncz-1, z near top)
-      if (iz === ncz - 1 && (b === 0 || b === 2)) {
+      // Dimer reconstruction for bottom surface (iz === 0)
+      // FORTRAN ref: atoms 1,3 get +disp in x; atoms 9,11 get -disp in x
+      if (iz === 0 && (b === 0 || b === 2)) {
         x += disp;
       }
-      if (iz === ncz - 1 && (b === 8 || b === 10)) {
+      if (iz === 0 && (b === 8 || b === 10)) {
         x -= disp;
       }
 
       const sp = Math.random() < theta ? 1 : 0;
       atoms.push({x, y, z, sp});
     }
+  }
+
+  // Top surface dimer atoms (FORTRAN: k=ncellzf, 4 extra atoms per cell)
+  // Top-surface dimers are rotated 90° — displacement in y instead of x
+  for (let ix = 0; ix < ncx; ix++)
+  for (let iy = 0; iy < ncy; iy++) {
+    const zTop = ncz * lattz + lattz; // one layer above top bulk
+    atoms.push({x: ix * lattx,             y: iy * latty + disp,           z: zTop, sp: Math.random() < theta ? 1 : 0});
+    atoms.push({x: (ix + 0.50) * lattx,    y: iy * latty + disp,           z: zTop, sp: Math.random() < theta ? 1 : 0});
+    atoms.push({x: ix * lattx,             y: (iy + 0.50) * latty - disp,  z: zTop, sp: Math.random() < theta ? 1 : 0});
+    atoms.push({x: (ix + 0.50) * lattx,    y: (iy + 0.50) * latty - disp,  z: zTop, sp: Math.random() < theta ? 1 : 0});
   }
 
   natom = atoms.length;
@@ -778,7 +800,8 @@ self.onmessage = function(e) {
 
 let worker = null;
 let running = false, cancelled = false, sweepRunning = false;
-let scene, camera, renderer, atomMeshes = [], controls;
+let scene, camera, renderer, atomMeshes = [], bondMeshes = [], controls;
+let currentStyle = 'bs', lastAtomData = null;
 let energyChartInst = null, tempChartInst = null, layerChartInst = null;
 let tswEnergyChartInst = null, tswGeChartInst = null;
 let cswEnergyChartInst = null, cswLatChartInst = null;
@@ -824,7 +847,7 @@ function updateAtomCount() {
   const ncx = +document.getElementById('pNcx').value;
   const ncy = +document.getElementById('pNcy').value;
   const ncz = +document.getElementById('pNcz').value;
-  document.getElementById('atomCount').textContent = ncx * ncy * ncz * 16;
+  document.getElementById('atomCount').textContent = ncx * ncy * ncz * 16 + ncx * ncy * 4;
 }
 ['pNcx','pNcy','pNcz'].forEach(id => document.getElementById(id).addEventListener('change', updateAtomCount));
 
@@ -836,7 +859,12 @@ function init3D() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x050805);
 
-  camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+  // Orthographic camera — no depth perspective
+  const aspect = w / h;
+  let frustum = 15;
+  camera = new THREE.OrthographicCamera(
+    -frustum * aspect, frustum * aspect, frustum, -frustum, 0.1, 1000
+  );
   camera.position.set(15, 15, 20);
   camera.lookAt(0, 0, 0);
 
@@ -851,10 +879,13 @@ function init3D() {
   const dir = new THREE.DirectionalLight(0xffffff, 1.0);
   dir.position.set(10, 10, 10);
   scene.add(dir);
+  const dir2 = new THREE.DirectionalLight(0xffffff, 0.4);
+  dir2.position.set(-5, -5, 10);
+  scene.add(dir2);
 
   // Simple orbit controls (no external dependency)
   let isDragging = false, prevX = 0, prevY = 0;
-  let theta = 0.5, phi = 0.8, radius = 25;
+  let theta = 0.5, phi = 0.8, radius = 30;
   const target = new THREE.Vector3(0, 0, 0);
 
   function updateCamera() {
@@ -862,6 +893,11 @@ function init3D() {
     camera.position.y = target.y + radius * Math.cos(phi);
     camera.position.z = target.z + radius * Math.sin(phi) * Math.sin(theta);
     camera.lookAt(target);
+    // Update ortho frustum for zoom
+    const a = w / h;
+    camera.left = -frustum * a; camera.right = frustum * a;
+    camera.top = frustum; camera.bottom = -frustum;
+    camera.updateProjectionMatrix();
   }
 
   renderer.domElement.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
@@ -874,7 +910,7 @@ function init3D() {
   });
   window.addEventListener('mouseup', () => isDragging = false);
   renderer.domElement.addEventListener('wheel', e => {
-    radius = Math.max(5, Math.min(100, radius + e.deltaY * 0.05));
+    frustum = Math.max(3, Math.min(50, frustum + e.deltaY * 0.03));
     updateCamera();
     e.preventDefault();
   }, {passive: false});
@@ -902,16 +938,74 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+// Shared geometries for each render style (created on first use)
+let geoCache = {};
+function getGeo(key, factory) { if (!geoCache[key]) geoCache[key] = factory(); return geoCache[key]; }
+
+// Bond cylinder helper: position+orient a cylinder between two Vector3 points
+const _bAxis = new THREE.Vector3();
+const _bMid = new THREE.Vector3();
+function orientBond(mesh, p1, p2) {
+  _bMid.addVectors(p1, p2).multiplyScalar(0.5);
+  _bAxis.subVectors(p2, p1);
+  const len = _bAxis.length();
+  mesh.position.copy(_bMid);
+  mesh.scale.set(1, len, 1);
+  if (len > 0.001) {
+    _bAxis.normalize();
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), _bAxis);
+  }
+}
+
+// Style parameters
+const STYLES = {
+  bs:    { atomR: [0.5, 0.55],  bondR: 0.12, showBonds: true,  showAtoms: true  },
+  vdw:   { atomR: [1.17, 1.22], bondR: 0,    showBonds: false, showAtoms: true  },
+  stick: { atomR: [0.15, 0.15], bondR: 0.12, showBonds: true,  showAtoms: true  },
+  layer: { atomR: [0.5, 0.55],  bondR: 0.12, showBonds: true,  showAtoms: true  }
+};
+
+// Layer color palette (rainbow from blue to red, bottom to top)
+function layerColor(t) {
+  // t in [0,1], 0=bottom, 1=top
+  const r = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.75) * 4));
+  const g = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.5) * 4));
+  const b = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.25) * 4));
+  return new THREE.Color(r, g, b);
+}
+
+const BOND_CUTOFF = 2.8; // Angstroms — typical Si-Si bond ~ 2.35, cutoff includes slightly stretched bonds
+const siColor = new THREE.Color(0x3ca0a0);
+const geColor = new THREE.Color(0xdd8844);
+
+function setRenderStyle(style) {
+  currentStyle = style;
+  document.querySelectorAll('#renderModes button').forEach(b => {
+    b.classList.toggle('active', b.dataset.style === style);
+  });
+  // Update legend
+  const legend = document.getElementById('colorLegend');
+  if (style === 'layer') {
+    legend.innerHTML = '<span style="background:linear-gradient(to right,#4040ff,#40ff40,#ffff40,#ff4040);width:80px;height:10px;border-radius:3px;display:inline-block"></span><span>bottom &rarr; top layer</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
+  } else {
+    legend.innerHTML = '<span><span class="dot" style="background:#3ca0a0"></span>Silicon</span><span><span class="dot" style="background:#dd8844"></span>Germanium</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
+  }
+  if (lastAtomData) updateAtoms(lastAtomData.pos, lastAtomData.sp, lastAtomData.n, lastAtomData.lx, lastAtomData.ly, lastAtomData.lz);
+}
+
 function updateAtoms(posBuffer, spBuffer, natom, totlx, totly, totlz) {
   const positions = new Float64Array(posBuffer);
   const sp = new Uint8Array(spBuffer);
 
-  // Center offset
-  const cx = totlx / 2, cy = totly / 2, cz = totlz / 2;
+  // Cache for style changes
+  lastAtomData = {pos: posBuffer, sp: spBuffer, n: natom, lx: totlx, ly: totly, lz: totlz};
 
-  // Create or update meshes
+  const cx = totlx / 2, cy = totly / 2, cz = totlz / 2;
+  const style = STYLES[currentStyle];
+
+  // --- Atoms ---
   while (atomMeshes.length < natom) {
-    const geo = new THREE.SphereGeometry(0.6, 12, 8);
+    const geo = getGeo('sphere16', () => new THREE.SphereGeometry(1, 16, 10));
     const mat = new THREE.MeshPhongMaterial({ color: 0x3ca0a0 });
     const mesh = new THREE.Mesh(geo, mat);
     scene.add(mesh);
@@ -920,21 +1014,78 @@ function updateAtoms(posBuffer, spBuffer, natom, totlx, totly, totlz) {
   while (atomMeshes.length > natom) {
     const m = atomMeshes.pop();
     scene.remove(m);
-    m.geometry.dispose();
     m.material.dispose();
   }
 
-  const siColor = new THREE.Color(0x3ca0a0);
-  const geColor = new THREE.Color(0xdd8844);
+  // Compute z range for layer coloring
+  let zMin = Infinity, zMax = -Infinity;
+  const viewPos = [];
+  for (let i = 0; i < natom; i++) {
+    const vx = positions[i*3] - cx;
+    const vy = positions[i*3+2] - cz;
+    const vz = positions[i*3+1] - cy;
+    viewPos.push(vx, vy, vz);
+    if (vy < zMin) zMin = vy;
+    if (vy > zMax) zMax = vy;
+  }
+  const zRange = Math.max(0.01, zMax - zMin);
 
   for (let i = 0; i < natom; i++) {
-    atomMeshes[i].position.set(
-      positions[i*3] - cx,
-      positions[i*3+2] - cz, // swap y/z for better view
-      positions[i*3+1] - cy
-    );
-    atomMeshes[i].material.color = sp[i] === 0 ? siColor : geColor;
-    atomMeshes[i].scale.setScalar(sp[i] === 0 ? 1.0 : 1.15); // Ge slightly larger
+    const mesh = atomMeshes[i];
+    mesh.position.set(viewPos[i*3], viewPos[i*3+1], viewPos[i*3+2]);
+    const r = style.atomR[sp[i] === 0 ? 0 : 1];
+    mesh.scale.setScalar(r);
+    mesh.visible = style.showAtoms;
+
+    if (currentStyle === 'layer') {
+      const t = (viewPos[i*3+1] - zMin) / zRange;
+      mesh.material.color.copy(layerColor(t));
+    } else {
+      mesh.material.color.copy(sp[i] === 0 ? siColor : geColor);
+    }
+  }
+
+  // --- Bonds ---
+  // Clear old bonds (shared material — dispose once)
+  if (bondMeshes.length > 0) {
+    const oldMat = bondMeshes[0].material;
+    while (bondMeshes.length > 0) { scene.remove(bondMeshes.pop()); }
+    oldMat.dispose();
+  }
+
+  if (style.showBonds && natom > 0) {
+    const bondGeo = getGeo('cyl6', () => new THREE.CylinderGeometry(1, 1, 1, 6));
+    const bondColor = currentStyle === 'layer' ? 0x555555 : 0x668866;
+    const sharedBondMat = new THREE.MeshPhongMaterial({ color: bondColor });
+    const cutSq = BOND_CUTOFF * BOND_CUTOFF;
+
+    // Build bonds using real (unswapped) positions with PBC in x,y
+    for (let i = 0; i < natom; i++) {
+      const ix = positions[i*3], iy = positions[i*3+1], iz = positions[i*3+2];
+      for (let j = i + 1; j < natom; j++) {
+        let dx = positions[j*3] - ix;
+        let dy = positions[j*3+1] - iy;
+        let dz = positions[j*3+2] - iz;
+        // PBC in x and y
+        if (dx > totlx * 0.5) dx -= totlx; else if (dx < -totlx * 0.5) dx += totlx;
+        if (dy > totly * 0.5) dy -= totly; else if (dy < -totly * 0.5) dy += totly;
+        const r2 = dx*dx + dy*dy + dz*dz;
+        if (r2 < cutSq && r2 > 0.1) {
+          const mesh = new THREE.Mesh(bondGeo, sharedBondMat);
+          const p1 = new THREE.Vector3(viewPos[i*3], viewPos[i*3+1], viewPos[i*3+2]);
+          const p2 = new THREE.Vector3(
+            viewPos[i*3] + dx,
+            viewPos[i*3+1] + dz,
+            viewPos[i*3+2] + dy
+          );
+          orientBond(mesh, p1, p2);
+          mesh.scale.x = style.bondR;
+          mesh.scale.z = style.bondR;
+          scene.add(mesh);
+          bondMeshes.push(mesh);
+        }
+      }
+    }
   }
 }
 
