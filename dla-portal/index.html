@@ -67,8 +67,46 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .mode-tab:hover:not(.active){color:#7a9a7a}
 .mode-section{display:none}
 .mode-section.active{display:block}
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
+
+/* ── Investigation Cards ── */
+.inv-panel{margin-bottom:14px}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:#0d150d;border:0.5px solid rgba(60,160,120,0.2);border-left:3px solid rgba(60,160,120,0.5);border-radius:0 6px 6px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:700;color:#7dddb0;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:11px;color:#7a9a7a;line-height:1.5;margin-bottom:4px}
+.inv-card-q b{color:#7dddb0;font-weight:600}
+.inv-card-method{font-size:10px;color:#4a6a4a;line-height:1.5;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:#3ca03c}
+.inv-card textarea::placeholder{color:#4a6a4a}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:rgba(60,160,60,0.5)}
+
+/* ── Logbook ── */
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.log-entry{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(60,80,160,0.15);color:#7da0dd;border:0.5px solid rgba(60,80,160,0.3)}
+.log-type-tag.conc{background:rgba(240,180,41,0.15);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:4px;padding-top:4px;border-top:0.5px solid rgba(60,160,60,0.1)}
+.log-entry-actions{margin-left:auto;display:flex;gap:4px}
+.log-entry-actions button{font-size:9px;padding:2px 6px;border:none;color:#4a6a4a;cursor:pointer;background:transparent}
+.log-entry-actions button:hover{color:#e24b4a}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -79,6 +117,59 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 <div class="portal-sub">Random walkers diffuse and stick to a growing cluster, producing beautiful fractal structures. The resulting aggregate has fractal dimension D &asymp; 1.71, emerging purely from the dynamics of diffusion.</div>
 
 <div class="note"><b>Physics:</b> DLA models growth processes limited by diffusion: electrodeposition, mineral dendrites, lightning patterns, bacterial colonies. Particles launched from afar random-walk until they touch the cluster and stick. The outer tips grow fastest because they intercept walkers first, producing branching fractal structures.</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel inv-panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle" id="invToggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">What is the fractal dimension of DLA?</div>
+        <div class="inv-card-q"><b>Question:</b> Is a DLA aggregate a line (D=1), a filled circle (D=2), or something in between?</div>
+        <div class="inv-card-method"><b>Method:</b> Grow 10000 particles, sticking prob = 1.0, point seed. Read D from M(r) plot. <b>Look for:</b> D &asymp; 1.71. The aggregate is fractal.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard1()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs1" placeholder="Your observations: what fractal dimension did you measure? Is it closer to a line or a filled circle?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">Does stickiness change the fractal?</div>
+        <div class="inv-card-q"><b>Question:</b> If particles don&rsquo;t always stick on first contact, does the aggregate look different?</div>
+        <div class="inv-card-method"><b>Method:</b> Sweep sticking probability from 0.05 to 1.0 (8 points), 5000 particles each. <b>Look for:</b> Low sticking &rarr; denser, higher D. High sticking &rarr; branchy, lower D.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard2()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs2" placeholder="Your observations: how does sticking probability affect the fractal dimension? Which end is branchier?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">How does the seed shape matter?</div>
+        <div class="inv-card-q"><b>Question:</b> Does the initial seed geometry change the growth pattern?</div>
+        <div class="inv-card-method"><b>Method:</b> Grow 5000 particles with point seed, line seed, and circle seed. Compare D. <b>Look for:</b> Different seed shapes may produce different fractal dimensions and aggregate morphologies.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard3()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs3" placeholder="Your observations: which seed shape gave the highest D? Did the aggregate shape change dramatically?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the growth and sweep tools to explore your own question. What variable do you want to change, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- PARAMETERS -->
 <div class="panel" id="paramPanel">
@@ -112,6 +203,7 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 <div class="mode-tabs">
   <div class="mode-tab active" onclick="setMode('single')">Grow Aggregate</div>
   <div class="mode-tab" onclick="setMode('sweep')">Sticking Sweep</div>
+  <div class="mode-tab" onclick="setMode('seedcmp')">Seed Comparison</div>
 </div>
 
 <!-- SINGLE -->
@@ -141,6 +233,25 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="swProgFill"></div></div>
     <span class="progress-text" id="swProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SEED COMPARISON -->
+<div class="mode-section" id="modeSeedcmp">
+<div class="note"><b>Investigation:</b> How does the initial seed geometry affect fractal growth? Three aggregates are grown sequentially &mdash; point, line, and circle seed &mdash; with identical parameters. Compare the resulting fractal dimensions.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>Particles</label><input type="number" id="scParticles" value="5000" step="500"></div>
+  <div class="sweep-item"><label>Sticking prob</label><input type="number" id="scStick" value="1.0" step="0.05" min="0.01" max="1.0"></div>
+  <div class="sweep-item"><label>Grid size</label><input type="number" id="scGrid" value="500" step="50" min="200" max="1000"></div>
+  <div class="sweep-item"><label>Runs per seed</label><input type="number" id="scRuns" value="1" min="1" max="5" step="1"></div>
+</div>
+<div class="controls">
+  <button onclick="runSeedComparison()">&#9654; Run Seed Comparison</button>
+  <button onclick="cancelDLA()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="scProgFill"></div></div>
+    <span class="progress-text" id="scProgText">Ready</span>
   </div>
 </div>
 </div>
@@ -182,6 +293,48 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   </div>
 </div>
 
+<!-- SEED COMPARISON DASHBOARD -->
+<div class="dashboard" id="seedDash" style="display:none">
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">Fractal Dimension by Seed Type</div>
+      <div class="chart-wrap tall"><canvas id="scDimChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Comparison Summary</div>
+      <div id="seedTable"></div>
+      <div class="canvas-wrap" style="margin-top:14px"><canvas id="scAggCanvas" width="500" height="500"></canvas></div>
+      <div style="font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:4px;text-align:center">Last aggregate grown</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -191,8 +344,9 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
    ═══════════════════════════════════════════════════════════════ */
 
 let running = false, cancelled = false;
-let massChartInst = null, swDimChartInst = null;
+let massChartInst = null, swDimChartInst = null, scDimChartInst = null;
 let currentMode = 'single';
+const LOGBOOK_KEY = 'alexey_dla_logbook';
 
 const chartDefaults = {
   responsive:true, maintainAspectRatio:false, animation:{duration:0},
@@ -203,13 +357,16 @@ const chartDefaults = {
 function setMode(m) {
   if (running) return;
   currentMode = m;
+  const modes = ['single','sweep','seedcmp'];
   document.querySelectorAll('.mode-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['single','sweep'][i] === m);
+    el.classList.toggle('active', modes[i] === m);
   });
   document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
-  document.getElementById(m === 'single' ? 'modeSingle' : 'modeSweep').classList.add('active');
+  const map = {single:'modeSingle', sweep:'modeSweep', seedcmp:'modeSeedcmp'};
+  document.getElementById(map[m]).classList.add('active');
   document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
   document.getElementById('sweepDash').style.display = m === 'sweep' ? '' : 'none';
+  document.getElementById('seedDash').style.display = m === 'seedcmp' ? '' : 'none';
 }
 
 function togglePanel(id) {
@@ -493,6 +650,259 @@ function displayStickSweep(results) {
 }
 
 function cancelDLA() { cancelled = true; }
+
+/* ── Seed Comparison ── */
+async function runSeedComparison() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('seedDash').style.display = '';
+
+  const maxP = +document.getElementById('scParticles').value;
+  const stick = +document.getElementById('scStick').value;
+  const gridSize = +document.getElementById('scGrid').value;
+  const runs = +document.getElementById('scRuns').value;
+  const launch = +document.getElementById('pLaunch').value;
+  const kill = +document.getElementById('pKill').value;
+
+  const seeds = ['point', 'line', 'circle'];
+  const allResults = []; // {seed, D, count, maxR, dValues[]}
+
+  const totalJobs = seeds.length * runs;
+  let jobsDone = 0;
+
+  for (const seed of seeds) {
+    if (cancelled) break;
+    const dValues = [];
+    let lastDla = null;
+
+    for (let r = 0; r < runs; r++) {
+      if (cancelled) break;
+      jobsDone++;
+      document.getElementById('scProgText').textContent = `${seed} seed (run ${r+1}/${runs}) — ${jobsDone}/${totalJobs}`;
+      document.getElementById('scProgFill').style.width = (jobsDone/totalJobs*100)+'%';
+
+      const dla = growDLA(gridSize, maxP, stick, seed, launch, kill);
+      let done = false;
+      while (!done && !cancelled) {
+        for (let j = 0; j < 100; j++) { if (!dla.step()) { done = true; break; } }
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+
+      const {D} = computeFractalDim(dla.particles, dla.cx, dla.cy);
+      dValues.push(D);
+      lastDla = dla;
+    }
+
+    if (lastDla && !cancelled) {
+      // Draw the last aggregate on the seed comparison canvas
+      drawAggregateOn(lastDla, 'scAggCanvas');
+    }
+
+    const meanD = dValues.reduce((a,b)=>a+b,0) / dValues.length;
+    const stdD = runs > 1 ? Math.sqrt(dValues.reduce((a,d)=>a+(d-meanD)*(d-meanD),0)/(dValues.length-1)) : 0;
+    allResults.push({seed, meanD, stdD, dValues, count: lastDla ? lastDla.getCount() : 0, maxR: lastDla ? lastDla.getMaxR() : 0});
+  }
+
+  if (!cancelled) {
+    document.getElementById('scProgText').textContent = 'Complete';
+    document.getElementById('scProgFill').style.width = '100%';
+    displaySeedComparison(allResults, runs);
+  }
+  running = false;
+}
+
+function drawAggregateOn(dla, canvasId) {
+  const cvs = document.getElementById(canvasId);
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width, h = cvs.height;
+  const img = ctx.createImageData(w, h);
+  const gs = dla.gridSize;
+  const scale = w / gs;
+  const maxOrder = dla.getCount();
+
+  for (let i = 0; i < w*h*4; i += 4) { img.data[i]=10; img.data[i+1]=15; img.data[i+2]=10; img.data[i+3]=255; }
+
+  dla.particles.forEach(p => {
+    const t = maxOrder > 0 ? p.order / maxOrder : 0;
+    const r = Math.round(20 + t * 200);
+    const g = Math.round(60 + t * 160);
+    const b = Math.round(80 + t * 176);
+    const x0 = Math.floor(p.x * scale), y0 = Math.floor(p.y * scale);
+    const x1 = Math.max(x0+1, Math.floor((p.x+1)*scale));
+    const y1 = Math.max(y0+1, Math.floor((p.y+1)*scale));
+    for (let y = y0; y < y1 && y < h; y++) {
+      for (let x = x0; x < x1 && x < w; x++) {
+        const idx = (y*w+x)*4;
+        img.data[idx]=r; img.data[idx+1]=g; img.data[idx+2]=b;
+      }
+    }
+  });
+
+  ctx.putImageData(img, 0, 0);
+}
+
+function displaySeedComparison(results, runs) {
+  if (scDimChartInst) scDimChartInst.destroy();
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'Seed Type', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Fractal Dimension D', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.min = 1.0;
+  opts.scales.y.max = 2.2;
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+
+  const errorBars = runs > 1;
+
+  scDimChartInst = new Chart(document.getElementById('scDimChart'), {
+    type:'bar',
+    data:{
+      labels: results.map(r => r.seed),
+      datasets:[
+        {label:'Measured D', data:results.map(r=>r.meanD), backgroundColor:['rgba(60,160,120,0.5)','rgba(80,140,200,0.5)','rgba(200,160,60,0.5)'], borderColor:['#3ca078','#5090c8','#c8a03c'], borderWidth:2, borderRadius:4},
+        {label:'D=1.71 (theory)', data:results.map(()=>1.71), type:'line', borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false}
+      ]
+    },
+    options:opts
+  });
+
+  // Summary table
+  const table = document.getElementById('seedTable');
+  let html = '<div style="font-size:10px;font-family:\'Space Mono\',monospace">';
+  results.forEach(r => {
+    const dStr = runs > 1 ? `D=${r.meanD.toFixed(3)} &plusmn; ${r.stdD.toFixed(3)}` : `D=${r.meanD.toFixed(3)}`;
+    html += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)">
+      <span style="color:#7a9a7a;text-transform:capitalize">${r.seed} seed</span>
+      <span style="color:#7dddb0;font-weight:700">${dStr}</span>
+      <span style="color:#4a6a4a">${r.count} pts</span>
+    </div>`;
+  });
+  html += '</div>';
+  table.innerHTML = html;
+}
+
+/* ── Investigation card runners ── */
+function runInvCard1() {
+  document.getElementById('pMaxP').value = '10000';
+  document.getElementById('pStick').value = '1.0';
+  document.getElementById('pSeed').value = 'point';
+  setMode('single');
+  setTimeout(() => runDLA(), 100);
+}
+
+function runInvCard2() {
+  document.getElementById('swSmin').value = '0.05';
+  document.getElementById('swSmax').value = '1.0';
+  document.getElementById('swPts').value = '8';
+  document.getElementById('swParticles').value = '5000';
+  setMode('sweep');
+  setTimeout(() => runStickSweep(), 100);
+}
+
+function runInvCard3() {
+  document.getElementById('scParticles').value = '5000';
+  document.getElementById('scStick').value = '1.0';
+  document.getElementById('scRuns').value = '1';
+  setMode('seedcmp');
+  setTimeout(() => runSeedComparison(), 100);
+}
+
+/* ── Logbook system ── */
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveLogEntries(entries) {
+  localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries));
+}
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `<div class="log-entry">
+      <div class="log-entry-hdr">
+        <span class="log-type-tag ${typeClass}">${typeLabel}</span>
+        <span class="log-entry-ts">${ts}</span>
+        <div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div>
+      </div>
+      <div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      ${e.context ? '<div class="log-entry-ctx">' + e.context + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'What is the fractal dimension of DLA?', 2:'Does stickiness change the fractal?', 3:'How does the seed shape matter?', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({
+    id: Date.now().toString(36),
+    timestamp: new Date().toISOString(),
+    type: 'obs',
+    text,
+    context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')
+  });
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#3ca03c';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  // Expand logbook panel if collapsed
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# DLA Portal — Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += `## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`;
+    md += e.text + '\n\n';
+    if (e.context) md += `> Context: ${e.context}\n\n`;
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dla-logbook.md';
+  a.click();
+}
+
+// Initialize logbook on load, collapse by default
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
 </script>
 </body>
 </html>

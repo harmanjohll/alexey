@@ -71,8 +71,45 @@ button.blue:hover:not(:disabled){background:rgba(60,80,160,0.1)}
 .sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
 .sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
 .sweep-item input,.sweep-item select{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
+/* ── Investigation Cards ── */
+.inv-panel{margin-bottom:14px}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:#0d150d;border:0.5px solid rgba(200,60,60,0.2);border-left:3px solid rgba(200,60,60,0.5);border-radius:0 6px 6px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:700;color:#dd7d7d;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:11px;color:#7a9a7a;line-height:1.5;margin-bottom:4px}
+.inv-card-q b{color:#dd7d7d;font-weight:600}
+.inv-card-method{font-size:10px;color:#4a6a4a;line-height:1.5;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:#3ca03c}
+.inv-card textarea::placeholder{color:#4a6a4a}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:rgba(60,160,60,0.5)}
+
+/* ── Logbook ── */
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.log-entry{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(60,80,160,0.15);color:#7da0dd;border:0.5px solid rgba(60,80,160,0.3)}
+.log-type-tag.conc{background:rgba(240,180,41,0.15);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:4px;padding-top:4px;border-top:0.5px solid rgba(60,160,60,0.1)}
+.log-entry-actions{margin-left:auto;display:flex;gap:4px}
+.log-entry-actions button{font-size:9px;padding:2px 6px;border:none;color:#4a6a4a;cursor:pointer;background:transparent}
+.log-entry-actions button:hover{color:#e24b4a}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -83,6 +120,59 @@ button.blue:hover:not(:disabled){background:rgba(60,80,160,0.1)}
 <div class="portal-sub">Metropolis Monte Carlo simulation of a 2D square lattice of spins. Explore the ferromagnetic phase transition at T<sub>c</sub> &asymp; 2.269 J/k<sub>B</sub>. Watch magnetic order emerge and collapse as you change temperature.</div>
 
 <div class="note"><b>Physics:</b> Each site carries a spin &plusmn;1. Nearest-neighbor coupling H = &minus;J &Sigma; s<sub>i</sub>s<sub>j</sub>. At low T, spins align (ferromagnet). At T<sub>c</sub> &asymp; 2.269, thermal fluctuations destroy long-range order. This is the simplest model showing a continuous phase transition with universal critical exponents.</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel inv-panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle" id="invToggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">Where does magnetism disappear?</div>
+        <div class="inv-card-q"><b>Question:</b> At what temperature does the 2D Ising model lose its spontaneous magnetization?</div>
+        <div class="inv-card-method"><b>Method:</b> Sweep T from 1.0 to 4.0 (20 points), L=100, h=0, 500 sweeps/point. <b>Look for:</b> |M| drops sharply near T &asymp; 2.27. Susceptibility &chi; and specific heat C<sub>v</sub> peak at the same temperature.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard1()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs1" placeholder="Your observations: what did you see? Did |M| drop where you expected?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">Does size matter?</div>
+        <div class="inv-card-q"><b>Question:</b> How does the lattice size affect the sharpness of the phase transition?</div>
+        <div class="inv-card-method"><b>Method:</b> Run T-sweeps at L = 20, 50, 100, 200 and overlay the curves. <b>Look for:</b> Larger L &rarr; sharper transition. The Onsager exact solution (infinite L) is shown as a dashed line. All curves should converge toward it.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard2()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs2" placeholder="Your observations: how does lattice size change the transition? Do larger lattices match the exact solution better?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">Can you magnetize a random system?</div>
+        <div class="inv-card-q"><b>Question:</b> Below T<sub>c</sub>, does the system remember which direction it was magnetized?</div>
+        <div class="inv-card-method"><b>Method:</b> Fix T = 1.5 (well below T<sub>c</sub>). Sweep external field h from +2 to &minus;2 and back. <b>Look for:</b> A hysteresis loop. Remanent magnetization (M &ne; 0 when h = 0). Coercive field (h needed to flip M).</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard3()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs3" placeholder="Your observations: did you see a loop? What is the remanent magnetization? The coercive field?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the sweep tools to explore your own question. What variable do you want to change, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- PARAMETERS -->
 <div class="panel" id="paramPanel">
@@ -119,6 +209,7 @@ button.blue:hover:not(:disabled){background:rgba(60,80,160,0.1)}
   <div class="mode-tab active" onclick="setMode('single')">Single Temperature</div>
   <div class="mode-tab" onclick="setMode('sweep')">Temperature Sweep</div>
   <div class="mode-tab" onclick="setMode('hysteresis')">Hysteresis Loop</div>
+  <div class="mode-tab" onclick="setMode('lsweep')">Finite-Size Scaling</div>
 </div>
 
 <!-- SINGLE RUN -->
@@ -167,6 +258,28 @@ button.blue:hover:not(:disabled){background:rgba(60,80,160,0.1)}
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="hysProgFill"></div></div>
     <span class="progress-text" id="hysProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- L-SWEEP (FINITE-SIZE SCALING) -->
+<div class="mode-section" id="modeLsweep">
+<div class="note"><b>Investigation:</b> Run T-sweeps at multiple lattice sizes and overlay the results. The phase transition sharpens with increasing L. The Onsager exact solution for the infinite lattice is shown for comparison.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>T min</label><input type="number" id="lswTmin" value="1.5" step="0.1"></div>
+  <div class="sweep-item"><label>T max</label><input type="number" id="lswTmax" value="3.5" step="0.1"></div>
+  <div class="sweep-item"><label>T points</label><input type="number" id="lswTpts" value="20" min="5" max="40"></div>
+  <div class="sweep-item"><label>Sweeps/point</label><input type="number" id="lswSweeps" value="500" step="100" min="100"></div>
+</div>
+<div class="sweep-grid">
+  <div class="sweep-item" style="grid-column:span 4"><label>Lattice sizes L (comma-separated)</label><input type="text" id="lswSizes" value="20, 50, 100, 200" style="text-align:left"></div>
+</div>
+<div class="controls">
+  <button onclick="runLSweep()">&#9654; Run Finite-Size Scaling</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="lswProgFill"></div></div>
+    <span class="progress-text" id="lswProgText">Ready</span>
   </div>
 </div>
 </div>
@@ -246,6 +359,60 @@ button.blue:hover:not(:disabled){background:rgba(60,80,160,0.1)}
   </div>
 </div>
 
+<!-- L-SWEEP DASHBOARD -->
+<div class="dashboard" id="lswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">|Magnetization| vs Temperature (multiple L)</div>
+      <div class="chart-wrap tall"><canvas id="lswMagChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Susceptibility &chi; vs Temperature (multiple L)</div>
+      <div class="chart-wrap tall"><canvas id="lswChiChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Specific Heat C<sub>v</sub> vs Temperature (multiple L)</div>
+      <div class="chart-wrap"><canvas id="lswCvChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Finite-Size Scaling Summary</div>
+      <div class="stat-grid">
+        <div class="stat-item" style="grid-column:span 2"><div class="stat-label">Onsager Exact T<sub>c</sub></div><div class="stat-value">2.269</div></div>
+      </div>
+      <div id="lswSummary" style="margin-top:10px;font-size:11px;color:#7a9a7a;line-height:1.6"></div>
+      <div class="note" style="margin-top:12px"><b>Key insight:</b> As L &rarr; &infin;, the transition becomes a true singularity. For finite L, it is rounded and shifted. The susceptibility peak height grows as L<sup>&gamma;/&nu;</sup> and the peak position approaches T<sub>c</sub> = 2/ln(1+&radic;2).</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -259,7 +426,10 @@ let running = false, cancelled = false;
 let magChartInst = null, enerChartInst = null;
 let swMagChart = null, swEnerChart = null, swChiChart = null, swCvChart = null;
 let hysChartInst = null;
+let lswMagChartInst = null, lswChiChartInst = null, lswCvChartInst = null;
 let currentMode = 'single';
+
+const LOGBOOK_KEY = 'alexey_ising_logbook';
 
 const chartDefaults = {
   responsive:true, maintainAspectRatio:false, animation:{duration:0},
@@ -271,15 +441,16 @@ function setMode(m) {
   if (running) return;
   currentMode = m;
   document.querySelectorAll('.mode-tab').forEach((el,i) => {
-    const modes = ['single','sweep','hysteresis'];
+    const modes = ['single','sweep','hysteresis','lsweep'];
     el.classList.toggle('active', modes[i] === m);
   });
   document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
-  const map = {single:'modeSingle',sweep:'modeSweep',hysteresis:'modeHysteresis'};
+  const map = {single:'modeSingle',sweep:'modeSweep',hysteresis:'modeHysteresis',lsweep:'modeLsweep'};
   document.getElementById(map[m]).classList.add('active');
   document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
   document.getElementById('sweepDash').style.display = m === 'sweep' ? '' : 'none';
   document.getElementById('hysDash').style.display = m === 'hysteresis' ? '' : 'none';
+  document.getElementById('lswDash').style.display = m === 'lsweep' ? '' : 'none';
 }
 
 function togglePanel(id) {
@@ -641,6 +812,262 @@ function resetIsing() {
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('progText').textContent = 'Ready';
 }
+
+/* ── Onsager exact magnetization ── */
+const TC_EXACT = 2.0 / Math.log(1 + Math.sqrt(2));
+
+function onsagerM(T, J) {
+  const tc = 2.0 * J / Math.log(1 + Math.sqrt(2));
+  if (T >= tc) return 0;
+  const k = 1.0 / (Math.sinh(2 * J / T) * Math.sinh(2 * J / T));
+  return Math.pow(Math.max(0, 1 - k * k), 1.0 / 8.0);
+}
+
+/* ── L-sweep (Finite-Size Scaling) ── */
+async function runLSweep() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('lswDash').style.display = '';
+
+  const Tmin = +document.getElementById('lswTmin').value;
+  const Tmax = +document.getElementById('lswTmax').value;
+  const Tpts = +document.getElementById('lswTpts').value;
+  const sweeps = +document.getElementById('lswSweeps').value;
+  const sizesStr = document.getElementById('lswSizes').value;
+  const sizes = sizesStr.split(',').map(s => parseInt(s.trim())).filter(n => n > 0);
+  const J = +document.getElementById('pJ').value;
+  const h = +document.getElementById('pH').value;
+  const init = document.getElementById('pInit').value;
+  const equil = Math.floor(sweeps * 0.3);
+
+  const allResults = [];
+  const totalRuns = sizes.length * Tpts;
+  let runCount = 0;
+
+  for (const L of sizes) {
+    const sizeResults = [];
+    for (let i = 0; i < Tpts; i++) {
+      if (cancelled) break;
+      const T = Tmin + (Tmax - Tmin) * i / (Tpts - 1);
+      runCount++;
+      document.getElementById('lswProgText').textContent = `L=${L}, T=${T.toFixed(2)} (${runCount}/${totalRuns})`;
+      document.getElementById('lswProgFill').style.width = (runCount/totalRuns*100)+'%';
+      await new Promise(r => setTimeout(r, 5));
+      const r = runSimulation(L, J, h, T, sweeps, equil, 2, init);
+      sizeResults.push({T, M:r.avgM, E:r.avgE, chi:r.chi, cv:r.cv});
+    }
+    if (cancelled) break;
+    allResults.push({L, results: sizeResults});
+  }
+
+  if (!cancelled) {
+    document.getElementById('lswProgText').textContent = 'Complete';
+    displayLSweep(allResults, J);
+  }
+  running = false;
+}
+
+function displayLSweep(allResults, J) {
+  [lswMagChartInst, lswChiChartInst, lswCvChartInst].forEach(c => { if(c) c.destroy(); });
+
+  const colors = ['#dd7d7d','#7da0dd','#f0b429','#a07ddd','#7dd87d','#dd7daa'];
+
+  // Build Onsager exact solution
+  const Tmin = allResults[0].results[0].T;
+  const Tmax = allResults[0].results[allResults[0].results.length-1].T;
+  const onsagerPts = [];
+  for (let i = 0; i <= 50; i++) {
+    const T = Tmin + (Tmax - Tmin) * i / 50;
+    onsagerPts.push({x: T, y: onsagerM(T, J)});
+  }
+
+  function makeLSweepChart(canvasId, metric, yLabel) {
+    const opts = JSON.parse(JSON.stringify(chartDefaults));
+    opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+    opts.scales.x.title = {display:true, text:'Temperature (J/kB)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    opts.scales.x.type = 'linear';
+    opts.scales.y.title = {display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+    const datasets = allResults.map((ar, idx) => ({
+      label: `L=${ar.L}`,
+      data: ar.results.map(r => ({x: r.T, y: r[metric]})),
+      borderColor: colors[idx % colors.length],
+      backgroundColor: colors[idx % colors.length] + '33',
+      borderWidth: 2, pointRadius: 2, showLine: true, fill: false
+    }));
+
+    // Add Onsager exact for magnetization
+    if (metric === 'M') {
+      datasets.push({
+        label: 'Onsager exact (L=∞)',
+        data: onsagerPts,
+        borderColor: '#7dd87d',
+        borderWidth: 2, borderDash: [6,3], pointRadius: 0, showLine: true, fill: false
+      });
+    }
+
+    return new Chart(document.getElementById(canvasId), {
+      type: 'scatter', data: {datasets}, options: opts,
+      plugins: [{
+        id:'tcLine',
+        afterDraw(chart) {
+          const xScale = chart.scales.x, yScale = chart.scales.y;
+          const px = xScale.getPixelForValue(TC_EXACT);
+          if (px < xScale.left || px > xScale.right) return;
+          const ctx = chart.ctx;
+          ctx.save(); ctx.strokeStyle = '#7dd87d66'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+          ctx.beginPath(); ctx.moveTo(px, yScale.top); ctx.lineTo(px, yScale.bottom); ctx.stroke();
+          ctx.fillStyle = '#7dd87d'; ctx.font = '9px "Space Mono"'; ctx.textAlign = 'center';
+          ctx.fillText('Tc', px, yScale.top - 4); ctx.restore();
+        }
+      }]
+    });
+  }
+
+  lswMagChartInst = makeLSweepChart('lswMagChart', 'M', '|M|');
+  lswChiChartInst = makeLSweepChart('lswChiChart', 'chi', 'Susceptibility χ');
+  lswCvChartInst = makeLSweepChart('lswCvChart', 'cv', 'Specific Heat Cv');
+
+  // Summary
+  let summary = '<table style="width:100%;font-size:10px;font-family:\'Space Mono\',monospace;color:#7a9a7a">';
+  summary += '<tr><td style="color:#4a6a4a">L</td><td style="color:#4a6a4a">χ peak T</td><td style="color:#4a6a4a">χ peak height</td></tr>';
+  allResults.forEach(ar => {
+    let maxChi = 0, maxChiT = 0;
+    ar.results.forEach(r => { if (r.chi > maxChi) { maxChi = r.chi; maxChiT = r.T; } });
+    summary += `<tr><td style="color:#dd7d7d">${ar.L}</td><td>${maxChiT.toFixed(3)}</td><td>${maxChi.toFixed(1)}</td></tr>`;
+  });
+  summary += '</table>';
+  document.getElementById('lswSummary').innerHTML = summary;
+}
+
+/* ── Investigation card runners ── */
+function runInvCard1() {
+  document.getElementById('swTmin').value = '1.0';
+  document.getElementById('swTmax').value = '4.0';
+  document.getElementById('swPts').value = '20';
+  document.getElementById('swSweeps').value = '500';
+  document.getElementById('pSize').value = '100';
+  setMode('sweep');
+  setTimeout(() => runTempSweep(), 100);
+}
+
+function runInvCard2() {
+  document.getElementById('lswTmin').value = '1.5';
+  document.getElementById('lswTmax').value = '3.5';
+  document.getElementById('lswTpts').value = '20';
+  document.getElementById('lswSweeps').value = '500';
+  document.getElementById('lswSizes').value = '20, 50, 100, 200';
+  setMode('lsweep');
+  setTimeout(() => runLSweep(), 100);
+}
+
+function runInvCard3() {
+  document.getElementById('hysHmax').value = '2.0';
+  document.getElementById('hysPts').value = '20';
+  document.getElementById('hysTemp').value = '1.5';
+  document.getElementById('hysSweeps').value = '300';
+  setMode('hysteresis');
+  setTimeout(() => runHysteresis(), 100);
+}
+
+/* ── Logbook system ── */
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveLogEntries(entries) {
+  localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries));
+}
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `<div class="log-entry">
+      <div class="log-entry-hdr">
+        <span class="log-type-tag ${typeClass}">${typeLabel}</span>
+        <span class="log-entry-ts">${ts}</span>
+        <div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div>
+      </div>
+      <div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      ${e.context ? '<div class="log-entry-ctx">' + e.context + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'Where does magnetism disappear?', 2:'Does size matter?', 3:'Can you magnetize a random system?', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({
+    id: Date.now().toString(36),
+    timestamp: new Date().toISOString(),
+    type: 'obs',
+    text,
+    context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')
+  });
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#3ca03c';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  // Expand logbook panel if collapsed
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# Ising Model — Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += `## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`;
+    md += e.text + '\n\n';
+    if (e.context) md += `> Context: ${e.context}\n\n`;
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ising-logbook.md';
+  a.click();
+}
+
+// Initialize logbook on load, collapse by default
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
 </script>
 </body>
 </html>

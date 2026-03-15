@@ -24,14 +24,16 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
 .param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .param-group{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px}
 .group-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+select,input[type=number],input[type=text]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
+select{width:130px;text-align:left}
+input[type=number]{width:100px}
+input[type=text]{text-align:left}
+input:focus,select:focus{outline:none;border-color:#3ca03c}
+input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
 .param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .param-row:last-child{margin-bottom:0}
 .param-lbl{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace}
 .param-lbl .unit{color:#4a6a4a;font-size:9px}
-select,input[type=number]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
-select{width:130px;text-align:left}
-input[type=number]{width:100px}
-input:focus,select:focus{outline:none;border-color:#3ca03c}
 .controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
 button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
@@ -61,8 +63,60 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .viz-tabs{display:flex;gap:6px;margin-bottom:8px}
 .viz-tab{padding:4px 12px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:10px;color:#4a6a4a;cursor:pointer;transition:all .15s}
 .viz-tab.active{background:rgba(100,60,180,0.15);color:#b07ddd;border-color:rgba(100,60,180,0.5)}
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}}
+/* Mode tabs */
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px}
+.mode-tab{padding:6px 16px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.mode-tab.active{background:rgba(100,60,180,0.15);color:#b07ddd;border-color:rgba(100,60,180,0.5)}
+.mode-tab:hover:not(.active){color:#7a9a7a}
+.mode-section{display:none}
+.mode-section.active{display:block}
+/* Sweep grid */
+.sweep-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
+.sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.sweep-item input,.sweep-item select{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+/* Investigation Cards */
+.inv-panel{margin-bottom:14px}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:#0d150d;border:0.5px solid rgba(100,60,180,0.2);border-left:3px solid rgba(100,60,180,0.5);border-radius:0 6px 6px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:700;color:#b07ddd;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:11px;color:#7a9a7a;line-height:1.5;margin-bottom:4px}
+.inv-card-q b{color:#b07ddd;font-weight:600}
+.inv-card-method{font-size:10px;color:#4a6a4a;line-height:1.5;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:#3ca03c}
+.inv-card textarea::placeholder{color:#4a6a4a}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:rgba(60,160,60,0.5)}
+/* Logbook */
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.log-entry{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(60,80,160,0.15);color:#7da0dd;border:0.5px solid rgba(60,80,160,0.3)}
+.log-type-tag.conc{background:rgba(240,180,41,0.15);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:4px;padding-top:4px;border-top:0.5px solid rgba(60,160,60,0.1)}
+.log-entry-actions{margin-left:auto;display:flex;gap:4px}
+.log-entry-actions button{font-size:9px;padding:2px 6px;border:none;color:#4a6a4a;cursor:pointer;background:transparent}
+.log-entry-actions button:hover{color:#e24b4a}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+/* Sweep results table */
+.sweep-table{width:100%;border-collapse:collapse;font-size:10px;font-family:'Space Mono',monospace;margin-top:8px}
+.sweep-table th{text-align:left;color:#4a6a4a;padding:4px 8px;border-bottom:0.5px solid rgba(60,160,60,0.2);text-transform:uppercase;letter-spacing:.5px;font-size:9px}
+.sweep-table td{padding:4px 8px;color:#e8f0e8;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.sweep-table td.regime{font-size:9px;color:#b07ddd}
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -73,6 +127,59 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 <div class="portal-sub">D2Q9 Lattice Boltzmann simulation of incompressible flow past obstacles. Watch vortices form and shed as Reynolds number increases. Explore the transition from laminar to turbulent flow.</div>
 
 <div class="note"><b>Physics:</b> The LBM simulates fluid flow by tracking probability distributions of particle velocities on a lattice. At each timestep: particles stream to neighboring nodes and collide (relax toward equilibrium). From these microscopic rules, macroscopic fluid behavior emerges &mdash; including the Navier-Stokes equations. The key parameter is the Reynolds number Re = uL/&nu;, which determines whether flow is laminar (smooth) or turbulent (vortex shedding).</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel inv-panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle" id="invToggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">When do vortices appear?</div>
+        <div class="inv-card-q"><b>Question:</b> At what Reynolds number does the flow behind a cylinder become unsteady?</div>
+        <div class="inv-card-method"><b>Method:</b> Re-sweep from 1 to 200, 10 points, 3000 steps/point. <b>Look for:</b> Re &lt; 5 &rarr; creeping flow. 5 &lt; Re &lt; 47 &rarr; steady vortices. Re &gt; 47 &rarr; von K&aacute;rm&aacute;n street.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard1()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs1" placeholder="Your observations: at what Re did you first see unsteady flow? Did the drag change?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">How often do vortices shed?</div>
+        <div class="inv-card-q"><b>Question:</b> What is the shedding frequency for vortex shedding flow?</div>
+        <div class="inv-card-method"><b>Method:</b> Run at Re &asymp; 100, extended steps (5000), measure Strouhal number St. <b>Look for:</b> St &asymp; 0.2 for a circular cylinder &mdash; a universal result.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard2()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs2" placeholder="Your observations: what Strouhal number did you measure? How regular is the shedding?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">Circle vs square &mdash; which has more drag?</div>
+        <div class="inv-card-q"><b>Question:</b> Does obstacle shape affect drag?</div>
+        <div class="inv-card-method"><b>Method:</b> Fix Re &asymp; 50, run circle then square, compare C<sub>d</sub>. <b>Look for:</b> Square has higher C<sub>d</sub> due to sharp corners causing earlier separation.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard3()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs3" placeholder="Your observations: which shape had more drag? By how much? Why might sharp corners matter?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the sweep tools to explore your own question. What variable do you want to change, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- PARAMETERS -->
 <div class="panel" id="paramPanel">
@@ -104,7 +211,16 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   </div>
 </div>
 
-<!-- CONTROLS -->
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
+  <div class="mode-tab" onclick="setMode('sweep')">Re Sweep</div>
+  <div class="mode-tab" onclick="setMode('strouhal')">Strouhal Analysis</div>
+  <div class="mode-tab" onclick="setMode('shape')">Shape Comparison</div>
+</div>
+
+<!-- SINGLE RUN MODE -->
+<div class="mode-section active" id="modeSingle">
 <div class="controls">
   <button onclick="startLBM()">&#9654; Run Simulation</button>
   <button onclick="cancelLBM()" class="danger">&#9632; Stop</button>
@@ -114,16 +230,73 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
     <span class="progress-text" id="progText">Ready</span>
   </div>
 </div>
+</div>
 
-<!-- DASHBOARD -->
-<div class="dashboard">
+<!-- RE SWEEP MODE -->
+<div class="mode-section" id="modeSweep">
+<div class="note"><b>Investigation:</b> How does drag change with Reynolds number? Sweep Re from low to high and watch the flow transition from creeping to steady vortices to vortex shedding. The drag coefficient and Strouhal number reveal the physics.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>Re min</label><input type="number" id="swReMin" value="1" step="1" min="1"></div>
+  <div class="sweep-item"><label>Re max</label><input type="number" id="swReMax" value="200" step="10" min="10"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="swPts" value="8" min="3" max="20"></div>
+  <div class="sweep-item"><label>Steps/point</label><input type="number" id="swSteps" value="3000" step="500" min="1000"></div>
+</div>
+<div class="controls">
+  <button onclick="runReSweep()">&#9654; Run Re Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="swProgFill"></div></div>
+    <span class="progress-text" id="swProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- STROUHAL ANALYSIS MODE -->
+<div class="mode-section" id="modeStrouhal">
+<div class="note"><b>Investigation:</b> At Re &asymp; 100, vortices shed periodically behind the cylinder. Place a velocity probe downstream and record v<sub>y</sub> oscillations. Count zero-crossings to measure shedding frequency f, then compute the Strouhal number St = f &times; D / u<sub>0</sub>. For a circular cylinder, St &asymp; 0.2 &mdash; a universal result confirmed by experiment.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>Reynolds Re</label><input type="number" id="stReIn" value="100" step="10" min="20"></div>
+  <div class="sweep-item"><label>Steps</label><input type="number" id="stSteps" value="8000" step="500" min="2000"></div>
+  <div class="sweep-item"><label>Probe sample interval</label><input type="number" id="stSampleInt" value="10" step="5" min="1"></div>
+  <div class="sweep-item"><label>Shape</label><select id="stShape"><option value="circle">Circle</option><option value="square">Square</option></select></div>
+</div>
+<div class="controls">
+  <button onclick="runStrouhal()">&#9654; Run Strouhal Analysis</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="stProgFill"></div></div>
+    <span class="progress-text" id="stProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SHAPE COMPARISON MODE -->
+<div class="mode-section" id="modeShape">
+<div class="note"><b>Investigation:</b> Run the same flow (same Re) past a circle and a square. Compare drag coefficients to see how shape affects resistance. Sharp corners cause flow separation earlier, increasing drag.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>Reynolds Re</label><input type="number" id="shRe" value="50" step="10" min="5"></div>
+  <div class="sweep-item"><label>Steps</label><input type="number" id="shSteps" value="4000" step="500" min="1000"></div>
+  <div class="sweep-item"><label>Obs size (%Ny)</label><input type="number" id="shObsSize" value="25" min="5" max="50" step="5"></div>
+</div>
+<div class="controls">
+  <button onclick="runShapeComp()">&#9654; Run Shape Comparison</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="shProgFill"></div></div>
+    <span class="progress-text" id="shProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SINGLE RUN DASHBOARD -->
+<div class="dashboard" id="singleDash">
   <div class="dash-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div class="card-label" style="margin-bottom:0">Flow Visualization</div>
       <div class="viz-tabs">
-        <div class="viz-tab active" onclick="setViz('velocity')">Velocity</div>
-        <div class="viz-tab" onclick="setViz('vorticity')">Vorticity</div>
-        <div class="viz-tab" onclick="setViz('pressure')">Pressure</div>
+        <div class="viz-tab active" onclick="setViz('velocity',this)">Velocity</div>
+        <div class="viz-tab" onclick="setViz('vorticity',this)">Vorticity</div>
+        <div class="viz-tab" onclick="setViz('pressure',this)">Pressure</div>
       </div>
     </div>
     <div class="canvas-wrap"><canvas id="flowCanvas" width="600" height="200"></canvas></div>
@@ -157,23 +330,137 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   </div>
 </div>
 
+<!-- SWEEP DASHBOARD -->
+<div class="dashboard" id="sweepDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Drag Coefficient C<sub>d</sub> vs Reynolds Number</div>
+      <div class="chart-wrap tall"><canvas id="sweepCdChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Results</div>
+      <div id="sweepTable"></div>
+      <div class="note" style="margin-top:12px"><b>Flow regimes:</b> Creeping (Re&lt;5), Steady vortices (5&lt;Re&lt;47), Vortex shedding (Re&gt;47). The Strouhal number St = fD/u<sub>0</sub> measures shedding frequency &mdash; St &asymp; 0.2 for a cylinder is universal.</div>
+    </div>
+  </div>
+  <div class="dash-card">
+    <div class="card-label">Flow Visualization (last sweep point)</div>
+    <div class="canvas-wrap"><canvas id="sweepFlowCanvas" width="600" height="200"></canvas></div>
+  </div>
+</div>
+
+<!-- STROUHAL ANALYSIS DASHBOARD -->
+<div class="dashboard" id="strouhalDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">v<sub>y</sub> Probe Signal (downstream of obstacle)</div>
+      <div class="chart-wrap tall"><canvas id="strouhalVyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Strouhal Analysis</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Strouhal Number (St)</div><div class="stat-value" id="stStVal">--</div></div>
+        <div class="stat-item"><div class="stat-label">Reynolds Number</div><div class="stat-value sm" id="stReVal">--</div></div>
+        <div class="stat-item"><div class="stat-label">Shedding Frequency f</div><div class="stat-value sm" id="stFreqVal">--</div></div>
+        <div class="stat-item"><div class="stat-label">Zero Crossings</div><div class="stat-value sm" id="stCrossVal">--</div></div>
+        <div class="stat-item"><div class="stat-label">Probe v<sub>y</sub> Amplitude</div><div class="stat-value sm" id="stAmpVal">--</div></div>
+        <div class="stat-item"><div class="stat-label">Expected St (theory)</div><div class="stat-value sm" style="color:#3ca03c">~0.2</div></div>
+      </div>
+      <div class="note" style="margin-top:12px"><b>Key insight:</b> The Strouhal number St &asymp; 0.2 for a circular cylinder is remarkably constant across a wide range of Reynolds numbers (Re 100&ndash;10<sup>5</sup>). This universality suggests the shedding frequency is governed by the geometry, not viscosity.</div>
+    </div>
+  </div>
+  <div class="dash-card">
+    <div class="card-label">Flow Visualization (Strouhal run)</div>
+    <div class="canvas-wrap"><canvas id="strouhalFlowCanvas" width="600" height="200"></canvas></div>
+  </div>
+</div>
+
+<!-- SHAPE COMPARISON DASHBOARD -->
+<div class="dashboard" id="shapeDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">C<sub>d</sub> vs Time &mdash; Shape Comparison</div>
+      <div class="chart-wrap tall"><canvas id="shapeCdChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Comparison Summary</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Circle C<sub>d</sub> (avg)</div><div class="stat-value sm" id="shCdCircle">--</div></div>
+        <div class="stat-item"><div class="stat-label">Square C<sub>d</sub> (avg)</div><div class="stat-value sm" id="shCdSquare">--</div></div>
+        <div class="stat-item"><div class="stat-label">Reynolds Number</div><div class="stat-value sm" id="shReDisp">--</div></div>
+        <div class="stat-item"><div class="stat-label">Drag ratio (sq/circ)</div><div class="stat-value sm" id="shRatio">--</div></div>
+      </div>
+      <div class="chart-wrap" style="margin-top:12px"><canvas id="shapeBarChart"></canvas></div>
+      <div class="note" style="margin-top:12px"><b>Key insight:</b> Square obstacles have sharp corners that force flow separation at fixed points, producing wider wakes and higher drag than smooth circles at the same Re.</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════
    LBM PORTAL — D2Q9 Lattice Boltzmann Method
+   Single run, Re sweep, shape comparison, investigation cards, logbook
    ═══════════════════════════════════════════════════════════════ */
 
 let running = false, cancelled = false;
 let profileChartInst = null, dragChartInst = null;
+let sweepCdChartInst = null, shapeCdChartInst = null, shapeBarChartInst = null, strouhalVyChartInst = null;
 let vizMode = 'velocity';
+let currentMode = 'single';
+
+const LOGBOOK_KEY = 'alexey_lbm_logbook';
 
 const chartDefaults = {
   responsive:true, maintainAspectRatio:false, animation:{duration:0},
   plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(100,60,180,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},
   scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}
 };
+
+/* ── Mode switching ── */
+function setMode(m) {
+  if (running) return;
+  currentMode = m;
+  const modes = ['single','sweep','strouhal','shape'];
+  document.querySelectorAll('.mode-tab').forEach((el,i) => {
+    el.classList.toggle('active', modes[i] === m);
+  });
+  document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
+  const map = {single:'modeSingle', sweep:'modeSweep', strouhal:'modeStrouhal', shape:'modeShape'};
+  document.getElementById(map[m]).classList.add('active');
+  document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('sweepDash').style.display = m === 'sweep' ? '' : 'none';
+  document.getElementById('strouhalDash').style.display = m === 'strouhal' ? '' : 'none';
+  document.getElementById('shapeDash').style.display = m === 'shape' ? '' : 'none';
+}
 
 function togglePanel(id) {
   const p = document.getElementById(id);
@@ -182,10 +469,10 @@ function togglePanel(id) {
   if(t) t.innerHTML = p.classList.contains('collapsed') ? '&#9654; expand' : '&darr; collapse';
 }
 
-function setViz(mode) {
+function setViz(mode, el) {
   vizMode = mode;
-  document.querySelectorAll('.viz-tab').forEach(el => el.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
 }
 
 function updateRe() {
@@ -201,7 +488,6 @@ function updateRe() {
 updateRe();
 
 /* ── D2Q9 LBM Core ── */
-// Velocities: 0=rest, 1=E, 2=N, 3=W, 4=S, 5=NE, 6=NW, 7=SW, 8=SE
 const ex = [0, 1, 0,-1, 0, 1,-1,-1, 1];
 const ey = [0, 0, 1, 0,-1, 1, 1,-1,-1];
 const w  = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36];
@@ -212,12 +498,10 @@ function createLBM(Nx, Ny, u0, nu, obstacleType, obsSize) {
   const omega = 1 / tau;
   const N = Nx * Ny;
 
-  // Distribution functions
   const f = new Float64Array(9 * N);
   const ftemp = new Float64Array(9 * N);
   const obstacle = new Uint8Array(N);
 
-  // Set obstacle
   const cx = Math.floor(Nx * 0.25);
   const cy = Math.floor(Ny / 2);
   const r = obsSize / 2;
@@ -232,7 +516,6 @@ function createLBM(Nx, Ny, u0, nu, obstacleType, obsSize) {
     }
   }
 
-  // Initialize to equilibrium with uniform flow
   for (let y = 0; y < Ny; y++) {
     for (let x = 0; x < Nx; x++) {
       const idx = y * Nx + x;
@@ -259,9 +542,7 @@ function createLBM(Nx, Ny, u0, nu, obstacleType, obsSize) {
         let rho = 0, ux = 0, uy = 0;
         for (let q = 0; q < 9; q++) {
           const fq = ff[q*NN+idx];
-          rho += fq;
-          ux += ex[q]*fq;
-          uy += ey[q]*fq;
+          rho += fq; ux += ex[q]*fq; uy += ey[q]*fq;
         }
         ux /= rho; uy /= rho;
         for (let q = 0; q < 9; q++) {
@@ -343,9 +624,63 @@ function createLBM(Nx, Ny, u0, nu, obstacleType, obsSize) {
   };
 }
 
+/* ── Compute drag from momentum deficit ── */
+function computeDrag(lbm, macro, u0, obsSize) {
+  const {Nx, Ny, cx, r, obstacle} = lbm;
+  const xProbe = cx + Math.ceil(r) + 5;
+  if (xProbe >= Nx) return 0;
+  let drag = 0;
+  for (let y = 0; y < Ny; y++) {
+    const idx = y * Nx + xProbe;
+    drag += u0 - macro.ux[idx];
+  }
+  return 2 * drag / (u0 * u0 * obsSize);
+}
+
+/* ── Measure Strouhal number from uy probe signal ── */
+function measureStrouhal(uyProbeHistory, u0, obsSize, totalSteps) {
+  // Use second half (after transient)
+  const n = uyProbeHistory.length;
+  const start = Math.floor(n / 2);
+  if (n - start < 10) return {st: null, shedding: false};
+
+  const signal = uyProbeHistory.slice(start);
+  // Count zero crossings
+  let crossings = 0;
+  for (let i = 1; i < signal.length; i++) {
+    if ((signal[i-1] >= 0 && signal[i] < 0) || (signal[i-1] < 0 && signal[i] >= 0)) {
+      crossings++;
+    }
+  }
+
+  // Check amplitude: is there actual oscillation?
+  let maxAmp = 0;
+  for (let i = 0; i < signal.length; i++) maxAmp = Math.max(maxAmp, Math.abs(signal[i]));
+  const shedding = maxAmp > u0 * 0.01 && crossings >= 4;
+
+  if (!shedding) return {st: null, shedding: false};
+
+  // frequency = (crossings/2) / time_duration
+  // Each sample is taken every sampleInterval steps
+  // Total time of the analyzed window in lattice units:
+  const stepsInWindow = totalSteps / 2;
+  const freq = (crossings / 2) / stepsInWindow;
+  const D = obsSize;
+  const st = freq * D / u0;
+
+  return {st, shedding, crossings, freq};
+}
+
+/* ── Flow regime label ── */
+function getRegime(Re) {
+  if (Re < 5) return 'Creeping';
+  if (Re < 47) return 'Steady vortices';
+  return 'Vortex shedding';
+}
+
 /* ── Drawing ── */
-function drawFlow(lbm, macro) {
-  const cvs = document.getElementById('flowCanvas');
+function drawFlow(lbm, macro, canvasId) {
+  const cvs = document.getElementById(canvasId || 'flowCanvas');
   const {Nx, Ny} = lbm;
   cvs.width = Nx;
   cvs.height = Ny;
@@ -367,24 +702,21 @@ function drawFlow(lbm, macro) {
       if (vizMode === 'velocity') {
         val = Math.sqrt(ux[idx]*ux[idx] + uy[idx]*uy[idx]) / (lbm.u0 * 2);
       } else if (vizMode === 'vorticity') {
-        // Approximate vorticity
         const xp = Math.min(x+1, Nx-1), xm = Math.max(x-1, 0);
         const yp = Math.min(y+1, Ny-1), ym = Math.max(y-1, 0);
         const duy_dx = (uy[y*Nx+xp] - uy[y*Nx+xm]) / 2;
         const dux_dy = (ux[yp*Nx+x] - ux[ym*Nx+x]) / 2;
-        val = (duy_dx - dux_dy) * 20; // Scale for visibility
-      } else { // pressure
-        val = (rho[idx] - 1.0) * 50; // Scale
+        val = (duy_dx - dux_dy) * 20;
+      } else {
+        val = (rho[idx] - 1.0) * 50;
       }
 
       let r, g, b;
       if (vizMode === 'vorticity') {
-        // Diverging: blue (negative) -> white (0) -> red (positive)
         const t = Math.max(-1, Math.min(1, val));
         if (t > 0) { r=Math.round(128+127*t); g=Math.round(128-128*t); b=Math.round(128-128*t); }
         else { r=Math.round(128+128*t); g=Math.round(128+128*t); b=Math.round(128-127*t); }
       } else {
-        // Sequential: dark blue -> cyan -> yellow -> red
         const t = Math.max(0, Math.min(1, vizMode === 'pressure' ? val*0.5+0.5 : val));
         if (t < 0.25) { const s=t/0.25; r=0; g=Math.round(s*128); b=Math.round(128+s*127); }
         else if (t < 0.5) { const s=(t-0.25)/0.25; r=0; g=Math.round(128+s*127); b=Math.round(255-s*127); }
@@ -397,7 +729,9 @@ function drawFlow(lbm, macro) {
   ctx.putImageData(img, 0, 0);
 }
 
-/* ── Main simulation ── */
+/* ══════════════════════════════════════════════
+   SINGLE RUN
+   ══════════════════════════════════════════════ */
 async function startLBM() {
   if (running) return;
   running = true;
@@ -423,7 +757,7 @@ async function startLBM() {
 
     if (step % batchSize === 0) {
       const macro = lbm.getMacro();
-      drawFlow(lbm, macro);
+      drawFlow(lbm, macro, 'flowCanvas');
 
       const maxU = Math.max(...Array.from(macro.ux).map((u,i) => lbm.obstacle[i] ? 0 : Math.sqrt(u*u+macro.uy[i]*macro.uy[i])));
       document.getElementById('stStep').textContent = step;
@@ -431,22 +765,12 @@ async function startLBM() {
       document.getElementById('progText').textContent = `Step ${step}/${steps}`;
       document.getElementById('progFill').style.width = (step/steps*100)+'%';
 
-      // Rough drag estimate from momentum deficit
       if (obsType !== 'none' && step > 100) {
-        let drag = 0;
-        const xProbe = lbm.cx + Math.ceil(lbm.r) + 5;
-        if (xProbe < Nx) {
-          for (let y = 0; y < Ny; y++) {
-            const idx = y*Nx+xProbe;
-            drag += u0 - macro.ux[idx];
-          }
-        }
-        const Cd = 2 * drag / (u0 * u0 * obsSize);
+        const Cd = computeDrag(lbm, macro, u0, obsSize);
         document.getElementById('stCd').textContent = Cd.toFixed(3);
         if (step % (batchSize * 5) === 0) dragHistory.push({step, Cd});
       }
 
-      // Velocity profile
       if (step % (batchSize * 5) === 0) {
         updateProfileChart(lbm, macro);
         updateDragChart(dragHistory);
@@ -458,7 +782,7 @@ async function startLBM() {
 
   if (!cancelled) {
     const macro = lbm.getMacro();
-    drawFlow(lbm, macro);
+    drawFlow(lbm, macro, 'flowCanvas');
     updateProfileChart(lbm, macro);
     updateDragChart(dragHistory);
   }
@@ -501,6 +825,7 @@ function updateDragChart(dragHistory) {
 }
 
 function cancelLBM() { cancelled = true; }
+function cancelSweep() { cancelled = true; }
 function resetLBM() {
   cancelled = true;
   running = false;
@@ -514,6 +839,567 @@ function resetLBM() {
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('progText').textContent = 'Ready';
 }
+
+/* ══════════════════════════════════════════════
+   REYNOLDS NUMBER SWEEP
+   ══════════════════════════════════════════════ */
+async function runReSweep() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+
+  const ReMin = +document.getElementById('swReMin').value;
+  const ReMax = +document.getElementById('swReMax').value;
+  const nPts = +document.getElementById('swPts').value;
+  const stepsPerPt = +document.getElementById('swSteps').value;
+  const u0 = +document.getElementById('pU0').value;
+  const Nx = +document.getElementById('pNx').value;
+  const Ny = +document.getElementById('pNy').value;
+  const obsType = document.getElementById('pObstacle').value === 'none' ? 'circle' : document.getElementById('pObstacle').value;
+  const obsFrac = +document.getElementById('pObsSize').value / 100;
+  const obsSize = obsFrac * Ny;
+
+  const results = [];
+  const batchSize = 20;
+
+  for (let pt = 0; pt < nPts && !cancelled; pt++) {
+    const Re = nPts === 1 ? ReMin : ReMin + (ReMax - ReMin) * pt / (nPts - 1);
+    const nu = u0 * obsSize / Re;
+
+    document.getElementById('swProgText').textContent = `Point ${pt+1}/${nPts} · Re=${Re.toFixed(1)}`;
+    document.getElementById('swProgFill').style.width = (pt / nPts * 100) + '%';
+
+    const lbm = createLBM(Nx, Ny, u0, nu, obsType, obsSize);
+    const dragHist = [];
+    const uyProbeHist = [];
+
+    // Probe point: 3 obstacle radii downstream, centerline
+    const probeX = Math.min(lbm.cx + Math.ceil(lbm.r * 3), Nx - 2);
+    const probeY = Math.floor(Ny / 2);
+
+    for (let step = 0; step < stepsPerPt && !cancelled; step++) {
+      lbm.step();
+
+      if (step % batchSize === 0) {
+        const macro = lbm.getMacro();
+
+        // Record uy at probe for Strouhal measurement
+        const probeIdx = probeY * Nx + probeX;
+        uyProbeHist.push(macro.uy[probeIdx]);
+
+        if (step > stepsPerPt * 0.2) {
+          const Cd = computeDrag(lbm, macro, u0, obsSize);
+          dragHist.push(Cd);
+        }
+
+        // Draw last point's flow
+        if (pt === nPts - 1) {
+          drawFlow(lbm, macro, 'sweepFlowCanvas');
+        }
+
+        if (step % (batchSize * 10) === 0) {
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+    }
+
+    if (cancelled) break;
+
+    // Compute time-averaged Cd from last 50% of drag history
+    const half = Math.floor(dragHist.length / 2);
+    const tailDrag = dragHist.slice(half);
+    const avgCd = tailDrag.length > 0 ? tailDrag.reduce((a,b)=>a+b,0)/tailDrag.length : 0;
+
+    // Get max velocity
+    const finalMacro = lbm.getMacro();
+    let maxU = 0;
+    for (let i = 0; i < lbm.N; i++) {
+      if (!lbm.obstacle[i]) {
+        const spd = Math.sqrt(finalMacro.ux[i]*finalMacro.ux[i] + finalMacro.uy[i]*finalMacro.uy[i]);
+        if (spd > maxU) maxU = spd;
+      }
+    }
+
+    // Strouhal measurement
+    const stMeas = measureStrouhal(uyProbeHist, u0, obsSize, stepsPerPt);
+
+    results.push({
+      Re, nu, avgCd, maxU,
+      regime: getRegime(Re),
+      shedding: stMeas.shedding,
+      st: stMeas.st
+    });
+
+    // Update chart progressively
+    updateSweepChart(results);
+    updateSweepTable(results);
+  }
+
+  document.getElementById('swProgText').textContent = cancelled ? 'Cancelled' : 'Complete';
+  document.getElementById('swProgFill').style.width = '100%';
+  running = false;
+}
+
+function updateSweepChart(results) {
+  if (sweepCdChartInst) sweepCdChartInst.destroy();
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'Reynolds Number (Re)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Cd', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}};
+
+  const datasets = [{
+    label: 'Cd vs Re',
+    data: results.map(r => ({x: r.Re, y: r.avgCd})),
+    borderColor: '#b07ddd',
+    backgroundColor: results.map(r => r.shedding ? '#f0b429' : '#b07ddd'),
+    borderWidth: 1.5,
+    pointRadius: 5,
+    pointStyle: results.map(r => r.shedding ? 'triangle' : 'circle'),
+    showLine: true,
+    fill: false
+  }];
+
+  // Add St values as annotation-like second dataset if any shedding
+  const stResults = results.filter(r => r.shedding && r.st !== null);
+  if (stResults.length > 0) {
+    datasets.push({
+      label: 'Strouhal (St)',
+      data: stResults.map(r => ({x: r.Re, y: r.st})),
+      borderColor: '#f0b429',
+      backgroundColor: '#f0b429',
+      borderWidth: 1,
+      pointRadius: 4,
+      showLine: true,
+      fill: false,
+      yAxisID: 'ySt'
+    });
+    opts.scales.ySt = {
+      position: 'right',
+      grid: {display: false},
+      ticks: {color: '#f0b429', font: {family: 'Space Mono', size: 9}},
+      title: {display: true, text: 'Strouhal (St)', color: '#f0b429', font: {family: 'Space Mono', size: 9}}
+    };
+  }
+
+  sweepCdChartInst = new Chart(document.getElementById('sweepCdChart'), {
+    type: 'scatter',
+    data: {datasets},
+    options: opts
+  });
+}
+
+function updateSweepTable(results) {
+  let html = '<table class="sweep-table"><tr><th>Re</th><th>&nu;</th><th>C<sub>d</sub></th><th>Max u</th><th>Regime</th><th>St</th></tr>';
+  results.forEach(r => {
+    html += `<tr>
+      <td>${r.Re.toFixed(1)}</td>
+      <td>${r.nu.toFixed(4)}</td>
+      <td>${r.avgCd.toFixed(3)}</td>
+      <td>${r.maxU.toFixed(4)}</td>
+      <td class="regime">${r.regime}</td>
+      <td>${r.shedding && r.st !== null ? r.st.toFixed(3) : '--'}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  document.getElementById('sweepTable').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════
+   STROUHAL ANALYSIS
+   ══════════════════════════════════════════════ */
+async function runStrouhal() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+
+  const Re = +document.getElementById('stReIn').value;
+  const steps = +document.getElementById('stSteps').value;
+  const sampleInt = +document.getElementById('stSampleInt').value;
+  const shape = document.getElementById('stShape').value;
+  const Nx = +document.getElementById('pNx').value;
+  const Ny = +document.getElementById('pNy').value;
+  const obsFrac = +document.getElementById('pObsSize').value / 100;
+  const obsSize = obsFrac * Ny;
+  const u0 = +document.getElementById('pU0').value;
+  const nu = u0 * obsSize / Re;
+
+  const lbm = createLBM(Nx, Ny, u0, nu, shape, obsSize);
+  const batchSize = 20;
+
+  // Probe at (cx + 3r, cy)
+  const probeX = Math.min(lbm.cx + Math.ceil(lbm.r * 3), Nx - 2);
+  const probeY = Math.floor(Ny / 2);
+  const uyProbeHist = [];
+  const probeSteps = [];
+
+  for (let step = 0; step < steps && !cancelled; step++) {
+    lbm.step();
+
+    if (step % sampleInt === 0) {
+      const macro = lbm.getMacro();
+      const probeIdx = probeY * Nx + probeX;
+      uyProbeHist.push(macro.uy[probeIdx]);
+      probeSteps.push(step);
+
+      if (step % (batchSize * 10) === 0) {
+        drawFlow(lbm, macro, 'strouhalFlowCanvas');
+        document.getElementById('stProgText').textContent = `Step ${step}/${steps}`;
+        document.getElementById('stProgFill').style.width = (step / steps * 100) + '%';
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+  }
+
+  if (!cancelled) {
+    // Final visualization
+    const finalMacro = lbm.getMacro();
+    drawFlow(lbm, finalMacro, 'strouhalFlowCanvas');
+
+    // Strouhal analysis: use second half after transient
+    const n = uyProbeHist.length;
+    const startIdx = Math.floor(n / 2);
+    const signal = uyProbeHist.slice(startIdx);
+    const signalSteps = probeSteps.slice(startIdx);
+
+    // Count zero crossings
+    let crossings = 0;
+    for (let i = 1; i < signal.length; i++) {
+      if ((signal[i-1] >= 0 && signal[i] < 0) || (signal[i-1] < 0 && signal[i] >= 0)) {
+        crossings++;
+      }
+    }
+
+    // Max amplitude
+    let maxAmp = 0;
+    for (let i = 0; i < signal.length; i++) maxAmp = Math.max(maxAmp, Math.abs(signal[i]));
+    const shedding = maxAmp > u0 * 0.01 && crossings >= 4;
+
+    // Compute Strouhal
+    let st = null, freq = null;
+    if (shedding) {
+      const stepsInWindow = steps / 2;
+      freq = (crossings / 2) / stepsInWindow;
+      const D = obsSize;
+      st = freq * D / u0;
+    }
+
+    // Update dashboard
+    document.getElementById('stStVal').textContent = st !== null ? st.toFixed(4) : 'No shedding';
+    document.getElementById('stStVal').style.color = st !== null ? '#b07ddd' : '#e24b4a';
+    document.getElementById('stReVal').textContent = Re.toFixed(1);
+    document.getElementById('stFreqVal').textContent = freq !== null ? freq.toExponential(3) : '--';
+    document.getElementById('stCrossVal').textContent = shedding ? crossings : '< 4';
+    document.getElementById('stAmpVal').textContent = maxAmp.toExponential(3);
+
+    // Plot vy time series
+    updateStrouhalVyChart(probeSteps, uyProbeHist, startIdx);
+  }
+
+  document.getElementById('stProgText').textContent = cancelled ? 'Cancelled' : 'Complete';
+  document.getElementById('stProgFill').style.width = '100%';
+  running = false;
+}
+
+function updateStrouhalVyChart(probeSteps, uyProbeHist, transientEnd) {
+  if (strouhalVyChartInst) strouhalVyChartInst.destroy();
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'Time Step', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'v_y at probe', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}};
+
+  // Transient portion (first half, lighter color)
+  const transientData = probeSteps.slice(0, transientEnd).map((s, i) => ({x: s, y: uyProbeHist[i]}));
+  const analysisData = probeSteps.slice(transientEnd).map((s, i) => ({x: s, y: uyProbeHist[transientEnd + i]}));
+
+  strouhalVyChartInst = new Chart(document.getElementById('strouhalVyChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Transient',
+          data: transientData,
+          borderColor: 'rgba(176,125,221,0.3)',
+          borderWidth: 1,
+          pointRadius: 0,
+          showLine: true,
+          fill: false
+        },
+        {
+          label: 'Analyzed signal',
+          data: analysisData,
+          borderColor: '#b07ddd',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          showLine: true,
+          fill: false
+        }
+      ]
+    },
+    options: opts
+  });
+}
+
+/* ══════════════════════════════════════════════
+   SHAPE COMPARISON
+   ══════════════════════════════════════════════ */
+async function runShapeComp() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+
+  const Re = +document.getElementById('shRe').value;
+  const steps = +document.getElementById('shSteps').value;
+  const Nx = +document.getElementById('pNx').value;
+  const Ny = +document.getElementById('pNy').value;
+  const obsFrac = +document.getElementById('shObsSize').value / 100;
+  const obsSize = obsFrac * Ny;
+  const u0 = +document.getElementById('pU0').value;
+  const nu = u0 * obsSize / Re;
+
+  const batchSize = 20;
+  const shapes = ['circle', 'square'];
+  const shapeData = {};
+
+  for (let si = 0; si < shapes.length && !cancelled; si++) {
+    const shape = shapes[si];
+    document.getElementById('shProgText').textContent = `Running ${shape} (${si+1}/2)...`;
+    document.getElementById('shProgFill').style.width = (si / 2 * 100) + '%';
+
+    const lbm = createLBM(Nx, Ny, u0, nu, shape, obsSize);
+    const dragHist = [];
+
+    for (let step = 0; step < steps && !cancelled; step++) {
+      lbm.step();
+
+      if (step % batchSize === 0) {
+        if (step > 100) {
+          const macro = lbm.getMacro();
+          const Cd = computeDrag(lbm, macro, u0, obsSize);
+          if (step % (batchSize * 3) === 0) {
+            dragHist.push({step, Cd});
+          }
+        }
+
+        if (step % (batchSize * 10) === 0) {
+          const pct = (si + step/steps) / 2 * 100;
+          document.getElementById('shProgFill').style.width = pct + '%';
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+    }
+
+    // Time-averaged Cd from last 50%
+    const half = Math.floor(dragHist.length / 2);
+    const tail = dragHist.slice(half);
+    const avgCd = tail.length > 0 ? tail.reduce((a,b) => a + b.Cd, 0) / tail.length : 0;
+
+    shapeData[shape] = {dragHist, avgCd};
+  }
+
+  if (!cancelled) {
+    document.getElementById('shCdCircle').textContent = shapeData.circle.avgCd.toFixed(3);
+    document.getElementById('shCdSquare').textContent = shapeData.square.avgCd.toFixed(3);
+    document.getElementById('shReDisp').textContent = Re.toFixed(1);
+    const ratio = shapeData.circle.avgCd > 0 ? shapeData.square.avgCd / shapeData.circle.avgCd : 0;
+    document.getElementById('shRatio').textContent = ratio.toFixed(2) + 'x';
+
+    updateShapeCdChart(shapeData);
+    updateShapeBarChart(shapeData);
+  }
+
+  document.getElementById('shProgText').textContent = cancelled ? 'Cancelled' : 'Complete';
+  document.getElementById('shProgFill').style.width = '100%';
+  running = false;
+}
+
+function updateShapeCdChart(shapeData) {
+  if (shapeCdChartInst) shapeCdChartInst.destroy();
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'Step', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Cd', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}};
+
+  const datasets = [];
+  if (shapeData.circle) {
+    datasets.push({
+      label: 'Circle',
+      data: shapeData.circle.dragHist.map(d => ({x:d.step, y:d.Cd})),
+      borderColor: '#b07ddd',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      showLine: true,
+      fill: false
+    });
+  }
+  if (shapeData.square) {
+    datasets.push({
+      label: 'Square',
+      data: shapeData.square.dragHist.map(d => ({x:d.step, y:d.Cd})),
+      borderColor: '#f0b429',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      showLine: true,
+      fill: false
+    });
+  }
+
+  shapeCdChartInst = new Chart(document.getElementById('shapeCdChart'), {
+    type: 'scatter',
+    data: {datasets},
+    options: opts
+  });
+}
+
+function updateShapeBarChart(shapeData) {
+  if (shapeBarChartInst) shapeBarChartInst.destroy();
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:false};
+  opts.scales.y.title = {display:true, text:'Average Cd', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.plugins.legend = {display:false};
+
+  shapeBarChartInst = new Chart(document.getElementById('shapeBarChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Circle', 'Square'],
+      datasets: [{
+        data: [shapeData.circle.avgCd, shapeData.square.avgCd],
+        backgroundColor: ['rgba(176,125,221,0.6)', 'rgba(240,180,41,0.6)'],
+        borderColor: ['#b07ddd', '#f0b429'],
+        borderWidth: 1.5,
+        borderRadius: 3
+      }]
+    },
+    options: opts
+  });
+}
+
+/* ══════════════════════════════════════════════
+   INVESTIGATION CARD RUNNERS
+   ══════════════════════════════════════════════ */
+function runInvCard1() {
+  document.getElementById('swReMin').value = '1';
+  document.getElementById('swReMax').value = '200';
+  document.getElementById('swPts').value = '10';
+  document.getElementById('swSteps').value = '3000';
+  document.getElementById('pObstacle').value = 'circle';
+  setMode('sweep');
+  setTimeout(() => runReSweep(), 100);
+}
+
+function runInvCard2() {
+  document.getElementById('stReIn').value = '100';
+  document.getElementById('stSteps').value = '8000';
+  document.getElementById('stSampleInt').value = '10';
+  document.getElementById('stShape').value = 'circle';
+  setMode('strouhal');
+  setTimeout(() => runStrouhal(), 100);
+}
+
+function runInvCard3() {
+  document.getElementById('shRe').value = '50';
+  document.getElementById('shSteps').value = '4000';
+  setMode('shape');
+  setTimeout(() => runShapeComp(), 100);
+}
+
+/* ══════════════════════════════════════════════
+   LOGBOOK SYSTEM
+   ══════════════════════════════════════════════ */
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveLogEntries(entries) {
+  localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries));
+}
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `<div class="log-entry">
+      <div class="log-entry-hdr">
+        <span class="log-type-tag ${typeClass}">${typeLabel}</span>
+        <span class="log-entry-ts">${ts}</span>
+        <div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div>
+      </div>
+      <div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      ${e.context ? '<div class="log-entry-ctx">' + e.context + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'When do vortices appear?', 2:'How often do vortices shed?', 3:'Circle vs square — which has more drag?', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({
+    id: Date.now().toString(36),
+    timestamp: new Date().toISOString(),
+    type: 'obs',
+    text,
+    context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')
+  });
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#3ca03c';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# LBM Portal — Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += `## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`;
+    md += e.text + '\n\n';
+    if (e.context) md += `> Context: ${e.context}\n\n`;
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lbm-logbook.md';
+  a.click();
+}
+
+// Initialize logbook on load, collapse by default
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
 </script>
 </body>
 </html>

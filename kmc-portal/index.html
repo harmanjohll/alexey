@@ -93,8 +93,59 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .preset-btn{font-size:10px;padding:4px 10px;margin-right:6px;margin-bottom:4px}
 .preset-btn.active{background:rgba(60,160,60,0.2)}
 
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.stat-grid.four{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}}
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px}
+.mode-tab{padding:6px 16px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.mode-tab.active{background:rgba(60,160,60,0.15);color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.mode-tab:hover:not(.active){color:#7a9a7a}
+.mode-section{display:none}
+.mode-section.active{display:block}
+
+.sweep-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
+.sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.sweep-item input{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+
+/* Investigation Cards */
+.inv-panel{margin-bottom:14px}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:3px solid rgba(60,160,60,0.5);border-radius:0 6px 6px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:11px;color:#7a9a7a;line-height:1.5;margin-bottom:4px}
+.inv-card-q b{color:#7dd87d;font-weight:600}
+.inv-card-method{font-size:10px;color:#4a6a4a;line-height:1.5;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:#3ca03c}
+.inv-card textarea::placeholder{color:#4a6a4a}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:rgba(60,160,60,0.5)}
+
+/* Logbook */
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.log-entry{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(60,80,160,0.15);color:#7da0dd;border:0.5px solid rgba(60,80,160,0.3)}
+.log-type-tag.conc{background:rgba(240,180,41,0.15);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:4px;padding-top:4px;border-top:0.5px solid rgba(60,160,60,0.1)}
+.log-entry-actions{margin-left:auto;display:flex;gap:4px}
+.log-entry-actions button{font-size:9px;padding:2px 6px;border:none;color:#4a6a4a;cursor:pointer;background:transparent}
+.log-entry-actions button:hover{color:#e24b4a}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.stat-grid.four{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -103,6 +154,59 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 <div class="portal-tag">KMC PORTAL · 2D KINETIC MONTE CARLO</div>
 <div class="portal-title">SiGe Thin Film Simulator</div>
 <div class="portal-sub">Faithful browser implementation of a 2D Kinetic Monte Carlo simulation for Silicon-Germanium thin film etching. Replicates the FORTRAN90 physics: desorption, surface diffusion, and bulk diffusion with Metropolis energy criterion on a full-scale lattice (1000×5000). Computation runs in a Web Worker — the UI stays responsive.</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel inv-panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle" id="invToggle">&#x25BC; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">How does temperature affect surface roughness?</div>
+        <div class="inv-card-q"><b>Question:</b> Does a hotter substrate produce a rougher or smoother film?</div>
+        <div class="inv-card-method"><b>Method:</b> Temperature sweep 300&rarr;1000K, 8 points. <b>Look for:</b> Relationship between T and final roughness (RMS).</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard1()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs1" placeholder="Your observations: how does temperature affect roughness? Did you expect this?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">What is the growth universality class?</div>
+        <div class="inv-card-q"><b>Question:</b> What is the roughness exponent &beta;?</div>
+        <div class="inv-card-method"><b>Method:</b> Long single run (5000+ iterations), read &beta; from the log-log fit. <b>Look for:</b> Compare &beta; to KPZ (0.24), EW (0.25), random (0.5).</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard2()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs2" placeholder="Your observations: what beta value did you measure? Which universality class does it match?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">SiGe composition and surface morphology</div>
+        <div class="inv-card-q"><b>Question:</b> How does Ge fraction affect surface structure?</div>
+        <div class="inv-card-method"><b>Method:</b> &theta;-sweep from 0 to 1, 6 points. <b>Look for:</b> Different compositions &rarr; different roughness.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard3()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs3" placeholder="Your observations: how does Ge fraction change the surface? Is there a peak in roughness?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the sweep tools to explore your own question. What variable do you want to change, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- PARAMETERS -->
 <div class="panel" id="paramPanel">
@@ -150,20 +254,67 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   </div>
 </div>
 
-<!-- CONTROLS -->
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
+  <div class="mode-tab" onclick="setMode('tsweep')">Temperature Sweep</div>
+  <div class="mode-tab" onclick="setMode('csweep')">Composition Sweep</div>
+</div>
+
+<!-- SINGLE RUN MODE -->
+<div class="mode-section active" id="modeSingle">
 <div class="controls">
-  <button id="runBtn" onclick="startSim()">▶ Run Simulation</button>
-  <button id="pauseBtn" onclick="pauseSim()" disabled>⏸ Pause</button>
-  <button id="resumeBtn" onclick="resumeSim()" disabled style="display:none">▶ Resume</button>
-  <button id="resetBtn" onclick="resetSim()" class="danger">↺ Reset</button>
+  <button id="runBtn" onclick="startSim()">&#9654; Run Simulation</button>
+  <button id="pauseBtn" onclick="pauseSim()" disabled>&#9208; Pause</button>
+  <button id="resumeBtn" onclick="resumeSim()" disabled style="display:none">&#9654; Resume</button>
+  <button id="resetBtn" onclick="resetSim()" class="danger">&#8634; Reset</button>
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
     <span class="progress-text" id="progText">Ready</span>
   </div>
 </div>
+</div>
 
-<!-- DASHBOARD -->
-<div class="dashboard">
+<!-- TEMPERATURE SWEEP MODE -->
+<div class="mode-section" id="modeTsweep">
+<div class="note"><b>Investigation:</b> How does substrate temperature affect film roughness and surface statistics? Sweep T across a range while keeping all other parameters fixed. Each point runs a full KMC simulation and records the final surface metrics.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>T min (K)</label><input type="number" id="tswTmin" value="300" step="50"></div>
+  <div class="sweep-item"><label>T max (K)</label><input type="number" id="tswTmax" value="1000" step="50"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="tswPts" value="5" min="3" max="20"></div>
+  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="tswNiter" value="50" step="10" min="10"></div>
+</div>
+<div class="controls">
+  <button id="tswRunBtn" onclick="runTempSweep()">&#9654; Run Temperature Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="tswProgFill"></div></div>
+    <span class="progress-text" id="tswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- COMPOSITION SWEEP MODE -->
+<div class="mode-section" id="modeCsweep">
+<div class="note"><b>Investigation:</b> How does the Ge fraction (&theta;) affect surface morphology? Sweep &theta; from 0 (pure Si) to 1 (pure Ge) and observe how roughness, skewness, and kurtosis change with composition.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>&theta; min</label><input type="number" id="cswThetaMin" value="0" step="0.1" min="0" max="1"></div>
+  <div class="sweep-item"><label>&theta; max</label><input type="number" id="cswThetaMax" value="1" step="0.1" min="0" max="1"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="cswPts" value="6" min="3" max="20"></div>
+  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="cswNiter" value="50" step="10" min="10"></div>
+</div>
+<div class="controls">
+  <button id="cswRunBtn" onclick="runCompSweep()">&#9654; Run Composition Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="cswProgFill"></div></div>
+    <span class="progress-text" id="cswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SINGLE RUN DASHBOARD -->
+<div class="dashboard" id="singleDash">
   <!-- Lattice visualization (full width) -->
   <div class="lattice-section">
     <div class="dash-card">
@@ -259,6 +410,54 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   </div>
 </div>
 
+<!-- TEMPERATURE SWEEP DASHBOARD -->
+<div class="dashboard" id="tswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">RMS Roughness vs Temperature</div>
+      <div class="chart-wrap"><canvas id="tswRoughChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Skewness vs Temperature</div>
+      <div class="chart-wrap"><canvas id="tswSkewChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Kurtosis vs Temperature</div>
+      <div class="chart-wrap"><canvas id="tswKurtChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Summary</div>
+      <div id="tswSummary" style="font-size:11px;color:#7a9a7a;line-height:1.8;font-family:'Space Mono',monospace"></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSITION SWEEP DASHBOARD -->
+<div class="dashboard" id="cswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">RMS Roughness vs &theta; (Ge fraction)</div>
+      <div class="chart-wrap"><canvas id="cswRoughChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Skewness vs &theta; (Ge fraction)</div>
+      <div class="chart-wrap"><canvas id="cswSkewChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Kurtosis vs &theta; (Ge fraction)</div>
+      <div class="chart-wrap"><canvas id="cswKurtChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Summary</div>
+      <div id="cswSummary" style="font-size:11px;color:#7a9a7a;line-height:1.8;font-family:'Space Mono',monospace"></div>
+    </div>
+  </div>
+</div>
+
 <!-- SNAPSHOTS -->
 <div class="panel" id="snapPanel">
   <div class="panel-hdr" onclick="togglePanel('snapPanel')">
@@ -269,6 +468,32 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   <div class="panel-body">
     <div class="snap-strip" id="snapStrip">
       <div style="font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
     </div>
   </div>
 </div>
@@ -585,6 +810,11 @@ let rmsHistory = [], skewHistory = [], kurtHistory = [];
 let logMode = 'linear'; // 'linear' = log10 values on linear axes, 'logscale' = Chart.js log axes
 let viewMode = 'cross'; // 'cross' or 'hmap'
 let lastSliceData = null, lastSliceH = 0, lastLattx = 1000, lastHtRaw = null;
+let currentMode = 'single';
+let sweepCancelled = false;
+let tswRoughChart = null, tswSkewChart = null, tswKurtChart = null;
+let cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
+const LOGBOOK_KEY = 'alexey_kmc_logbook';
 
 const chartDefaults = {
   responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
@@ -617,8 +847,11 @@ function initCharts() {
   } else {
     roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
   }
-  // Add regression line dataset
+  // Add regression line dataset + universality class reference lines
   roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_KPZ=0.24', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_EW=0.25', data:[], borderColor:'rgba(125,221,125,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_rand=0.5', data:[], borderColor:'rgba(226,75,74,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
 
   heightChart = mkChart('heightChart', 'Avg Height', 'iteration', 'avg height', '#4a9aaa', '');
@@ -674,6 +907,33 @@ function fitPowerLaw(data) {
   return { beta, intercept };
 }
 
+function addUniversalityLines(fit, logData, rawData) {
+  // Reference lines: KPZ (0.24), EW (0.25), random (0.5)
+  const refBetas = [0.24, 0.25, 0.5];
+  if (!fit || !logData || logData.length < 2) {
+    for (let k = 0; k < 3; k++) roughnessChart.data.datasets[2 + k].data = [];
+    return;
+  }
+  const xMin = logData[0].x, xMax = logData[logData.length - 1].x;
+  for (let k = 0; k < 3; k++) {
+    const b = refBetas[k];
+    // Anchor reference line to the first data point so they share the same start
+    const refIntercept = logData[0].y - b * logData[0].x;
+    if (logMode === 'linear') {
+      roughnessChart.data.datasets[2 + k].data = [
+        { x: xMin, y: refIntercept + b * xMin },
+        { x: xMax, y: refIntercept + b * xMax }
+      ];
+    } else {
+      const rXmin = rawData[0].x, rXmax = rawData[rawData.length - 1].x;
+      roughnessChart.data.datasets[2 + k].data = [
+        { x: rXmin, y: Math.pow(10, refIntercept + b * Math.log10(rXmin)) },
+        { x: rXmax, y: Math.pow(10, refIntercept + b * Math.log10(rXmax)) }
+      ];
+    }
+  }
+}
+
 function updateCharts(d) {
   // Roughness
   roughnessData.push({ x: d.iter, y: d.rmsht });
@@ -685,6 +945,7 @@ function updateCharts(d) {
       const xMin = logData[0].x, xMax = logData[logData.length-1].x;
       roughnessChart.data.datasets[1].data = [{x:xMin,y:fit.intercept+fit.beta*xMin},{x:xMax,y:fit.intercept+fit.beta*xMax}];
     }
+    addUniversalityLines(fit, logData, roughnessData);
   } else {
     roughnessChart.data.datasets[0].data = roughnessData;
     if (fit) {
@@ -693,6 +954,8 @@ function updateCharts(d) {
       const yMax = Math.pow(10, fit.intercept + fit.beta*Math.log10(xMax));
       roughnessChart.data.datasets[1].data = [{x:xMin,y:yMin},{x:xMax,y:yMax}];
     }
+    const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x: Math.log10(p.x), y: Math.log10(p.y) }));
+    addUniversalityLines(fit, logData, roughnessData);
   }
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? `β = ${fit.beta.toFixed(4)}` : 'β = —';
@@ -741,11 +1004,14 @@ function setLogMode(mode) {
     roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
   }
   roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_KPZ=0.24', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_EW=0.25', data:[], borderColor:'rgba(125,221,125,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_rand=0.5', data:[], borderColor:'rgba(226,75,74,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
   // Replay data
   const fit = fitPowerLaw(roughnessData);
+  const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x:Math.log10(p.x), y:Math.log10(p.y) }));
   if (logMode === 'linear') {
-    const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x:Math.log10(p.x), y:Math.log10(p.y) }));
     roughnessChart.data.datasets[0].data = logData;
     if (fit && logData.length > 0) {
       const xMin = logData[0].x, xMax = logData[logData.length-1].x;
@@ -758,6 +1024,7 @@ function setLogMode(mode) {
       roughnessChart.data.datasets[1].data = [{x:xMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMin))},{x:xMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMax))}];
     }
   }
+  addUniversalityLines(fit, logData, roughnessData);
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? `β = ${fit.beta.toFixed(4)}` : 'β = —';
 }
@@ -1009,6 +1276,317 @@ function togglePanel(id) {
   const toggle = panel.querySelector('.toggle');
   if (toggle) toggle.textContent = panel.classList.contains('collapsed') ? '▶ expand' : '▼ collapse';
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MODE TABS
+   ═══════════════════════════════════════════════════════════════ */
+function setMode(m) {
+  if (running) return;
+  currentMode = m;
+  document.querySelectorAll('.mode-tab').forEach((el, i) => {
+    const modes = ['single', 'tsweep', 'csweep'];
+    el.classList.toggle('active', modes[i] === m);
+  });
+  document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
+  const map = {single:'modeSingle', tsweep:'modeTsweep', csweep:'modeCsweep'};
+  document.getElementById(map[m]).classList.add('active');
+  document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('tswDash').style.display = m === 'tsweep' ? '' : 'none';
+  document.getElementById('cswDash').style.display = m === 'csweep' ? '' : 'none';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SWEEP INFRASTRUCTURE — run worker for each parameter set
+   ═══════════════════════════════════════════════════════════════ */
+function runWorkerForParams(params) {
+  return new Promise((resolve) => {
+    const blob = new Blob([workerSource], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const w = new Worker(url);
+    URL.revokeObjectURL(url);
+    let lastData = null;
+    w.onmessage = function(e) {
+      const d = e.data;
+      if (d.type === 'iteration') {
+        lastData = { rmsht: d.rmsht, aveht: d.aveht, stdev: d.stdev, skewness: d.skewness, kurtosis: d.kurtosis, iter: d.iter };
+      } else if (d.type === 'done') {
+        w.terminate();
+        resolve(lastData);
+      }
+    };
+    w.onerror = function() { w.terminate(); resolve(lastData); };
+    w.postMessage({ type: 'start', params });
+  });
+}
+
+function cancelSweep() {
+  sweepCancelled = true;
+}
+
+function destroySweepCharts() {
+  [tswRoughChart, tswSkewChart, tswKurtChart, cswRoughChart, cswSkewChart, cswKurtChart].forEach(c => { if (c) c.destroy(); });
+  tswRoughChart = tswSkewChart = tswKurtChart = cswRoughChart = cswSkewChart = cswKurtChart = null;
+}
+
+function mkSweepChart(id, xLabel, yLabel, color) {
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = { display:true, text:xLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  opts.scales.y.title = { display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  return new Chart(document.getElementById(id), {
+    type: 'scatter',
+    data: { datasets:[{ data:[], borderColor:color, backgroundColor:color, borderWidth:1.5, pointRadius:4, showLine:true, tension:0.2, fill:false }] },
+    options: opts
+  });
+}
+
+/* ── Temperature Sweep ── */
+async function runTempSweep() {
+  if (running) return;
+  running = true;
+  sweepCancelled = false;
+  const tMin = +document.getElementById('tswTmin').value;
+  const tMax = +document.getElementById('tswTmax').value;
+  const pts = +document.getElementById('tswPts').value;
+  const niter = +document.getElementById('tswNiter').value;
+  const baseParams = readParams();
+
+  // Init sweep charts
+  if (tswRoughChart) tswRoughChart.destroy();
+  if (tswSkewChart) tswSkewChart.destroy();
+  if (tswKurtChart) tswKurtChart.destroy();
+  tswRoughChart = mkSweepChart('tswRoughChart', 'Temperature (K)', 'RMS Roughness', '#7dd87d');
+  tswSkewChart = mkSweepChart('tswSkewChart', 'Temperature (K)', 'Skewness', '#f0b429');
+  tswKurtChart = mkSweepChart('tswKurtChart', 'Temperature (K)', 'Kurtosis (excess)', '#e24b4a');
+
+  document.getElementById('tswDash').style.display = '';
+  document.getElementById('tswRunBtn').disabled = true;
+  document.getElementById('tswSummary').innerHTML = '';
+
+  const results = [];
+  for (let i = 0; i < pts; i++) {
+    if (sweepCancelled) break;
+    const t = pts === 1 ? tMin : tMin + (tMax - tMin) * i / (pts - 1);
+    const pct = ((i / pts) * 100).toFixed(0);
+    document.getElementById('tswProgFill').style.width = pct + '%';
+    document.getElementById('tswProgText').textContent = `T=${t.toFixed(0)}K (${i+1}/${pts})`;
+
+    const p = Object.assign({}, baseParams, { temp: t, niter1: niter });
+    const data = await runWorkerForParams(p);
+    if (data) {
+      results.push({ t, ...data });
+      tswRoughChart.data.datasets[0].data = results.map(r => ({ x: r.t, y: r.rmsht }));
+      tswRoughChart.update();
+      tswSkewChart.data.datasets[0].data = results.map(r => ({ x: r.t, y: r.skewness }));
+      tswSkewChart.update();
+      tswKurtChart.data.datasets[0].data = results.map(r => ({ x: r.t, y: r.kurtosis }));
+      tswKurtChart.update();
+    }
+  }
+
+  // Summary
+  if (results.length > 0) {
+    const minR = results.reduce((a, b) => a.rmsht < b.rmsht ? a : b);
+    const maxR = results.reduce((a, b) => a.rmsht > b.rmsht ? a : b);
+    document.getElementById('tswSummary').innerHTML =
+      `<div>Points: ${results.length}</div>` +
+      `<div>Min roughness: ${minR.rmsht.toFixed(4)} at T=${minR.t.toFixed(0)}K</div>` +
+      `<div>Max roughness: ${maxR.rmsht.toFixed(4)} at T=${maxR.t.toFixed(0)}K</div>` +
+      `<div>Range: ${(maxR.rmsht - minR.rmsht).toFixed(4)}</div>`;
+  }
+
+  document.getElementById('tswProgFill').style.width = '100%';
+  document.getElementById('tswProgText').textContent = sweepCancelled ? 'Cancelled' : 'Complete';
+  document.getElementById('tswRunBtn').disabled = false;
+  running = false;
+}
+
+/* ── Composition (theta) Sweep ── */
+async function runCompSweep() {
+  if (running) return;
+  running = true;
+  sweepCancelled = false;
+  const thMin = +document.getElementById('cswThetaMin').value;
+  const thMax = +document.getElementById('cswThetaMax').value;
+  const pts = +document.getElementById('cswPts').value;
+  const niter = +document.getElementById('cswNiter').value;
+  const baseParams = readParams();
+
+  if (cswRoughChart) cswRoughChart.destroy();
+  if (cswSkewChart) cswSkewChart.destroy();
+  if (cswKurtChart) cswKurtChart.destroy();
+  cswRoughChart = mkSweepChart('cswRoughChart', 'θ (Ge fraction)', 'RMS Roughness', '#7dd87d');
+  cswSkewChart = mkSweepChart('cswSkewChart', 'θ (Ge fraction)', 'Skewness', '#f0b429');
+  cswKurtChart = mkSweepChart('cswKurtChart', 'θ (Ge fraction)', 'Kurtosis (excess)', '#e24b4a');
+
+  document.getElementById('cswDash').style.display = '';
+  document.getElementById('cswRunBtn').disabled = true;
+  document.getElementById('cswSummary').innerHTML = '';
+
+  const results = [];
+  for (let i = 0; i < pts; i++) {
+    if (sweepCancelled) break;
+    const th = pts === 1 ? thMin : thMin + (thMax - thMin) * i / (pts - 1);
+    const pct = ((i / pts) * 100).toFixed(0);
+    document.getElementById('cswProgFill').style.width = pct + '%';
+    document.getElementById('cswProgText').textContent = `θ=${th.toFixed(2)} (${i+1}/${pts})`;
+
+    const p = Object.assign({}, baseParams, { theta: th, niter1: niter });
+    const data = await runWorkerForParams(p);
+    if (data) {
+      results.push({ theta: th, ...data });
+      cswRoughChart.data.datasets[0].data = results.map(r => ({ x: r.theta, y: r.rmsht }));
+      cswRoughChart.update();
+      cswSkewChart.data.datasets[0].data = results.map(r => ({ x: r.theta, y: r.skewness }));
+      cswSkewChart.update();
+      cswKurtChart.data.datasets[0].data = results.map(r => ({ x: r.theta, y: r.kurtosis }));
+      cswKurtChart.update();
+    }
+  }
+
+  if (results.length > 0) {
+    const minR = results.reduce((a, b) => a.rmsht < b.rmsht ? a : b);
+    const maxR = results.reduce((a, b) => a.rmsht > b.rmsht ? a : b);
+    document.getElementById('cswSummary').innerHTML =
+      `<div>Points: ${results.length}</div>` +
+      `<div>Min roughness: ${minR.rmsht.toFixed(4)} at θ=${minR.theta.toFixed(2)}</div>` +
+      `<div>Max roughness: ${maxR.rmsht.toFixed(4)} at θ=${maxR.theta.toFixed(2)}</div>` +
+      `<div>Range: ${(maxR.rmsht - minR.rmsht).toFixed(4)}</div>`;
+  }
+
+  document.getElementById('cswProgFill').style.width = '100%';
+  document.getElementById('cswProgText').textContent = sweepCancelled ? 'Cancelled' : 'Complete';
+  document.getElementById('cswRunBtn').disabled = false;
+  running = false;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INVESTIGATION CARDS
+   ═══════════════════════════════════════════════════════════════ */
+function runInvCard1() {
+  // T-sweep 300 -> 1000K, 8 points
+  document.getElementById('tswTmin').value = '300';
+  document.getElementById('tswTmax').value = '1000';
+  document.getElementById('tswPts').value = '8';
+  document.getElementById('tswNiter').value = '50';
+  setMode('tsweep');
+  setTimeout(() => runTempSweep(), 100);
+}
+
+function runInvCard2() {
+  // Long single run for beta measurement
+  document.getElementById('pNiter1').value = '5000';
+  setMode('single');
+  setTimeout(() => startSim(), 100);
+}
+
+function runInvCard3() {
+  // Theta-sweep 0 to 1, 6 points
+  document.getElementById('cswThetaMin').value = '0';
+  document.getElementById('cswThetaMax').value = '1';
+  document.getElementById('cswPts').value = '6';
+  document.getElementById('cswNiter').value = '50';
+  setMode('csweep');
+  setTimeout(() => runCompSweep(), 100);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGBOOK
+   ═══════════════════════════════════════════════════════════════ */
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveLogEntries(entries) {
+  localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries));
+}
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `<div class="log-entry">
+      <div class="log-entry-hdr">
+        <span class="log-type-tag ${typeClass}">${typeLabel}</span>
+        <span class="log-entry-ts">${ts}</span>
+        <div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div>
+      </div>
+      <div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      ${e.context ? '<div class="log-entry-ctx">' + e.context + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'How does temperature affect surface roughness?', 2:'What is the growth universality class?', 3:'SiGe composition and surface morphology', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({
+    id: Date.now().toString(36),
+    timestamp: new Date().toISOString(),
+    type: 'obs',
+    text,
+    context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')
+  });
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#3ca03c';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# KMC SiGe Thin Film — Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += `## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`;
+    md += e.text + '\n\n';
+    if (e.context) md += `> Context: ${e.context}\n\n`;
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kmc-logbook.md';
+  a.click();
+}
+
+// Initialize logbook panel collapsed
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
 
 initCharts();
 </script>

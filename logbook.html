@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Logbook · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:1000px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.page-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.page-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.page-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:750px;margin-bottom:2rem}
+
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:12px;background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px}
+.filters select,.filters input{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:6px 10px;border-radius:4px}
+.filters select{min-width:140px}
+.filters input{flex:1;min-width:180px}
+.filters select:focus,.filters input:focus{outline:none;border-color:#3ca03c}
+.filter-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+
+.stats-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat-chip{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:8px 14px;display:flex;align-items:center;gap:8px}
+.stat-chip .num{font-size:20px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.stat-chip .lbl{font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace}
+
+.date-group{margin-bottom:20px}
+.date-hdr{font-size:11px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+
+.entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px;margin-bottom:8px;background:#111a11;transition:border-color .2s}
+.entry:hover{border-color:rgba(60,160,60,0.35)}
+.entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.module-badge{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.type-tag.obs{background:rgba(60,80,160,0.15);color:#7da0dd;border:0.5px solid rgba(60,80,160,0.3)}
+.type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-left:auto}
+.entry-text{font-size:12px;color:#e8f0e8;line-height:1.6}
+.entry-ctx{font-size:10px;color:#4a6a4a;margin-top:4px;font-style:italic}
+
+.empty-state{text-align:center;padding:60px 20px;color:#4a6a4a}
+.empty-state .icon{font-size:48px;margin-bottom:16px;opacity:.3}
+.empty-state .msg{font-size:14px;font-family:'Space Mono',monospace;margin-bottom:8px}
+.empty-state .hint{font-size:11px;line-height:1.6}
+
+.export-bar{display:flex;gap:8px;margin-bottom:20px;justify-content:flex-end}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+
+@media print{
+  body{background:#fff;color:#000;padding:1cm}
+  .nav-back,.filters,.export-bar{display:none!important}
+  .entry{border:1px solid #ccc;break-inside:avoid;background:#fff}
+  .module-badge,.type-tag{border:1px solid #999}
+  .entry-text{color:#000}
+  .page-title{color:#000}
+  .date-hdr{color:#666;border-bottom:1px solid #ccc}
+}
+@media(max-width:600px){.stats-row{flex-direction:column}.filters{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="index.html" class="nav-back">&larr; portfolio home</a>
+<div class="page-tag">ALEXEY MIKHAIL JOHLL &middot; RESEARCH LOGBOOK</div>
+<div class="page-title">Research Logbook</div>
+<div class="page-sub">All observations, questions, and conclusions from your investigations across every module — collected in one place. This is the record of your scientific thinking.</div>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div class="filters">
+  <div>
+    <div class="filter-label">Module</div>
+    <select id="filterModule" onchange="renderAll()">
+      <option value="all">All modules</option>
+    </select>
+  </div>
+  <div>
+    <div class="filter-label">Type</div>
+    <select id="filterType" onchange="renderAll()">
+      <option value="all">All types</option>
+      <option value="obs">Observations</option>
+      <option value="quest">Questions</option>
+      <option value="conc">Conclusions</option>
+    </select>
+  </div>
+  <div style="flex:1">
+    <div class="filter-label">Search</div>
+    <input type="text" id="filterSearch" placeholder="Search entries..." oninput="renderAll()">
+  </div>
+</div>
+
+<div class="export-bar">
+  <button onclick="exportAll()">&#8681; Export full logbook as markdown</button>
+  <button onclick="window.print()">&#128424; Print</button>
+</div>
+
+<div id="timeline"></div>
+</div>
+
+<script>
+const MODULE_KEYS = {
+  'alexey_ising_logbook': {name:'Ising Model', color:'#dd7d7d', bg:'rgba(200,60,60,0.15)', border:'rgba(200,60,60,0.3)'},
+  'alexey_percolation_logbook': {name:'Percolation', color:'#7ddd7d', bg:'rgba(60,200,60,0.15)', border:'rgba(60,200,60,0.3)'},
+  'alexey_qmc_logbook': {name:'QMC', color:'#7da0dd', bg:'rgba(60,80,160,0.15)', border:'rgba(60,80,160,0.3)'},
+  'alexey_kmc_logbook': {name:'KMC', color:'#7dd87d', bg:'rgba(60,160,60,0.15)', border:'rgba(60,160,60,0.3)'},
+  'alexey_dla_logbook': {name:'DLA', color:'#7dddd8', bg:'rgba(60,200,200,0.15)', border:'rgba(60,200,200,0.3)'},
+  'alexey_lbm_logbook': {name:'LBM', color:'#dda07d', bg:'rgba(200,120,60,0.15)', border:'rgba(200,120,60,0.3)'},
+  'alexey_md_logbook': {name:'MD (Tersoff)', color:'#ddd07d', bg:'rgba(200,180,60,0.15)', border:'rgba(200,180,60,0.3)'},
+  'alexey_exp_01_logbook': {name:'Exp 01 · xG', color:'#a07ddd', bg:'rgba(120,60,200,0.15)', border:'rgba(120,60,200,0.3)'},
+  'alexey_exp_02_logbook': {name:'Exp 02 · Orbits', color:'#dd7daa', bg:'rgba(200,60,130,0.15)', border:'rgba(200,60,130,0.3)'},
+  'alexey_exp_03_logbook': {name:'Exp 03 · Chaos', color:'#7ddda0', bg:'rgba(60,200,120,0.15)', border:'rgba(60,200,120,0.3)'},
+  'alexey_exp_04_logbook': {name:'Exp 04 · Fractal', color:'#dd7d7d', bg:'rgba(200,60,60,0.15)', border:'rgba(200,60,60,0.3)'},
+  'alexey_exp_05_logbook': {name:'Exp 05 · Walk', color:'#7da0dd', bg:'rgba(60,80,160,0.15)', border:'rgba(60,80,160,0.3)'},
+  'alexey_exp_06_logbook': {name:'Exp 06 · Pendulum', color:'#dda07d', bg:'rgba(200,120,60,0.15)', border:'rgba(200,120,60,0.3)'},
+  'alexey_exp_07_logbook': {name:'Exp 07 · Stars', color:'#ddd07d', bg:'rgba(200,180,60,0.15)', border:'rgba(200,180,60,0.3)'}
+};
+
+function getAllEntries() {
+  const all = [];
+  for (const [key, meta] of Object.entries(MODULE_KEYS)) {
+    try {
+      const entries = JSON.parse(localStorage.getItem(key)) || [];
+      entries.forEach(e => all.push({...e, moduleKey: key, module: meta}));
+    } catch(e) {}
+  }
+  all.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  return all;
+}
+
+function renderAll() {
+  const all = getAllEntries();
+  const moduleFilter = document.getElementById('filterModule').value;
+  const typeFilter = document.getElementById('filterType').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+
+  const filtered = all.filter(e => {
+    if (moduleFilter !== 'all' && e.moduleKey !== moduleFilter) return false;
+    if (typeFilter !== 'all' && e.type !== typeFilter) return false;
+    if (search && !e.text.toLowerCase().includes(search) && !(e.context || '').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  // Stats
+  const stats = document.getElementById('statsRow');
+  const modules = new Set(all.map(e => e.moduleKey));
+  stats.innerHTML = `
+    <div class="stat-chip"><span class="num">${all.length}</span><span class="lbl">total entries</span></div>
+    <div class="stat-chip"><span class="num">${modules.size}</span><span class="lbl">active modules</span></div>
+    <div class="stat-chip"><span class="num">${all.filter(e=>e.type==='obs').length}</span><span class="lbl">observations</span></div>
+    <div class="stat-chip"><span class="num">${all.filter(e=>e.type==='quest').length}</span><span class="lbl">questions</span></div>
+    <div class="stat-chip"><span class="num">${all.filter(e=>e.type==='conc').length}</span><span class="lbl">conclusions</span></div>
+  `;
+
+  // Populate module filter if needed
+  const sel = document.getElementById('filterModule');
+  if (sel.options.length <= 1) {
+    for (const [key, meta] of Object.entries(MODULE_KEYS)) {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = meta.name;
+      sel.appendChild(opt);
+    }
+  }
+
+  const timeline = document.getElementById('timeline');
+  if (filtered.length === 0) {
+    timeline.innerHTML = `<div class="empty-state">
+      <div class="icon">&#128221;</div>
+      <div class="msg">${all.length === 0 ? 'No logbook entries yet' : 'No matching entries'}</div>
+      <div class="hint">${all.length === 0 ? 'Open any research tool or experiment, run an investigation,<br>and save your observations to the logbook.' : 'Try adjusting your filters or search terms.'}</div>
+    </div>`;
+    return;
+  }
+
+  // Group by date
+  const groups = {};
+  filtered.forEach(e => {
+    const d = new Date(e.timestamp).toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(e);
+  });
+
+  let html = '';
+  for (const [date, entries] of Object.entries(groups)) {
+    html += `<div class="date-group"><div class="date-hdr">${date}</div>`;
+    entries.forEach(e => {
+      const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+      const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+      const time = new Date(e.timestamp).toLocaleTimeString();
+      html += `<div class="entry">
+        <div class="entry-hdr">
+          <span class="module-badge" style="background:${e.module.bg};color:${e.module.color};border:0.5px solid ${e.module.border}">${e.module.name}</span>
+          <span class="type-tag ${typeClass}">${typeLabel}</span>
+          <span class="entry-ts">${time}</span>
+        </div>
+        <div class="entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        ${e.context ? '<div class="entry-ctx">' + e.context.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' : ''}
+      </div>`;
+    });
+    html += '</div>';
+  }
+  timeline.innerHTML = html;
+}
+
+function exportAll() {
+  const all = getAllEntries();
+  if (all.length === 0) return;
+  let md = '# Alexey Mikhail Johll — Research Logbook\n\nExported: ' + new Date().toLocaleString() + '\n\n---\n\n';
+  const groups = {};
+  all.forEach(e => {
+    const d = new Date(e.timestamp).toLocaleDateString();
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(e);
+  });
+  for (const [date, entries] of Object.entries(groups)) {
+    md += `## ${date}\n\n`;
+    entries.forEach(e => {
+      const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+      const time = new Date(e.timestamp).toLocaleTimeString();
+      md += `### [${e.module.name}] ${typeLabel} — ${time}\n\n`;
+      md += e.text + '\n\n';
+      if (e.context) md += `> ${e.context}\n\n`;
+    });
+    md += '---\n\n';
+  }
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'alexey-research-logbook.md';
+  a.click();
+}
+
+renderAll();
+</script>
+</body>
+</html>
