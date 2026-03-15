@@ -78,8 +78,30 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .theory-row .lbl{color:#7a9a7a}
 .theory-row .val{color:#7da0dd;font-family:'Space Mono',monospace;font-weight:700}
 
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}}
+.sweep-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
+.sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.sweep-item input,.sweep-item select{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+.preset-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.preset-btn{font-size:10px;padding:5px 12px;background:rgba(60,80,160,0.1);border:0.5px solid rgba(60,80,160,0.3);color:#7da0dd;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;transition:all .15s}
+.preset-btn:hover{background:rgba(60,80,160,0.2);border-color:rgba(60,80,160,0.5)}
+.preset-btn.active{background:rgba(60,80,160,0.25);border-color:#7da0dd}
+.sweep-progress{margin-top:10px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.compare-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.level-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.level-row:last-child{border-bottom:none}
+.level-bar{height:10px;border-radius:2px;min-width:4px}
+.level-label{font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace;min-width:80px}
+.level-val{font-size:10px;color:#7da0dd;font-family:'Space Mono',monospace;font-weight:700}
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px}
+.mode-tab{padding:6px 16px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.mode-tab.active{background:rgba(60,160,60,0.15);color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.mode-tab:hover:not(.active){color:#7a9a7a}
+.mode-section{display:none}
+.mode-section.active{display:block}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -135,14 +157,119 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   </div>
 </div>
 
-<!-- CONTROLS -->
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
+  <div class="mode-tab" onclick="setMode('sweep')">Parameter Sweep</div>
+  <div class="mode-tab" onclick="setMode('compare')">VMC vs DMC</div>
+  <div class="mode-tab" onclick="setMode('levels')">Energy Levels</div>
+</div>
+
+<!-- SINGLE RUN CONTROLS -->
+<div class="mode-section active" id="modeSingle">
 <div class="controls">
-  <button id="runBtn" onclick="startQMC()">▶ Run QMC</button>
-  <button id="resetBtn" onclick="resetQMC()" class="danger">↺ Reset</button>
+  <button id="runBtn" onclick="startQMC()">&#9654; Run QMC</button>
+  <button id="resetBtn" onclick="resetQMC()" class="danger">&#8634; Reset</button>
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
     <span class="progress-text" id="progText">Ready</span>
   </div>
+</div>
+</div>
+
+<!-- PARAMETER SWEEP MODE -->
+<div class="mode-section" id="modeSweep">
+<div class="panel">
+  <div class="panel-hdr" onclick="togglePanel('sweepPanel')" id="sweepPanel">
+    <span class="snum">SWEEP</span>
+    <span class="sname">Parameter Sweep Investigation</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>Investigation mode:</b> Sweep one parameter while keeping others fixed. See how energy, error, and convergence depend on your chosen variable. This is how computational physicists validate their methods.</div>
+    <div class="sweep-grid">
+      <div class="sweep-item">
+        <label>Sweep parameter</label>
+        <select id="sweepParam" onchange="updateSweepInputs()">
+          <option value="walkers">Walkers</option>
+          <option value="steps">Steps</option>
+          <option value="dt">Time step (dt)</option>
+          <option value="boxL">Box size L</option>
+          <option value="fracIter">Fractal iterations</option>
+        </select>
+      </div>
+      <div class="sweep-item">
+        <label>Min value</label>
+        <input type="number" id="sweepMin" value="50">
+      </div>
+      <div class="sweep-item">
+        <label>Max value</label>
+        <input type="number" id="sweepMax" value="5000">
+      </div>
+      <div class="sweep-item">
+        <label>Points</label>
+        <input type="number" id="sweepPts" value="7" min="3" max="20">
+      </div>
+    </div>
+    <div class="group-label">Presets</div>
+    <div class="preset-btns">
+      <div class="preset-btn" onclick="loadPreset('walkerConv')">Walker convergence (1/&#8730;N)</div>
+      <div class="preset-btn" onclick="loadPreset('dtBias')">Time step bias (dt&#8594;0)</div>
+      <div class="preset-btn" onclick="loadPreset('fracDepth')">Fractal depth study</div>
+      <div class="preset-btn" onclick="loadPreset('boxScale')">Box size scaling</div>
+    </div>
+    <div class="controls">
+      <button onclick="runSweep()">&#9654; Run Sweep</button>
+      <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="sweepProgFill"></div></div>
+        <span class="progress-text" id="sweepProgText">Ready</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- VMC vs DMC COMPARISON -->
+<div class="mode-section" id="modeCompare">
+<div class="panel">
+  <div class="panel-hdr">
+    <span class="snum">VS</span>
+    <span class="sname">VMC vs DMC Comparison</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>Variational principle:</b> VMC gives E &#8805; E_exact (always overestimates). DMC is a projection method that converges closer to the true ground state. Run both with identical parameters to see the difference.</div>
+    <div class="controls">
+      <button onclick="runComparison()">&#9654; Run Both Methods</button>
+      <button onclick="resetComparison()" class="danger">&#8634; Reset</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="compProgFill"></div></div>
+        <span class="progress-text" id="compProgText">Ready</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ENERGY LEVELS MODE -->
+<div class="mode-section" id="modeLevels">
+<div class="panel">
+  <div class="panel-hdr">
+    <span class="snum">E_n</span>
+    <span class="sname">Energy Level Diagram</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>Quantum states:</b> Compute multiple energy levels using QMC. Compare computed values against exact analytical results. See the energy level spacing and degeneracy patterns.</div>
+    <div class="controls">
+      <button onclick="runLevels()">&#9654; Compute Levels (n=1..4)</button>
+      <button onclick="resetLevels()" class="danger">&#8634; Reset</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="levProgFill"></div></div>
+        <span class="progress-text" id="levProgText">Ready</span>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- DASHBOARD -->
@@ -197,6 +324,76 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
       <div class="canvas-wrap">
         <canvas id="fracCanvas" width="400" height="400"></canvas>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- SWEEP RESULTS DASHBOARD -->
+<div class="dashboard" id="sweepDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label" id="sweepChartLabel">Energy vs Parameter</div>
+      <div class="chart-wrap tall"><canvas id="sweepEnergyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Relative Error vs Parameter</div>
+      <div class="chart-wrap tall"><canvas id="sweepErrorChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Sweep Results Table</div>
+      <div style="max-height:300px;overflow-y:auto" id="sweepTable"></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label" id="sweepFitLabel">Scaling Analysis</div>
+      <div class="chart-wrap"><canvas id="sweepFitChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON DASHBOARD -->
+<div class="dashboard" id="compDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Energy Convergence: VMC vs DMC</div>
+      <div class="chart-wrap tall"><canvas id="compEnergyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Comparison Summary</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">VMC Energy</div><div class="stat-value sm" id="compVMCE">--</div></div>
+        <div class="stat-item"><div class="stat-label">DMC Energy</div><div class="stat-value sm" id="compDMCE">--</div></div>
+        <div class="stat-item"><div class="stat-label">VMC Error</div><div class="stat-value sm" id="compVMCErr">--</div></div>
+        <div class="stat-item"><div class="stat-label">DMC Error</div><div class="stat-value sm" id="compDMCErr">--</div></div>
+        <div class="stat-item"><div class="stat-label">Exact Energy</div><div class="stat-value sm" id="compExact">--</div></div>
+        <div class="stat-item"><div class="stat-label">VMC >= Exact?</div><div class="stat-value sm" id="compVarPrinc">--</div></div>
+      </div>
+      <div class="note" style="margin-top:12px"><b>Key insight:</b> The variational principle guarantees VMC energy is always >= exact energy. DMC, being a projection method, converges closer to the true ground state without this bias.</div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Walker Distribution: VMC</div>
+      <div class="chart-wrap"><canvas id="compVMCWalkers"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Walker Distribution: DMC</div>
+      <div class="chart-wrap"><canvas id="compDMCWalkers"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ENERGY LEVELS DASHBOARD -->
+<div class="dashboard" id="levelsDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Energy Level Diagram</div>
+      <div class="chart-wrap tall"><canvas id="levelsChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Computed vs Exact</div>
+      <div id="levelsTable" style="max-height:400px;overflow-y:auto"></div>
     </div>
   </div>
 </div>
@@ -1017,10 +1214,494 @@ function togglePanel(id) {
   if (toggle) toggle.textContent = panel.classList.contains('collapsed') ? '▶ expand' : '▼ collapse';
 }
 
+/* ── Mode switching ── */
+let currentMode = 'single';
+let sweepRunning = false, sweepCancelled = false;
+let sweepEnergyChart = null, sweepErrorChart = null, sweepFitChart = null;
+let compEnergyChart = null, compVMCWalkersChart = null, compDMCWalkersChart = null;
+let levelsChartInst = null;
+
+function setMode(mode) {
+  if (running || sweepRunning) return;
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach((el, i) => {
+    const modes = ['single','sweep','compare','levels'];
+    el.classList.toggle('active', modes[i] === mode);
+  });
+  document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
+  const modeMap = {single:'modeSingle',sweep:'modeSweep',compare:'modeCompare',levels:'modeLevels'};
+  document.getElementById(modeMap[mode]).classList.add('active');
+  // Show/hide dashboards
+  document.querySelector('.dashboard:not(#sweepDash):not(#compDash):not(#levelsDash)').style.display = mode === 'single' ? '' : 'none';
+  document.getElementById('sweepDash').style.display = mode === 'sweep' ? '' : 'none';
+  document.getElementById('compDash').style.display = mode === 'compare' ? '' : 'none';
+  document.getElementById('levelsDash').style.display = mode === 'levels' ? '' : 'none';
+}
+
+/* ── Sweep defaults ── */
+function updateSweepInputs() {
+  const param = document.getElementById('sweepParam').value;
+  const defaults = {
+    walkers: {min:50, max:5000, pts:7},
+    steps: {min:500, max:20000, pts:6},
+    dt: {min:0.0005, max:0.05, pts:7},
+    boxL: {min:0.5, max:3.0, pts:6},
+    fracIter: {min:1, max:5, pts:5}
+  };
+  const d = defaults[param];
+  document.getElementById('sweepMin').value = d.min;
+  document.getElementById('sweepMax').value = d.max;
+  document.getElementById('sweepPts').value = d.pts;
+  document.getElementById('sweepMin').step = param === 'dt' ? 0.001 : param === 'boxL' ? 0.1 : 1;
+  document.getElementById('sweepMax').step = param === 'dt' ? 0.01 : param === 'boxL' ? 0.5 : 1;
+}
+
+function loadPreset(name) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (name === 'walkerConv') {
+    document.getElementById('sweepParam').value = 'walkers';
+    document.getElementById('sweepMin').value = 50;
+    document.getElementById('sweepMax').value = 5000;
+    document.getElementById('sweepPts').value = 7;
+  } else if (name === 'dtBias') {
+    document.getElementById('sweepParam').value = 'dt';
+    document.getElementById('sweepMin').value = 0.001;
+    document.getElementById('sweepMax').value = 0.05;
+    document.getElementById('sweepPts').value = 7;
+  } else if (name === 'fracDepth') {
+    document.getElementById('sweepParam').value = 'fracIter';
+    document.getElementById('sweepMin').value = 1;
+    document.getElementById('sweepMax').value = 5;
+    document.getElementById('sweepPts').value = 5;
+    document.getElementById('pFractal').value = 'sierpinski';
+    updateFractalUI();
+  } else if (name === 'boxScale') {
+    document.getElementById('sweepParam').value = 'boxL';
+    document.getElementById('sweepMin').value = 0.5;
+    document.getElementById('sweepMax').value = 3.0;
+    document.getElementById('sweepPts').value = 6;
+  }
+}
+
+/* ── Parameter sweep engine ── */
+function generateSweepValues(min, max, pts, param) {
+  const values = [];
+  if (param === 'walkers' || param === 'steps' || param === 'fracIter') {
+    // Use logarithmic spacing for walkers/steps
+    if (param === 'fracIter') {
+      for (let i = min; i <= max; i++) values.push(i);
+      return values;
+    }
+    const logMin = Math.log10(min), logMax = Math.log10(max);
+    for (let i = 0; i < pts; i++) {
+      const v = Math.pow(10, logMin + (logMax - logMin) * i / (pts - 1));
+      values.push(Math.round(v));
+    }
+  } else {
+    for (let i = 0; i < pts; i++) {
+      values.push(min + (max - min) * i / (pts - 1));
+    }
+  }
+  return values;
+}
+
+function getBaseParams() {
+  const dim = currentDim;
+  const ns = [+document.getElementById('pNx').value];
+  const Ls = [+document.getElementById('pL').value];
+  if (dim >= 2) { ns.push(+document.getElementById('pNy').value); Ls.push(+document.getElementById('pLy').value); }
+  if (dim >= 3) { ns.push(+document.getElementById('pNz').value); Ls.push(+document.getElementById('pLz').value); }
+  const method = document.getElementById('pMethod').value;
+  const nWalkers = +document.getElementById('pWalkers').value;
+  const nSteps = +document.getElementById('pSteps').value;
+  const dt = +document.getElementById('pDt').value;
+  const equil = +document.getElementById('pEquil').value;
+  const fracType = document.getElementById('pFractal').value;
+  const fracIter = +document.getElementById('pFracIter').value;
+  const kochPts = fracType === 'koch' ? generateKochPoints(fracIter) : null;
+  return { dim, ns, Ls, nWalkers, nSteps, dt, equil, fracType, fracIter, kochPts, method };
+}
+
+async function runSweep() {
+  if (sweepRunning) return;
+  sweepRunning = true;
+  sweepCancelled = false;
+  const param = document.getElementById('sweepParam').value;
+  const min = +document.getElementById('sweepMin').value;
+  const max = +document.getElementById('sweepMax').value;
+  const pts = +document.getElementById('sweepPts').value;
+  const values = generateSweepValues(min, max, pts, param);
+  const base = getBaseParams();
+  const exact = getExactEnergy();
+  const results = [];
+  document.getElementById('sweepDash').style.display = '';
+  const paramLabels = {walkers:'Walkers',steps:'Steps',dt:'dt',boxL:'Box L',fracIter:'Fractal iter'};
+
+  for (let i = 0; i < values.length; i++) {
+    if (sweepCancelled) break;
+    const v = values[i];
+    document.getElementById('sweepProgText').textContent = `Running ${i+1}/${values.length}: ${paramLabels[param]}=${param==='dt'?v.toFixed(4):v}`;
+    document.getElementById('sweepProgFill').style.width = ((i+1)/values.length*100)+'%';
+
+    // Clone params and override swept parameter
+    const p = Object.assign({}, base);
+    if (param === 'walkers') p.nWalkers = Math.round(v);
+    else if (param === 'steps') p.nSteps = Math.round(v);
+    else if (param === 'dt') p.dt = v;
+    else if (param === 'boxL') {
+      p.Ls = [v];
+      if (p.dim >= 2) p.Ls.push(v);
+      if (p.dim >= 3) p.Ls.push(v);
+    }
+    else if (param === 'fracIter') {
+      p.fracIter = Math.round(v);
+      if (p.fracType === 'koch') p.kochPts = generateKochPoints(p.fracIter);
+    }
+
+    // Recompute exact for boxL sweeps
+    let sweepExact = exact;
+    if (param === 'boxL') {
+      const pi2 = Math.PI * Math.PI;
+      sweepExact = 0;
+      for (let d = 0; d < p.dim; d++) sweepExact += pi2 * p.ns[d] * p.ns[d] / (v * v);
+    }
+
+    // Run simulation
+    const result = await new Promise(resolve => {
+      setTimeout(() => {
+        const r = p.method === 'dmc' || base.method === 'dmc' ? runDMC(p) : runVMC(p);
+        resolve(r);
+      }, 10);
+    });
+
+    const energies = result.energies;
+    const skip = Math.floor(energies.length * 0.2);
+    const eData = energies.slice(skip);
+    const mean = eData.length > 0 ? eData.reduce((a,b)=>a+b,0)/eData.length : 0;
+    const variance = eData.length > 0 ? eData.reduce((a,b)=>a+(b-mean)*(b-mean),0)/eData.length : 0;
+    const std = Math.sqrt(variance / Math.max(1, eData.length));
+    const err = sweepExact > 0 ? Math.abs(mean - sweepExact) / sweepExact * 100 : 0;
+
+    results.push({ value: v, energy: mean, std, error: err, exact: sweepExact });
+  }
+
+  if (!sweepCancelled) {
+    document.getElementById('sweepProgText').textContent = 'Sweep complete';
+    displaySweepResults(results, param, paramLabels[param]);
+  }
+  sweepRunning = false;
+}
+
+function cancelSweep() { sweepCancelled = true; sweepRunning = false; document.getElementById('sweepProgText').textContent = 'Cancelled'; }
+
+function displaySweepResults(results, param, label) {
+  // Destroy old charts
+  [sweepEnergyChart, sweepErrorChart, sweepFitChart].forEach(c => { if(c) c.destroy(); });
+
+  const labels = results.map(r => param === 'dt' ? r.value.toFixed(4) : Math.round(r.value).toString());
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+  opts.scales.x.title = {display:true, text:label, color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Energy', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  document.getElementById('sweepChartLabel').textContent = 'Energy vs ' + label;
+
+  // Energy chart with error bars (approximated via line segments)
+  const energyData = results.map(r => r.energy);
+  const exactData = results.map(r => r.exact);
+  const upperBound = results.map(r => r.energy + r.std);
+  const lowerBound = results.map(r => r.energy - r.std);
+
+  sweepEnergyChart = new Chart(document.getElementById('sweepEnergyChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {label:'QMC energy', data:energyData, borderColor:'#7da0dd', backgroundColor:'rgba(125,160,221,0.3)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#7da0dd', fill:false},
+        {label:'Exact', data:exactData, borderColor:'#7dd87d', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false},
+        {label:'+1 std', data:upperBound, borderColor:'rgba(125,160,221,0.3)', borderWidth:1, borderDash:[2,2], pointRadius:0, fill:false},
+        {label:'-1 std', data:lowerBound, borderColor:'rgba(125,160,221,0.3)', borderWidth:1, borderDash:[2,2], pointRadius:0, fill:'-1'}
+      ]
+    },
+    options: opts
+  });
+
+  // Error chart
+  const eopts = JSON.parse(JSON.stringify(chartDefaults));
+  eopts.scales.x.title = {display:true, text:label, color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  eopts.scales.y.title = {display:true, text:'Relative Error (%)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  sweepErrorChart = new Chart(document.getElementById('sweepErrorChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{data: results.map(r => r.error), borderColor:'#f0b429', backgroundColor:'rgba(240,180,41,0.2)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#f0b429', fill:true}]
+    },
+    options: eopts
+  });
+
+  // Scaling analysis
+  const fopts = JSON.parse(JSON.stringify(chartDefaults));
+  fopts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+  document.getElementById('sweepFitLabel').textContent = 'Scaling Analysis';
+
+  if (param === 'walkers') {
+    // Fit 1/sqrt(N) scaling
+    const logN = results.map(r => Math.log10(r.value));
+    const logErr = results.filter(r=>r.error>0).map(r => Math.log10(r.error));
+    const fitLabels = results.map(r => Math.round(r.value).toString());
+    const fitData = results.map(r => r.error);
+    const theoreticalFit = results.map(r => fitData[0] * Math.sqrt(results[0].value / r.value));
+    fopts.scales.x.title = {display:true, text:'Walkers', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    fopts.scales.y.title = {display:true, text:'Error (%)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    fopts.scales.y.type = 'logarithmic';
+    fopts.scales.x.type = 'logarithmic';
+    sweepFitChart = new Chart(document.getElementById('sweepFitChart'), {
+      type:'scatter',
+      data:{datasets:[
+        {label:'Measured error', data:results.map(r=>({x:r.value,y:r.error})), backgroundColor:'#f0b429', pointRadius:5},
+        {label:'1/sqrt(N) fit', data:results.map(r=>({x:r.value,y:theoreticalFit[results.indexOf(r)]})), borderColor:'#7dd87d', borderWidth:1.5, borderDash:[4,2], pointRadius:0, showLine:true, fill:false}
+      ]},
+      options:fopts
+    });
+  } else if (param === 'dt') {
+    // Linear extrapolation to dt=0
+    fopts.scales.x.title = {display:true, text:'dt', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    fopts.scales.y.title = {display:true, text:'Energy', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    const dtVals = results.map(r => r.value);
+    const eVals = results.map(r => r.energy);
+    // Linear regression
+    const n = dtVals.length;
+    const sx = dtVals.reduce((a,b)=>a+b,0), sy = eVals.reduce((a,b)=>a+b,0);
+    const sxy = dtVals.reduce((a,v,i)=>a+v*eVals[i],0), sxx = dtVals.reduce((a,v)=>a+v*v,0);
+    const slope = (n*sxy-sx*sy)/(n*sxx-sx*sx);
+    const intercept = (sy-slope*sx)/n;
+    const fitLine = [{x:0,y:intercept},{x:Math.max(...dtVals)*1.1,y:intercept+slope*Math.max(...dtVals)*1.1}];
+    sweepFitChart = new Chart(document.getElementById('sweepFitChart'), {
+      type:'scatter',
+      data:{datasets:[
+        {label:'QMC energy', data:results.map(r=>({x:r.value,y:r.energy})), backgroundColor:'#7da0dd', pointRadius:5},
+        {label:'Exact (dt=0)', data:[{x:0,y:results[0].exact}], backgroundColor:'#7dd87d', pointRadius:8, pointStyle:'triangle'},
+        {label:'Linear fit', data:fitLine, borderColor:'#f0b429', borderWidth:1.5, borderDash:[4,2], pointRadius:0, showLine:true, fill:false}
+      ]},
+      options:fopts
+    });
+  } else {
+    // Generic scatter
+    fopts.scales.x.title = {display:true, text:label, color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    fopts.scales.y.title = {display:true, text:'Energy', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    sweepFitChart = new Chart(document.getElementById('sweepFitChart'), {
+      type:'scatter',
+      data:{datasets:[
+        {label:'QMC', data:results.map(r=>({x:r.value,y:r.energy})), backgroundColor:'#7da0dd', pointRadius:5},
+        {label:'Exact', data:results.map(r=>({x:r.value,y:r.exact})), backgroundColor:'#7dd87d', pointRadius:4, pointStyle:'triangle'}
+      ]},
+      options:fopts
+    });
+  }
+
+  // Results table
+  const table = document.getElementById('sweepTable');
+  table.innerHTML = '<div style="font-size:10px;font-family:\'Space Mono\',monospace">' +
+    '<div class="theory-row" style="font-weight:700;color:#7da0dd"><span class="lbl">' + label + '</span><span>Energy</span><span>Exact</span><span>Error</span></div>' +
+    results.map(r => `<div class="theory-row"><span class="lbl">${param==='dt'?r.value.toFixed(4):Math.round(r.value)}</span><span class="val">${r.energy.toFixed(4)}</span><span style="color:#7dd87d">${r.exact.toFixed(4)}</span><span style="color:#f0b429">${r.error.toFixed(2)}%</span></div>`).join('') +
+    '</div>';
+}
+
+/* ── VMC vs DMC Comparison ── */
+async function runComparison() {
+  if (running || sweepRunning) return;
+  running = true;
+  const base = getBaseParams();
+  const exact = getExactEnergy();
+
+  document.getElementById('compProgText').textContent = 'Running VMC...';
+  document.getElementById('compProgFill').style.width = '25%';
+  document.getElementById('compDash').style.display = '';
+
+  const vmcParams = Object.assign({}, base);
+  const vmcResult = await new Promise(resolve => setTimeout(() => resolve(runVMC(vmcParams)), 10));
+
+  document.getElementById('compProgText').textContent = 'Running DMC...';
+  document.getElementById('compProgFill').style.width = '75%';
+
+  const dmcParams = Object.assign({}, base);
+  const dmcResult = await new Promise(resolve => setTimeout(() => resolve(runDMC(dmcParams)), 10));
+
+  document.getElementById('compProgText').textContent = 'Complete';
+  document.getElementById('compProgFill').style.width = '100%';
+  running = false;
+
+  // Compute stats
+  function computeStats(energies) {
+    const skip = Math.floor(energies.length * 0.2);
+    const d = energies.slice(skip);
+    const mean = d.reduce((a,b)=>a+b,0)/d.length;
+    const v = d.reduce((a,b)=>a+(b-mean)*(b-mean),0)/d.length;
+    return {mean, std: Math.sqrt(v/d.length)};
+  }
+
+  const vmcStats = computeStats(vmcResult.energies);
+  const dmcStats = computeStats(dmcResult.energies);
+
+  document.getElementById('compVMCE').textContent = vmcStats.mean.toFixed(4);
+  document.getElementById('compDMCE').textContent = dmcStats.mean.toFixed(4);
+  document.getElementById('compVMCErr').textContent = (Math.abs(vmcStats.mean-exact)/exact*100).toFixed(2)+'%';
+  document.getElementById('compDMCErr').textContent = (Math.abs(dmcStats.mean-exact)/exact*100).toFixed(2)+'%';
+  document.getElementById('compExact').textContent = exact.toFixed(4);
+  document.getElementById('compVarPrinc').textContent = vmcStats.mean >= exact * 0.99 ? 'Yes' : 'Close';
+  document.getElementById('compVarPrinc').style.color = vmcStats.mean >= exact * 0.99 ? '#7dd87d' : '#f0b429';
+
+  // Energy convergence chart
+  if (compEnergyChart) compEnergyChart.destroy();
+  const maxLen = Math.max(vmcResult.energies.length, dmcResult.energies.length);
+  const labels = Array.from({length:maxLen}, (_,i)=>i);
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+  opts.scales.x.title = {display:true, text:'Step (post-equil)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Energy', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  compEnergyChart = new Chart(document.getElementById('compEnergyChart'), {
+    type:'line',
+    data:{labels, datasets:[
+      {label:'VMC', data:vmcResult.energies, borderColor:'#7da0dd', borderWidth:1, pointRadius:0, fill:false},
+      {label:'DMC', data:dmcResult.energies, borderColor:'#e8a0dd', borderWidth:1, pointRadius:0, fill:false},
+      {label:'VMC avg', data:runningAvg(vmcResult.energies), borderColor:'#3c60a0', borderWidth:2, pointRadius:0, fill:false},
+      {label:'DMC avg', data:runningAvg(dmcResult.energies), borderColor:'#a03ca0', borderWidth:2, pointRadius:0, fill:false},
+      {label:'Exact', data:labels.map(()=>exact), borderColor:'#7dd87d', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false}
+    ]},
+    options:opts
+  });
+
+  // Walker distributions
+  if (compVMCWalkersChart) compVMCWalkersChart.destroy();
+  if (compDMCWalkersChart) compDMCWalkersChart.destroy();
+
+  function makeWalkerChart(canvasId, positions, label) {
+    if (currentDim === 1) {
+      const L = base.Ls[0];
+      const bins = 50, bw = L/bins;
+      const counts = new Array(bins).fill(0);
+      positions.forEach(p => { const b = Math.min(bins-1, Math.floor(p[0]/bw)); if(b>=0) counts[b]++; });
+      const maxC = Math.max(...counts)||1;
+      const norm = counts.map(c=>c/maxC);
+      const theory = [];
+      for(let i=0;i<bins;i++){const x=(i+0.5)*bw; theory.push(Math.pow(Math.sin(base.ns[0]*Math.PI*x/L),2));}
+      const maxT = Math.max(...theory)||1;
+      const wopts = JSON.parse(JSON.stringify(chartDefaults));
+      return new Chart(document.getElementById(canvasId),{type:'bar',data:{labels:counts.map((_,i)=>((i+0.5)*bw).toFixed(2)),datasets:[
+        {label:label,data:norm,backgroundColor:'rgba(125,160,221,0.5)',borderWidth:0,borderRadius:1},
+        {label:'Exact',data:theory.map(t=>t/maxT),type:'line',borderColor:'#7dd87d',borderWidth:1.5,pointRadius:0,fill:false}
+      ]},options:wopts});
+    } else {
+      const scatterData = positions.slice(0,2000).map(p=>({x:p[0],y:p[1]}));
+      const wopts = JSON.parse(JSON.stringify(chartDefaults));
+      return new Chart(document.getElementById(canvasId),{type:'scatter',data:{datasets:[{data:scatterData,backgroundColor:'rgba(125,160,221,0.3)',pointRadius:1.5}]},options:wopts});
+    }
+  }
+  compVMCWalkersChart = makeWalkerChart('compVMCWalkers', vmcResult.positions, 'VMC');
+  compDMCWalkersChart = makeWalkerChart('compDMCWalkers', dmcResult.positions, 'DMC');
+}
+
+function resetComparison() {
+  [compEnergyChart, compVMCWalkersChart, compDMCWalkersChart].forEach(c => { if(c) c.destroy(); });
+  compEnergyChart = compVMCWalkersChart = compDMCWalkersChart = null;
+  ['compVMCE','compDMCE','compVMCErr','compDMCErr','compExact','compVarPrinc'].forEach(id => document.getElementById(id).textContent = '--');
+  document.getElementById('compProgFill').style.width = '0%';
+  document.getElementById('compProgText').textContent = 'Ready';
+}
+
+/* ── Energy Levels ── */
+async function runLevels() {
+  if (running || sweepRunning) return;
+  running = true;
+  const base = getBaseParams();
+  const dim = currentDim;
+  const results = [];
+  document.getElementById('levelsDash').style.display = '';
+
+  // Generate quantum number combinations for levels
+  const states = [];
+  if (dim === 1) {
+    for (let n = 1; n <= 4; n++) states.push({ns:[n], label:`n=${n}`});
+  } else if (dim === 2) {
+    const combos = [[1,1],[1,2],[2,1],[2,2],[1,3],[3,1]];
+    combos.forEach(c => states.push({ns:c, label:`(${c[0]},${c[1]})`}));
+  } else {
+    const combos = [[1,1,1],[1,1,2],[1,2,1],[2,1,1]];
+    combos.forEach(c => states.push({ns:c, label:`(${c[0]},${c[1]},${c[2]})`}));
+  }
+
+  for (let i = 0; i < states.length; i++) {
+    document.getElementById('levProgText').textContent = `Computing state ${i+1}/${states.length}: ${states[i].label}`;
+    document.getElementById('levProgFill').style.width = ((i+1)/states.length*100)+'%';
+
+    const p = Object.assign({}, base, {ns: states[i].ns});
+
+    // Exact energy
+    const pi2 = Math.PI * Math.PI;
+    let exact = 0;
+    for (let d = 0; d < dim; d++) exact += pi2 * states[i].ns[d] * states[i].ns[d] / (base.Ls[d] * base.Ls[d]);
+
+    const result = await new Promise(resolve => setTimeout(() => resolve(base.method === 'dmc' ? runDMC(p) : runVMC(p)), 10));
+    const energies = result.energies;
+    const skip = Math.floor(energies.length * 0.2);
+    const eData = energies.slice(skip);
+    const mean = eData.length > 0 ? eData.reduce((a,b)=>a+b,0)/eData.length : 0;
+    const variance = eData.length > 0 ? eData.reduce((a,b)=>a+(b-mean)*(b-mean),0)/eData.length : 0;
+    const std = Math.sqrt(variance/Math.max(1,eData.length));
+
+    results.push({label: states[i].label, ns: states[i].ns, computed: mean, exact, std, error: Math.abs(mean-exact)/exact*100});
+  }
+
+  document.getElementById('levProgText').textContent = 'Complete';
+  running = false;
+  displayLevels(results);
+}
+
+function displayLevels(results) {
+  if (levelsChartInst) levelsChartInst.destroy();
+
+  // Bar chart: computed vs exact for each state
+  const labels = results.map(r => r.label);
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+  opts.scales.x.title = {display:true, text:'Quantum state', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Energy', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  levelsChartInst = new Chart(document.getElementById('levelsChart'), {
+    type:'bar',
+    data:{labels, datasets:[
+      {label:'QMC computed', data:results.map(r=>r.computed), backgroundColor:'rgba(125,160,221,0.6)', borderColor:'#7da0dd', borderWidth:1, borderRadius:2},
+      {label:'Exact', data:results.map(r=>r.exact), backgroundColor:'rgba(125,216,125,0.3)', borderColor:'#7dd87d', borderWidth:1, borderRadius:2}
+    ]},
+    options:opts
+  });
+
+  // Table
+  const table = document.getElementById('levelsTable');
+  table.innerHTML = results.map(r => `
+    <div class="level-row">
+      <span class="level-label">${r.label}</span>
+      <div class="level-bar" style="width:${Math.min(100,r.exact/Math.max(...results.map(x=>x.exact))*100)}%;background:rgba(125,216,125,0.4)"></div>
+      <span class="level-val">${r.computed.toFixed(3)} / ${r.exact.toFixed(3)}</span>
+      <span style="font-size:9px;color:${r.error<2?'#7dd87d':'#f0b429'};font-family:'Space Mono',monospace">${r.error.toFixed(1)}%</span>
+    </div>
+  `).join('');
+}
+
+function resetLevels() {
+  if (levelsChartInst) levelsChartInst.destroy();
+  levelsChartInst = null;
+  document.getElementById('levelsTable').innerHTML = '';
+  document.getElementById('levProgFill').style.width = '0%';
+  document.getElementById('levProgText').textContent = 'Ready';
+}
+
 // Initialize
 updateTheory();
 updateFractalUI();
 drawBoundary();
+updateSweepInputs();
 
 // Listen for param changes to update theory
 ['pNx','pNy','pNz','pL','pLy','pLz'].forEach(id => {

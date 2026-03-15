@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LBM Portal &middot; Lattice Boltzmann Fluid</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:1100px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.portal-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(100,60,180,0.2);color:#b07ddd;border:0.5px solid rgba(100,60,180,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.portal-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.portal-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:750px;margin-bottom:2rem}
+.panel{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.panel-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d;cursor:pointer;user-select:none}
+.panel-hdr .snum{font-size:10px;font-weight:700;background:rgba(100,60,180,0.15);color:#b07ddd;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(100,60,180,0.4)}
+.panel-hdr .sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.panel-hdr .toggle{margin-left:auto;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.panel-body{padding:16px}
+.panel.collapsed .panel-body{display:none}
+.param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.param-group{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px}
+.group-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.param-row:last-child{margin-bottom:0}
+.param-lbl{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace}
+.param-lbl .unit{color:#4a6a4a;font-size:9px}
+select,input[type=number]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
+select{width:130px;text-align:left}
+input[type=number]{width:100px}
+input:focus,select:focus{outline:none;border-color:#3ca03c}
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.progress-wrap{flex:1;min-width:200px;display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:6px;background:#0d150d;border-radius:3px;border:0.5px solid rgba(60,160,60,0.15);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#643cb4,#b07ddd);width:0%;transition:width .3s}
+.progress-text{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;white-space:nowrap}
+.dashboard{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-row.wide{grid-template-columns:2fr 1fr}
+.dash-card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:14px;overflow:hidden}
+.card-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.chart-wrap{height:280px;position:relative}
+.chart-wrap.tall{height:350px}
+.canvas-wrap{position:relative;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;overflow:hidden}
+.canvas-wrap canvas{display:block;width:100%}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-item{padding:8px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
+.stat-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.stat-value{font-size:18px;font-weight:700;color:#b07ddd;font-family:'Space Mono',monospace}
+.stat-value.sm{font-size:13px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #643cb4;background:rgba(100,60,180,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#b07ddd;font-weight:600}
+.viz-tabs{display:flex;gap:6px;margin-bottom:8px}
+.viz-tab{padding:4px 12px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:10px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.viz-tab.active{background:rgba(100,60,180,0.15);color:#b07ddd;border-color:rgba(100,60,180,0.5)}
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="portal-tag">LBM PORTAL &middot; COMPUTATIONAL FLUID DYNAMICS</div>
+<div class="portal-title">Lattice Boltzmann Method</div>
+<div class="portal-sub">D2Q9 Lattice Boltzmann simulation of incompressible flow past obstacles. Watch vortices form and shed as Reynolds number increases. Explore the transition from laminar to turbulent flow.</div>
+
+<div class="note"><b>Physics:</b> The LBM simulates fluid flow by tracking probability distributions of particle velocities on a lattice. At each timestep: particles stream to neighboring nodes and collide (relax toward equilibrium). From these microscopic rules, macroscopic fluid behavior emerges &mdash; including the Navier-Stokes equations. The key parameter is the Reynolds number Re = uL/&nu;, which determines whether flow is laminar (smooth) or turbulent (vortex shedding).</div>
+
+<!-- PARAMETERS -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">LBM</span>
+    <span class="sname">Simulation Parameters</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Domain</div>
+        <div class="param-row"><span class="param-lbl">Width (Nx)</span><input type="number" id="pNx" value="300" min="100" max="600" step="50"></div>
+        <div class="param-row"><span class="param-lbl">Height (Ny)</span><input type="number" id="pNy" value="100" min="50" max="200" step="10"></div>
+        <div class="param-row"><span class="param-lbl">Steps</span><input type="number" id="pSteps" value="5000" min="500" max="50000" step="500"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Flow</div>
+        <div class="param-row"><span class="param-lbl">Inlet u<sub>0</sub> <span class="unit">(lattice)</span></span><input type="number" id="pU0" value="0.08" step="0.01" min="0.01" max="0.2"></div>
+        <div class="param-row"><span class="param-lbl">Viscosity &nu; <span class="unit">(lattice)</span></span><input type="number" id="pNu" value="0.02" step="0.005" min="0.002" max="0.5"></div>
+        <div class="param-row"><span class="param-lbl">Reynolds Re</span><input type="number" id="pRe" value="" disabled></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Obstacle</div>
+        <div class="param-row"><span class="param-lbl">Shape</span><select id="pObstacle"><option value="circle">Circle</option><option value="square">Square</option><option value="none">None</option></select></div>
+        <div class="param-row"><span class="param-lbl">Size <span class="unit">(%height)</span></span><input type="number" id="pObsSize" value="25" min="5" max="50" step="5"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <button onclick="startLBM()">&#9654; Run Simulation</button>
+  <button onclick="cancelLBM()" class="danger">&#9632; Stop</button>
+  <button onclick="resetLBM()" class="danger">&#8634; Reset</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    <span class="progress-text" id="progText">Ready</span>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+  <div class="dash-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-label" style="margin-bottom:0">Flow Visualization</div>
+      <div class="viz-tabs">
+        <div class="viz-tab active" onclick="setViz('velocity')">Velocity</div>
+        <div class="viz-tab" onclick="setViz('vorticity')">Vorticity</div>
+        <div class="viz-tab" onclick="setViz('pressure')">Pressure</div>
+      </div>
+    </div>
+    <div class="canvas-wrap"><canvas id="flowCanvas" width="600" height="200"></canvas></div>
+  </div>
+
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Statistics</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Reynolds Number</div><div class="stat-value" id="stRe">--</div></div>
+        <div class="stat-item"><div class="stat-label">Time Step</div><div class="stat-value" id="stStep">0</div></div>
+        <div class="stat-item"><div class="stat-label">Max Velocity</div><div class="stat-value sm" id="stMaxU">--</div></div>
+        <div class="stat-item"><div class="stat-label">Drag Coeff C<sub>d</sub></div><div class="stat-value sm" id="stCd">--</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Velocity Profile at x = obstacle</div>
+      <div class="chart-wrap"><canvas id="profileChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Drag Coefficient vs Time</div>
+      <div class="chart-wrap"><canvas id="dragChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Flow Regimes</div>
+      <div class="note"><b>Re &lt; 5:</b> Creeping flow (no separation)<br><b>5 &lt; Re &lt; 40:</b> Steady recirculation zone behind obstacle<br><b>Re &gt; 40:</b> Vortex shedding &mdash; alternating vortices detach (von K&aacute;rm&aacute;n street)<br><b>Investigation:</b> At what Reynolds number do vortices appear?</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   LBM PORTAL — D2Q9 Lattice Boltzmann Method
+   ═══════════════════════════════════════════════════════════════ */
+
+let running = false, cancelled = false;
+let profileChartInst = null, dragChartInst = null;
+let vizMode = 'velocity';
+
+const chartDefaults = {
+  responsive:true, maintainAspectRatio:false, animation:{duration:0},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(100,60,180,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},
+  scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}
+};
+
+function togglePanel(id) {
+  const p = document.getElementById(id);
+  p.classList.toggle('collapsed');
+  const t = p.querySelector('.toggle');
+  if(t) t.innerHTML = p.classList.contains('collapsed') ? '&#9654; expand' : '&darr; collapse';
+}
+
+function setViz(mode) {
+  vizMode = mode;
+  document.querySelectorAll('.viz-tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function updateRe() {
+  const u0 = +document.getElementById('pU0').value;
+  const nu = +document.getElementById('pNu').value;
+  const Ny = +document.getElementById('pNy').value;
+  const obsSize = +document.getElementById('pObsSize').value / 100 * Ny;
+  const Re = u0 * obsSize / nu;
+  document.getElementById('pRe').value = Re.toFixed(1);
+  return Re;
+}
+['pU0','pNu','pNy','pObsSize'].forEach(id => document.getElementById(id).addEventListener('input', updateRe));
+updateRe();
+
+/* ── D2Q9 LBM Core ── */
+// Velocities: 0=rest, 1=E, 2=N, 3=W, 4=S, 5=NE, 6=NW, 7=SW, 8=SE
+const ex = [0, 1, 0,-1, 0, 1,-1,-1, 1];
+const ey = [0, 0, 1, 0,-1, 1, 1,-1,-1];
+const w  = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36];
+const opp = [0, 3, 4, 1, 2, 7, 8, 5, 6];
+
+function createLBM(Nx, Ny, u0, nu, obstacleType, obsSize) {
+  const tau = 3 * nu + 0.5;
+  const omega = 1 / tau;
+  const N = Nx * Ny;
+
+  // Distribution functions
+  const f = new Float64Array(9 * N);
+  const ftemp = new Float64Array(9 * N);
+  const obstacle = new Uint8Array(N);
+
+  // Set obstacle
+  const cx = Math.floor(Nx * 0.25);
+  const cy = Math.floor(Ny / 2);
+  const r = obsSize / 2;
+  for (let y = 0; y < Ny; y++) {
+    for (let x = 0; x < Nx; x++) {
+      const idx = y * Nx + x;
+      if (obstacleType === 'circle') {
+        if ((x-cx)*(x-cx)+(y-cy)*(y-cy) <= r*r) obstacle[idx] = 1;
+      } else if (obstacleType === 'square') {
+        if (Math.abs(x-cx) <= r && Math.abs(y-cy) <= r) obstacle[idx] = 1;
+      }
+    }
+  }
+
+  // Initialize to equilibrium with uniform flow
+  for (let y = 0; y < Ny; y++) {
+    for (let x = 0; x < Nx; x++) {
+      const idx = y * Nx + x;
+      if (obstacle[idx]) continue;
+      const rho = 1.0;
+      const ux = u0, uy = 0;
+      for (let q = 0; q < 9; q++) {
+        const eu = ex[q]*ux + ey[q]*uy;
+        const usq = ux*ux + uy*uy;
+        f[q*N + idx] = w[q] * rho * (1 + 3*eu + 4.5*eu*eu - 1.5*usq);
+      }
+    }
+  }
+
+  return {
+    Nx, Ny, N, u0, tau, omega, f, ftemp, obstacle, cx, cy, r,
+
+    step() {
+      const {Nx:NX, Ny:NY, N:NN, omega:om, f:ff, ftemp:ft, obstacle:obs} = this;
+
+      // Collision
+      for (let idx = 0; idx < NN; idx++) {
+        if (obs[idx]) continue;
+        let rho = 0, ux = 0, uy = 0;
+        for (let q = 0; q < 9; q++) {
+          const fq = ff[q*NN+idx];
+          rho += fq;
+          ux += ex[q]*fq;
+          uy += ey[q]*fq;
+        }
+        ux /= rho; uy /= rho;
+        for (let q = 0; q < 9; q++) {
+          const eu = ex[q]*ux + ey[q]*uy;
+          const usq = ux*ux + uy*uy;
+          const feq = w[q]*rho*(1 + 3*eu + 4.5*eu*eu - 1.5*usq);
+          ft[q*NN+idx] = ff[q*NN+idx] + om*(feq - ff[q*NN+idx]);
+        }
+      }
+
+      // Streaming
+      for (let y = 0; y < NY; y++) {
+        for (let x = 0; x < NX; x++) {
+          const idx = y*NX+x;
+          for (let q = 0; q < 9; q++) {
+            const nx = x + ex[q], ny = y + ey[q];
+            if (nx < 0 || nx >= NX || ny < 0 || ny >= NY) continue;
+            const nidx = ny*NX+nx;
+            if (obs[nidx]) continue;
+            ff[q*NN+nidx] = ft[q*NN+idx];
+          }
+        }
+      }
+
+      // Bounce-back on obstacles
+      for (let idx = 0; idx < NN; idx++) {
+        if (!obs[idx]) continue;
+        for (let q = 1; q < 9; q++) {
+          ff[opp[q]*NN+idx] = ft[q*NN+idx];
+        }
+      }
+
+      // Inlet BC (Zou-He)
+      for (let y = 1; y < NY-1; y++) {
+        const idx = y*NX;
+        const rho = 1.0;
+        const ux = this.u0, uy = 0;
+        for (let q = 0; q < 9; q++) {
+          const eu = ex[q]*ux + ey[q]*uy;
+          const usq = ux*ux + uy*uy;
+          ff[q*NN+idx] = w[q]*rho*(1 + 3*eu + 4.5*eu*eu - 1.5*usq);
+        }
+      }
+
+      // Outlet BC (zero gradient)
+      for (let y = 0; y < NY; y++) {
+        const idx = y*NX+(NX-1);
+        const src = y*NX+(NX-2);
+        for (let q = 0; q < 9; q++) ff[q*NN+idx] = ff[q*NN+src];
+      }
+
+      // Top/bottom walls (bounce-back)
+      for (let x = 0; x < NX; x++) {
+        const top = x, bot = (NY-1)*NX+x;
+        for (let q = 1; q < 9; q++) {
+          ff[opp[q]*NN+top] = ft[q*NN+top];
+          ff[opp[q]*NN+bot] = ft[q*NN+bot];
+        }
+      }
+    },
+
+    getMacro() {
+      const rho = new Float64Array(this.N);
+      const ux = new Float64Array(this.N);
+      const uy = new Float64Array(this.N);
+      for (let idx = 0; idx < this.N; idx++) {
+        if (this.obstacle[idx]) continue;
+        let r = 0, vx = 0, vy = 0;
+        for (let q = 0; q < 9; q++) {
+          const fq = this.f[q*this.N+idx];
+          r += fq; vx += ex[q]*fq; vy += ey[q]*fq;
+        }
+        rho[idx] = r;
+        ux[idx] = r > 0 ? vx/r : 0;
+        uy[idx] = r > 0 ? vy/r : 0;
+      }
+      return {rho, ux, uy};
+    }
+  };
+}
+
+/* ── Drawing ── */
+function drawFlow(lbm, macro) {
+  const cvs = document.getElementById('flowCanvas');
+  const {Nx, Ny} = lbm;
+  cvs.width = Nx;
+  cvs.height = Ny;
+  const ctx = cvs.getContext('2d');
+  const img = ctx.createImageData(Nx, Ny);
+  const {rho, ux, uy} = macro;
+
+  for (let y = 0; y < Ny; y++) {
+    for (let x = 0; x < Nx; x++) {
+      const idx = y * Nx + x;
+      const pidx = idx * 4;
+
+      if (lbm.obstacle[idx]) {
+        img.data[pidx]=40; img.data[pidx+1]=40; img.data[pidx+2]=40; img.data[pidx+3]=255;
+        continue;
+      }
+
+      let val;
+      if (vizMode === 'velocity') {
+        val = Math.sqrt(ux[idx]*ux[idx] + uy[idx]*uy[idx]) / (lbm.u0 * 2);
+      } else if (vizMode === 'vorticity') {
+        // Approximate vorticity
+        const xp = Math.min(x+1, Nx-1), xm = Math.max(x-1, 0);
+        const yp = Math.min(y+1, Ny-1), ym = Math.max(y-1, 0);
+        const duy_dx = (uy[y*Nx+xp] - uy[y*Nx+xm]) / 2;
+        const dux_dy = (ux[yp*Nx+x] - ux[ym*Nx+x]) / 2;
+        val = (duy_dx - dux_dy) * 20; // Scale for visibility
+      } else { // pressure
+        val = (rho[idx] - 1.0) * 50; // Scale
+      }
+
+      let r, g, b;
+      if (vizMode === 'vorticity') {
+        // Diverging: blue (negative) -> white (0) -> red (positive)
+        const t = Math.max(-1, Math.min(1, val));
+        if (t > 0) { r=Math.round(128+127*t); g=Math.round(128-128*t); b=Math.round(128-128*t); }
+        else { r=Math.round(128+128*t); g=Math.round(128+128*t); b=Math.round(128-127*t); }
+      } else {
+        // Sequential: dark blue -> cyan -> yellow -> red
+        const t = Math.max(0, Math.min(1, vizMode === 'pressure' ? val*0.5+0.5 : val));
+        if (t < 0.25) { const s=t/0.25; r=0; g=Math.round(s*128); b=Math.round(128+s*127); }
+        else if (t < 0.5) { const s=(t-0.25)/0.25; r=0; g=Math.round(128+s*127); b=Math.round(255-s*127); }
+        else if (t < 0.75) { const s=(t-0.5)/0.25; r=Math.round(s*255); g=255; b=Math.round(128-s*128); }
+        else { const s=(t-0.75)/0.25; r=255; g=Math.round(255-s*200); b=0; }
+      }
+      img.data[pidx]=r; img.data[pidx+1]=g; img.data[pidx+2]=b; img.data[pidx+3]=255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ── Main simulation ── */
+async function startLBM() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+
+  const Nx = +document.getElementById('pNx').value;
+  const Ny = +document.getElementById('pNy').value;
+  const u0 = +document.getElementById('pU0').value;
+  const nu = +document.getElementById('pNu').value;
+  const steps = +document.getElementById('pSteps').value;
+  const obsType = document.getElementById('pObstacle').value;
+  const obsSize = +document.getElementById('pObsSize').value / 100 * Ny;
+  const Re = u0 * obsSize / nu;
+
+  document.getElementById('stRe').textContent = Re.toFixed(1);
+
+  const lbm = createLBM(Nx, Ny, u0, nu, obsType, obsSize);
+  const dragHistory = [];
+  const batchSize = 20;
+
+  for (let step = 0; step < steps && !cancelled; step++) {
+    lbm.step();
+
+    if (step % batchSize === 0) {
+      const macro = lbm.getMacro();
+      drawFlow(lbm, macro);
+
+      const maxU = Math.max(...Array.from(macro.ux).map((u,i) => lbm.obstacle[i] ? 0 : Math.sqrt(u*u+macro.uy[i]*macro.uy[i])));
+      document.getElementById('stStep').textContent = step;
+      document.getElementById('stMaxU').textContent = maxU.toFixed(4);
+      document.getElementById('progText').textContent = `Step ${step}/${steps}`;
+      document.getElementById('progFill').style.width = (step/steps*100)+'%';
+
+      // Rough drag estimate from momentum deficit
+      if (obsType !== 'none' && step > 100) {
+        let drag = 0;
+        const xProbe = lbm.cx + Math.ceil(lbm.r) + 5;
+        if (xProbe < Nx) {
+          for (let y = 0; y < Ny; y++) {
+            const idx = y*Nx+xProbe;
+            drag += u0 - macro.ux[idx];
+          }
+        }
+        const Cd = 2 * drag / (u0 * u0 * obsSize);
+        document.getElementById('stCd').textContent = Cd.toFixed(3);
+        if (step % (batchSize * 5) === 0) dragHistory.push({step, Cd});
+      }
+
+      // Velocity profile
+      if (step % (batchSize * 5) === 0) {
+        updateProfileChart(lbm, macro);
+        updateDragChart(dragHistory);
+      }
+
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  if (!cancelled) {
+    const macro = lbm.getMacro();
+    drawFlow(lbm, macro);
+    updateProfileChart(lbm, macro);
+    updateDragChart(dragHistory);
+  }
+
+  document.getElementById('progText').textContent = cancelled ? 'Stopped' : 'Complete';
+  document.getElementById('progFill').style.width = '100%';
+  running = false;
+}
+
+function updateProfileChart(lbm, macro) {
+  if (profileChartInst) profileChartInst.destroy();
+  const xProbe = lbm.cx;
+  const profile = [];
+  for (let y = 0; y < lbm.Ny; y++) {
+    const idx = y * lbm.Nx + xProbe;
+    profile.push(lbm.obstacle[idx] ? 0 : macro.ux[idx]);
+  }
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'ux', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'y', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.indexAxis = 'y';
+  profileChartInst = new Chart(document.getElementById('profileChart'), {
+    type:'line',
+    data:{labels:profile.map((_,i)=>i), datasets:[{data:profile, borderColor:'#b07ddd', borderWidth:1.5, pointRadius:0, fill:false}]},
+    options:opts
+  });
+}
+
+function updateDragChart(dragHistory) {
+  if (dragChartInst) dragChartInst.destroy();
+  if (dragHistory.length === 0) return;
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'Step', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Cd', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  dragChartInst = new Chart(document.getElementById('dragChart'), {
+    type:'line',
+    data:{labels:dragHistory.map(d=>d.step), datasets:[{data:dragHistory.map(d=>d.Cd), borderColor:'#f0b429', borderWidth:1.5, pointRadius:0, fill:false}]},
+    options:opts
+  });
+}
+
+function cancelLBM() { cancelled = true; }
+function resetLBM() {
+  cancelled = true;
+  running = false;
+  if (profileChartInst) profileChartInst.destroy();
+  if (dragChartInst) dragChartInst.destroy();
+  profileChartInst = dragChartInst = null;
+  const cvs = document.getElementById('flowCanvas');
+  cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
+  ['stRe','stMaxU','stCd'].forEach(id => document.getElementById(id).textContent = '--');
+  document.getElementById('stStep').textContent = '0';
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progText').textContent = 'Ready';
+}
+</script>
+</body>
+</html>
