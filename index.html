@@ -157,19 +157,61 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
 <!-- ═══════════════ ENGINEERING ═══════════════ -->
 <div class="section-hdr">
   <span class="section-label">Engineering</span>
-  <span class="section-count">hardware + simulation</span>
+  <span class="section-count">5 modules</span>
   <span class="section-line"></span>
 </div>
 <div class="grid" id="engGrid">
-  <a class="card" href="arduino-portal/index.html">
+  <a class="card" href="arduino-portal/index.html?tab=dcmotor">
     <div class="card-inner">
       <div class="card-top">
-        <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">ARDUINO</span>
+        <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">DC MOTOR</span>
         <span class="card-badge badge-live">WEB SERIAL</span>
       </div>
-      <div class="card-title">Motors, Servos &amp; Control</div>
-      <div class="card-desc">Simulate DC motors, tune PID controllers, and connect live to Arduino hardware via Web Serial. Compare simulated vs real motor response. Export ready-to-upload .ino sketches.</div>
-      <div class="card-tags"><span class="tag">motor control</span><span class="tag">PID</span><span class="tag">servo</span><span class="tag">web serial</span><span class="tag">arduino</span></div>
+      <div class="card-title">DC Motor Simulator</div>
+      <div class="card-desc">PWM duty cycle, back-EMF, torque curves. Euler integration of motor equations. Overlay live Arduino RPM data.</div>
+      <div class="card-tags"><span class="tag">motor control</span><span class="tag">PWM</span><span class="tag">euler integration</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-portal/index.html?tab=servo">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">SERVO</span>
+        <span class="card-badge badge-live">WEB SERIAL</span>
+      </div>
+      <div class="card-title">Servo Control Lab</div>
+      <div class="card-desc">Pulse-width modulation, sweep patterns, angular response curves. Send pulse widths directly to hardware servos.</div>
+      <div class="card-tags"><span class="tag">servo</span><span class="tag">pulse width</span><span class="tag">motion control</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-portal/index.html?tab=pid">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">PID</span>
+        <span class="card-badge badge-live">WEB SERIAL</span>
+      </div>
+      <div class="card-title">PID Controller Tuner</div>
+      <div class="card-desc">Tune Kp, Ki, Kd gains. Visualise overshoot, settling time, and steady-state error. Push gains to Arduino and compare.</div>
+      <div class="card-tags"><span class="tag">PID</span><span class="tag">control theory</span><span class="tag">tuning</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-playground/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(200,160,40,0.15);color:#ddb84d;border-color:rgba(200,160,40,0.4)">PLAYGROUND</span>
+      </div>
+      <div class="card-title">Arduino Playground</div>
+      <div class="card-desc">Virtual Arduino Uno with LEDs, buttons, potentiometers, servos, and buzzer. Wire components, write sketches, run them in the browser &mdash; no hardware needed.</div>
+      <div class="card-tags"><span class="tag">virtual arduino</span><span class="tag">circuit building</span><span class="tag">code editor</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-portal/index.html?tab=builds">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(74,106,74,0.15);color:#7a9a7a;border-color:rgba(74,106,74,0.3)">LOG</span>
+      </div>
+      <div class="card-title">Build Log</div>
+      <div class="card-desc">Investigation cards, saved experiments, and notes from motor/servo/PID sessions.</div>
+      <div class="card-tags"><span class="tag">documentation</span><span class="tag">logbook</span></div>
     </div>
   </a>
 </div>
