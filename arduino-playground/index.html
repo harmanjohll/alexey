@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arduino Playground · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;line-height:1.65;overflow-x:hidden}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#111a11;border-bottom:0.5px solid rgba(60,160,60,0.15)}
+.nav-back{font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;border:0.5px solid rgba(60,160,60,0.2);padding:4px 10px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.topbar-title{font-size:13px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8}
+.topbar-sub{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-left:auto}
+
+/* Main layout */
+.main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;height:calc(100vh - 45px)}
+.board-panel{grid-row:1/3;border-right:0.5px solid rgba(60,160,60,0.15);display:flex;flex-direction:column}
+.editor-panel{display:flex;flex-direction:column}
+.output-panel{border-top:0.5px solid rgba(60,160,60,0.15);display:flex;flex-direction:column}
+
+/* Board area */
+.board-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0d150d;border-bottom:0.5px solid rgba(60,160,60,0.1);flex-wrap:wrap}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:12px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.board-canvas-wrap{flex:1;position:relative;overflow:hidden;background:#080e08}
+canvas#board{display:block;width:100%;height:100%}
+
+/* Component palette */
+.palette{display:flex;gap:4px;padding:6px 12px;background:#111a11;border-top:0.5px solid rgba(60,160,60,0.1);flex-wrap:wrap}
+.pal-btn{font-size:9px;font-family:'Space Mono',monospace;padding:4px 8px;border:0.5px solid rgba(60,160,60,0.25);border-radius:4px;background:transparent;color:#7a9a7a;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px}
+.pal-btn:hover{background:rgba(60,160,60,0.1);color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.pal-btn.active{background:rgba(200,160,40,0.15);color:#ddb84d;border-color:rgba(200,160,40,0.4)}
+.pal-dot{width:6px;height:6px;border-radius:50%}
+
+/* Wiring list */
+.wiring{padding:6px 12px;background:#0d150d;border-top:0.5px solid rgba(60,160,60,0.1);max-height:120px;overflow-y:auto}
+.wire-item{display:flex;align-items:center;justify-content:space-between;padding:3px 6px;font-size:10px;font-family:'Space Mono',monospace;color:#7a9a7a;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.wire-item:last-child{border-bottom:none}
+.wire-remove{color:#e24b4a;cursor:pointer;font-size:8px;border:none;background:none;padding:2px 4px}
+.wire-empty{font-size:10px;color:#4a6a4a;font-style:italic;padding:4px 6px}
+
+/* Editor */
+.editor-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0d150d;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.editor-hdr select{font-size:10px;font-family:'Space Mono',monospace;background:#0a0f0a;color:#7a9a7a;border:0.5px solid rgba(60,160,60,0.25);border-radius:4px;padding:3px 6px;margin-left:auto}
+textarea#code{flex:1;width:100%;background:#0a0f0a;color:#7dd87d;font-family:'Space Mono',monospace;font-size:12px;line-height:1.6;padding:12px;border:none;resize:none;outline:none;tab-size:2}
+textarea#code::placeholder{color:#2a3a2a}
+
+/* Controls bar */
+.ctrl-bar{display:flex;gap:6px;padding:6px 12px;background:#111a11;border-top:0.5px solid rgba(60,160,60,0.1)}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:10px;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+button.run{color:#7dd87d;border-color:rgba(60,160,60,0.6);background:rgba(60,160,60,0.08)}
+
+/* Serial monitor */
+.serial-hdr{display:flex;align-items:center;gap:8px;padding:6px 12px;background:#0d150d;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.serial-out{flex:1;background:#060a06;padding:8px 12px;font-family:'Space Mono',monospace;font-size:10px;color:#5dc0dd;line-height:1.7;overflow-y:auto;min-height:100px;max-height:180px}
+.serial-line{margin:0;white-space:pre-wrap;word-break:break-all}
+.serial-err{color:#e24b4a}
+.serial-sys{color:#4a6a4a;font-style:italic}
+
+/* Component visuals on board */
+.pin-label{font-size:7px;fill:#4a6a4a;font-family:'Space Mono',monospace}
+.pin-active{fill:#7dd87d}
+
+/* Status indicator */
+.run-indicator{width:8px;height:8px;border-radius:50%;background:#4a6a4a;display:inline-block;margin-right:4px}
+.run-indicator.running{background:#7dd87d;box-shadow:0 0 6px rgba(125,216,125,0.5);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:768px){
+  .main{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  .board-panel{border-right:none;border-bottom:0.5px solid rgba(60,160,60,0.15);max-height:50vh}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="../index.html" class="nav-back">&larr; home</a>
+  <span class="topbar-title">Arduino Playground</span>
+  <span class="topbar-sub">Virtual Arduino Uno &middot; No hardware needed</span>
+</div>
+
+<div class="main">
+  <!-- LEFT: Board + Components -->
+  <div class="board-panel">
+    <div class="board-hdr">
+      <span class="snum">BOARD</span>
+      <span class="sname">Arduino Uno</span>
+      <span style="margin-left:auto;font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace">Click a component, then click a pin</span>
+    </div>
+    <div class="board-canvas-wrap">
+      <canvas id="board"></canvas>
+    </div>
+    <div class="palette" id="palette">
+      <button class="pal-btn" data-comp="led" onclick="selectComp('led')"><span class="pal-dot" style="background:#ff4444"></span>LED</button>
+      <button class="pal-btn" data-comp="rgb" onclick="selectComp('rgb')"><span class="pal-dot" style="background:linear-gradient(135deg,#f44,#4f4,#44f)"></span>RGB LED</button>
+      <button class="pal-btn" data-comp="button" onclick="selectComp('button')"><span class="pal-dot" style="background:#aaa"></span>Button</button>
+      <button class="pal-btn" data-comp="pot" onclick="selectComp('pot')"><span class="pal-dot" style="background:#ddb84d"></span>Pot</button>
+      <button class="pal-btn" data-comp="servo" onclick="selectComp('servo')"><span class="pal-dot" style="background:#5dc0dd"></span>Servo</button>
+      <button class="pal-btn" data-comp="buzzer" onclick="selectComp('buzzer')"><span class="pal-dot" style="background:#b07ddd"></span>Buzzer</button>
+      <button class="pal-btn" data-comp="temp" onclick="selectComp('temp')"><span class="pal-dot" style="background:#dd7d7d"></span>Temp</button>
+      <button class="pal-btn" data-comp="ldr" onclick="selectComp('ldr')"><span class="pal-dot" style="background:#7ddd7d"></span>LDR</button>
+    </div>
+    <div class="wiring" id="wiringList">
+      <div class="wire-empty">No components wired. Select a component above, then click a pin on the board.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT TOP: Code editor -->
+  <div class="editor-panel">
+    <div class="editor-hdr">
+      <span class="snum">SKETCH</span>
+      <span class="sname">Code Editor</span>
+      <select id="exampleSelect" onchange="loadExample()">
+        <option value="">Load example...</option>
+        <option value="blink">Blink LED</option>
+        <option value="button_led">Button → LED</option>
+        <option value="pot_servo">Pot → Servo</option>
+        <option value="traffic">Traffic Light</option>
+        <option value="rgb_fade">RGB Fade</option>
+        <option value="temp_alarm">Temp Alarm</option>
+        <option value="night_light">Night Light</option>
+      </select>
+    </div>
+    <textarea id="code" spellcheck="false" placeholder="// Write your Arduino sketch here...
+// Use setup() and loop() just like real Arduino.
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(13, HIGH);
+  delay(500);
+  digitalWrite(13, LOW);
+  delay(500);
+}"></textarea>
+    <div class="ctrl-bar">
+      <button class="run" onclick="runSketch()" id="runBtn">&#9654; Upload &amp; Run</button>
+      <button class="danger" onclick="stopSketch()" id="stopBtn" disabled>&#9632; Stop</button>
+      <button onclick="resetBoard()">Reset board</button>
+      <button onclick="clearWiring()">Clear wiring</button>
+      <span id="runStatus" style="margin-left:auto;font-size:10px;font-family:'Space Mono',monospace;color:#4a6a4a;display:flex;align-items:center"><span class="run-indicator" id="runDot"></span>Idle</span>
+    </div>
+  </div>
+
+  <!-- RIGHT BOTTOM: Serial Monitor -->
+  <div class="output-panel">
+    <div class="serial-hdr">
+      <span class="snum">SERIAL</span>
+      <span class="sname">Monitor</span>
+      <button onclick="clearSerial()" style="margin-left:auto;font-size:9px;padding:3px 8px">Clear</button>
+    </div>
+    <div class="serial-out" id="serialOut">
+      <div class="serial-line serial-sys">Arduino Playground ready. Wire components and write a sketch.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   VIRTUAL ARDUINO UNO
+   Board rendering, component wiring, Arduino code interpreter
+   ═══════════════════════════════════════════════════════════════ */
+
+// ── Pin definitions ──
+const DIGITAL_PINS = 14; // D0-D13
+const ANALOG_PINS = 6;   // A0-A5
+const PWM_PINS = [3, 5, 6, 9, 10, 11]; // ~ pins
+
+// ── Board state ──
+const board = {
+  pins: new Array(20).fill(null).map(() => ({ mode: 0, value: 0, pwm: 0 })), // 0-13 digital, 14-19 = A0-A5
+  components: {},    // pin -> { type, state, ... }
+  servos: {},        // pin -> { attached, angle }
+  serialBaud: 0,
+  tonePin: -1,
+  toneFreq: 0,
+  millis: 0,
+};
+
+const INPUT = 0, OUTPUT = 1, INPUT_PULLUP = 2;
+const HIGH = 1, LOW = 0;
+const LED_BUILTIN = 13;
+
+// ── Wiring ──
+let selectedComp = null;
+let wiring = []; // { pin, type, label }
+
+function selectComp(type) {
+  document.querySelectorAll('.pal-btn').forEach(b => b.classList.remove('active'));
+  if (selectedComp === type) { selectedComp = null; return; }
+  selectedComp = type;
+  const btn = document.querySelector(`.pal-btn[data-comp="${type}"]`);
+  if (btn) btn.classList.add('active');
+}
+
+function addComponent(pin, type) {
+  // Validate pin for component type
+  const analogTypes = ['pot', 'temp', 'ldr'];
+  if (analogTypes.includes(type) && pin < 14) {
+    serialPrint('⚠ ' + type.toUpperCase() + ' needs an analog pin (A0-A5)', 'err');
+    return;
+  }
+  if (type === 'servo' && !PWM_PINS.includes(pin) && pin < 14) {
+    serialPrint('⚠ Servo works best on PWM pins (3,5,6,9,10,11)', 'sys');
+  }
+
+  // Remove existing component on this pin
+  wiring = wiring.filter(w => w.pin !== pin);
+
+  const labels = {
+    led: 'LED', rgb: 'RGB LED', button: 'Button', pot: 'Potentiometer',
+    servo: 'Servo', buzzer: 'Buzzer', temp: 'Temp Sensor', ldr: 'Light Sensor'
+  };
+
+  wiring.push({ pin, type, label: labels[type] || type });
+  board.components[pin] = { type, state: 0, value: 512 }; // Default analog value
+  if (type === 'servo') board.servos[pin] = { attached: false, angle: 90 };
+
+  updateWiringList();
+  drawBoard();
+  selectedComp = null;
+  document.querySelectorAll('.pal-btn').forEach(b => b.classList.remove('active'));
+}
+
+function removeComponent(pin) {
+  wiring = wiring.filter(w => w.pin !== pin);
+  delete board.components[pin];
+  delete board.servos[pin];
+  updateWiringList();
+  drawBoard();
+}
+
+function clearWiring() {
+  wiring = [];
+  Object.keys(board.components).forEach(k => delete board.components[k]);
+  Object.keys(board.servos).forEach(k => delete board.servos[k]);
+  updateWiringList();
+  drawBoard();
+}
+
+function updateWiringList() {
+  const el = document.getElementById('wiringList');
+  if (wiring.length === 0) {
+    el.innerHTML = '<div class="wire-empty">No components wired. Select a component above, then click a pin on the board.</div>';
+    return;
+  }
+  el.innerHTML = wiring.map(w => {
+    const pinName = w.pin >= 14 ? 'A' + (w.pin - 14) : 'D' + w.pin;
+    let extra = '';
+    if (['pot', 'temp', 'ldr'].includes(w.type)) {
+      const val = board.components[w.pin] ? board.components[w.pin].value : 512;
+      extra = `<input type="range" min="0" max="1023" value="${val}" style="width:60px;height:12px;accent-color:#7dd87d" oninput="setAnalogValue(${w.pin}, +this.value)">`;
+    }
+    if (w.type === 'button') {
+      const pressed = board.components[w.pin] && board.components[w.pin].state;
+      extra = `<button style="font-size:8px;padding:2px 6px;${pressed ? 'background:rgba(60,160,60,0.2)' : ''}" onmousedown="pressButton(${w.pin})" onmouseup="releaseButton(${w.pin})" ontouchstart="pressButton(${w.pin})" ontouchend="releaseButton(${w.pin})">${pressed ? 'HELD' : 'PRESS'}</button>`;
+    }
+    return `<div class="wire-item"><span>${pinName} → ${w.label}</span>${extra}<button class="wire-remove" onclick="removeComponent(${w.pin})">✕</button></div>`;
+  }).join('');
+}
+
+function setAnalogValue(pin, val) {
+  if (board.components[pin]) board.components[pin].value = val;
+}
+
+function pressButton(pin) {
+  if (board.components[pin]) { board.components[pin].state = 1; updateWiringList(); drawBoard(); }
+}
+function releaseButton(pin) {
+  if (board.components[pin]) { board.components[pin].state = 0; updateWiringList(); drawBoard(); }
+}
+
+// ── Board Rendering (Canvas) ──
+const cvs = document.getElementById('board');
+const ctx = cvs.getContext('2d');
+
+function resizeCanvas() {
+  const wrap = cvs.parentElement;
+  cvs.width = wrap.clientWidth * (window.devicePixelRatio || 1);
+  cvs.height = wrap.clientHeight * (window.devicePixelRatio || 1);
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  drawBoard();
+}
+
+// Pin positions for click detection
+let pinPositions = []; // { x, y, pin, radius }
+
+function drawBoard() {
+  const w = cvs.width / (window.devicePixelRatio || 1);
+  const h = cvs.height / (window.devicePixelRatio || 1);
+  ctx.clearRect(0, 0, w, h);
+  pinPositions = [];
+
+  // Board body
+  const bx = w * 0.15, by = h * 0.08, bw = w * 0.7, bh = h * 0.84;
+  ctx.fillStyle = '#0d4a6b';
+  ctx.strokeStyle = 'rgba(40,160,200,0.4)';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, bx, by, bw, bh, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  // USB connector
+  ctx.fillStyle = '#888';
+  roundRect(ctx, bx + bw * 0.35, by - 12, bw * 0.3, 16, 3);
+  ctx.fill();
+  ctx.fillStyle = '#666';
+  ctx.fillRect(bx + bw * 0.4, by - 10, bw * 0.2, 10);
+
+  // Power jack
+  ctx.fillStyle = '#333';
+  roundRect(ctx, bx - 10, by + bh * 0.3, 14, 24, 2);
+  ctx.fill();
+
+  // Reset button
+  ctx.fillStyle = '#aa3030';
+  ctx.beginPath();
+  ctx.arc(bx + bw * 0.85, by + 20, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Chip
+  ctx.fillStyle = '#1a1a1a';
+  roundRect(ctx, bx + bw * 0.25, by + bh * 0.35, bw * 0.5, bh * 0.35, 3);
+  ctx.fill();
+  ctx.fillStyle = '#3a3a3a';
+  ctx.font = '8px "Space Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('ATmega328P', bx + bw * 0.5, by + bh * 0.53);
+
+  // Pin 13 LED (built-in)
+  const led13 = board.pins[13];
+  const ledOn = led13.value > 0 || led13.pwm > 0;
+  ctx.fillStyle = ledOn ? `rgba(255, 180, 0, ${0.3 + (led13.pwm > 0 ? led13.pwm / 255 * 0.7 : led13.value * 0.7)})` : '#333';
+  ctx.beginPath();
+  ctx.arc(bx + bw * 0.75, by + 20, 3, 0, Math.PI * 2);
+  ctx.fill();
+  if (ledOn) {
+    ctx.shadowColor = '#ffb400';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(bx + bw * 0.75, by + 20, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  ctx.font = '6px "Space Mono", monospace';
+  ctx.fillStyle = '#5a8a9a';
+  ctx.fillText('L', bx + bw * 0.75, by + 28);
+
+  // Title
+  ctx.fillStyle = '#8abccc';
+  ctx.font = 'bold 11px "Space Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('ARDUINO UNO', bx + 12, by + 18);
+
+  // Digital pins (top row, right to left: D13 to D0)
+  const pinR = Math.min(8, bw / 40);
+  const pinGap = bw / 16;
+  ctx.font = `${Math.max(6, pinR - 1)}px "Space Mono", monospace`;
+  ctx.textAlign = 'center';
+
+  for (let i = 0; i <= 13; i++) {
+    const px = bx + bw - 10 - i * pinGap;
+    const py = by + bh - 12;
+    const hasComp = !!board.components[i];
+    const isActive = board.pins[i].value > 0 || board.pins[i].pwm > 0;
+
+    ctx.fillStyle = hasComp ? getCompColor(board.components[i].type) : (isActive ? '#7dd87d' : '#1a3a4a');
+    ctx.strokeStyle = hasComp ? getCompColor(board.components[i].type) : 'rgba(40,160,200,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(px, py, pinR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // PWM indicator
+    if (PWM_PINS.includes(i)) {
+      ctx.fillStyle = '#5a8a9a';
+      ctx.fillText('~', px, py + pinR + 8);
+    }
+
+    ctx.fillStyle = hasComp ? '#e8f0e8' : '#5a8a9a';
+    ctx.fillText(i, px, py - pinR - 3);
+
+    pinPositions.push({ x: px, y: py, pin: i, radius: pinR + 4 });
+
+    // Draw component icon near pin
+    if (hasComp) {
+      drawComponentIcon(ctx, board.components[i], px, py - pinR - 14, pinR);
+    }
+  }
+
+  // Analog pins (bottom row, left to right: A0 to A5)
+  for (let i = 0; i < ANALOG_PINS; i++) {
+    const pin = 14 + i;
+    const px = bx + 10 + i * pinGap;
+    const py = by + 12;
+    const hasComp = !!board.components[pin];
+
+    ctx.fillStyle = hasComp ? getCompColor(board.components[pin].type) : '#1a3a2a';
+    ctx.strokeStyle = hasComp ? getCompColor(board.components[pin].type) : 'rgba(60,160,60,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(px, py, pinR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = hasComp ? '#e8f0e8' : '#5a9a5a';
+    ctx.fillText('A' + i, px, py + pinR + 10);
+
+    pinPositions.push({ x: px, y: py, pin: pin, radius: pinR + 4 });
+
+    if (hasComp) {
+      drawComponentIcon(ctx, board.components[pin], px, py + pinR + 14, pinR);
+    }
+  }
+
+  // Power pins labels
+  ctx.fillStyle = '#5a5a3a';
+  ctx.font = '6px "Space Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('5V  3.3V  GND', bx + bw - 8, by + 30);
+}
+
+function getCompColor(type) {
+  const colors = {
+    led: '#ff4444', rgb: '#dd44dd', button: '#aaaaaa', pot: '#ddb84d',
+    servo: '#5dc0dd', buzzer: '#b07ddd', temp: '#dd7d7d', ldr: '#7ddd7d'
+  };
+  return colors[type] || '#7a9a7a';
+}
+
+function drawComponentIcon(ctx, comp, x, y, r) {
+  const s = r * 0.8;
+  ctx.save();
+  switch (comp.type) {
+    case 'led': {
+      const brightness = comp.state || 0;
+      ctx.fillStyle = brightness > 0 ? `rgba(255,68,68,${0.4 + brightness * 0.6})` : '#441111';
+      ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.fill();
+      if (brightness > 0) {
+        ctx.shadowColor = '#ff4444'; ctx.shadowBlur = s * 3;
+        ctx.beginPath(); ctx.arc(x, y, s * 0.6, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      break;
+    }
+    case 'rgb': {
+      ctx.fillStyle = comp.color || '#222';
+      ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.fill();
+      break;
+    }
+    case 'button': {
+      ctx.fillStyle = comp.state ? '#aaa' : '#555';
+      roundRect(ctx, x - s, y - s * 0.7, s * 2, s * 1.4, 2); ctx.fill();
+      break;
+    }
+    case 'pot': {
+      ctx.strokeStyle = '#ddb84d'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.stroke();
+      const angle = (comp.value / 1023) * Math.PI * 1.5 - Math.PI * 0.75;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(angle) * s, y + Math.sin(angle) * s); ctx.stroke();
+      break;
+    }
+    case 'servo': {
+      const angle = (board.servos[comp.pin] ? board.servos[comp.pin].angle : 90) - 90;
+      ctx.fillStyle = '#2a6080'; roundRect(ctx, x - s * 1.2, y - s * 0.5, s * 2.4, s, 2); ctx.fill();
+      ctx.strokeStyle = '#5dc0dd'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(angle * Math.PI / 180) * s * 1.5, y + Math.sin(angle * Math.PI / 180) * s * 1.5);
+      ctx.stroke();
+      break;
+    }
+    case 'buzzer': {
+      ctx.fillStyle = comp.state ? '#b07ddd' : '#2a1a3a';
+      ctx.beginPath(); ctx.arc(x, y, s, 0, Math.PI * 2); ctx.fill();
+      if (comp.state) { ctx.shadowColor = '#b07ddd'; ctx.shadowBlur = 6; ctx.beginPath(); ctx.arc(x, y, s * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; }
+      break;
+    }
+    case 'temp': {
+      ctx.strokeStyle = '#dd7d7d'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y + s * 0.3, s * 0.4, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y + s * 0.3); ctx.lineTo(x, y - s); ctx.stroke();
+      break;
+    }
+    case 'ldr': {
+      ctx.strokeStyle = '#7ddd7d'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, s * 0.7, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - s, y - s * 0.5); ctx.lineTo(x - s * 0.3, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - s, y + s * 0.1); ctx.lineTo(x - s * 0.3, y + s * 0.5); ctx.stroke();
+      break;
+    }
+  }
+  ctx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// Click on board to assign component to pin
+cvs.addEventListener('click', e => {
+  if (!selectedComp) return;
+  const rect = cvs.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const mx = (e.clientX - rect.left);
+  const my = (e.clientY - rect.top);
+
+  for (const pp of pinPositions) {
+    const dx = mx - pp.x, dy = my - pp.y;
+    if (dx * dx + dy * dy < pp.radius * pp.radius) {
+      addComponent(pp.pin, selectedComp);
+      return;
+    }
+  }
+});
+
+// ── Audio context for buzzer ──
+let audioCtx = null, oscillator = null;
+
+function startTone(freq) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (oscillator) { try { oscillator.stop(); } catch(e) {} }
+  oscillator = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.05;
+  oscillator.connect(gain);
+  gain.connect(audioCtx.destination);
+  oscillator.frequency.value = freq;
+  oscillator.type = 'square';
+  oscillator.start();
+}
+
+function stopTone() {
+  if (oscillator) { try { oscillator.stop(); } catch(e) {} oscillator = null; }
+}
+
+// ── Serial Monitor ──
+function serialPrint(text, cls) {
+  const el = document.getElementById('serialOut');
+  const line = document.createElement('div');
+  line.className = 'serial-line' + (cls ? ' serial-' + cls : '');
+  line.textContent = text;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+  // Limit lines
+  while (el.children.length > 500) el.removeChild(el.firstChild);
+}
+
+function clearSerial() {
+  document.getElementById('serialOut').innerHTML = '<div class="serial-line serial-sys">Serial monitor cleared.</div>';
+}
+
+// ── Arduino API (virtual) ──
+function createArduinoAPI() {
+  const api = {};
+
+  api.pinMode = (pin, mode) => {
+    if (pin >= 0 && pin < 20) board.pins[pin].mode = mode;
+  };
+
+  api.digitalWrite = (pin, value) => {
+    if (pin < 0 || pin >= 20) return;
+    board.pins[pin].value = value ? 1 : 0;
+    board.pins[pin].pwm = 0;
+    // Update component visual
+    const comp = board.components[pin];
+    if (comp) {
+      if (comp.type === 'led') comp.state = value ? 1 : 0;
+      if (comp.type === 'buzzer') comp.state = value ? 1 : 0;
+    }
+  };
+
+  api.digitalRead = (pin) => {
+    if (pin < 0 || pin >= 20) return 0;
+    const comp = board.components[pin];
+    if (comp && comp.type === 'button') {
+      return board.pins[pin].mode === INPUT_PULLUP ? (comp.state ? 0 : 1) : comp.state;
+    }
+    return board.pins[pin].value;
+  };
+
+  api.analogRead = (pin) => {
+    // Accept both raw pin number (14-19) and analog channel (0-5)
+    const actualPin = pin < 14 ? pin + 14 : pin;
+    const comp = board.components[actualPin];
+    if (comp) return comp.value;
+    return 0;
+  };
+
+  api.analogWrite = (pin, value) => {
+    if (pin < 0 || pin >= 14) return;
+    value = Math.max(0, Math.min(255, Math.round(value)));
+    board.pins[pin].pwm = value;
+    board.pins[pin].value = value > 0 ? 1 : 0;
+    const comp = board.components[pin];
+    if (comp) {
+      if (comp.type === 'led') comp.state = value / 255;
+      if (comp.type === 'buzzer') comp.state = value > 0 ? 1 : 0;
+    }
+  };
+
+  api.tone = (pin, freq) => {
+    board.tonePin = pin;
+    board.toneFreq = freq;
+    const comp = board.components[pin];
+    if (comp && comp.type === 'buzzer') comp.state = 1;
+    startTone(freq);
+  };
+
+  api.noTone = (pin) => {
+    board.tonePin = -1;
+    board.toneFreq = 0;
+    const comp = board.components[pin];
+    if (comp && comp.type === 'buzzer') comp.state = 0;
+    stopTone();
+  };
+
+  api.millis = () => board.millis;
+
+  api.map = (value, fromLow, fromHigh, toLow, toHigh) => {
+    return Math.round((value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow);
+  };
+
+  api.constrain = (value, low, high) => Math.max(low, Math.min(high, value));
+
+  api.abs = Math.abs;
+  api.min = Math.min;
+  api.max = Math.max;
+
+  // Servo library
+  api._Servo = function() {
+    this._pin = -1;
+    this.attach = (pin) => { this._pin = pin; if (board.servos[pin]) board.servos[pin].attached = true; };
+    this.write = (angle) => {
+      angle = Math.max(0, Math.min(180, Math.round(angle)));
+      if (this._pin >= 0 && board.servos[this._pin]) board.servos[this._pin].angle = angle;
+    };
+    this.read = () => {
+      if (this._pin >= 0 && board.servos[this._pin]) return board.servos[this._pin].angle;
+      return 90;
+    };
+    this.detach = () => { if (this._pin >= 0 && board.servos[this._pin]) board.servos[this._pin].attached = false; };
+  };
+
+  // Serial library
+  api._Serial = {
+    begin: (baud) => { board.serialBaud = baud; serialPrint('Serial started at ' + baud + ' baud', 'sys'); },
+    print: (val) => { serialPrint(String(val)); },
+    println: (val) => { serialPrint(val !== undefined ? String(val) : ''); },
+    available: () => 0,
+    read: () => -1,
+  };
+
+  return api;
+}
+
+// ── Code Compiler / Interpreter ──
+let sketchRunning = false;
+let sketchAbort = null;
+
+function compileSketch(source) {
+  // Strip C-style type declarations, transform to JS
+  let code = source;
+
+  // Remove #include lines
+  code = code.replace(/#include\s*<[^>]+>/g, '');
+
+  // Replace type declarations
+  code = code.replace(/\b(void|int|long|float|double|unsigned long|unsigned int|byte|boolean|char|String)\s+(?=\w+\s*[\(=;,])/g, 'let ');
+  // Fix 'let setup()' and 'let loop()' → 'async function setup()' etc
+  code = code.replace(/let\s+setup\s*\(/g, 'async function setup(');
+  code = code.replace(/let\s+loop\s*\(/g, 'async function loop(');
+  // Other function declarations that got turned to 'let'
+  code = code.replace(/let\s+(\w+)\s*\(([^)]*)\)\s*\{/g, 'function $1($2) {');
+
+  // Replace const declarations with Arduino-style consts
+  code = code.replace(/\bconst\s+(int|long|float|byte)\s+/g, 'const ');
+
+  // delay() → await _delay()
+  code = code.replace(/\bdelay\s*\(/g, 'await _delay(');
+
+  // delayMicroseconds → tiny delay
+  code = code.replace(/\bdelayMicroseconds\s*\(/g, 'await _delayMicro(');
+
+  // Serial.xxx → _Serial.xxx
+  code = code.replace(/\bSerial\./g, '_Serial.');
+
+  // Servo myServo; → let myServo = new _Servo();
+  code = code.replace(/\bServo\s+(\w+)\s*;/g, 'let $1 = new _Servo();');
+  // If already declared with let
+  code = code.replace(/\blet\s+Servo\s+/g, 'let ');
+
+  // Constants
+  code = code.replace(/\bHIGH\b/g, '1');
+  code = code.replace(/\bLOW\b/g, '0');
+  code = code.replace(/\bINPUT\b/g, '0');
+  code = code.replace(/\bOUTPUT\b/g, '1');
+  code = code.replace(/\bINPUT_PULLUP\b/g, '2');
+  code = code.replace(/\bLED_BUILTIN\b/g, '13');
+
+  // Analog pin names
+  code = code.replace(/\bA0\b/g, '0');
+  code = code.replace(/\bA1\b/g, '1');
+  code = code.replace(/\bA2\b/g, '2');
+  code = code.replace(/\bA3\b/g, '3');
+  code = code.replace(/\bA4\b/g, '4');
+  code = code.replace(/\bA5\b/g, '5');
+
+  return code;
+}
+
+async function runSketch() {
+  if (sketchRunning) return;
+
+  const source = document.getElementById('code').value;
+  if (!source.trim()) { serialPrint('No sketch to run.', 'err'); return; }
+
+  // Reset board state
+  board.pins.forEach(p => { p.value = 0; p.pwm = 0; });
+  board.millis = 0;
+  board.tonePin = -1;
+  stopTone();
+  Object.values(board.components).forEach(c => { c.state = 0; });
+
+  const compiled = compileSketch(source);
+
+  sketchRunning = true;
+  let aborted = false;
+  sketchAbort = () => { aborted = true; };
+
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+  document.getElementById('runDot').classList.add('running');
+  document.getElementById('runStatus').querySelector('span:last-child') || (document.getElementById('runStatus').lastChild.textContent = 'Running');
+
+  serialPrint('── Compiling and uploading...', 'sys');
+
+  const api = createArduinoAPI();
+
+  // Create execution context
+  const _delay = (ms) => {
+    const scaledMs = Math.min(ms, 50); // Cap real delay at 50ms for responsiveness
+    return new Promise((resolve, reject) => {
+      const id = setTimeout(() => {
+        if (aborted) reject(new Error('ABORT'));
+        board.millis += ms;
+        resolve();
+      }, scaledMs);
+      // Store for cleanup
+      activeTimeouts.push(id);
+    });
+  };
+
+  const _delayMicro = (us) => _delay(Math.max(1, us / 1000));
+
+  const activeTimeouts = [];
+
+  try {
+    // Build function string with API in scope
+    const fn = new Function(
+      'pinMode', 'digitalWrite', 'digitalRead', 'analogRead', 'analogWrite',
+      'tone', 'noTone', 'millis', 'map', 'constrain', 'abs', 'min', 'max',
+      '_Servo', '_Serial', '_delay', '_delayMicro',
+      compiled + `\n;return { setup, loop };`
+    );
+
+    const sketch = fn(
+      api.pinMode, api.digitalWrite, api.digitalRead, api.analogRead, api.analogWrite,
+      api.tone, api.noTone, api.millis, api.map, api.constrain, api.abs, api.min, api.max,
+      api._Servo, api._Serial, _delay, _delayMicro
+    );
+
+    serialPrint('── Upload complete. Running...', 'sys');
+
+    // Run setup
+    if (typeof sketch.setup === 'function') {
+      await sketch.setup();
+    }
+
+    // Run loop
+    if (typeof sketch.loop === 'function') {
+      while (!aborted) {
+        await sketch.loop();
+        drawBoard(); // Update visuals each loop iteration
+      }
+    } else {
+      serialPrint('No loop() function found.', 'sys');
+    }
+
+  } catch (e) {
+    if (e.message !== 'ABORT') {
+      serialPrint('Error: ' + e.message, 'err');
+      console.error('Sketch error:', e);
+    }
+  }
+
+  // Cleanup
+  activeTimeouts.forEach(id => clearTimeout(id));
+  sketchRunning = false;
+  sketchAbort = null;
+  stopTone();
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  document.getElementById('runDot').classList.remove('running');
+  const statusText = document.getElementById('runStatus').lastChild;
+  if (statusText) statusText.textContent = 'Stopped';
+  serialPrint('── Sketch stopped.', 'sys');
+  drawBoard();
+}
+
+function stopSketch() {
+  if (sketchAbort) sketchAbort();
+}
+
+function resetBoard() {
+  stopSketch();
+  board.pins.forEach(p => { p.mode = 0; p.value = 0; p.pwm = 0; });
+  board.millis = 0;
+  Object.values(board.components).forEach(c => { c.state = 0; });
+  stopTone();
+  clearSerial();
+  serialPrint('Board reset.', 'sys');
+  drawBoard();
+}
+
+// ── Example Sketches ──
+const examples = {
+  blink: {
+    code: `// Blink — The "Hello World" of Arduino
+// Wire: LED on pin 13 (or use built-in LED)
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+  Serial.println("Blink sketch started!");
+}
+
+void loop() {
+  digitalWrite(13, HIGH);
+  Serial.println("LED ON");
+  delay(1000);
+
+  digitalWrite(13, LOW);
+  Serial.println("LED OFF");
+  delay(1000);
+}`,
+    wiring: [{ pin: 13, type: 'led' }]
+  },
+
+  button_led: {
+    code: `// Button controls LED
+// Wire: Button on pin 2, LED on pin 13
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(2, INPUT_PULLUP);
+  pinMode(13, OUTPUT);
+  Serial.println("Press the button to light the LED!");
+}
+
+void loop() {
+  int buttonState = digitalRead(2);
+
+  if (buttonState == 0) {
+    digitalWrite(13, HIGH);
+    Serial.println("Button pressed — LED ON");
+  } else {
+    digitalWrite(13, LOW);
+  }
+
+  delay(50);
+}`,
+    wiring: [{ pin: 2, type: 'button' }, { pin: 13, type: 'led' }]
+  },
+
+  pot_servo: {
+    code: `// Potentiometer controls Servo
+// Wire: Pot on A0, Servo on pin 9
+
+Servo myServo;
+
+void setup() {
+  Serial.begin(9600);
+  myServo.attach(9);
+  Serial.println("Turn the potentiometer to move the servo!");
+}
+
+void loop() {
+  int potValue = analogRead(A0);
+  int angle = map(potValue, 0, 1023, 0, 180);
+
+  myServo.write(angle);
+  Serial.print("Pot: ");
+  Serial.print(potValue);
+  Serial.print(" -> Angle: ");
+  Serial.println(angle);
+
+  delay(50);
+}`,
+    wiring: [{ pin: 14, type: 'pot' }, { pin: 9, type: 'servo' }]
+  },
+
+  traffic: {
+    code: `// Traffic Light Sequence
+// Wire: LEDs on pins 11 (green), 12 (yellow), 13 (red)
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(11, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(13, OUTPUT);
+  Serial.println("Traffic light started!");
+}
+
+void loop() {
+  // Green
+  digitalWrite(11, HIGH);
+  digitalWrite(12, LOW);
+  digitalWrite(13, LOW);
+  Serial.println("GREEN — Go");
+  delay(3000);
+
+  // Yellow
+  digitalWrite(11, LOW);
+  digitalWrite(12, HIGH);
+  Serial.println("YELLOW — Caution");
+  delay(1000);
+
+  // Red
+  digitalWrite(12, LOW);
+  digitalWrite(13, HIGH);
+  Serial.println("RED — Stop");
+  delay(3000);
+}`,
+    wiring: [{ pin: 11, type: 'led' }, { pin: 12, type: 'led' }, { pin: 13, type: 'led' }]
+  },
+
+  rgb_fade: {
+    code: `// RGB LED Fade
+// Wire: LED on pin 9 (uses PWM for brightness)
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(9, OUTPUT);
+  Serial.println("LED brightness fade started!");
+}
+
+void loop() {
+  // Fade up
+  int brightness = 0;
+  while (brightness <= 255) {
+    analogWrite(9, brightness);
+    Serial.print("Brightness: ");
+    Serial.println(brightness);
+    brightness = brightness + 5;
+    delay(30);
+  }
+
+  // Fade down
+  while (brightness >= 0) {
+    analogWrite(9, brightness);
+    brightness = brightness - 5;
+    delay(30);
+  }
+}`,
+    wiring: [{ pin: 9, type: 'led' }]
+  },
+
+  temp_alarm: {
+    code: `// Temperature Alarm
+// Wire: Temp sensor on A0, Buzzer on pin 8, LED on pin 13
+// Drag the temp slider above 700 to trigger the alarm!
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(8, OUTPUT);
+  pinMode(13, OUTPUT);
+  Serial.println("Temperature alarm ready!");
+  Serial.println("Drag the temp slider to simulate temperature changes.");
+}
+
+void loop() {
+  int reading = analogRead(A0);
+  float tempC = (reading * 5.0 / 1023.0 - 0.5) * 100;
+
+  Serial.print("Sensor: ");
+  Serial.print(reading);
+  Serial.print(" -> Temp: ");
+  Serial.print(tempC);
+  Serial.println(" C");
+
+  if (reading > 700) {
+    // Alarm!
+    tone(8, 1000);
+    digitalWrite(13, HIGH);
+    Serial.println("** ALARM — Temperature too high! **");
+    delay(200);
+    noTone(8);
+    digitalWrite(13, LOW);
+    delay(200);
+  } else {
+    noTone(8);
+    digitalWrite(13, LOW);
+    delay(500);
+  }
+}`,
+    wiring: [{ pin: 14, type: 'temp' }, { pin: 8, type: 'buzzer' }, { pin: 13, type: 'led' }]
+  },
+
+  night_light: {
+    code: `// Automatic Night Light
+// Wire: LDR on A0, LED on pin 9
+// Lower the LDR slider to simulate darkness!
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(9, OUTPUT);
+  Serial.println("Night light ready!");
+  Serial.println("Lower the LDR slider to simulate darkness.");
+}
+
+void loop() {
+  int lightLevel = analogRead(A0);
+
+  // Invert: less light = brighter LED
+  int brightness = map(lightLevel, 0, 1023, 255, 0);
+  brightness = constrain(brightness, 0, 255);
+
+  analogWrite(9, brightness);
+
+  Serial.print("Light: ");
+  Serial.print(lightLevel);
+  Serial.print(" -> LED: ");
+  Serial.println(brightness);
+
+  delay(100);
+}`,
+    wiring: [{ pin: 14, type: 'ldr' }, { pin: 9, type: 'led' }]
+  }
+};
+
+function loadExample() {
+  const sel = document.getElementById('exampleSelect');
+  const key = sel.value;
+  if (!key || !examples[key]) return;
+
+  stopSketch();
+  clearWiring();
+
+  const ex = examples[key];
+  document.getElementById('code').value = ex.code;
+
+  // Auto-wire components
+  ex.wiring.forEach(w => {
+    addComponent(w.pin, w.type);
+  });
+
+  serialPrint('Loaded example: ' + key, 'sys');
+  sel.value = '';
+}
+
+// ── Init ──
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+</script>
+</body>
+</html>

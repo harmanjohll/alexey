@@ -491,6 +491,13 @@ function setMode(m) {
   document.querySelectorAll('.mode-tab').forEach((tab, i) => tab.classList.toggle('active', modes[i] === m));
 }
 
+// URL param tab routing: ?tab=dcmotor|servo|pid|builds
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  if (tab && ['dcmotor','servo','pid','builds'].includes(tab)) setMode(tab);
+})();
+
 function makeChart(canvasId, opts) {
   const o = JSON.parse(JSON.stringify(chartDefaults));
   Object.assign(o, opts.options || {});
