@@ -15,7 +15,10 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
 .hero-sub{font-family:'Space Mono',monospace;font-size:clamp(13px,2vw,16px);color:#7a9a7a;margin-bottom:6px}
 .hero-loc{font-size:12px;color:#4a6a4a;font-family:'Space Mono',monospace}
 
-.section-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:16px;padding-left:2px}
+.section-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.section-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;padding-left:2px}
+.section-count{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.section-line{flex:1;height:0.5px;background:rgba(60,160,60,0.15)}
 
 .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:3rem}
 
@@ -32,12 +35,16 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
 .card-desc{font-size:13px;color:#7a9a7a;line-height:1.6;margin-bottom:10px}
 .card-tags{display:flex;gap:6px;flex-wrap:wrap}
 .tag{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;padding:2px 7px;border:0.5px solid rgba(60,160,60,0.15);border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.card-badge{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px;margin-left:auto}
+.badge-live{background:rgba(40,160,200,0.15);color:#5dc0dd;border:0.5px solid rgba(40,160,200,0.3)}
 
 .about{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:24px;margin-bottom:2rem}
 .about p{font-size:14px;color:#7a9a7a;line-height:1.8}
 
-.logbook-link{display:inline-block;font-size:12px;color:#7dd87d;font-family:'Space Mono',monospace;text-decoration:none;border:0.5px solid rgba(60,160,60,0.3);padding:8px 16px;border-radius:4px;transition:all .15s}
+.logbook-link{display:inline-block;font-size:12px;color:#7dd87d;font-family:'Space Mono',monospace;text-decoration:none;border:0.5px solid rgba(60,160,60,0.3);padding:8px 16px;border-radius:4px;transition:all .15s;margin-bottom:3rem}
 .logbook-link:hover{background:rgba(60,160,60,0.1);border-color:#3ca03c}
+
+.section-empty{padding:24px;text-align:center;font-size:12px;color:#4a6a4a;font-style:italic;background:#111a11;border:0.5px solid rgba(60,160,60,0.15);border-radius:8px;border-style:dashed}
 
 @media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
 </style>
@@ -51,16 +58,30 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
   <div class="hero-loc">Singapore · 2025–2026</div>
 </div>
 
-<div class="section-label">Experiments</div>
+<!-- ═══════════════ EXPERIMENTS ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Experiments</span>
+  <span class="section-count">7 modules</span>
+  <span class="section-line"></span>
+</div>
 <div class="grid" id="expGrid"></div>
 
-<div class="section-label">About this portfolio</div>
+<!-- ═══════════════ ABOUT ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">About this portfolio</span>
+  <span class="section-line"></span>
+</div>
 <div class="about">
   <p>Each experiment begins with a question Alexey writes himself. The computation amplifies his thinking — it does not replace it. Every hypothesis, every interpretation, every dialogue with the AI coach is logged and timestamped. The ideas are his.</p>
 </div>
 
-<div class="section-label">Research Tools</div>
-<div class="grid" id="toolGrid">
+<!-- ═══════════════ COMPUTATIONAL ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Computational</span>
+  <span class="section-count">7 research tools</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid" id="compGrid">
   <a class="card" href="kmc-portal/index.html">
     <div class="card-inner">
       <div class="card-top">
@@ -131,17 +152,39 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
       <div class="card-tags"><span class="tag">molecular dynamics</span><span class="tag">tersoff potential</span><span class="tag">three.js 3D</span></div>
     </div>
   </a>
+</div>
+
+<!-- ═══════════════ ENGINEERING ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Engineering</span>
+  <span class="section-count">hardware + simulation</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid" id="engGrid">
   <a class="card" href="arduino-portal/index.html">
     <div class="card-inner">
       <div class="card-top">
         <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">ARDUINO</span>
+        <span class="card-badge badge-live">WEB SERIAL</span>
       </div>
       <div class="card-title">Motors, Servos &amp; Control</div>
-      <div class="card-desc">Simulate DC motors, tune PID controllers, and document Arduino builds. PWM duty cycle &rarr; speed, servo pulse &rarr; angle, and interactive gain tuning with live response charts.</div>
-      <div class="card-tags"><span class="tag">motor control</span><span class="tag">PID</span><span class="tag">servo</span><span class="tag">arduino</span></div>
+      <div class="card-desc">Simulate DC motors, tune PID controllers, and connect live to Arduino hardware via Web Serial. Compare simulated vs real motor response. Export ready-to-upload .ino sketches.</div>
+      <div class="card-tags"><span class="tag">motor control</span><span class="tag">PID</span><span class="tag">servo</span><span class="tag">web serial</span><span class="tag">arduino</span></div>
     </div>
   </a>
 </div>
+
+<!-- ═══════════════ FIELD WORK ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Field Work</span>
+  <span class="section-count">coming soon</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid" id="fieldGrid">
+  <div class="section-empty">Outdoor experiments and observational science &mdash; coming soon.</div>
+</div>
+
+<a href="logbook.html" class="logbook-link">View full logbook &rarr;</a>
 
 </div>
 
@@ -188,7 +231,7 @@ const experiments = [
     folder: 'experiment-05-random-walk',
     title: "The Drunkard's Walk",
     subtitle: 'Random Walk',
-    desc: 'Simulate hundreds of random walkers and discover that spread grows as √N, not N.',
+    desc: 'Simulate hundreds of random walkers and discover that spread grows as \u221AN, not N.',
     tags: ['probability', 'statistical physics', 'monte carlo'],
     lsKey: 'alexey_exp_05'
   },
