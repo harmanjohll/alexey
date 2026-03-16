@@ -105,6 +105,14 @@ canvas.sim-canvas{background:#050805;border:0.5px solid rgba(60,160,60,0.2);bord
 .build-card textarea:focus{outline:none;border-color:#5dc0dd}
 .build-card textarea::placeholder{color:#4a6a4a}
 .val-display{font-size:13px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;min-width:60px;text-align:right}
+.serial-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#111a11;border:0.5px solid rgba(40,160,200,0.25);border-radius:8px;margin-bottom:14px;flex-wrap:wrap}
+.serial-status{display:flex;align-items:center;gap:6px;font-size:11px;font-family:'Space Mono',monospace;color:#4a6a4a}
+.serial-dot{width:8px;height:8px;border-radius:50%;background:#4a6a4a;transition:background .3s}
+.serial-dot.connected{background:#7dd87d;box-shadow:0 0 6px rgba(125,216,125,0.5)}
+.serial-info{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-left:auto}
+.serial-bar button{font-size:10px;padding:5px 12px}
+.hw-badge{display:inline-block;font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px;background:rgba(40,160,200,0.15);color:#5dc0dd;border:0.5px solid rgba(40,160,200,0.3);margin-left:6px;vertical-align:middle}
+.hw-data{font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace;padding:6px 10px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;margin-top:8px;min-height:24px}
 @media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
 @media(max-width:600px){.param-grid{grid-template-columns:1fr}}
 </style>
@@ -165,6 +173,21 @@ canvas.sim-canvas{background:#050805;border:0.5px solid rgba(60,160,60,0.2);bord
   </div>
 </div>
 
+<!-- SERIAL CONNECTION BAR -->
+<div class="serial-bar" id="serialBar">
+  <div class="serial-status">
+    <span class="serial-dot" id="serialDot"></span>
+    <span id="serialLabel">Disconnected</span>
+  </div>
+  <button id="serialConnectBtn" onclick="serialConnect()">Connect Arduino</button>
+  <button id="serialDisconnectBtn" onclick="serialDisconnect()" style="display:none" class="danger">Disconnect</button>
+  <select id="serialBaud" style="width:100px;font-size:10px">
+    <option value="9600" selected>9600</option>
+    <option value="115200">115200</option>
+  </select>
+  <div class="serial-info" id="serialInfo">Web Serial API &mdash; Chrome/Edge only &middot; HTTPS required</div>
+</div>
+
 <!-- MODE TABS -->
 <div class="mode-tabs">
   <div class="mode-tab active" onclick="setMode('dcmotor')">DC Motor</div>
@@ -205,6 +228,8 @@ canvas.sim-canvas{background:#050805;border:0.5px solid rgba(60,160,60,0.2);bord
   <div class="controls">
     <button onclick="runDCMotor()">&#9654; Simulate motor</button>
     <button onclick="runDCSweep()">Sweep duty cycle</button>
+    <button onclick="sendDCToArduino()" id="dcSendBtn" disabled>&#9889; Send PWM to Arduino</button>
+    <button onclick="exportDCSketch()">&#8615; Export .ino</button>
     <button class="danger" onclick="clearDC()">Clear</button>
   </div>
   <div class="dashboard" id="dcDash">
@@ -232,6 +257,9 @@ canvas.sim-canvas{background:#050805;border:0.5px solid rgba(60,160,60,0.2);bord
           <div class="stat-item"><div class="stat-label">No-load RPM</div><div class="stat-value sm" id="dcNoload">&mdash;</div></div>
           <div class="stat-item"><div class="stat-label">Mech. power (W)</div><div class="stat-value sm" id="dcPower">&mdash;</div></div>
           <div class="stat-item"><div class="stat-label">Efficiency (%)</div><div class="stat-value sm" id="dcEff">&mdash;</div></div>
+        </div>
+        <div class="hw-data" id="dcHwData" style="display:none">
+          <span class="hw-badge">LIVE</span> <span id="dcHwText">Waiting for Arduino data...</span>
         </div>
       </div>
     </div>
@@ -274,6 +302,8 @@ canvas.sim-canvas{background:#050805;border:0.5px solid rgba(60,160,60,0.2);bord
   </div>
   <div class="controls">
     <button onclick="runServoSweep()">&#9654; Run pattern</button>
+    <button onclick="sendServoToArduino()" id="svSendBtn" disabled>&#9889; Send to Arduino</button>
+    <button onclick="exportServoSketch()">&#8615; Export .ino</button>
     <button class="danger" onclick="stopServo()">&#9632; Stop</button>
   </div>
   <div class="dashboard" id="servoDash">
@@ -331,6 +361,8 @@ canvas.sim-canvas{background:#050805;border:0.5px solid rgba(60,160,60,0.2);bord
   </div>
   <div class="controls">
     <button onclick="runPID()">&#9654; Simulate PID</button>
+    <button onclick="sendPIDToArduino()" id="pidSendBtn" disabled>&#9889; Send PID to Arduino</button>
+    <button onclick="exportPIDSketch()">&#8615; Export .ino</button>
     <button class="danger" onclick="clearPID()">Clear</button>
   </div>
   <div class="dashboard" id="pidDash">
@@ -934,6 +966,432 @@ function runInvCard3() {
   document.getElementById('pidTarget').value = 90;
   document.getElementById('pidJ').value = 0.01;
   runPID();
+}
+
+/* ═══════════════════════ WEB SERIAL API ═══════════════════════ */
+
+let serialPort = null, serialReader = null, serialKeepReading = false, serialReadableClosed = null;
+let hwRpmHistory = [], hwAngleHistory = [], hwPosHistory = [], hwTimeHistory = [];
+
+class LineBreakTransformer {
+  constructor() { this.chunks = ''; }
+  transform(chunk, controller) {
+    this.chunks += chunk;
+    const lines = this.chunks.split('\n');
+    this.chunks = lines.pop();
+    lines.forEach(line => controller.enqueue(line.trim()));
+  }
+  flush(controller) { controller.enqueue(this.chunks); }
+}
+
+function serialSupported() { return 'serial' in navigator; }
+
+async function serialConnect() {
+  if (!serialSupported()) {
+    alert('Web Serial API not supported. Use Chrome or Edge (89+) over HTTPS.');
+    return;
+  }
+  try {
+    serialPort = await navigator.serial.requestPort();
+    const baud = +document.getElementById('serialBaud').value;
+    await serialPort.open({ baudRate: baud });
+
+    document.getElementById('serialDot').classList.add('connected');
+    document.getElementById('serialLabel').textContent = 'Connected (' + baud + ' baud)';
+    document.getElementById('serialConnectBtn').style.display = 'none';
+    document.getElementById('serialDisconnectBtn').style.display = '';
+    document.getElementById('serialInfo').textContent = 'Waiting 2s for Arduino reset...';
+    document.getElementById('dcSendBtn').disabled = false;
+    document.getElementById('svSendBtn').disabled = false;
+    document.getElementById('pidSendBtn').disabled = false;
+    document.getElementById('dcHwData').style.display = '';
+
+    // Arduino resets on DTR — wait 2s before sending anything
+    setTimeout(() => {
+      document.getElementById('serialInfo').textContent = 'Ready — sending and receiving data';
+      serialKeepReading = true;
+      serialReadLoop();
+    }, 2000);
+
+  } catch(e) {
+    console.error('Serial connect error:', e);
+    document.getElementById('serialInfo').textContent = 'Connection failed: ' + e.message;
+  }
+}
+
+async function serialDisconnect() {
+  serialKeepReading = false;
+  try {
+    if (serialReader) { serialReader.cancel(); }
+    if (serialReadableClosed) { await serialReadableClosed.catch(() => {}); }
+    if (serialPort) { await serialPort.close(); }
+  } catch(e) { console.warn('Disconnect:', e); }
+  serialPort = null; serialReader = null;
+
+  document.getElementById('serialDot').classList.remove('connected');
+  document.getElementById('serialLabel').textContent = 'Disconnected';
+  document.getElementById('serialConnectBtn').style.display = '';
+  document.getElementById('serialDisconnectBtn').style.display = 'none';
+  document.getElementById('serialInfo').textContent = 'Web Serial API \u2014 Chrome/Edge only \u00b7 HTTPS required';
+  document.getElementById('dcSendBtn').disabled = true;
+  document.getElementById('svSendBtn').disabled = true;
+  document.getElementById('pidSendBtn').disabled = true;
+  document.getElementById('dcHwData').style.display = 'none';
+}
+
+async function serialReadLoop() {
+  const decoder = new TextDecoderStream();
+  serialReadableClosed = serialPort.readable.pipeTo(decoder.writable);
+  serialReader = decoder.readable
+    .pipeThrough(new TransformStream(new LineBreakTransformer()))
+    .getReader();
+  try {
+    while (serialKeepReading) {
+      const { value, done } = await serialReader.read();
+      if (done) break;
+      if (value) processSerialLine(value);
+    }
+  } catch(e) { console.warn('Serial read:', e); }
+  finally { if (serialReader) serialReader.releaseLock(); }
+}
+
+function processSerialLine(line) {
+  if (!line) return;
+  // Protocol: KEY:VALUE or KEY:V1,V2,...
+  const parts = line.split(':');
+  if (parts.length < 2) return;
+  const key = parts[0].toUpperCase();
+  const vals = parts[1].split(',').map(Number);
+
+  const now = performance.now() / 1000;
+
+  if (key === 'RPM' && !isNaN(vals[0])) {
+    hwRpmHistory.push({t: now, v: vals[0]});
+    if (hwRpmHistory.length > 300) hwRpmHistory.shift();
+    document.getElementById('dcHwText').textContent = 'RPM: ' + vals[0].toFixed(0);
+    // Overlay on DC speed chart if it exists
+    overlayHwOnDCChart();
+  }
+  if (key === 'CURRENT' && !isNaN(vals[0])) {
+    document.getElementById('dcHwText').textContent += ' | I: ' + vals[0].toFixed(3) + ' A';
+  }
+  if (key === 'ANG' && !isNaN(vals[0])) {
+    hwAngleHistory.push({t: now, v: vals[0]});
+    if (hwAngleHistory.length > 300) hwAngleHistory.shift();
+    document.getElementById('svCurAngle').textContent = vals[0].toFixed(1) + '\u00b0 (HW)';
+  }
+  if (key === 'POS' && !isNaN(vals[0])) {
+    hwPosHistory.push({t: now, v: vals[0]});
+    if (hwPosHistory.length > 600) hwPosHistory.shift();
+    overlayHwOnPIDChart();
+  }
+}
+
+function overlayHwOnDCChart() {
+  if (!dcSpeedChart || hwRpmHistory.length < 2) return;
+  // Add or update hardware dataset
+  if (dcSpeedChart.data.datasets.length < 2) {
+    dcSpeedChart.data.datasets.push({
+      data: [], borderColor: '#7dd87d', borderWidth: 1.5, borderDash: [4,2],
+      pointRadius: 0, fill: false, label: 'Arduino (live)'
+    });
+  }
+  const t0 = hwRpmHistory[0].t;
+  dcSpeedChart.data.datasets[1].data = hwRpmHistory.map(p => ({x: (p.t - t0).toFixed(3), y: p.v}));
+  dcSpeedChart.update('none');
+}
+
+function overlayHwOnPIDChart() {
+  if (!pidPosChart || hwPosHistory.length < 2) return;
+  if (pidPosChart.data.datasets.length < 3) {
+    pidPosChart.data.datasets.push({
+      data: [], borderColor: '#7dd87d', borderWidth: 1.5, borderDash: [4,2],
+      pointRadius: 0, fill: false, label: 'Arduino (live)'
+    });
+  }
+  const t0 = hwPosHistory[0].t;
+  pidPosChart.data.datasets[2].data = hwPosHistory.map(p => ({x: (p.t - t0).toFixed(2), y: p.v}));
+  pidPosChart.update('none');
+}
+
+async function serialSend(msg) {
+  if (!serialPort || !serialPort.writable) return;
+  try {
+    const writer = serialPort.writable.getWriter();
+    await writer.write(new TextEncoder().encode(msg + '\n'));
+    writer.releaseLock();
+  } catch(e) { console.warn('Serial write:', e); }
+}
+
+// Per-tab send commands
+function sendDCToArduino() {
+  const duty = +document.getElementById('dcDuty').value;
+  const pwmVal = Math.round(duty * 255 / 100);
+  serialSend('PWM:' + pwmVal);
+  hwRpmHistory = []; // Reset live data
+  document.getElementById('dcHwText').textContent = 'Sent PWM=' + pwmVal + ' (duty ' + duty + '%). Waiting for RPM data...';
+}
+
+function sendServoToArduino() {
+  const pw = +document.getElementById('svPulse').value;
+  serialSend('SERVO:' + pw);
+}
+
+function sendPIDToArduino() {
+  const kp = +document.getElementById('pidKp').value;
+  const ki = +document.getElementById('pidKi').value;
+  const kd = +document.getElementById('pidKd').value;
+  const target = +document.getElementById('pidTarget').value;
+  serialSend('PID:' + kp + ',' + ki + ',' + kd + ',' + target);
+  hwPosHistory = [];
+}
+
+/* ═══════════════════════ SKETCH EXPORT ═══════════════════════ */
+
+function downloadSketch(filename, content) {
+  const blob = new Blob([content], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function exportDCSketch() {
+  const Vs = document.getElementById('dcVsupply').value;
+  const sketch = `// DC Motor Control — Generated by Alexey's Arduino Portal
+// Upload to Arduino, connect motor driver to pin 9
+// Open Web Serial in the portal to see live RPM overlay
+
+const int MOTOR_PIN = 9;       // PWM output to motor driver
+const int ENCODER_PIN = 2;     // Encoder interrupt pin (optional)
+volatile long encoderTicks = 0;
+unsigned long lastTime = 0;
+float rpm = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(MOTOR_PIN, OUTPUT);
+  pinMode(ENCODER_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), encoderISR, RISING);
+  Serial.println("DC Motor ready. Supply=${Vs}V");
+}
+
+void encoderISR() {
+  encoderTicks++;
+}
+
+void loop() {
+  // Check for PWM commands from Web Serial
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\\n');
+    cmd.trim();
+    if (cmd.startsWith("PWM:")) {
+      int pwmVal = cmd.substring(4).toInt();
+      pwmVal = constrain(pwmVal, 0, 255);
+      analogWrite(MOTOR_PIN, pwmVal);
+    }
+  }
+
+  // Calculate RPM from encoder (20 slots assumed)
+  unsigned long now = millis();
+  if (now - lastTime >= 100) {  // Every 100ms
+    noInterrupts();
+    long ticks = encoderTicks;
+    encoderTicks = 0;
+    interrupts();
+    rpm = (ticks / 20.0) * (60000.0 / (now - lastTime));
+    lastTime = now;
+
+    // Send to Web Serial portal
+    Serial.print("RPM:");
+    Serial.println(rpm, 1);
+
+    // Also report current if using INA219 sensor
+    // float current = readCurrent();
+    // Serial.print("CURRENT:");
+    // Serial.println(current, 3);
+  }
+}
+`;
+  downloadSketch('dc_motor_control.ino', sketch);
+}
+
+function exportServoSketch() {
+  const minPW = document.getElementById('svMin').value;
+  const maxPW = document.getElementById('svMax').value;
+  const sketch = `// Servo Control — Generated by Alexey's Arduino Portal
+// Upload to Arduino, connect servo signal to pin 9
+// Open Web Serial in the portal to send pulse widths
+
+#include <Servo.h>
+
+Servo myServo;
+const int SERVO_PIN = 9;
+const int POT_PIN = A0;  // Optional: potentiometer for feedback
+int currentAngle = 90;
+
+void setup() {
+  Serial.begin(9600);
+  myServo.attach(SERVO_PIN, ${minPW}, ${maxPW});
+  myServo.write(90);
+  Serial.println("Servo ready. Range: ${minPW}-${maxPW} us");
+}
+
+void loop() {
+  // Check for servo commands from Web Serial
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\\n');
+    cmd.trim();
+    if (cmd.startsWith("SERVO:")) {
+      int pulseWidth = cmd.substring(6).toInt();
+      int angle = map(pulseWidth, ${minPW}, ${maxPW}, 0, 180);
+      angle = constrain(angle, 0, 180);
+      myServo.write(angle);
+      currentAngle = angle;
+    }
+  }
+
+  // Report actual angle (from potentiometer feedback if wired)
+  // int potVal = analogRead(POT_PIN);
+  // float measuredAngle = map(potVal, 0, 1023, 0, 180);
+  // Serial.print("ANG:");
+  // Serial.println(measuredAngle, 1);
+
+  // Or just report commanded angle
+  Serial.print("ANG:");
+  Serial.println(currentAngle);
+
+  delay(50);  // 20 Hz update
+}
+`;
+  downloadSketch('servo_control.ino', sketch);
+}
+
+function exportPIDSketch() {
+  const kp = document.getElementById('pidKp').value;
+  const ki = document.getElementById('pidKi').value;
+  const kd = document.getElementById('pidKd').value;
+  const target = document.getElementById('pidTarget').value;
+  const sketch = `// PID Motor Control — Generated by Alexey's Arduino Portal
+// Upload to Arduino. Motor on pin 9, encoder on pin 2.
+// PID runs on-board. Reports position to Web Serial for overlay.
+
+const int MOTOR_PIN = 9;
+const int ENCODER_PIN = 2;
+volatile long encoderTicks = 0;
+
+// PID gains (from portal simulation)
+float Kp = ${kp};
+float Ki = ${ki};
+float Kd = ${kd};
+float setpoint = ${target};  // degrees
+
+float position = 0;
+float integral = 0;
+float prevError = 0;
+unsigned long lastPID = 0;
+
+// Encoder: 20 slots * 4x quadrature = 80 counts/rev
+const float COUNTS_PER_DEG = 80.0 / 360.0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(MOTOR_PIN, OUTPUT);
+  pinMode(ENCODER_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), encoderISR, CHANGE);
+  lastPID = millis();
+  Serial.println("PID ready. Kp=" + String(Kp) + " Ki=" + String(Ki) + " Kd=" + String(Kd));
+}
+
+void encoderISR() {
+  encoderTicks++;
+}
+
+void loop() {
+  // Check for PID gain updates from Web Serial
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\\n');
+    cmd.trim();
+    if (cmd.startsWith("PID:")) {
+      // Format: PID:Kp,Ki,Kd,target
+      String params = cmd.substring(4);
+      int c1 = params.indexOf(',');
+      int c2 = params.indexOf(',', c1+1);
+      int c3 = params.indexOf(',', c2+1);
+      if (c1 > 0 && c2 > 0 && c3 > 0) {
+        Kp = params.substring(0, c1).toFloat();
+        Ki = params.substring(c1+1, c2).toFloat();
+        Kd = params.substring(c2+1, c3).toFloat();
+        setpoint = params.substring(c3+1).toFloat();
+        integral = 0;
+        prevError = 0;
+      }
+    }
+  }
+
+  // PID loop at ~100 Hz
+  unsigned long now = millis();
+  float dt = (now - lastPID) / 1000.0;
+  if (dt >= 0.01) {
+    lastPID = now;
+
+    // Read position from encoder
+    noInterrupts();
+    long ticks = encoderTicks;
+    interrupts();
+    position = ticks / COUNTS_PER_DEG;
+
+    float error = setpoint - position;
+    integral += error * dt;
+    integral = constrain(integral, -500, 500);  // Anti-windup
+    float derivative = (error - prevError) / dt;
+    prevError = error;
+
+    float output = Kp * error + Ki * integral + Kd * derivative;
+    output = constrain(output, -255, 255);
+
+    // Drive motor (H-bridge: positive = forward)
+    if (output >= 0) {
+      analogWrite(MOTOR_PIN, (int)output);
+    } else {
+      analogWrite(MOTOR_PIN, 0);  // Simplified: no reverse
+    }
+
+    // Report to Web Serial every 50ms
+    static unsigned long lastReport = 0;
+    if (now - lastReport >= 50) {
+      lastReport = now;
+      Serial.print("POS:");
+      Serial.print(position, 1);
+      Serial.print(",ERR:");
+      Serial.println(error, 1);
+    }
+  }
+}
+`;
+  downloadSketch('pid_motor_control.ino', sketch);
+}
+
+// Check serial support on load
+if (!serialSupported()) {
+  document.getElementById('serialBar').style.opacity = '0.5';
+  document.getElementById('serialConnectBtn').disabled = true;
+  document.getElementById('serialInfo').textContent = 'Web Serial not available in this browser. Use Chrome/Edge 89+.';
+}
+
+// Handle unexpected disconnect
+if (serialSupported()) {
+  navigator.serial.addEventListener('disconnect', () => {
+    serialPort = null;
+    serialKeepReading = false;
+    document.getElementById('serialDot').classList.remove('connected');
+    document.getElementById('serialLabel').textContent = 'Disconnected (device removed)';
+    document.getElementById('serialConnectBtn').style.display = '';
+    document.getElementById('serialDisconnectBtn').style.display = 'none';
+    document.getElementById('dcSendBtn').disabled = true;
+    document.getElementById('svSendBtn').disabled = true;
+    document.getElementById('pidSendBtn').disabled = true;
+  });
 }
 
 /* ═══════════════════════ BUILD LOG ═══════════════════════ */
