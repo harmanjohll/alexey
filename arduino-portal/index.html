@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arduino Motor Control Lab · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:1100px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.portal-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(40,160,200,0.15);color:#5dc0dd;border:0.5px solid rgba(40,160,200,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.portal-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.portal-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:750px;margin-bottom:2rem}
+.panel{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.panel-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d;cursor:pointer;user-select:none}
+.panel-hdr .snum{font-size:10px;font-weight:700;background:rgba(40,160,200,0.15);color:#5dc0dd;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(40,160,200,0.4)}
+.panel-hdr .sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.panel-hdr .toggle{margin-left:auto;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.panel-body{padding:16px}
+.panel.collapsed .panel-body{display:none}
+.param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.param-group{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px}
+.group-label{font-size:10px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.param-row:last-child{margin-bottom:0}
+.param-lbl{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace}
+.param-lbl .unit{color:#4a6a4a;font-size:9px}
+select,input[type=number],input[type=range]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+select{width:120px;text-align:left}
+input[type=number]{width:100px;text-align:right}
+input[type=range]{width:120px;padding:0;border:none;background:transparent}
+input:focus,select:focus{outline:none;border-color:#5dc0dd}
+input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+button{background:transparent;border:0.5px solid rgba(40,160,200,0.5);color:#5dc0dd;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(40,160,200,0.1);border-color:#5dc0dd}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.dashboard{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-row.wide{grid-template-columns:2fr 1fr}
+.dash-row.triple{grid-template-columns:1fr 1fr 1fr}
+.dash-card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:14px;overflow:hidden}
+.card-label{font-size:10px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.chart-wrap{height:250px;position:relative}
+.chart-wrap.tall{height:320px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-item{padding:8px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
+.stat-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.stat-value{font-size:18px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace}
+.stat-value.sm{font-size:13px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3a90a0;background:rgba(40,160,200,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#5dc0dd;font-weight:600}
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.mode-tab{padding:6px 16px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.mode-tab.active{background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.5)}
+.mode-tab:hover:not(.active){color:#7a9a7a}
+.mode-section{display:none}
+.mode-section.active{display:block}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:#0d150d;border:0.5px solid rgba(40,160,200,0.2);border-left:3px solid rgba(40,160,200,0.5);border-radius:0 6px 6px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:11px;color:#7a9a7a;line-height:1.5;margin-bottom:4px}
+.inv-card-q b{color:#5dc0dd;font-weight:600}
+.inv-card-method{font-size:10px;color:#4a6a4a;line-height:1.5;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:#5dc0dd}
+.inv-card textarea::placeholder{color:#4a6a4a}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:rgba(60,160,60,0.5)}
+canvas.sim-canvas{background:#050805;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;display:block;width:100%}
+.servo-viz{display:flex;align-items:center;justify-content:center;height:280px;background:#050805;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;position:relative}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(40,160,200,0.15);color:#5dc0dd;border:0.5px solid rgba(40,160,200,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#5dc0dd}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+.build-cards{display:grid;grid-template-columns:1fr;gap:12px}
+.build-card{background:#0d150d;border:0.5px solid rgba(40,160,200,0.2);border-radius:6px;padding:16px}
+.build-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.build-card-num{font-size:9px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;background:rgba(40,160,200,0.15);padding:2px 8px;border-radius:4px;border:0.5px solid rgba(40,160,200,0.4)}
+.build-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace}
+.build-card-desc{font-size:11px;color:#7a9a7a;line-height:1.6;margin-bottom:8px}
+.build-card-circuit{font-size:10px;color:#4a6a4a;line-height:1.5;padding:8px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;font-family:'Space Mono',monospace;white-space:pre;overflow-x:auto;margin-bottom:8px}
+.build-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.build-card textarea:focus{outline:none;border-color:#5dc0dd}
+.build-card textarea::placeholder{color:#4a6a4a}
+.val-display{font-size:13px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;min-width:60px;text-align:right}
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="portal-tag">ARDUINO PORTAL &middot; MOTOR CONTROL LAB</div>
+<div class="portal-title">Motors, Servos &amp; Control</div>
+<div class="portal-sub">Explore the physics of motor control with Arduino. Simulate DC motors responding to PWM signals, tune PID controllers in real time, and document your physical builds. Every motor obeys F&nbsp;=&nbsp;ma &mdash; the simulation uses the same Euler integration as orbital mechanics, just applied to torque and angular momentum.</div>
+
+<div class="note"><b>Physics:</b> A DC motor converts electrical energy to rotation via the Lorentz force. The motor equation V&nbsp;=&nbsp;IR&nbsp;+&nbsp;K<sub>e</sub>&omega; links voltage, current, and speed. PWM controls the effective voltage. A PID controller adjusts the output to minimize error between desired and actual position &mdash; the same control theory used in rockets, robots, and self-driving cars.</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">Is motor speed proportional to PWM?</div>
+        <div class="inv-card-q"><b>Question:</b> If you double the PWM duty cycle, does the motor spin twice as fast?</div>
+        <div class="inv-card-method"><b>Method:</b> DC Motor tab. Set load torque to 0.01 N&middot;m. Sweep duty cycle from 10% to 100% in steps of 10%. Record steady-state RPM at each step. <b>Look for:</b> Is the relationship linear? Is there a dead zone at low duty cycles where the motor doesn't spin?</div>
+        <div class="inv-btns"><button onclick="runInvCard1()">Run this investigation &rarr;</button></div>
+        <textarea id="invObs1" placeholder="Your observations: was speed proportional to duty cycle? Where did it deviate?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">Can you stop overshoot without losing speed?</div>
+        <div class="inv-card-q"><b>Question:</b> In a PID controller, can you eliminate overshoot while still reaching the target quickly?</div>
+        <div class="inv-card-method"><b>Method:</b> PID Tuner tab. Start with P=2.0, I=0, D=0. Increase P until you see oscillation. Then add D to dampen it. Then add I to remove steady-state error. <b>Look for:</b> The tradeoff between speed and stability. What happens when D is too high?</div>
+        <div class="inv-btns"><button onclick="runInvCard2()">Run this investigation &rarr;</button></div>
+        <textarea id="invObs2" placeholder="Your observations: what was the best combination of P, I, D? What tradeoffs did you find?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">How does inertia change the game?</div>
+        <div class="inv-card-q"><b>Question:</b> If you double the load inertia (heavier arm), do you need to double the PID gains?</div>
+        <div class="inv-card-method"><b>Method:</b> PID Tuner tab. Find good PID gains for J=0.01. Then change to J=0.02 without changing gains. <b>Look for:</b> Does it oscillate? Undershoot? How must you adjust the gains to restore good tracking?</div>
+        <div class="inv-btns"><button onclick="runInvCard3()">Run this investigation &rarr;</button></div>
+        <textarea id="invObs3" placeholder="Your observations: how did doubling inertia affect the response? What gains needed changing?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the simulation controls to explore your own question. What variable do you want to change, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('dcmotor')">DC Motor</div>
+  <div class="mode-tab" onclick="setMode('servo')">Servo</div>
+  <div class="mode-tab" onclick="setMode('pid')">PID Tuner</div>
+  <div class="mode-tab" onclick="setMode('builds')">Build Log</div>
+</div>
+
+<!-- ═══════════════════════ DC MOTOR ═══════════════════════ -->
+<div class="mode-section active" id="modeDcmotor">
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">MOTOR</span><span class="sname">DC Motor Parameters</span></div>
+    <div class="panel-body">
+      <div class="note"><b>Model:</b> V<sub>eff</sub> = duty &times; V<sub>supply</sub>. Motor: V = IR + K<sub>e</sub>&omega;. Torque: &tau; = K<sub>t</sub>I. Rotation: J&middot;&Delta;&omega; = (&tau; &minus; b&omega; &minus; &tau;<sub>load</sub>)&middot;&Delta;t. No calculus &mdash; just multiplication per timestep.</div>
+      <div class="param-grid">
+        <div class="param-group">
+          <div class="group-label">Electrical</div>
+          <div class="param-row"><span class="param-lbl">V supply <span class="unit">(V)</span></span><input type="number" id="dcVsupply" value="12" min="3" max="24" step="1"></div>
+          <div class="param-row"><span class="param-lbl">R motor <span class="unit">(&Omega;)</span></span><input type="number" id="dcR" value="2.0" min="0.5" max="10" step="0.5"></div>
+          <div class="param-row"><span class="param-lbl">L motor <span class="unit">(mH)</span></span><input type="number" id="dcL" value="5" min="1" max="50" step="1"></div>
+        </div>
+        <div class="param-group">
+          <div class="group-label">Mechanical</div>
+          <div class="param-row"><span class="param-lbl">K<sub>e</sub> = K<sub>t</sub> <span class="unit">(V&middot;s/rad)</span></span><input type="number" id="dcKe" value="0.05" min="0.01" max="0.2" step="0.01"></div>
+          <div class="param-row"><span class="param-lbl">J inertia <span class="unit">(kg&middot;m&sup2;)</span></span><input type="number" id="dcJ" value="0.001" min="0.0001" max="0.01" step="0.0001"></div>
+          <div class="param-row"><span class="param-lbl">b friction <span class="unit">(N&middot;m&middot;s)</span></span><input type="number" id="dcB" value="0.001" min="0" max="0.01" step="0.001"></div>
+        </div>
+        <div class="param-group">
+          <div class="group-label">Control</div>
+          <div class="param-row"><span class="param-lbl">PWM duty <span class="unit">(%)</span></span><span class="val-display" id="dcDutyVal">50%</span></div>
+          <div class="param-row"><input type="range" id="dcDuty" min="0" max="100" value="50" step="1" oninput="document.getElementById('dcDutyVal').textContent=this.value+'%'"></div>
+          <div class="param-row"><span class="param-lbl">&tau; load <span class="unit">(N&middot;m)</span></span><input type="number" id="dcTload" value="0.01" min="0" max="0.5" step="0.005"></div>
+          <div class="param-row"><span class="param-lbl">Sim time <span class="unit">(s)</span></span><input type="number" id="dcTime" value="2" min="0.5" max="10" step="0.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="controls">
+    <button onclick="runDCMotor()">&#9654; Simulate motor</button>
+    <button onclick="runDCSweep()">Sweep duty cycle</button>
+    <button class="danger" onclick="clearDC()">Clear</button>
+  </div>
+  <div class="dashboard" id="dcDash">
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Speed (RPM) vs Time</div>
+        <div class="chart-wrap"><canvas id="dcSpeedChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Current (A) vs Time</div>
+        <div class="chart-wrap"><canvas id="dcCurrentChart"></canvas></div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Steady-State RPM vs Duty Cycle</div>
+        <div class="chart-wrap"><canvas id="dcSweepChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Motor Statistics</div>
+        <div class="stat-grid">
+          <div class="stat-item"><div class="stat-label">Steady RPM</div><div class="stat-value sm" id="dcStRPM">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Steady current (A)</div><div class="stat-value sm" id="dcStI">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Stall current (A)</div><div class="stat-value sm" id="dcStall">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">No-load RPM</div><div class="stat-value sm" id="dcNoload">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Mech. power (W)</div><div class="stat-value sm" id="dcPower">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Efficiency (%)</div><div class="stat-value sm" id="dcEff">&mdash;</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SERVO ═══════════════════════ -->
+<div class="mode-section" id="modeServo">
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">SERVO</span><span class="sname">Servo Control</span></div>
+    <div class="panel-body">
+      <div class="note"><b>How servos work:</b> A servo receives a PWM signal with period ~20 ms. The pulse width (1000&ndash;2000 &mu;s) maps to angle (0&ndash;180&deg;). An internal PID controller drives the motor to match the target angle. You control position, not speed.</div>
+      <div class="param-grid">
+        <div class="param-group">
+          <div class="group-label">Pulse</div>
+          <div class="param-row"><span class="param-lbl">Pulse &mu;s</span><span class="val-display" id="svPulseVal">1500</span></div>
+          <div class="param-row"><input type="range" id="svPulse" min="500" max="2500" value="1500" step="10" oninput="updateServoPulse()"></div>
+          <div class="param-row"><span class="param-lbl">Mapped angle</span><span class="val-display" id="svAngleVal">90&deg;</span></div>
+        </div>
+        <div class="param-group">
+          <div class="group-label">Servo Model</div>
+          <div class="param-row"><span class="param-lbl">Speed <span class="unit">(deg/s)</span></span><input type="number" id="svSpeed" value="300" min="60" max="600" step="30"></div>
+          <div class="param-row"><span class="param-lbl">Min &mu;s</span><input type="number" id="svMin" value="1000" min="500" max="1200" step="50"></div>
+          <div class="param-row"><span class="param-lbl">Max &mu;s</span><input type="number" id="svMax" value="2000" min="1800" max="2500" step="50"></div>
+        </div>
+        <div class="param-group">
+          <div class="group-label">Sweep</div>
+          <div class="param-row"><span class="param-lbl">Pattern</span>
+            <select id="svPattern">
+              <option value="sweep">Sweep 0-180</option>
+              <option value="step3">3-position step</option>
+              <option value="step5">5-position step</option>
+              <option value="sine">Sine wave</option>
+            </select>
+          </div>
+          <div class="param-row"><span class="param-lbl">Period <span class="unit">(s)</span></span><input type="number" id="svPeriod" value="3" min="1" max="10" step="0.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="controls">
+    <button onclick="runServoSweep()">&#9654; Run pattern</button>
+    <button class="danger" onclick="stopServo()">&#9632; Stop</button>
+  </div>
+  <div class="dashboard" id="servoDash">
+    <div class="dash-row wide">
+      <div class="dash-card">
+        <div class="card-label">Servo Position</div>
+        <div class="servo-viz" id="servoViz">
+          <canvas id="servoCanvas" width="400" height="260"></canvas>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Pulse &harr; Angle Mapping</div>
+        <div class="stat-grid">
+          <div class="stat-item"><div class="stat-label">Current angle</div><div class="stat-value sm" id="svCurAngle">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Target angle</div><div class="stat-value sm" id="svTgtAngle">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Pulse width</div><div class="stat-value sm" id="svCurPulse">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">PWM frequency</div><div class="stat-value sm">50 Hz</div></div>
+        </div>
+        <div class="chart-wrap" style="height:180px;margin-top:12px"><canvas id="svAngleChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PID TUNER ═══════════════════════ -->
+<div class="mode-section" id="modePid">
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">PID</span><span class="sname">PID Controller Tuner</span></div>
+    <div class="panel-body">
+      <div class="note"><b>PID control:</b> output = K<sub>p</sub>&middot;e + K<sub>i</sub>&middot;&Sigma;e&middot;&Delta;t + K<sub>d</sub>&middot;&Delta;e/&Delta;t. The error e = setpoint &minus; measured. P reacts to present error, I accumulates past error, D predicts future error. Together they drive the system to the target.</div>
+      <div class="param-grid">
+        <div class="param-group">
+          <div class="group-label">PID Gains</div>
+          <div class="param-row"><span class="param-lbl">K<sub>p</sub></span><span class="val-display" id="pidKpVal">2.00</span></div>
+          <div class="param-row"><input type="range" id="pidKp" min="0" max="10" value="2" step="0.1" oninput="document.getElementById('pidKpVal').textContent=(+this.value).toFixed(2)"></div>
+          <div class="param-row"><span class="param-lbl">K<sub>i</sub></span><span class="val-display" id="pidKiVal">0.00</span></div>
+          <div class="param-row"><input type="range" id="pidKi" min="0" max="5" value="0" step="0.05" oninput="document.getElementById('pidKiVal').textContent=(+this.value).toFixed(2)"></div>
+          <div class="param-row"><span class="param-lbl">K<sub>d</sub></span><span class="val-display" id="pidKdVal">0.00</span></div>
+          <div class="param-row"><input type="range" id="pidKd" min="0" max="2" value="0" step="0.01" oninput="document.getElementById('pidKdVal').textContent=(+this.value).toFixed(2)"></div>
+        </div>
+        <div class="param-group">
+          <div class="group-label">Plant (Motor + Load)</div>
+          <div class="param-row"><span class="param-lbl">J inertia <span class="unit">(kg&middot;m&sup2;)</span></span><input type="number" id="pidJ" value="0.01" min="0.001" max="0.1" step="0.001"></div>
+          <div class="param-row"><span class="param-lbl">b friction</span><input type="number" id="pidB" value="0.1" min="0" max="1" step="0.01"></div>
+          <div class="param-row"><span class="param-lbl">&tau; disturb <span class="unit">(N&middot;m)</span></span><input type="number" id="pidDist" value="0" min="0" max="1" step="0.05"></div>
+        </div>
+        <div class="param-group">
+          <div class="group-label">Setpoint</div>
+          <div class="param-row"><span class="param-lbl">Target <span class="unit">(deg)</span></span><input type="number" id="pidTarget" value="90" min="0" max="360" step="10"></div>
+          <div class="param-row"><span class="param-lbl">Sim time <span class="unit">(s)</span></span><input type="number" id="pidTime" value="5" min="1" max="20" step="1"></div>
+          <div class="param-row"><span class="param-lbl">Step at t= <span class="unit">(s)</span></span><input type="number" id="pidStepT" value="0.5" min="0" max="5" step="0.1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="controls">
+    <button onclick="runPID()">&#9654; Simulate PID</button>
+    <button class="danger" onclick="clearPID()">Clear</button>
+  </div>
+  <div class="dashboard" id="pidDash">
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Position vs Time (setpoint &amp; response)</div>
+        <div class="chart-wrap tall"><canvas id="pidPosChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">PID Performance</div>
+        <div class="stat-grid">
+          <div class="stat-item"><div class="stat-label">Rise time (10%&rarr;90%)</div><div class="stat-value sm" id="pidRise">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Overshoot (%)</div><div class="stat-value sm" id="pidOver">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Settling time (2%)</div><div class="stat-value sm" id="pidSettle">&mdash;</div></div>
+          <div class="stat-item"><div class="stat-label">Steady-state error</div><div class="stat-value sm" id="pidSSE">&mdash;</div></div>
+        </div>
+        <div class="card-label" style="margin-top:14px">Error vs Time</div>
+        <div class="chart-wrap" style="height:160px"><canvas id="pidErrChart"></canvas></div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Control Output vs Time</div>
+        <div class="chart-wrap"><canvas id="pidOutChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">P / I / D Components</div>
+        <div class="chart-wrap"><canvas id="pidCompChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ BUILD LOG ═══════════════════════ -->
+<div class="mode-section" id="modeBuilds">
+  <div class="note"><b>Build Log:</b> Document your physical Arduino projects here. Record the circuit, code snippets, observations, and what you learned. Each build entry is saved to your logbook.</div>
+  <div class="build-cards" id="buildCards">
+    <div class="build-card">
+      <div class="build-card-hdr">
+        <span class="build-card-num">BUILD 01</span>
+        <span class="build-card-title">Template &mdash; Your First Build</span>
+      </div>
+      <div class="build-card-desc">Describe what you built, what components you used, and what it does. Replace this template with your actual project.</div>
+      <div class="build-card-circuit">Arduino Pin Layout:
+  Pin 9  (PWM)  &rarr; Motor driver IN1
+  Pin 10 (PWM)  &rarr; Motor driver IN2
+  Pin A0        &rarr; Potentiometer (speed control)
+  5V / GND      &rarr; Power rails</div>
+      <textarea id="buildObs1" placeholder="What happened when you ran it? What did you learn? What would you change?"></textarea>
+      <div style="margin-top:8px"><button onclick="saveBuildToLog(1)">Save to logbook</button></div>
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <button onclick="addBuildCard()">+ Add new build</button>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ARDUINO MOTOR CONTROL LAB
+   DC Motor simulation, Servo visualization, PID tuner
+   ═══════════════════════════════════════════════════════════════ */
+
+const chartDefaults = {
+  responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+  plugins: {
+    legend: { display: false },
+    tooltip: { backgroundColor:'#111a11', borderColor:'rgba(40,160,200,0.3)', borderWidth:1, titleColor:'#e8f0e8', bodyColor:'#7a9a7a',
+      titleFont:{family:'Space Mono',size:10}, bodyFont:{family:'Space Mono',size:10} }
+  },
+  scales: {
+    x: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}} },
+    y: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}} }
+  }
+};
+
+let dcSpeedChart = null, dcCurrentChart = null, dcSweepChart = null;
+let pidPosChart = null, pidErrChart = null, pidOutChart = null, pidCompChart = null;
+let svAngleChart = null;
+let servoAnimId = null, servoCurrentAngle = 90;
+
+/* ── Panel toggle ── */
+function togglePanel(id) {
+  const p = document.getElementById(id);
+  p.classList.toggle('collapsed');
+  const t = p.querySelector('.toggle');
+  if (t) t.innerHTML = p.classList.contains('collapsed') ? '&#9654; expand' : '&#9660; collapse';
+}
+
+/* ── Mode tabs ── */
+function setMode(m) {
+  const modes = ['dcmotor', 'servo', 'pid', 'builds'];
+  modes.forEach(md => {
+    const el = document.getElementById('mode' + md.charAt(0).toUpperCase() + md.slice(1));
+    if (el) el.classList.toggle('active', md === m);
+  });
+  document.querySelectorAll('.mode-tab').forEach((tab, i) => tab.classList.toggle('active', modes[i] === m));
+}
+
+function makeChart(canvasId, opts) {
+  const o = JSON.parse(JSON.stringify(chartDefaults));
+  Object.assign(o, opts.options || {});
+  if (opts.xTitle) { o.scales.x.title = {display:true, text:opts.xTitle, color:'#4a6a4a', font:{family:'Space Mono',size:9}}; }
+  if (opts.yTitle) { o.scales.y.title = {display:true, text:opts.yTitle, color:'#4a6a4a', font:{family:'Space Mono',size:9}}; }
+  if (opts.legend) { o.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}; }
+  return new Chart(document.getElementById(canvasId), {
+    type: opts.type || 'line',
+    data: opts.data,
+    options: o
+  });
+}
+
+/* ═══════════════════════ DC MOTOR SIMULATION ═══════════════════════ */
+
+function simulateDCMotor(params) {
+  const { Vs, R, L, Ke, Kt, J, b, duty, Tload, tMax } = params;
+  const dt = 0.0002; // 200 µs timestep
+  const steps = Math.floor(tMax / dt);
+  const Veff = (duty / 100) * Vs;
+
+  let omega = 0, I = 0;
+  const times = [], speeds = [], currents = [];
+  const sampleEvery = Math.max(1, Math.floor(steps / 500));
+
+  for (let s = 0; s < steps; s++) {
+    // Motor equations (Euler integration)
+    const backEMF = Ke * omega;
+    const dI = (Veff - I * R - backEMF) / L;
+    I += dI * dt;
+    if (I < 0) I = 0; // Diode prevents negative current in H-bridge
+
+    const torque = Kt * I;
+    const dOmega = (torque - b * omega - Tload) / J;
+    omega += dOmega * dt;
+    if (omega < 0) omega = 0;
+
+    if (s % sampleEvery === 0) {
+      times.push(s * dt);
+      speeds.push(omega * 60 / (2 * Math.PI)); // rad/s → RPM
+      currents.push(I);
+    }
+  }
+
+  const steadyRPM = speeds[speeds.length - 1];
+  const steadyI = currents[currents.length - 1];
+  const stallI = Veff / R;
+  const noloadRPM = (Veff / Ke) * 60 / (2 * Math.PI);
+  const mechPower = (steadyRPM * 2 * Math.PI / 60) * Tload;
+  const elecPower = Veff * steadyI;
+  const eff = elecPower > 0 ? (mechPower / elecPower) * 100 : 0;
+
+  return { times, speeds, currents, steadyRPM, steadyI, stallI, noloadRPM, mechPower, eff };
+}
+
+function runDCMotor() {
+  const params = {
+    Vs: +document.getElementById('dcVsupply').value,
+    R: +document.getElementById('dcR').value,
+    L: +document.getElementById('dcL').value / 1000, // mH → H
+    Ke: +document.getElementById('dcKe').value,
+    Kt: +document.getElementById('dcKe').value, // Ke = Kt for ideal motor
+    J: +document.getElementById('dcJ').value,
+    b: +document.getElementById('dcB').value,
+    duty: +document.getElementById('dcDuty').value,
+    Tload: +document.getElementById('dcTload').value,
+    tMax: +document.getElementById('dcTime').value
+  };
+
+  const res = simulateDCMotor(params);
+
+  // Update stats
+  document.getElementById('dcStRPM').textContent = res.steadyRPM.toFixed(0);
+  document.getElementById('dcStI').textContent = res.steadyI.toFixed(3);
+  document.getElementById('dcStall').textContent = res.stallI.toFixed(2);
+  document.getElementById('dcNoload').textContent = res.noloadRPM.toFixed(0);
+  document.getElementById('dcPower').textContent = res.mechPower.toFixed(3);
+  document.getElementById('dcEff').textContent = res.eff.toFixed(1);
+
+  // Speed chart
+  if (dcSpeedChart) dcSpeedChart.destroy();
+  dcSpeedChart = makeChart('dcSpeedChart', {
+    xTitle: 'Time (s)', yTitle: 'RPM',
+    data: {
+      labels: res.times.map(t => t.toFixed(3)),
+      datasets: [{data: res.speeds, borderColor:'#5dc0dd', borderWidth:1.5, pointRadius:0, fill:false}]
+    }
+  });
+
+  // Current chart
+  if (dcCurrentChart) dcCurrentChart.destroy();
+  dcCurrentChart = makeChart('dcCurrentChart', {
+    xTitle: 'Time (s)', yTitle: 'Current (A)',
+    data: {
+      labels: res.times.map(t => t.toFixed(3)),
+      datasets: [{data: res.currents, borderColor:'#dd8844', borderWidth:1.5, pointRadius:0, fill:false}]
+    }
+  });
+}
+
+function runDCSweep() {
+  const params = {
+    Vs: +document.getElementById('dcVsupply').value,
+    R: +document.getElementById('dcR').value,
+    L: +document.getElementById('dcL').value / 1000,
+    Ke: +document.getElementById('dcKe').value,
+    Kt: +document.getElementById('dcKe').value,
+    J: +document.getElementById('dcJ').value,
+    b: +document.getElementById('dcB').value,
+    Tload: +document.getElementById('dcTload').value,
+    tMax: 2
+  };
+
+  const duties = [];
+  const rpms = [];
+  for (let d = 0; d <= 100; d += 5) {
+    params.duty = d;
+    const res = simulateDCMotor(params);
+    duties.push(d);
+    rpms.push(res.steadyRPM);
+  }
+
+  if (dcSweepChart) dcSweepChart.destroy();
+  dcSweepChart = makeChart('dcSweepChart', {
+    xTitle: 'Duty Cycle (%)', yTitle: 'Steady-State RPM',
+    data: {
+      labels: duties.map(d => d + '%'),
+      datasets: [{data: rpms, borderColor:'#5dc0dd', borderWidth:2, pointRadius:3, pointBackgroundColor:'#5dc0dd', fill:false}]
+    }
+  });
+}
+
+function clearDC() {
+  [dcSpeedChart, dcCurrentChart, dcSweepChart].forEach(c => { if (c) c.destroy(); });
+  dcSpeedChart = dcCurrentChart = dcSweepChart = null;
+  ['dcStRPM','dcStI','dcStall','dcNoload','dcPower','dcEff'].forEach(id => document.getElementById(id).textContent = '\u2014');
+}
+
+/* ═══════════════════════ SERVO ═══════════════════════ */
+
+function updateServoPulse() {
+  const pw = +document.getElementById('svPulse').value;
+  const minPW = +document.getElementById('svMin').value;
+  const maxPW = +document.getElementById('svMax').value;
+  const angle = Math.max(0, Math.min(180, (pw - minPW) / (maxPW - minPW) * 180));
+  document.getElementById('svPulseVal').textContent = pw;
+  document.getElementById('svAngleVal').innerHTML = angle.toFixed(1) + '&deg;';
+  drawServo(angle);
+}
+
+function drawServo(angleDeg) {
+  const c = document.getElementById('servoCanvas');
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Servo body
+  const cx = w / 2, cy = h - 40;
+  ctx.fillStyle = '#1a2a1a';
+  ctx.fillRect(cx - 30, cy - 20, 60, 40);
+  ctx.strokeStyle = 'rgba(40,160,200,0.5)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - 30, cy - 20, 60, 40);
+
+  // Arm
+  const armLen = 100;
+  const rad = (angleDeg - 90) * Math.PI / 180; // 0° = left, 90° = up, 180° = right
+  const ax = cx + armLen * Math.cos(-rad + Math.PI);
+  const ay = cy + armLen * Math.sin(-rad + Math.PI);
+
+  // Arm shadow (trail)
+  ctx.strokeStyle = 'rgba(93,192,221,0.15)';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, armLen, Math.PI, 0, false);
+  ctx.stroke();
+
+  // Arm line
+  ctx.strokeStyle = '#5dc0dd';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(ax, ay);
+  ctx.stroke();
+
+  // Hub
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#2a4a4a';
+  ctx.fill();
+  ctx.strokeStyle = '#5dc0dd';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Endpoint
+  ctx.beginPath();
+  ctx.arc(ax, ay, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#5dc0dd';
+  ctx.fill();
+
+  // Angle readout
+  ctx.fillStyle = '#4a6a4a';
+  ctx.font = '11px Space Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(angleDeg.toFixed(1) + '°', cx, cy + 50);
+
+  // Tick marks
+  for (let a = 0; a <= 180; a += 30) {
+    const r = (a - 90) * Math.PI / 180;
+    const tx = cx + (armLen + 12) * Math.cos(-r + Math.PI);
+    const ty = cy + (armLen + 12) * Math.sin(-r + Math.PI);
+    const tx2 = cx + (armLen + 6) * Math.cos(-r + Math.PI);
+    const ty2 = cy + (armLen + 6) * Math.sin(-r + Math.PI);
+    ctx.strokeStyle = '#4a6a4a';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(tx2, ty2);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.fillStyle = '#4a6a4a';
+    ctx.font = '8px Space Mono, monospace';
+    const ltx = cx + (armLen + 22) * Math.cos(-r + Math.PI);
+    const lty = cy + (armLen + 22) * Math.sin(-r + Math.PI);
+    ctx.fillText(a + '°', ltx, lty + 3);
+  }
+}
+
+function runServoSweep() {
+  stopServo();
+  const pattern = document.getElementById('svPattern').value;
+  const period = +document.getElementById('svPeriod').value;
+  const minPW = +document.getElementById('svMin').value;
+  const maxPW = +document.getElementById('svMax').value;
+  const speed = +document.getElementById('svSpeed').value;
+  const angleHistory = [];
+  const timeHistory = [];
+  const startTime = performance.now();
+
+  if (svAngleChart) svAngleChart.destroy();
+
+  function getTarget(t) {
+    const phase = (t % period) / period;
+    switch (pattern) {
+      case 'sweep': return phase < 0.5 ? phase * 2 * 180 : (1 - phase) * 2 * 180;
+      case 'step3': return phase < 0.33 ? 0 : phase < 0.66 ? 90 : 180;
+      case 'step5': {
+        const s = Math.floor(phase * 5);
+        return [0, 45, 90, 135, 180][s];
+      }
+      case 'sine': return 90 + 90 * Math.sin(phase * 2 * Math.PI);
+      default: return 90;
+    }
+  }
+
+  let lastT = 0;
+  function animate() {
+    const elapsed = (performance.now() - startTime) / 1000;
+    const dt = elapsed - lastT;
+    lastT = elapsed;
+
+    const target = getTarget(elapsed);
+    // Simulate servo speed limit
+    const diff = target - servoCurrentAngle;
+    const maxMove = speed * dt;
+    if (Math.abs(diff) > maxMove) {
+      servoCurrentAngle += Math.sign(diff) * maxMove;
+    } else {
+      servoCurrentAngle = target;
+    }
+
+    drawServo(servoCurrentAngle);
+    document.getElementById('svCurAngle').textContent = servoCurrentAngle.toFixed(1) + '°';
+    document.getElementById('svTgtAngle').textContent = target.toFixed(1) + '°';
+    const pw = minPW + (servoCurrentAngle / 180) * (maxPW - minPW);
+    document.getElementById('svCurPulse').textContent = pw.toFixed(0) + ' µs';
+
+    angleHistory.push(servoCurrentAngle);
+    timeHistory.push(elapsed);
+    if (angleHistory.length > 300) { angleHistory.shift(); timeHistory.shift(); }
+
+    // Update chart every 10 frames
+    if (angleHistory.length % 10 === 0) {
+      if (svAngleChart) svAngleChart.destroy();
+      svAngleChart = makeChart('svAngleChart', {
+        xTitle: 'Time (s)', yTitle: 'Angle (°)',
+        data: {
+          labels: timeHistory.map(t => t.toFixed(1)),
+          datasets: [{data: angleHistory, borderColor:'#5dc0dd', borderWidth:1.5, pointRadius:0, fill:false}]
+        }
+      });
+    }
+
+    if (elapsed < period * 3) {
+      servoAnimId = requestAnimationFrame(animate);
+    }
+  }
+  servoAnimId = requestAnimationFrame(animate);
+}
+
+function stopServo() {
+  if (servoAnimId) { cancelAnimationFrame(servoAnimId); servoAnimId = null; }
+}
+
+/* ═══════════════════════ PID TUNER ═══════════════════════ */
+
+function runPID() {
+  const Kp = +document.getElementById('pidKp').value;
+  const Ki = +document.getElementById('pidKi').value;
+  const Kd = +document.getElementById('pidKd').value;
+  const J = +document.getElementById('pidJ').value;
+  const b = +document.getElementById('pidB').value;
+  const dist = +document.getElementById('pidDist').value;
+  const target = +document.getElementById('pidTarget').value;
+  const tMax = +document.getElementById('pidTime').value;
+  const stepT = +document.getElementById('pidStepT').value;
+
+  const dt = 0.001;
+  const steps = Math.floor(tMax / dt);
+  const sampleEvery = Math.max(1, Math.floor(steps / 600));
+
+  let theta = 0, omega = 0;
+  let integral = 0, prevError = 0;
+  const times = [], positions = [], setpoints = [], errors = [], outputs = [];
+  const pTerms = [], iTerms = [], dTerms = [];
+
+  for (let s = 0; s < steps; s++) {
+    const t = s * dt;
+    const sp = t >= stepT ? target : 0;
+    const error = sp - theta;
+
+    integral += error * dt;
+    // Anti-windup: clamp integral
+    const iMax = 50 / Math.max(0.01, Ki);
+    integral = Math.max(-iMax, Math.min(iMax, integral));
+
+    const derivative = (error - prevError) / dt;
+    prevError = error;
+
+    const pTerm = Kp * error;
+    const iTerm = Ki * integral;
+    const dTerm = Kd * derivative;
+    let output = pTerm + iTerm + dTerm;
+
+    // Clamp output (simulate motor voltage limit)
+    output = Math.max(-100, Math.min(100, output));
+
+    // Plant: J * dOmega/dt = output - b*omega - disturbance
+    const torque = output - b * omega - (t > stepT + 1 ? dist : 0);
+    omega += (torque / J) * dt;
+    theta += omega * dt;
+
+    if (s % sampleEvery === 0) {
+      times.push(t);
+      positions.push(theta);
+      setpoints.push(sp);
+      errors.push(error);
+      outputs.push(output);
+      pTerms.push(pTerm);
+      iTerms.push(iTerm);
+      dTerms.push(dTerm);
+    }
+  }
+
+  // Compute metrics
+  const finalIdx = positions.length - 1;
+  const sse = Math.abs(target - positions[finalIdx]);
+  const peak = Math.max(...positions);
+  const overshoot = target > 0 ? Math.max(0, (peak - target) / target * 100) : 0;
+
+  // Rise time: first time from 10% to 90% of target
+  let riseStart = -1, riseEnd = -1;
+  for (let i = 0; i < positions.length; i++) {
+    if (riseStart < 0 && positions[i] >= target * 0.1) riseStart = times[i];
+    if (riseEnd < 0 && positions[i] >= target * 0.9) { riseEnd = times[i]; break; }
+  }
+  const riseTime = riseStart >= 0 && riseEnd >= 0 ? riseEnd - riseStart : -1;
+
+  // Settling time: last time position leaves 2% band around target
+  let settleTime = -1;
+  const band = Math.abs(target) * 0.02;
+  for (let i = positions.length - 1; i >= 0; i--) {
+    if (Math.abs(positions[i] - target) > band) { settleTime = times[i]; break; }
+  }
+  if (settleTime < 0) settleTime = times[0];
+
+  document.getElementById('pidRise').textContent = riseTime >= 0 ? riseTime.toFixed(3) + ' s' : 'N/A';
+  document.getElementById('pidOver').textContent = overshoot.toFixed(1) + '%';
+  document.getElementById('pidSettle').textContent = settleTime.toFixed(3) + ' s';
+  document.getElementById('pidSSE').textContent = sse.toFixed(2) + '°';
+
+  const labels = times.map(t => t.toFixed(2));
+
+  // Position chart
+  if (pidPosChart) pidPosChart.destroy();
+  pidPosChart = makeChart('pidPosChart', {
+    xTitle: 'Time (s)', yTitle: 'Position (°)', legend: true,
+    data: {
+      labels,
+      datasets: [
+        {data: setpoints, borderColor:'rgba(93,192,221,0.4)', borderWidth:1, borderDash:[5,3], pointRadius:0, fill:false, label:'Setpoint'},
+        {data: positions, borderColor:'#5dc0dd', borderWidth:1.5, pointRadius:0, fill:false, label:'Response'}
+      ]
+    }
+  });
+
+  // Error chart
+  if (pidErrChart) pidErrChart.destroy();
+  pidErrChart = makeChart('pidErrChart', {
+    xTitle: 'Time (s)', yTitle: 'Error (°)',
+    data: {
+      labels,
+      datasets: [{data: errors, borderColor:'#e24b4a', borderWidth:1, pointRadius:0, fill:false}]
+    }
+  });
+
+  // Output chart
+  if (pidOutChart) pidOutChart.destroy();
+  pidOutChart = makeChart('pidOutChart', {
+    xTitle: 'Time (s)', yTitle: 'Control Output',
+    data: {
+      labels,
+      datasets: [{data: outputs, borderColor:'#ddb84d', borderWidth:1.5, pointRadius:0, fill:false}]
+    }
+  });
+
+  // Component chart
+  if (pidCompChart) pidCompChart.destroy();
+  pidCompChart = makeChart('pidCompChart', {
+    xTitle: 'Time (s)', yTitle: 'Contribution', legend: true,
+    data: {
+      labels,
+      datasets: [
+        {data: pTerms, borderColor:'#5dc0dd', borderWidth:1, pointRadius:0, fill:false, label:'P'},
+        {data: iTerms, borderColor:'#7dd87d', borderWidth:1, pointRadius:0, fill:false, label:'I'},
+        {data: dTerms, borderColor:'#dd8844', borderWidth:1, pointRadius:0, fill:false, label:'D'}
+      ]
+    }
+  });
+}
+
+function clearPID() {
+  [pidPosChart, pidErrChart, pidOutChart, pidCompChart].forEach(c => { if (c) c.destroy(); });
+  pidPosChart = pidErrChart = pidOutChart = pidCompChart = null;
+  ['pidRise','pidOver','pidSettle','pidSSE'].forEach(id => document.getElementById(id).textContent = '\u2014');
+}
+
+/* ═══════════════════════ INVESTIGATION CARDS ═══════════════════════ */
+
+function runInvCard1() {
+  setMode('dcmotor');
+  document.getElementById('dcTload').value = 0.01;
+  document.getElementById('dcDuty').value = 50;
+  document.getElementById('dcDutyVal').textContent = '50%';
+  runDCSweep();
+}
+
+function runInvCard2() {
+  setMode('pid');
+  document.getElementById('pidKp').value = 2; document.getElementById('pidKpVal').textContent = '2.00';
+  document.getElementById('pidKi').value = 0; document.getElementById('pidKiVal').textContent = '0.00';
+  document.getElementById('pidKd').value = 0; document.getElementById('pidKdVal').textContent = '0.00';
+  document.getElementById('pidTarget').value = 90;
+  document.getElementById('pidJ').value = 0.01;
+  runPID();
+}
+
+function runInvCard3() {
+  setMode('pid');
+  document.getElementById('pidKp').value = 2; document.getElementById('pidKpVal').textContent = '2.00';
+  document.getElementById('pidKi').value = 0.5; document.getElementById('pidKiVal').textContent = '0.50';
+  document.getElementById('pidKd').value = 0.1; document.getElementById('pidKdVal').textContent = '0.10';
+  document.getElementById('pidTarget').value = 90;
+  document.getElementById('pidJ').value = 0.01;
+  runPID();
+}
+
+/* ═══════════════════════ BUILD LOG ═══════════════════════ */
+
+let buildCount = 1;
+
+function addBuildCard() {
+  buildCount++;
+  const container = document.getElementById('buildCards');
+  const card = document.createElement('div');
+  card.className = 'build-card';
+  card.innerHTML = `
+    <div class="build-card-hdr">
+      <span class="build-card-num">BUILD ${String(buildCount).padStart(2,'0')}</span>
+      <input type="text" style="flex:1;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;padding:4px 8px;border-radius:4px" placeholder="Project title...">
+    </div>
+    <textarea style="width:100%;min-height:40px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-bottom:8px" placeholder="Describe your build: components, wiring, what it does..."></textarea>
+    <div class="build-card-circuit" contenteditable="true" style="min-height:40px">Pin layout...</div>
+    <textarea id="buildObs${buildCount}" style="width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px" placeholder="What happened? What did you learn?"></textarea>
+    <div style="margin-top:8px"><button onclick="saveBuildToLog(${buildCount})">Save to logbook</button></div>
+  `;
+  container.appendChild(card);
+}
+
+function saveBuildToLog(num) {
+  const textarea = document.getElementById('buildObs' + num);
+  if (!textarea) return;
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type: 'obs', text, context: 'Build ' + num});
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#5dc0dd';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+/* ═══════════════════════ LOGBOOK ═══════════════════════ */
+
+const LOGBOOK_KEY = 'alexey_arduino_logbook';
+
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+function saveLogEntries(entries) { localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries)); }
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return '<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag '+typeClass+'">'+typeLabel+'</span><span class="log-entry-ts">'+ts+'</span><div class="log-entry-actions"><button onclick="deleteLogEntry('+i+')">&times;</button></div></div><div class="log-entry-text">'+e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'+(e.context?'<div class="log-entry-ctx">'+e.context+'</div>':'')+'</div>';
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'Is motor speed proportional to PWM?', 2:'Can you stop overshoot without losing speed?', 3:'How does inertia change the game?', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type: 'obs', text, context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')});
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#5dc0dd';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# Arduino Motor Control Lab \u2014 Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += '## ' + typeLabel + ' \u2014 ' + date.toLocaleDateString() + ' ' + date.toLocaleTimeString() + '\n\n' + e.text + '\n\n';
+    if (e.context) md += '> Context: ' + e.context + '\n\n';
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'arduino-motor-lab-logbook.md';
+  a.click();
+}
+
+// Initialize
+drawServo(90);
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
+</script>
+</body>
+</html>
