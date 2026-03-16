@@ -284,6 +284,8 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
       <div class="color-legend" id="colorLegend">
         <span><span class="dot" style="background:#3ca0a0"></span>Silicon</span>
         <span><span class="dot" style="background:#dd8844"></span>Germanium</span>
+        <span style="color:#3ca03c">&square; cell</span>
+        <span style="color:#ddb84d">&square; slab</span>
         <span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>
       </div>
     </div>
@@ -720,6 +722,38 @@ function mcSwap(nSteps, kT) {
   }
 }
 
+function mcGrandCanonical(nSteps, kT, dmu) {
+  // Grand canonical species change (niter4 equivalent from Fortran main.f)
+  // Picks a random atom, flips Si<->Ge, accepts via Metropolis with chemical potential
+  if (nSteps <= 0 || natom < 1 || kT < 1e-12) return;
+
+  for (let s = 0; s < nSteps; s++) {
+    const a = Math.floor(Math.random() * natom);
+    if (a < 0 || a >= natom) continue;
+    const s1i = species[a];
+    const s1f = s1i === 0 ? 1 : 0; // flip Si<->Ge
+
+    const eBefore = energy;
+    species[a] = s1f;
+    computeForces();
+    const eAfter = energy;
+    const dE = eAfter - eBefore;
+
+    // dmu = mu_si - mu_ge (positive favors Si retention)
+    // Si->Ge (s1i=0): del_mu = mu_si - mu_ge = dmu
+    // Ge->Si (s1i=1): del_mu = mu_ge - mu_si = -dmu
+    const del_mu = s1i === 0 ? dmu : -dmu;
+
+    mcTotal++;
+    if (dE - del_mu <= 0 || Math.random() < Math.exp(-(dE - del_mu) / kT)) {
+      mcAccept++;
+    } else {
+      species[a] = s1i; // revert
+      computeForces();
+    }
+  }
+}
+
 function layerComposition(nLayers) {
   if (!nLayers) nLayers = 8;
   let zmin = Infinity, zmax = -Infinity;
@@ -770,6 +804,7 @@ self.onmessage = function(e) {
     // MC swaps
     const kT = kB * p.temp;
     mcSwap(p.mcswap, kT);
+    mcGrandCanonical(p.mcgc, kT, p.dmu);
 
     const T = temperature();
     const epa = energy / natom;
@@ -807,6 +842,7 @@ let tswEnergyChartInst = null, tswGeChartInst = null;
 let cswEnergyChartInst = null, cswLatChartInst = null;
 let energyHistory = [], tempHistory = [];
 let currentNatom = 0;
+let simBox = null, slabBox = null;
 
 const chartDefaults = {
   responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
@@ -986,9 +1022,9 @@ function setRenderStyle(style) {
   // Update legend
   const legend = document.getElementById('colorLegend');
   if (style === 'layer') {
-    legend.innerHTML = '<span style="background:linear-gradient(to right,#4040ff,#40ff40,#ffff40,#ff4040);width:80px;height:10px;border-radius:3px;display:inline-block"></span><span>bottom &rarr; top layer</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
+    legend.innerHTML = '<span style="background:linear-gradient(to right,#4040ff,#40ff40,#ffff40,#ff4040);width:80px;height:10px;border-radius:3px;display:inline-block"></span><span>bottom &rarr; top layer</span><span style="color:#3ca03c">&square; cell</span><span style="color:#ddb84d">&square; slab</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
   } else {
-    legend.innerHTML = '<span><span class="dot" style="background:#3ca0a0"></span>Silicon</span><span><span class="dot" style="background:#dd8844"></span>Germanium</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
+    legend.innerHTML = '<span><span class="dot" style="background:#3ca0a0"></span>Silicon</span><span><span class="dot" style="background:#dd8844"></span>Germanium</span><span style="color:#3ca03c">&square; cell</span><span style="color:#ddb84d">&square; slab</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
   }
   if (lastAtomData) updateAtoms(lastAtomData.pos, lastAtomData.sp, lastAtomData.n, lastAtomData.lx, lastAtomData.ly, lastAtomData.lz);
 }
@@ -1086,6 +1122,32 @@ function updateAtoms(posBuffer, spBuffer, natom, totlx, totly, totlz) {
         }
       }
     }
+  }
+
+  // ── Simulation box wireframe (green = full cell, gold = slab region) ──
+  if (simBox) { scene.remove(simBox); simBox.geometry.dispose(); simBox.material.dispose(); simBox = null; }
+  if (slabBox) { scene.remove(slabBox); slabBox.geometry.dispose(); slabBox.material.dispose(); slabBox = null; }
+
+  // Full periodic cell: totlx x totlz (view y) x totly (view z), centered at origin
+  const fullBoxGeo = new THREE.BoxGeometry(totlx, totlz, totly);
+  const fullEdges = new THREE.EdgesGeometry(fullBoxGeo);
+  const fullMat = new THREE.LineBasicMaterial({ color: 0x3ca03c, opacity: 0.35, transparent: true });
+  simBox = new THREE.LineSegments(fullEdges, fullMat);
+  scene.add(simBox);
+  fullBoxGeo.dispose();
+
+  // Slab region box: atoms sit within a subset of z; vacuum is above and below
+  // Use actual atom z-range to define slab extent
+  if (zMax > zMin) {
+    const slabH = zMax - zMin + 1.0; // small padding around atoms
+    const slabCenterY = ((zMin + zMax) / 2); // already in view-y coords (centered)
+    const slabGeo = new THREE.BoxGeometry(totlx, slabH, totly);
+    const slabEdges = new THREE.EdgesGeometry(slabGeo);
+    const slabMat = new THREE.LineBasicMaterial({ color: 0xddb84d, opacity: 0.3, transparent: true });
+    slabBox = new THREE.LineSegments(slabEdges, slabMat);
+    slabBox.position.y = slabCenterY;
+    scene.add(slabBox);
+    slabGeo.dispose();
   }
 }
 
