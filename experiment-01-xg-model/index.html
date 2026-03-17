@@ -65,7 +65,38 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
 .reply-sec{margin-top:12px;display:none}
 .nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
 .nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
-@media(max-width:680px){.lab-grid{grid-template-columns:1fr}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}canvas#pitch{max-width:100%;height:auto}}
+@media(max-width:680px){.lab-grid{grid-template-columns:1fr}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}canvas#pitch{max-width:100%;height:auto}.league-grid{grid-template-columns:1fr!important}.compare-table{font-size:9px}.compare-table th,.compare-table td{padding:4px 6px}}
+.lab-modes{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.lab-modes button{font-size:10px;padding:5px 12px}
+.lab-modes button.active{background:rgba(60,160,60,0.15);border-color:#3ca03c;color:#7dd87d}
+.model-toggle{display:flex;gap:6px;margin-bottom:10px}
+.model-toggle button{font-size:9px;padding:3px 10px}
+.model-toggle button.active{background:rgba(60,160,60,0.15);border-color:#3ca03c}
+.league-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.league-card{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:12px}
+.league-card .lc-name{font-size:13px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px}
+.league-card .lc-country{font-size:10px;color:#4a6a4a;margin-bottom:8px}
+.league-card .lc-stat{display:flex;justify-content:space-between;padding:3px 0;font-size:10px}
+.league-card .lc-stat .lc-label{color:#7a9a7a}
+.league-card .lc-stat .lc-val{color:#7dd87d;font-family:'Space Mono',monospace;font-weight:700}
+.league-toggles{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.league-toggles button{font-size:9px;padding:4px 10px}
+.league-toggles button.active{background:rgba(60,160,60,0.15);border-color:#3ca03c;color:#7dd87d}
+.compare-table{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:10px;margin-bottom:14px}
+.compare-table th{background:#0d150d;color:#ddb84d;font-size:9px;text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;text-align:right;border:0.5px solid rgba(60,160,60,0.15);font-weight:700}
+.compare-table th:first-child{text-align:left}
+.compare-table td{padding:5px 8px;border:0.5px solid rgba(60,160,60,0.1);color:#e8f0e8;text-align:right;background:#0a0f0a}
+.compare-table td:first-child{text-align:left;color:#7a9a7a;font-weight:600}
+.compare-table tr:hover td{background:#0d150d}
+.team-table{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:10px}
+.team-table th{background:#0d150d;color:#7a9a7a;font-size:8px;text-transform:uppercase;padding:4px 6px;text-align:right;border:0.5px solid rgba(60,160,60,0.1)}
+.team-table th:first-child{text-align:left}
+.team-table td{padding:4px 6px;border:0.5px solid rgba(60,160,60,0.08);color:#e8f0e8;text-align:right}
+.team-table td:first-child{text-align:left;color:#7a9a7a}
+.overperf{color:#7dd87d}.underperf{color:#e24b4a}
+.shot-type-btns{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.shot-type-btns button{font-size:9px;padding:3px 8px}
+.shot-type-btns button.active{background:rgba(60,160,60,0.15);border-color:#3ca03c}
 .log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
 .log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
@@ -116,6 +147,22 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
     <span class="shint" id="labHint">Lock your hypothesis first</span>
   </div>
   <div class="sbody">
+    <div class="lab-modes">
+      <button class="active" onclick="setLabMode('shots')">Your Shots</button>
+      <button onclick="setLabMode('heatmap')">xG Heatmap</button>
+      <button onclick="setLabMode('leagues')">League Data</button>
+    </div>
+    <div id="labShots">
+    <div class="model-toggle">
+      <button class="active" id="modelABtn" onclick="setModel('geometric')">Model A: Geometric</button>
+      <button id="modelBBtn" onclick="setModel('logistic')">Model B: Logistic Regression</button>
+    </div>
+    <div class="shot-type-btns">
+      <button class="active" onclick="setShotType('open')">Open play</button>
+      <button onclick="setShotType('header')">Header (0.6×)</button>
+      <button onclick="setShotType('freekick')">Free kick</button>
+      <button onclick="setShotType('penalty')">Penalty (0.76)</button>
+    </div>
     <div class="lab-grid">
       <div>
         <canvas id="pitch" width="460" height="360"></canvas>
@@ -144,6 +191,44 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
         </div>
       </div>
     </div>
+    </div><!-- end labShots -->
+
+    <!-- xG HEATMAP -->
+    <div id="labHeatmap" style="display:none">
+      <div class="model-toggle">
+        <button class="active" id="hmModelABtn" onclick="setHeatmapModel('geometric')">Geometric Model</button>
+        <button id="hmModelBBtn" onclick="setHeatmapModel('logistic')">Logistic Regression</button>
+      </div>
+      <canvas id="heatmapCanvas" width="460" height="360" style="border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block;width:100%;max-width:460px"></canvas>
+      <div class="legend" style="margin-top:8px">
+        <span>0.00</span>
+        <div class="lgbar"></div>
+        <span>0.50+</span>
+        <span style="margin-left:8px">— xG probability at every point on the pitch</span>
+      </div>
+      <div class="note" style="margin-top:12px"><b>What you see:</b> The heatmap shows the probability of scoring from every location. Brighter = higher xG. Compare the two models: the geometric model is simpler (angle × distance decay), while the logistic regression model is closer to how professionals calculate xG.</div>
+    </div>
+
+    <!-- LEAGUE DATA EXPLORER -->
+    <div id="labLeagues" style="display:none">
+      <div class="note"><b>Real data from European leagues (2024-25).</b> Toggle leagues on/off. Compare how leagues differ in shooting efficiency, conversion rates, and where goals come from. Look for teams that over- or under-perform their xG.</div>
+      <div class="league-toggles" id="leagueToggles"></div>
+      <div class="sl" style="margin-bottom:8px">league comparison</div>
+      <table class="compare-table" id="leagueCompareTable"></table>
+      <div class="league-grid">
+        <div>
+          <div class="sl" style="margin-bottom:6px">goals vs xG — team performance</div>
+          <div class="chart-wrap" style="height:280px"><canvas id="xgScatterChart"></canvas></div>
+          <div style="font-size:9px;color:#4a6a4a;margin-top:4px;font-family:'Space Mono',monospace">Above diagonal = overperforming xG. Below = underperforming.</div>
+        </div>
+        <div>
+          <div class="sl" style="margin-bottom:6px">shot zone distribution by league</div>
+          <div class="chart-wrap" style="height:280px"><canvas id="zoneChart"></canvas></div>
+        </div>
+      </div>
+      <div class="sl" style="margin-bottom:8px">team details (click a league to expand)</div>
+      <div id="teamDetails"></div>
+    </div>
   </div>
 </div>
 
@@ -166,7 +251,9 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
         <div class="rstat"><span class="rl">Maximum goals in one run</span><span class="rv" id="rMax">—</span></div>
         <div class="rstat"><span class="rl">Probability of 0 goals</span><span class="rv" id="rP0">—</span></div>
         <div class="rstat"><span class="rl">Probability of 2+ goals</span><span class="rv" id="rP2">—</span></div>
-        <div class="model-note">This model uses geometry only — distance and shot angle. Real professional xG models also include: foot vs head, assisted vs solo, game state, and pressure from defenders. Your model captures the most important factors.</div>
+        <div class="rstat"><span class="rl">Std deviation</span><span class="rv" id="rStd">—</span></div>
+        <div class="rstat"><span class="rl">Model used</span><span class="rv" id="rModel" style="font-size:10px">—</span></div>
+        <div class="model-note">This model uses geometry only — distance and shot angle. Toggle "Model B: Logistic Regression" in the lab to try a model closer to professional xG. Real models also include: foot vs head, assisted vs solo, game state, and pressure from defenders.</div>
       </div>
     </div>
   </div>
@@ -241,6 +328,129 @@ const PY=GY+Math.round(11*SC),PBY2=GY+Math.round(16.5*SC),PBHW=Math.round(20.16*
 const SYY2=GY+Math.round(5.5*SC),SYHW=Math.round(9.16*SC);
 const DRAD=Math.round(9.15*SC);
 let shots=[],locked=false,hx=null,hy=null,mcInst=null,convHist=[];
+let currentModel='geometric',currentShotType='open';
+let xgScatterInst=null,zoneChartInst=null;
+
+/* ── League Data (2024-25 season, approximate aggregates) ── */
+const LEAGUE_DATA = {
+  'Premier League': {
+    country: 'England', color: '#6B5B95',
+    avgGoalsPerMatch: 2.76, avgXGPerMatch: 2.68, avgShotsPerMatch: 24.8,
+    conversionRate: 11.1, avgXGPerShot: 0.108,
+    teams: [
+      {name:'Liverpool',xGF:77.2,xGA:32.1,gF:81,gA:29,shots:618,soT:219},
+      {name:'Arsenal',xGF:72.5,xGA:34.8,gF:75,gA:31,shots:630,soT:210},
+      {name:'Man City',xGF:68.3,xGA:38.2,gF:72,gA:41,shots:605,soT:198},
+      {name:'Chelsea',xGF:62.1,xGA:42.5,gF:67,gA:39,shots:590,soT:185},
+      {name:'Aston Villa',xGF:55.8,xGA:44.1,gF:58,gA:47,shots:520,soT:170},
+      {name:'Newcastle',xGF:58.2,xGA:40.3,gF:61,gA:43,shots:545,soT:178},
+      {name:'Brighton',xGF:53.4,xGA:46.8,gF:55,gA:50,shots:560,soT:175},
+      {name:'Tottenham',xGF:60.1,xGA:48.5,gF:63,gA:52,shots:575,soT:182},
+      {name:'Man United',xGF:48.2,xGA:50.1,gF:44,gA:53,shots:510,soT:160},
+      {name:'Bournemouth',xGF:49.5,xGA:47.3,gF:52,gA:48,shots:490,soT:158}
+    ],
+    shotZones: [{zone:'6-yard box',pct:8,xg:0.38},{zone:'Central penalty',pct:22,xg:0.15},{zone:'Wide penalty',pct:25,xg:0.08},{zone:'Edge of box',pct:28,xg:0.04},{zone:'Long range',pct:17,xg:0.02}]
+  },
+  'La Liga': {
+    country: 'Spain', color: '#FF6F61',
+    avgGoalsPerMatch: 2.62, avgXGPerMatch: 2.55, avgShotsPerMatch: 23.5,
+    conversionRate: 11.1, avgXGPerShot: 0.109,
+    teams: [
+      {name:'Barcelona',xGF:82.1,xGA:30.5,gF:90,gA:28,shots:680,soT:240},
+      {name:'Real Madrid',xGF:71.3,xGA:35.2,gF:76,gA:32,shots:620,soT:215},
+      {name:'Atletico',xGF:58.7,xGA:32.8,gF:55,gA:30,shots:510,soT:170},
+      {name:'Athletic Bilbao',xGF:55.2,xGA:38.4,gF:57,gA:36,shots:495,soT:165},
+      {name:'Villarreal',xGF:52.8,xGA:41.2,gF:56,gA:44,shots:505,soT:162}
+    ],
+    shotZones: [{zone:'6-yard box',pct:7,xg:0.37},{zone:'Central penalty',pct:21,xg:0.14},{zone:'Wide penalty',pct:24,xg:0.07},{zone:'Edge of box',pct:30,xg:0.04},{zone:'Long range',pct:18,xg:0.02}]
+  },
+  'Bundesliga': {
+    country: 'Germany', color: '#88B04B',
+    avgGoalsPerMatch: 3.14, avgXGPerMatch: 3.02, avgShotsPerMatch: 25.2,
+    conversionRate: 12.5, avgXGPerShot: 0.120,
+    teams: [
+      {name:'Bayern Munich',xGF:82.5,xGA:33.1,gF:87,gA:35,shots:650,soT:230},
+      {name:'Leverkusen',xGF:68.7,xGA:36.5,gF:72,gA:34,shots:580,soT:200},
+      {name:'Dortmund',xGF:62.3,xGA:42.8,gF:65,gA:45,shots:555,soT:185},
+      {name:'RB Leipzig',xGF:58.1,xGA:40.2,gF:60,gA:38,shots:530,soT:175},
+      {name:'Stuttgart',xGF:55.6,xGA:43.5,gF:58,gA:46,shots:510,soT:168}
+    ],
+    shotZones: [{zone:'6-yard box',pct:9,xg:0.40},{zone:'Central penalty',pct:23,xg:0.16},{zone:'Wide penalty',pct:24,xg:0.08},{zone:'Edge of box',pct:27,xg:0.04},{zone:'Long range',pct:17,xg:0.02}]
+  },
+  'Serie A': {
+    country: 'Italy', color: '#009B77',
+    avgGoalsPerMatch: 2.68, avgXGPerMatch: 2.62, avgShotsPerMatch: 24.2,
+    conversionRate: 11.1, avgXGPerShot: 0.108,
+    teams: [
+      {name:'Inter Milan',xGF:72.8,xGA:32.4,gF:76,gA:30,shots:610,soT:210},
+      {name:'Napoli',xGF:68.5,xGA:35.8,gF:72,gA:33,shots:590,soT:195},
+      {name:'AC Milan',xGF:60.2,xGA:42.1,gF:62,gA:40,shots:550,soT:180},
+      {name:'Juventus',xGF:55.8,xGA:33.5,gF:50,gA:31,shots:520,soT:168},
+      {name:'Atalanta',xGF:65.3,xGA:38.2,gF:70,gA:42,shots:570,soT:190}
+    ],
+    shotZones: [{zone:'6-yard box',pct:7,xg:0.36},{zone:'Central penalty',pct:22,xg:0.14},{zone:'Wide penalty',pct:25,xg:0.07},{zone:'Edge of box',pct:29,xg:0.04},{zone:'Long range',pct:17,xg:0.02}]
+  },
+  'Ligue 1': {
+    country: 'France', color: '#DD4124',
+    avgGoalsPerMatch: 2.58, avgXGPerMatch: 2.50, avgShotsPerMatch: 23.8,
+    conversionRate: 10.8, avgXGPerShot: 0.105,
+    teams: [
+      {name:'PSG',xGF:78.5,xGA:28.2,gF:82,gA:25,shots:660,soT:235},
+      {name:'Monaco',xGF:58.2,xGA:40.1,gF:62,gA:38,shots:530,soT:175},
+      {name:'Marseille',xGF:55.8,xGA:42.3,gF:58,gA:44,shots:520,soT:168},
+      {name:'Lille',xGF:52.1,xGA:38.5,gF:48,gA:36,shots:490,soT:158},
+      {name:'Lyon',xGF:54.3,xGA:45.8,gF:57,gA:48,shots:510,soT:165}
+    ],
+    shotZones: [{zone:'6-yard box',pct:7,xg:0.36},{zone:'Central penalty',pct:20,xg:0.13},{zone:'Wide penalty',pct:24,xg:0.07},{zone:'Edge of box',pct:30,xg:0.04},{zone:'Long range',pct:19,xg:0.02}]
+  },
+  'Championship': {
+    country: 'England (Tier 2)', color: '#B565A7',
+    avgGoalsPerMatch: 2.51, avgXGPerMatch: 2.45, avgShotsPerMatch: 23.1,
+    conversionRate: 10.9, avgXGPerShot: 0.106,
+    teams: [
+      {name:'Leeds United',xGF:68.5,xGA:38.2,gF:72,gA:40,shots:580,soT:195},
+      {name:'Burnley',xGF:62.3,xGA:40.5,gF:65,gA:38,shots:550,soT:180},
+      {name:'Sheffield Utd',xGF:55.8,xGA:42.1,gF:52,gA:44,shots:510,soT:165},
+      {name:'Sunderland',xGF:52.5,xGA:44.8,gF:55,gA:47,shots:495,soT:160},
+      {name:'Middlesbrough',xGF:50.2,xGA:43.5,gF:48,gA:42,shots:480,soT:155}
+    ],
+    shotZones: [{zone:'6-yard box',pct:7,xg:0.35},{zone:'Central penalty',pct:20,xg:0.13},{zone:'Wide penalty',pct:24,xg:0.07},{zone:'Edge of box',pct:30,xg:0.04},{zone:'Long range',pct:19,xg:0.02}]
+  }
+};
+
+/* ── Logistic regression xG model (Soccermatics-style) ── */
+function calcXGLogistic(x,y){
+  if(y<=GY)return{xg:0,d:0,a:0};
+  const dx=x-GX,dy=y-GY,dp=Math.sqrt(dx*dx+dy*dy),dm=dp/SC;
+  if(dm<0.8)return{xg:0.96,d:dm,a:180};
+  // Angle using atan formula: angle = atan(7.32*distToGoalLine / (distToGoalLine^2 + lateralOffset^2 - (7.32/2)^2))
+  const distGL=dy/SC; // distance to goal line in metres
+  const latOff=Math.abs(dx)/SC; // lateral offset from centre
+  const denom=distGL*distGL+latOff*latOff-3.66*3.66;
+  const angleRad=denom>0?Math.atan(7.32*distGL/denom):Math.PI/2;
+  const angleDeg=angleRad*180/Math.PI;
+  // Logistic: P = 1/(1+exp(-(b0+b1*angle+b2*dist+b3*angle*dist+b4*dist^2)))
+  const b0=-0.85,b1=0.21,b2=-0.08,b3=-0.005,b4=0.001;
+  const logit=b0+b1*angleRad+b2*dm+b3*angleRad*dm+b4*dm*dm;
+  let xg=1/(1+Math.exp(-logit));
+  xg=Math.min(0.96,Math.max(0,xg));
+  return{xg,d:dm,a:angleDeg};
+}
+
+/* ── Shot type modifiers ── */
+function applyShotMod(xg,dist){
+  if(currentShotType==='header')return xg*0.6;
+  if(currentShotType==='freekick'){
+    if(dist<15)return 0.02;
+    if(dist<20)return 0.04;
+    if(dist<27)return 0.06+0.02*Math.exp(-(dist-23)*(dist-23)/8);
+    return 0.02;
+  }
+  if(currentShotType==='penalty')return 0.76;
+  return xg;
+}
+
+let selectedLeagues=new Set(['Premier League','Bundesliga','La Liga']);
 
 function dp(){
   for(let i=0;i<7;i++){ctx.fillStyle=i%2===0?'#061a0a':'#071e0c';ctx.fillRect(i*(W/7),0,Math.ceil(W/7)+1,H)}
@@ -259,7 +469,7 @@ function dp(){
   ctx.beginPath();ctx.moveTo(GX-GHW,GY-6);ctx.lineTo(GX+GHW,GY-6);ctx.stroke();
 }
 
-function calcXG(x,y){
+function calcXGGeometric(x,y){
   if(y<=GY)return{xg:0,d:0,a:0};
   const dx=x-GX,dy=y-GY,dp=Math.sqrt(dx*dx+dy*dy),dm=dp/SC;
   if(dm<.8)return{xg:.96,d:dm,a:180};
@@ -269,6 +479,11 @@ function calcXG(x,y){
   const ar=Math.acos(Math.max(-1,Math.min(1,dot)));
   const xg=Math.min(.96,(ar/Math.PI)*Math.exp(-dm/14)*3.5);
   return{xg,d:dm,a:ar*180/Math.PI};
+}
+function calcXG(x,y){
+  const raw=currentModel==='logistic'?calcXGLogistic(x,y):calcXGGeometric(x,y);
+  if(currentShotType!=='open'){raw.xg=applyShotMod(raw.xg,raw.d);}
+  return raw;
 }
 
 function xgCol(xg){
@@ -353,10 +568,13 @@ function runMC(){
   const avg=counts.reduce((s,c,i)=>s+c*i,0)/N;
   const mx=counts.length-1-[...counts].reverse().findIndex(c=>c>0);
   document.getElementById('rXG').textContent=tot.toFixed(3);
+  const std=Math.sqrt(counts.reduce((s,c,i)=>s+c*(i-avg)*(i-avg),0)/N);
   document.getElementById('rAvg').textContent=avg.toFixed(2);
   document.getElementById('rMax').textContent=mx;
   document.getElementById('rP0').textContent=(counts[0]/N*100).toFixed(1)+'%';
   document.getElementById('rP2').textContent=(counts.slice(2).reduce((a,b)=>a+b,0)/N*100).toFixed(1)+'%';
+  document.getElementById('rStd').textContent=std.toFixed(2);
+  document.getElementById('rModel').textContent=currentModel==='logistic'?'Logistic Regression':'Geometric';
   const el=document.getElementById('stepRes');el.style.display='';
   const cc=document.getElementById('mcChart');
   if(mcInst)mcInst.destroy();
@@ -408,6 +626,168 @@ async function sendReply(){
 }
 
 redraw();
+
+/* ── Lab mode switching ── */
+function setLabMode(mode){
+  document.getElementById('labShots').style.display=mode==='shots'?'':'none';
+  document.getElementById('labHeatmap').style.display=mode==='heatmap'?'':'none';
+  document.getElementById('labLeagues').style.display=mode==='leagues'?'':'none';
+  document.querySelectorAll('.lab-modes button').forEach((b,i)=>{
+    b.classList.toggle('active',['shots','heatmap','leagues'][i]===mode);
+  });
+  if(mode==='heatmap')drawHeatmap();
+  if(mode==='leagues')initLeagueView();
+}
+
+function setModel(m){
+  currentModel=m;
+  document.getElementById('modelABtn').classList.toggle('active',m==='geometric');
+  document.getElementById('modelBBtn').classList.toggle('active',m==='logistic');
+  redraw();
+}
+
+function setShotType(t){
+  currentShotType=t;
+  document.querySelectorAll('.shot-type-btns button').forEach(b=>{
+    b.classList.toggle('active',b.textContent.toLowerCase().includes(t==='open'?'open':t==='header'?'header':t==='freekick'?'free':t==='penalty'?'penalty':''));
+  });
+  redraw();
+}
+
+function setHeatmapModel(m){
+  document.getElementById('hmModelABtn').classList.toggle('active',m==='geometric');
+  document.getElementById('hmModelBBtn').classList.toggle('active',m==='logistic');
+  const prev=currentModel;currentModel=m;drawHeatmap();currentModel=prev;
+}
+
+/* ── xG Heatmap ── */
+function drawHeatmap(){
+  const hc=document.getElementById('heatmapCanvas'),hctx=hc.getContext('2d');
+  const w=hc.width,h=hc.height;
+  const imgData=hctx.createImageData(w,h);
+  for(let py=0;py<h;py++){
+    for(let px=0;px<w;px++){
+      const{xg}=calcXG(px,py);
+      const idx=(py*w+px)*4;
+      if(xg<=0){imgData.data[idx]=6;imgData.data[idx+1]=15;imgData.data[idx+2]=6;imgData.data[idx+3]=255;continue;}
+      const t=Math.min(1,xg/0.5);
+      imgData.data[idx]=Math.round(t*255);
+      imgData.data[idx+1]=Math.round((1-t)*60+t*80);
+      imgData.data[idx+2]=Math.round((1-t)*60);
+      imgData.data[idx+3]=255;
+    }
+  }
+  hctx.putImageData(imgData,0,0);
+  // Draw pitch lines on top
+  hctx.strokeStyle='rgba(255,255,255,0.3)';hctx.lineWidth=1;
+  hctx.strokeRect(10,GY,w-20,h-GY-8);
+  hctx.strokeRect(GX-PBHW,GY,PBHW*2,PBY2-GY);
+  hctx.strokeRect(GX-SYHW,GY,SYHW*2,SYY2-GY);
+  hctx.strokeStyle='rgba(255,255,255,0.6)';hctx.lineWidth=2;
+  hctx.beginPath();hctx.moveTo(GX-GHW,GY);hctx.lineTo(GX-GHW,GY-10);hctx.lineTo(GX+GHW,GY-10);hctx.lineTo(GX+GHW,GY);hctx.stroke();
+}
+
+/* ── League Data Visualization ── */
+function initLeagueView(){
+  // Build toggles
+  const tEl=document.getElementById('leagueToggles');
+  if(tEl.children.length===0){
+    Object.keys(LEAGUE_DATA).forEach(name=>{
+      const btn=document.createElement('button');
+      btn.textContent=name;
+      btn.style.borderColor=LEAGUE_DATA[name].color;
+      if(selectedLeagues.has(name))btn.classList.add('active');
+      btn.onclick=()=>{
+        if(selectedLeagues.has(name))selectedLeagues.delete(name);else selectedLeagues.add(name);
+        btn.classList.toggle('active');
+        updateLeagueView();
+      };
+      tEl.appendChild(btn);
+    });
+  }
+  updateLeagueView();
+}
+
+function updateLeagueView(){
+  updateLeagueTable();
+  updateXGScatter();
+  updateZoneChart();
+  updateTeamDetails();
+}
+
+function updateLeagueTable(){
+  const tbl=document.getElementById('leagueCompareTable');
+  let html='<tr><th>League</th><th>Goals/match</th><th>xG/match</th><th>Shots/match</th><th>Conversion %</th><th>xG/shot</th></tr>';
+  for(const name of selectedLeagues){
+    const d=LEAGUE_DATA[name];if(!d)continue;
+    html+=`<tr><td style="color:${d.color}">${name}</td><td>${d.avgGoalsPerMatch.toFixed(2)}</td><td>${d.avgXGPerMatch.toFixed(2)}</td><td>${d.avgShotsPerMatch.toFixed(1)}</td><td>${d.conversionRate.toFixed(1)}%</td><td>${d.avgXGPerShot.toFixed(3)}</td></tr>`;
+  }
+  tbl.innerHTML=html;
+}
+
+function updateXGScatter(){
+  if(xgScatterInst)xgScatterInst.destroy();
+  const datasets=[];
+  for(const name of selectedLeagues){
+    const d=LEAGUE_DATA[name];if(!d)continue;
+    datasets.push({
+      label:name,data:d.teams.map(t=>({x:t.xGF,y:t.gF,label:t.name})),
+      backgroundColor:d.color+'cc',borderColor:d.color,borderWidth:1,pointRadius:5,
+      pointHoverRadius:7
+    });
+  }
+  // Diagonal line dataset
+  const allXG=[],allG=[];
+  datasets.forEach(ds=>ds.data.forEach(p=>{allXG.push(p.x);allG.push(p.y)}));
+  const mn=Math.min(...allXG,...allG)-5,mx=Math.max(...allXG,...allG)+5;
+  datasets.push({label:'Perfect',data:[{x:mn,y:mn},{x:mx,y:mx}],type:'line',borderColor:'rgba(255,255,255,0.15)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false});
+
+  xgScatterInst=new Chart(document.getElementById('xgScatterChart'),{type:'scatter',data:{datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:0},
+    plugins:{legend:{display:true,labels:{color:'#7a9a7a',font:{family:'Space Mono',size:8},boxWidth:8}},
+      tooltip:{callbacks:{label:c=>{const p=c.raw;return(p.label||'')+': xG='+p.x.toFixed(1)+', Goals='+p.y}},backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:9},bodyFont:{family:'Space Mono',size:9}}},
+    scales:{
+      x:{title:{display:true,text:'xG (For)',color:'#4a6a4a',font:{family:'Space Mono',size:9}},grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8}}},
+      y:{title:{display:true,text:'Goals Scored',color:'#4a6a4a',font:{family:'Space Mono',size:9}},grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8}}}
+    }
+  }});
+}
+
+function updateZoneChart(){
+  if(zoneChartInst)zoneChartInst.destroy();
+  const labels=['6-yard box','Central penalty','Wide penalty','Edge of box','Long range'];
+  const datasets=[];
+  for(const name of selectedLeagues){
+    const d=LEAGUE_DATA[name];if(!d)continue;
+    datasets.push({label:name,data:d.shotZones.map(z=>z.pct),backgroundColor:d.color+'88',borderColor:d.color,borderWidth:1});
+  }
+  zoneChartInst=new Chart(document.getElementById('zoneChart'),{type:'bar',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,animation:{duration:0},
+    plugins:{legend:{display:true,labels:{color:'#7a9a7a',font:{family:'Space Mono',size:8},boxWidth:8}},
+      tooltip:{backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:9},bodyFont:{family:'Space Mono',size:9}}},
+    scales:{
+      x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8}}},
+      y:{title:{display:true,text:'% of shots',color:'#4a6a4a',font:{family:'Space Mono',size:9}},grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8}}}
+    }
+  }});
+}
+
+function updateTeamDetails(){
+  const el=document.getElementById('teamDetails');
+  let html='';
+  for(const name of selectedLeagues){
+    const d=LEAGUE_DATA[name];if(!d)continue;
+    html+=`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:${d.color};font-family:'Space Mono',monospace;margin-bottom:6px">${name} — ${d.country}</div>`;
+    html+='<table class="team-table"><tr><th>Team</th><th>xG For</th><th>Goals</th><th>xG Diff</th><th>xG Against</th><th>Goals A</th><th>Shots</th><th>On Target</th></tr>';
+    d.teams.forEach(t=>{
+      const diff=t.gF-t.xGF;
+      const cls=diff>0?'overperf':'underperf';
+      html+=`<tr><td>${t.name}</td><td>${t.xGF.toFixed(1)}</td><td>${t.gF}</td><td class="${cls}">${diff>0?'+':''}${diff.toFixed(1)}</td><td>${t.xGA.toFixed(1)}</td><td>${t.gA}</td><td>${t.shots}</td><td>${t.soT}</td></tr>`;
+    });
+    html+='</table></div>';
+  }
+  el.innerHTML=html;
+}
 
 const LOGBOOK_KEY='alexey_exp_01_logbook';
 function getLogEntries(){try{return JSON.parse(localStorage.getItem(LOGBOOK_KEY))||[];}catch(e){return[];}}

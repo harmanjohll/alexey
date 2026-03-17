@@ -107,6 +107,22 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
 .logbook-add textarea:focus{outline:none;border-color:#ddb84d}
 .logbook-add textarea::placeholder{color:#4a6a4a}
 .logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+.data-table{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:11px;margin-bottom:12px}
+.data-table th{background:#0d150d;color:#ddb84d;font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;text-align:right;border:0.5px solid rgba(60,160,60,0.15);font-weight:700}
+.data-table th:first-child{text-align:left}
+.data-table td{padding:5px 10px;border:0.5px solid rgba(60,160,60,0.1);color:#e8f0e8;text-align:right;background:#0a0f0a}
+.data-table td:first-child{text-align:left;color:#7a9a7a}
+.data-table td[contenteditable="true"]{cursor:text;outline:none;transition:background .15s}
+.data-table td[contenteditable="true"]:focus{background:rgba(200,160,40,0.08);box-shadow:inset 0 0 0 1px rgba(200,160,40,0.3)}
+.data-table tr:hover td{background:#0d150d}
+.fit-result{background:#0d150d;border:0.5px solid rgba(200,160,40,0.3);border-left:3px solid #ddb84d;border-radius:0 6px 6px 0;padding:14px;margin-top:12px}
+.fit-result .fit-label{font-size:9px;font-weight:700;color:#ddb84d;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.fit-result .fit-value{font-size:22px;font-weight:700;color:#ddb84d;font-family:'Space Mono',monospace;line-height:1.2}
+.fit-result .fit-detail{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace;margin-top:4px}
+.dl-controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.dl-controls .sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
+.dl-controls .sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.dl-controls .sweep-item input{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
 @media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
 @media(max-width:600px){.param-grid{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
 </style>
@@ -178,16 +194,16 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
     <div class="param-grid">
       <div class="param-group">
         <div class="group-label">Slab Geometry</div>
-        <div class="param-row"><span class="param-lbl">Cells x</span><input type="number" id="pNcx" value="2" min="1" max="4" step="1"></div>
-        <div class="param-row"><span class="param-lbl">Cells y</span><input type="number" id="pNcy" value="2" min="1" max="4" step="1"></div>
+        <div class="param-row"><span class="param-lbl">Cells x</span><input type="number" id="pNcx" value="3" min="1" max="4" step="1"></div>
+        <div class="param-row"><span class="param-lbl">Cells y</span><input type="number" id="pNcy" value="3" min="1" max="4" step="1"></div>
         <div class="param-row"><span class="param-lbl">Cells z</span><input type="number" id="pNcz" value="3" min="2" max="6" step="1"></div>
-        <div class="param-row"><span class="param-lbl">Total atoms</span><span class="stat-value sm" id="atomCount" style="font-size:13px">112</span></div>
+        <div class="param-row"><span class="param-lbl">Total atoms</span><span class="stat-value sm" id="atomCount" style="font-size:13px">468</span></div>
         <div class="param-row"><span class="param-lbl">&theta; <span class="unit">(Ge frac)</span></span><input type="number" id="pTheta" value="0.0" min="0" max="1" step="0.1"></div>
       </div>
       <div class="param-group">
         <div class="group-label">Dynamics</div>
-        <div class="param-row"><span class="param-lbl">Temperature <span class="unit">(K)</span></span><input type="number" id="pTemp" value="500" min="50" max="1500" step="50"></div>
-        <div class="param-row"><span class="param-lbl">Timestep <span class="unit">(fs)</span></span><input type="number" id="pDt" value="1.0" min="0.1" max="5.0" step="0.1"></div>
+        <div class="param-row"><span class="param-lbl">Temperature <span class="unit">(K)</span></span><input type="number" id="pTemp" value="300" min="50" max="1500" step="50"></div>
+        <div class="param-row"><span class="param-lbl">Timestep <span class="unit">(fs)</span></span><input type="number" id="pDt" value="0.02" min="0.01" max="5.0" step="0.01"></div>
         <div class="param-row"><span class="param-lbl">VV steps/loop</span><input type="number" id="pNvv" value="50" min="10" max="200" step="10"></div>
         <div class="param-row"><span class="param-lbl">Outer loops</span><input type="number" id="pNloops" value="100" min="10" max="500" step="10"></div>
       </div>
@@ -206,6 +222,7 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
   <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
   <div class="mode-tab" onclick="setMode('tsweep')">T Sweep</div>
   <div class="mode-tab" onclick="setMode('csweep')">Composition Sweep</div>
+  <div class="mode-tab" onclick="setMode('datalab')">Data Lab</div>
 </div>
 
 <!-- SINGLE RUN -->
@@ -265,6 +282,76 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
           <span class="progress-text" id="cswProgText">Ready</span>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA LAB -->
+<div class="mode-section" id="modeDatalab">
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">LAB</span><span class="sname">Layer Sweep (Surface Energy)</span></div>
+    <div class="panel-body">
+      <div class="note"><b>Method:</b> Run the simulation at different slab thicknesses (cells z). Record energy/atom &times; natom = total energy. Plot total energy vs number of layers (N_layers = 4&times;ncz + 1). Linear regression gives y-intercept = residual energy &asymp; 2&times; surface energy.</div>
+      <div class="dl-controls">
+        <div class="sweep-item"><label>&Delta;&mu; (eV)</label><input type="number" id="dlDmu" value="0.0" step="0.1"></div>
+        <div class="sweep-item"><label>MC species (GC)</label><input type="number" id="dlMCgc" value="0" min="0" max="200" step="10"></div>
+        <div class="sweep-item"><label>ncz min</label><input type="number" id="dlNczMin" value="2" min="2" max="5"></div>
+        <div class="sweep-item"><label>ncz max</label><input type="number" id="dlNczMax" value="6" min="3" max="8"></div>
+      </div>
+      <div class="dl-controls" style="grid-template-columns:1fr 1fr">
+        <div class="sweep-item"><label>Loops/point</label><input type="number" id="dlLoops" value="100" min="20" max="300"></div>
+        <div class="sweep-item"><label>ncx / ncy</label><input type="number" id="dlNcxy" value="3" min="1" max="4"></div>
+      </div>
+      <div class="controls">
+        <button onclick="runLayerSweep()">&#9654; Run Layer Sweep</button>
+        <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="dlProgFill"></div></div>
+          <span class="progress-text" id="dlProgText">Ready</span>
+        </div>
+      </div>
+
+      <!-- Layer sweep data table -->
+      <table class="data-table" id="dlTable">
+        <thead><tr>
+          <th>ncz</th><th>N_layers</th><th>natom</th><th>E/atom (eV)</th><th>E_total (eV)</th>
+        </tr></thead>
+        <tbody id="dlTableBody">
+          <tr><td colspan="5" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run the layer sweep.</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="addLayerRow()">+ Add row</button>
+        <button onclick="recalcLayerFit()">Recalculate fit</button>
+        <button onclick="clearLayerTable()" class="danger">Clear table</button>
+      </div>
+
+      <!-- Fit result -->
+      <div class="fit-result" id="dlFitResult" style="display:none">
+        <div class="fit-label">Surface Energy (from y-intercept / 2)</div>
+        <div class="fit-value" id="dlSurfEVal">&mdash;</div>
+        <div class="fit-detail" id="dlFitDetail">y = mx + b, R&sup2; = &mdash;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-mu surface energy collection -->
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">COLLECT</span><span class="sname">Multi-&mu; Surface Energy</span></div>
+    <div class="panel-body">
+      <div class="note"><b>Goal:</b> Repeat the layer sweep at different chemical potentials (&Delta;&mu;). Record each surface energy to see how it varies with Ge content.</div>
+      <div class="controls">
+        <button onclick="recordSurfaceEnergy()">Record current &rarr;</button>
+        <button onclick="clearSurfaceEnergyTable()" class="danger">Clear table</button>
+      </div>
+      <table class="data-table" id="dlSurfTable">
+        <thead><tr>
+          <th>&Delta;&mu; (eV)</th><th>Surface Energy (eV)</th><th>Ge Fraction</th>
+        </tr></thead>
+        <tbody id="dlSurfTableBody">
+          <tr><td colspan="3" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run layer sweeps at different &Delta;&mu; and click &ldquo;Record current&rdquo;.</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -340,6 +427,30 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
     <div class="dash-card">
       <div class="card-label">Lattice Constant vs Ge Fraction</div>
       <div class="chart-wrap tall"><canvas id="cswLatChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA LAB DASHBOARD -->
+<div class="dashboard" id="datalabDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Total Energy vs Number of Layers</div>
+      <div class="chart-wrap tall"><canvas id="dlLayerChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Ge Distribution (latest run)</div>
+      <div class="chart-wrap tall"><canvas id="dlGeLayerChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Energy vs &Delta;&mu;</div>
+      <div class="chart-wrap tall"><canvas id="dlSurfEnergyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Surface Energy vs Ge Fraction</div>
+      <div class="chart-wrap tall"><canvas id="dlSurfGeChart"></canvas></div>
     </div>
   </div>
 </div>
@@ -867,7 +978,7 @@ function togglePanel(id) {
 
 /* ── Mode tabs ── */
 function setMode(m) {
-  const modes = ['single', 'tsweep', 'csweep'];
+  const modes = ['single', 'tsweep', 'csweep', 'datalab'];
   modes.forEach(md => {
     const el = document.getElementById('mode' + md.charAt(0).toUpperCase() + md.slice(1));
     if (el) el.classList.toggle('active', md === m);
@@ -876,6 +987,12 @@ function setMode(m) {
   document.getElementById('tswDash').style.display = m === 'tsweep' ? '' : 'none';
   document.getElementById('cswDash').style.display = m === 'csweep' ? '' : 'none';
   document.getElementById('mainDash').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('datalabDash').style.display = m === 'datalab' ? '' : 'none';
+  // Sync Data Lab fields from main params
+  if (m === 'datalab') {
+    document.getElementById('dlDmu').value = document.getElementById('pDmu').value;
+    document.getElementById('dlMCgc').value = document.getElementById('pMCgc').value;
+  }
 }
 
 /* ── Atom count update ── */
@@ -1397,6 +1514,7 @@ function runSinglePoint(params) {
   return new Promise((resolve) => {
     const w = createWorker();
     let lastEnergy = 0, lastLayers = [];
+    let lastNatom = 0, lastNSi = 0, lastNGe = 0;
     let step = 0;
     const halfLoops = Math.floor(params.nloops / 2); // first half = equilibration
     const energies = [];
@@ -1404,6 +1522,7 @@ function runSinglePoint(params) {
     w.onmessage = function(e) {
       const msg = e.data;
       if (msg.type === 'init_done') {
+        lastNatom = msg.natom;
         step = 0;
         doStep();
       } else if (msg.type === 'update') {
@@ -1411,6 +1530,9 @@ function runSinglePoint(params) {
           energies.push(msg.energy);
         }
         lastLayers = msg.layers || [];
+        lastNatom = msg.natom || lastNatom;
+        lastNSi = msg.nSi || 0;
+        lastNGe = msg.nGe || 0;
         step++;
         if (step < params.nloops && !cancelled) {
           setTimeout(doStep, 2);
@@ -1418,7 +1540,7 @@ function runSinglePoint(params) {
           w.terminate();
           const avgE = energies.length > 0 ? energies.reduce((a,b)=>a+b,0)/energies.length : 0;
           const geSurf = lastLayers.length > 0 ? lastLayers[lastLayers.length-1].ge / Math.max(1, lastLayers[lastLayers.length-1].si + lastLayers[lastLayers.length-1].ge) : 0;
-          resolve({energy: avgE, geSurface: geSurf});
+          resolve({energy: avgE, geSurface: geSurf, natom: lastNatom, layers: lastLayers, nSi: lastNSi, nGe: lastNGe});
         }
       }
     };
@@ -1606,6 +1728,302 @@ function exportLogbook() {
   a.href = URL.createObjectURL(blob);
   a.download = 'md-tersoff-logbook.md';
   a.click();
+}
+
+/* ── Data Lab ── */
+let dlLayerChartInst = null, dlGeLayerChartInst = null;
+let dlSurfEnergyChartInst = null, dlSurfGeChartInst = null;
+let layerSweepData = []; // [{ncz, nLayers, natom, epa, etotal, layers}]
+let surfaceEnergyData = []; // [{dmu, surfaceEnergy, geFraction}]
+let lastLayerSweepGeFrac = 0; // Ge fraction from most recent layer sweep
+
+function fitLinear(data) {
+  // data = [{x, y}], returns {slope, intercept, r2}
+  const n = data.length;
+  if (n < 2) return {slope: 0, intercept: 0, r2: 0};
+  let sx = 0, sy = 0, sxx = 0, sxy = 0;
+  for (const p of data) { sx += p.x; sy += p.y; sxx += p.x * p.x; sxy += p.x * p.y; }
+  const denom = n * sxx - sx * sx;
+  if (Math.abs(denom) < 1e-20) return {slope: 0, intercept: sy / n, r2: 0};
+  const slope = (n * sxy - sx * sy) / denom;
+  const intercept = (sy - slope * sx) / n;
+  // R^2
+  const yMean = sy / n;
+  let ssTot = 0, ssRes = 0;
+  for (const p of data) {
+    ssTot += (p.y - yMean) * (p.y - yMean);
+    const yPred = slope * p.x + intercept;
+    ssRes += (p.y - yPred) * (p.y - yPred);
+  }
+  const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+  return {slope, intercept, r2};
+}
+
+async function runLayerSweep() {
+  if (running || sweepRunning) return;
+  sweepRunning = true;
+  cancelled = false;
+
+  const dmu = +document.getElementById('dlDmu').value;
+  const mcgc = +document.getElementById('dlMCgc').value;
+  const nczMin = +document.getElementById('dlNczMin').value;
+  const nczMax = +document.getElementById('dlNczMax').value;
+  const loops = +document.getElementById('dlLoops').value;
+  const ncxy = +document.getElementById('dlNcxy').value;
+
+  // Sync dmu and mcgc to main params for consistency
+  document.getElementById('pDmu').value = dmu;
+  document.getElementById('pMCgc').value = mcgc;
+
+  const baseP = getParams();
+  layerSweepData = [];
+  renderLayerTable();
+
+  const pts = nczMax - nczMin + 1;
+  for (let i = 0; i < pts; i++) {
+    if (cancelled) break;
+    const ncz = nczMin + i;
+    const nLayers = 4 * ncz + 1;
+    const natom = ncxy * ncxy * ncz * 16 + ncxy * ncxy * 4;
+
+    document.getElementById('dlProgText').textContent = 'ncz=' + ncz + ' (' + (i+1) + '/' + pts + ')';
+    document.getElementById('dlProgFill').style.width = ((i+1)/pts*100) + '%';
+
+    const result = await runSinglePoint({...baseP, ncx: ncxy, ncy: ncxy, ncz, nloops: loops, dmu, mcgc});
+    const epa = result.energy;
+    const etotal = epa * result.natom;
+
+    // Compute Ge fraction from layers
+    let totalGe = 0, totalAtoms = 0;
+    if (result.layers && result.layers.length > 0) {
+      for (const l of result.layers) { totalGe += l.ge; totalAtoms += l.si + l.ge; }
+    }
+    const geFrac = totalAtoms > 0 ? totalGe / totalAtoms : 0;
+    lastLayerSweepGeFrac = geFrac;
+
+    layerSweepData.push({ncz, nLayers, natom: result.natom, epa, etotal, layers: result.layers || [], geFrac});
+    renderLayerTable();
+    updateLayerPlot();
+    updateGeLayerPlot(result.layers || []);
+  }
+
+  sweepRunning = false;
+  document.getElementById('dlProgText').textContent = cancelled ? 'Cancelled' : 'Complete';
+  if (!cancelled && layerSweepData.length >= 2) {
+    recalcLayerFit();
+  }
+}
+
+function renderLayerTable() {
+  const tbody = document.getElementById('dlTableBody');
+  if (layerSweepData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run the layer sweep.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = layerSweepData.map((d, i) =>
+    '<tr>' +
+    '<td>' + d.ncz + '</td>' +
+    '<td>' + d.nLayers + '</td>' +
+    '<td contenteditable="true" data-idx="' + i + '" data-field="natom">' + d.natom + '</td>' +
+    '<td contenteditable="true" data-idx="' + i + '" data-field="epa">' + d.epa.toFixed(4) + '</td>' +
+    '<td contenteditable="true" data-idx="' + i + '" data-field="etotal">' + d.etotal.toFixed(2) + '</td>' +
+    '</tr>'
+  ).join('');
+
+  // Add edit listeners
+  tbody.querySelectorAll('td[contenteditable]').forEach(td => {
+    td.addEventListener('blur', function() {
+      const idx = +this.dataset.idx;
+      const field = this.dataset.field;
+      const val = parseFloat(this.textContent);
+      if (!isNaN(val) && layerSweepData[idx]) {
+        layerSweepData[idx][field] = val;
+        // Recompute etotal if epa or natom changed
+        if (field === 'epa') {
+          layerSweepData[idx].etotal = val * layerSweepData[idx].natom;
+        } else if (field === 'natom') {
+          layerSweepData[idx].etotal = layerSweepData[idx].epa * val;
+        }
+      }
+    });
+  });
+}
+
+function addLayerRow() {
+  const lastNcz = layerSweepData.length > 0 ? layerSweepData[layerSweepData.length - 1].ncz + 1 : 2;
+  layerSweepData.push({ncz: lastNcz, nLayers: 4 * lastNcz + 1, natom: 0, epa: 0, etotal: 0, layers: [], geFrac: 0});
+  renderLayerTable();
+}
+
+function clearLayerTable() {
+  layerSweepData = [];
+  renderLayerTable();
+  if (dlLayerChartInst) { dlLayerChartInst.destroy(); dlLayerChartInst = null; }
+  if (dlGeLayerChartInst) { dlGeLayerChartInst.destroy(); dlGeLayerChartInst = null; }
+  document.getElementById('dlFitResult').style.display = 'none';
+}
+
+function recalcLayerFit() {
+  // Re-read table cells in case user edited them
+  const tbody = document.getElementById('dlTableBody');
+  const rows = tbody.querySelectorAll('tr');
+  rows.forEach((row, i) => {
+    if (i >= layerSweepData.length) return;
+    const cells = row.querySelectorAll('td[contenteditable]');
+    cells.forEach(td => {
+      const field = td.dataset.field;
+      const val = parseFloat(td.textContent);
+      if (!isNaN(val)) layerSweepData[i][field] = val;
+    });
+    // Recompute etotal from epa * natom
+    layerSweepData[i].etotal = layerSweepData[i].epa * layerSweepData[i].natom;
+  });
+
+  if (layerSweepData.length < 2) return;
+
+  const data = layerSweepData.map(d => ({x: d.nLayers, y: d.etotal}));
+  const fit = fitLinear(data);
+  const surfE = fit.intercept / 2;
+
+  document.getElementById('dlFitResult').style.display = '';
+  document.getElementById('dlSurfEVal').textContent = surfE.toFixed(4) + ' eV';
+  document.getElementById('dlFitDetail').textContent = 'y = ' + fit.slope.toFixed(4) + ' \u00d7 N + ' + fit.intercept.toFixed(4) + '  |  R\u00b2 = ' + fit.r2.toFixed(6) + '  |  intercept/2 = ' + surfE.toFixed(4) + ' eV';
+
+  updateLayerPlot();
+  renderLayerTable();
+}
+
+function updateLayerPlot() {
+  if (dlLayerChartInst) dlLayerChartInst.destroy();
+  if (layerSweepData.length === 0) return;
+
+  const scatterData = layerSweepData.map(d => ({x: d.nLayers, y: d.etotal}));
+  const datasets = [{
+    type: 'scatter',
+    data: scatterData,
+    backgroundColor: '#ddb84d',
+    pointRadius: 6,
+    borderColor: '#a08020',
+    borderWidth: 1,
+    label: 'Data'
+  }];
+
+  // Add fit line if we have enough points
+  if (layerSweepData.length >= 2) {
+    const fit = fitLinear(scatterData);
+    const xMin = Math.min(...scatterData.map(d => d.x));
+    const xMax = Math.max(...scatterData.map(d => d.x));
+    const margin = (xMax - xMin) * 0.15 || 2;
+    datasets.push({
+      type: 'line',
+      data: [
+        {x: xMin - margin, y: fit.slope * (xMin - margin) + fit.intercept},
+        {x: xMax + margin, y: fit.slope * (xMax + margin) + fit.intercept}
+      ],
+      borderColor: 'rgba(221,136,68,0.6)',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      fill: false,
+      label: 'Linear fit'
+    });
+  }
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'N_layers (4\u00d7ncz + 1)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'E_total (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.plugins.legend = {display: true, labels: {color:'#7a9a7a', font:{family:'Space Mono',size:9}}};
+
+  dlLayerChartInst = new Chart(document.getElementById('dlLayerChart'), {
+    type: 'scatter',
+    data: { datasets },
+    options: opts
+  });
+}
+
+function updateGeLayerPlot(layers) {
+  if (dlGeLayerChartInst) dlGeLayerChartInst.destroy();
+  if (!layers || layers.length === 0) return;
+
+  const labels = layers.map((_, i) => 'L' + (i + 1));
+  const geFrac = layers.map(l => l.ge / Math.max(1, l.si + l.ge));
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.y.min = 0; opts.scales.y.max = 1;
+  opts.scales.x.title = {display:true, text:'Layer (bottom\u2192top)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Ge fraction', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  dlGeLayerChartInst = new Chart(document.getElementById('dlGeLayerChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{data: geFrac, backgroundColor:'rgba(221,136,68,0.6)', borderColor:'#dd8844', borderWidth:1, borderRadius:2}] },
+    options: opts
+  });
+}
+
+function recordSurfaceEnergy() {
+  const fitEl = document.getElementById('dlFitResult');
+  if (fitEl.style.display === 'none' || layerSweepData.length < 2) {
+    alert('Run a layer sweep first to compute a surface energy.');
+    return;
+  }
+
+  const data = layerSweepData.map(d => ({x: d.nLayers, y: d.etotal}));
+  const fit = fitLinear(data);
+  const surfE = fit.intercept / 2;
+  const dmu = +document.getElementById('dlDmu').value;
+
+  surfaceEnergyData.push({dmu, surfaceEnergy: surfE, geFraction: lastLayerSweepGeFrac});
+  renderSurfaceEnergyTable();
+  updateSurfaceEnergyPlots();
+}
+
+function renderSurfaceEnergyTable() {
+  const tbody = document.getElementById('dlSurfTableBody');
+  if (surfaceEnergyData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run layer sweeps at different \u0394\u03bc and click \u201cRecord current\u201d.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = surfaceEnergyData.map(d =>
+    '<tr><td>' + d.dmu.toFixed(2) + '</td><td>' + d.surfaceEnergy.toFixed(4) + '</td><td>' + d.geFraction.toFixed(3) + '</td></tr>'
+  ).join('');
+}
+
+function clearSurfaceEnergyTable() {
+  surfaceEnergyData = [];
+  renderSurfaceEnergyTable();
+  if (dlSurfEnergyChartInst) { dlSurfEnergyChartInst.destroy(); dlSurfEnergyChartInst = null; }
+  if (dlSurfGeChartInst) { dlSurfGeChartInst.destroy(); dlSurfGeChartInst = null; }
+}
+
+function updateSurfaceEnergyPlots() {
+  // Surface energy vs dmu
+  if (dlSurfEnergyChartInst) dlSurfEnergyChartInst.destroy();
+  if (dlSurfGeChartInst) dlSurfGeChartInst.destroy();
+
+  if (surfaceEnergyData.length === 0) return;
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.plugins.legend = {display: false};
+
+  const opts1 = JSON.parse(JSON.stringify(opts));
+  opts1.scales.x.title = {display:true, text:'\u0394\u03bc (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts1.scales.y.title = {display:true, text:'Surface Energy (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  dlSurfEnergyChartInst = new Chart(document.getElementById('dlSurfEnergyChart'), {
+    type: 'scatter',
+    data: { datasets: [{data: surfaceEnergyData.map(d => ({x: d.dmu, y: d.surfaceEnergy})), backgroundColor:'#ddb84d', pointRadius: 6, borderColor:'#a08020', borderWidth:1}] },
+    options: opts1
+  });
+
+  const opts2 = JSON.parse(JSON.stringify(opts));
+  opts2.scales.x.title = {display:true, text:'Ge Fraction', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts2.scales.y.title = {display:true, text:'Surface Energy (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  dlSurfGeChartInst = new Chart(document.getElementById('dlSurfGeChart'), {
+    type: 'scatter',
+    data: { datasets: [{data: surfaceEnergyData.map(d => ({x: d.geFraction, y: d.surfaceEnergy})), backgroundColor:'#dd8844', pointRadius: 6, borderColor:'#a06020', borderWidth:1}] },
+    options: opts2
+  });
 }
 
 // Initialize
