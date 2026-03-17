@@ -335,8 +335,8 @@ let xgScatterInst=null,zoneChartInst=null;
 const LEAGUE_DATA = {
   'Premier League': {
     country: 'England', color: '#6B5B95',
-    avgGoalsPerMatch: 2.76, avgXGPerMatch: 2.68, avgShotsPerMatch: 24.8,
-    conversionRate: 11.1, avgXGPerShot: 0.108,
+    avgGoalsPerMatch: 2.93, avgXGPerMatch: 3.10, avgShotsPerMatch: 27.2,
+    conversionRate: 11.9, avgXGPerShot: 0.114,
     teams: [
       {name:'Liverpool',xGF:77.2,xGA:32.1,gF:81,gA:29,shots:618,soT:219},
       {name:'Arsenal',xGF:72.5,xGA:34.8,gF:75,gA:31,shots:630,soT:210},
@@ -353,10 +353,10 @@ const LEAGUE_DATA = {
   },
   'La Liga': {
     country: 'Spain', color: '#FF6F61',
-    avgGoalsPerMatch: 2.62, avgXGPerMatch: 2.55, avgShotsPerMatch: 23.5,
-    conversionRate: 11.1, avgXGPerShot: 0.109,
+    avgGoalsPerMatch: 2.62, avgXGPerMatch: 2.65, avgShotsPerMatch: 24.6,
+    conversionRate: 10.7, avgXGPerShot: 0.108,
     teams: [
-      {name:'Barcelona',xGF:82.1,xGA:30.5,gF:90,gA:28,shots:680,soT:240},
+      {name:'Barcelona',xGF:95.0,xGA:30.5,gF:100,gA:28,shots:710,soT:255},
       {name:'Real Madrid',xGF:71.3,xGA:35.2,gF:76,gA:32,shots:620,soT:215},
       {name:'Atletico',xGF:58.7,xGA:32.8,gF:55,gA:30,shots:510,soT:170},
       {name:'Athletic Bilbao',xGF:55.2,xGA:38.4,gF:57,gA:36,shots:495,soT:165},
@@ -366,8 +366,8 @@ const LEAGUE_DATA = {
   },
   'Bundesliga': {
     country: 'Germany', color: '#88B04B',
-    avgGoalsPerMatch: 3.14, avgXGPerMatch: 3.02, avgShotsPerMatch: 25.2,
-    conversionRate: 12.5, avgXGPerShot: 0.120,
+    avgGoalsPerMatch: 3.14, avgXGPerMatch: 3.15, avgShotsPerMatch: 27.4,
+    conversionRate: 12.0, avgXGPerShot: 0.115,
     teams: [
       {name:'Bayern Munich',xGF:82.5,xGA:33.1,gF:87,gA:35,shots:650,soT:230},
       {name:'Leverkusen',xGF:68.7,xGA:36.5,gF:72,gA:34,shots:580,soT:200},
@@ -379,8 +379,8 @@ const LEAGUE_DATA = {
   },
   'Serie A': {
     country: 'Italy', color: '#009B77',
-    avgGoalsPerMatch: 2.68, avgXGPerMatch: 2.62, avgShotsPerMatch: 24.2,
-    conversionRate: 11.1, avgXGPerShot: 0.108,
+    avgGoalsPerMatch: 2.56, avgXGPerMatch: 2.60, avgShotsPerMatch: 25.4,
+    conversionRate: 10.1, avgXGPerShot: 0.102,
     teams: [
       {name:'Inter Milan',xGF:72.8,xGA:32.4,gF:76,gA:30,shots:610,soT:210},
       {name:'Napoli',xGF:68.5,xGA:35.8,gF:72,gA:33,shots:590,soT:195},
@@ -392,8 +392,8 @@ const LEAGUE_DATA = {
   },
   'Ligue 1': {
     country: 'France', color: '#DD4124',
-    avgGoalsPerMatch: 2.58, avgXGPerMatch: 2.50, avgShotsPerMatch: 23.8,
-    conversionRate: 10.8, avgXGPerShot: 0.105,
+    avgGoalsPerMatch: 2.96, avgXGPerMatch: 2.95, avgShotsPerMatch: 25.3,
+    conversionRate: 11.0, avgXGPerShot: 0.117,
     teams: [
       {name:'PSG',xGF:78.5,xGA:28.2,gF:82,gA:25,shots:660,soT:235},
       {name:'Monaco',xGF:58.2,xGA:40.1,gF:62,gA:38,shots:530,soT:175},
@@ -430,7 +430,8 @@ function calcXGLogistic(x,y){
   const angleRad=denom>0?Math.atan(7.32*distGL/denom):Math.PI/2;
   const angleDeg=angleRad*180/Math.PI;
   // Logistic: P = 1/(1+exp(-(b0+b1*angle+b2*dist+b3*angle*dist+b4*dist^2)))
-  const b0=-0.85,b1=0.21,b2=-0.08,b3=-0.005,b4=0.001;
+  // Calibrated to produce realistic xG: ~0.40 at 5m central, ~0.12 at 12m, ~0.03 at 25m
+  const b0=-1.20,b1=1.05,b2=-0.10,b3=-0.01,b4=0.0008;
   const logit=b0+b1*angleRad+b2*dm+b3*angleRad*dm+b4*dm*dm;
   let xg=1/(1+Math.exp(-logit));
   xg=Math.min(0.96,Math.max(0,xg));
