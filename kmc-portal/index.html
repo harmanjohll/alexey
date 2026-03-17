@@ -475,7 +475,8 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
         <div class="stat-item"><div class="stat-label">Class match</div><div class="stat-value sm" id="scaleClass" style="font-size:10px;color:#7dd87d">—</div></div>
       </div>
       <div style="font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:8px;line-height:1.6">
-        Reference: <span style="color:#7da0dd">Random β=0.5 α=0.5 z=1</span> · <span style="color:#7dd87d">EW β=0.25 α=0.5 z=2</span> · <span style="color:#f0b429">KPZ β=0.333 α=0.5 z=1.5</span>
+        1+1D: <span style="color:#7da0dd">Random β=0.5</span> · <span style="color:#7dd87d">EW β=0.25 α=0.5 z=2</span> · <span style="color:#f0b429">KPZ β=0.333 α=0.5 z=1.5</span><br>
+        2+1D: <span style="color:#7dd87d">EW β≈0 (log) z=2</span> · <span style="color:#f0b429">KPZ β≈0.24 α≈0.39 z≈1.61</span> · <span style="color:#dd8844">MBE β=0.25 α=1 z=4</span>
       </div>
     </div>
   </div>
@@ -2008,9 +2009,11 @@ function fitLogLogSlope(points) {
 function classifyUniversality(beta, alpha, z) {
   const el = document.getElementById('scaleClass');
   const classes = [
-    { name: 'Random deposition', b: 0.5, a: 0.5, z: 1 },
-    { name: 'Edwards-Wilkinson', b: 0.25, a: 0.5, z: 2 },
-    { name: 'KPZ', b: 0.333, a: 0.5, z: 1.5 }
+    { name: 'Random deposition (1+1D)', b: 0.5, a: 0.5, z: 1 },
+    { name: 'Edwards-Wilkinson (1+1D)', b: 0.25, a: 0.5, z: 2 },
+    { name: 'KPZ (1+1D)', b: 0.333, a: 0.5, z: 1.5 },
+    { name: 'KPZ (2+1D)', b: 0.24, a: 0.39, z: 1.61 },
+    { name: 'MBE/Mullins-Herring (2+1D)', b: 0.25, a: 1.0, z: 4 }
   ];
   if (beta === null) { el.textContent = '—'; return; }
   let best = null, bestDist = Infinity;
