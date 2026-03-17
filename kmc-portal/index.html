@@ -179,7 +179,7 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
         <div class="inv-card-num">CARD 02</div>
         <div class="inv-card-title">What is the growth universality class?</div>
         <div class="inv-card-q"><b>Question:</b> What is the roughness exponent &beta;?</div>
-        <div class="inv-card-method"><b>Method:</b> Long single run (5000+ iterations), read &beta; from the log-log fit. <b>Look for:</b> Compare &beta; to KPZ (0.24), EW (0.25), random (0.5).</div>
+        <div class="inv-card-method"><b>Method:</b> Long single run (5000+ iterations), use the fit range controls to select the growth regime, read &beta; from the log-log fit. <b>Look for:</b> Compare &beta; to KPZ (0.333), EW (0.25), random (0.5). Run at multiple lattice sizes L to measure &alpha; and z.</div>
         <div class="inv-btns">
           <button onclick="runInvCard2()">Run this investigation &rarr;</button>
         </div>
@@ -376,6 +376,10 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
         <button class="sm active" id="logLinBtn" onclick="setLogMode('linear')">log₁₀ linear</button>
         <button class="sm" id="logScaleBtn" onclick="setLogMode('logscale')">log-scale axes</button>
         <span class="beta-display" id="betaDisp">β = —</span>
+        <span style="font-size:9px;color:#4a6a4a;margin-left:8px">fit range:</span>
+        <input type="number" id="fitMin" value="10" min="1" style="width:50px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
+        <span style="font-size:9px;color:#4a6a4a">to</span>
+        <input type="number" id="fitMax" value="10000" min="10" style="width:60px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
       </div>
       <div class="chart-wrap"><canvas id="roughnessChart"></canvas></div>
     </div>
@@ -406,6 +410,74 @@ button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
     <div class="dash-card">
       <div class="card-label">Concentration Profile — Ge fraction vs depth</div>
       <div class="chart-wrap"><canvas id="concChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 5: Pit Analysis -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Pit Analysis</span>
+        <span style="font-size:9px;color:#4a6a4a;margin-left:8px">threshold:</span>
+        <input type="number" id="pitThreshold" value="0.5" min="0.05" max="2.0" step="0.05" style="width:55px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
+        <span style="font-size:9px;color:#4a6a4a">× range below mean</span>
+        <button class="sm" onclick="updatePitAnalysis()" style="margin-left:8px">Refresh</button>
+      </div>
+      <div class="stat-grid four" id="pitStats">
+        <div class="stat-item"><div class="stat-label">Pit Count</div><div class="stat-value sm" id="pitCount">—</div></div>
+        <div class="stat-item"><div class="stat-label">Avg Pit Width</div><div class="stat-value sm" id="pitAvgW">—</div></div>
+        <div class="stat-item"><div class="stat-label">Max Pit Width</div><div class="stat-value sm" id="pitMaxW">—</div></div>
+        <div class="stat-item"><div class="stat-label">Avg Pit Depth</div><div class="stat-value sm" id="pitAvgD">—</div></div>
+        <div class="stat-item"><div class="stat-label">Max Pit Depth</div><div class="stat-value sm" id="pitMaxD">—</div></div>
+        <div class="stat-item"><div class="stat-label">Pit Coverage</div><div class="stat-value sm" id="pitCoverage">—</div></div>
+        <div class="stat-item"><div class="stat-label">Cutoff Height</div><div class="stat-value sm" id="pitCutoff">—</div></div>
+        <div class="stat-item"><div class="stat-label">Mean Height</div><div class="stat-value sm" id="pitMeanH">—</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Pit Width Distribution</div>
+      <div class="chart-wrap"><canvas id="pitHistChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 6: Pit-highlighted surface + Scaling Exponents -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Profile with Pits Highlighted</div>
+      <div class="chart-wrap"><canvas id="pitSurfaceChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Family-Vicsek Scaling Exponents</span>
+        <button class="sm" onclick="autoRecordScaling()">Auto-record current run</button>
+        <button class="sm danger" onclick="clearScalingData()">Clear data</button>
+      </div>
+      <div style="margin-bottom:10px">
+        <table class="events-table" id="scalingTable">
+          <tr><th>L (lattx)</th><th style="text-align:right">w_sat (RMS)</th><th style="text-align:right">t_x (iter)</th><th></th></tr>
+        </table>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace">Manual add:</span>
+          <input type="number" id="scaleL" placeholder="L" style="width:60px;font-size:10px;padding:2px 4px">
+          <input type="number" id="scaleWsat" placeholder="w_sat" step="0.001" style="width:70px;font-size:10px;padding:2px 4px">
+          <input type="number" id="scaleTx" placeholder="t_x" style="width:60px;font-size:10px;padding:2px 4px">
+          <button class="sm" onclick="addScalingEntry()">Add</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="height:140px;position:relative"><canvas id="alphaChart"></canvas></div>
+        <div style="height:140px;position:relative"><canvas id="zChart"></canvas></div>
+      </div>
+      <div class="stat-grid four" id="scalingStats">
+        <div class="stat-item"><div class="stat-label">β (growth)</div><div class="stat-value sm" id="scaleBeta" style="color:#f0b429">—</div></div>
+        <div class="stat-item"><div class="stat-label">α (roughness)</div><div class="stat-value sm" id="scaleAlpha" style="color:#7da0dd">—</div></div>
+        <div class="stat-item"><div class="stat-label">z = α/β (dynamic)</div><div class="stat-value sm" id="scaleZ" style="color:#e24b4a">—</div></div>
+        <div class="stat-item"><div class="stat-label">Class match</div><div class="stat-value sm" id="scaleClass" style="font-size:10px;color:#7dd87d">—</div></div>
+      </div>
+      <div style="font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:8px;line-height:1.6">
+        1+1D: <span style="color:#7da0dd">Random β=0.5</span> · <span style="color:#7dd87d">EW β=0.25 α=0.5 z=2</span> · <span style="color:#f0b429">KPZ β=0.333 α=0.5 z=1.5</span><br>
+        2+1D: <span style="color:#7dd87d">EW β≈0 (log) z=2</span> · <span style="color:#f0b429">KPZ β≈0.24 α≈0.39 z≈1.61</span> · <span style="color:#dd8844">MBE β=0.25 α=1 z=4</span>
+      </div>
     </div>
   </div>
 </div>
@@ -805,6 +877,9 @@ self.onmessage = function(e) {
 let worker = null, running = false, pausedState = false;
 let roughnessChart = null, heightChart = null, surfaceChart = null, concChart = null;
 let statsChart = null, histChart = null;
+let pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = null;
+let scalingData = JSON.parse(localStorage.getItem('alexey_kmc_scaling') || '[]');
+let lastFullHt = null;
 let roughnessData = [], heightData = [];
 let rmsHistory = [], skewHistory = [], kurtHistory = [];
 let logMode = 'linear'; // 'linear' = log10 values on linear axes, 'logscale' = Chart.js log axes
@@ -849,7 +924,7 @@ function initCharts() {
   }
   // Add regression line dataset + universality class reference lines
   roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
-  roughnessChart.data.datasets.push({ label:'β_KPZ=0.24', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_KPZ=0.333', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'β_EW=0.25', data:[], borderColor:'rgba(125,221,125,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'β_rand=0.5', data:[], borderColor:'rgba(226,75,74,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
@@ -885,16 +960,46 @@ function initCharts() {
     data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(60,160,60,0.5)', borderWidth:0, borderRadius:2 }] },
     options: hOpts
   });
+
+  // Pit width histogram
+  const phOpts = JSON.parse(JSON.stringify(chartDefaults));
+  phOpts.scales.x.title = { display:true, text:'pit width (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  phOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitHistChart = new Chart(document.getElementById('pitHistChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(226,75,74,0.5)', borderWidth:0, borderRadius:2 }] },
+    options: phOpts
+  });
+
+  // Pit-highlighted surface profile
+  const psOpts = JSON.parse(JSON.stringify(chartDefaults));
+  psOpts.scales.x.title = { display:true, text:'x', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  psOpts.scales.y.title = { display:true, text:'height', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitSurfaceChart = new Chart(document.getElementById('pitSurfaceChart'), {
+    type:'line',
+    data:{ labels:[], datasets:[
+      { label:'surface', data:[], borderColor:'#7dd87d', borderWidth:1, pointRadius:0, fill:false },
+      { label:'pits', data:[], borderColor:'rgba(226,75,74,0.8)', backgroundColor:'rgba(226,75,74,0.25)', borderWidth:1, pointRadius:0, fill:true },
+      { label:'threshold', data:[], borderColor:'rgba(240,180,41,0.6)', borderWidth:1, borderDash:[6,4], pointRadius:0, fill:false }
+    ]},
+    options: { ...psOpts, plugins: { ...psOpts.plugins, legend: { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} } } }
+  });
+
+  // Scaling exponent charts (alpha, z)
+  initScalingCharts();
 }
 
 function destroyCharts() {
-  [roughnessChart, heightChart, surfaceChart, concChart, statsChart, histChart].forEach(c => { if(c) c.destroy(); });
-  roughnessChart = heightChart = surfaceChart = concChart = statsChart = histChart = null;
+  [roughnessChart, heightChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitSurfaceChart, alphaChart, zChart].forEach(c => { if(c) c.destroy(); });
+  roughnessChart = heightChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitSurfaceChart = alphaChart = zChart = null;
 }
 
 // Power-law regression on log-log data
-function fitPowerLaw(data) {
-  const valid = data.filter(d => d.x > 0 && d.y > 0);
+function fitPowerLaw(data, xMin, xMax) {
+  let valid = data.filter(d => d.x > 0 && d.y > 0);
+  if (xMin !== undefined && xMax !== undefined) {
+    valid = valid.filter(d => d.x >= xMin && d.x <= xMax);
+  }
   if (valid.length < 3) return null;
   const logD = valid.map(d => ({ x: Math.log10(d.x), y: Math.log10(d.y) }));
   const n = logD.length;
@@ -907,9 +1012,35 @@ function fitPowerLaw(data) {
   return { beta, intercept };
 }
 
+function refitBeta() {
+  if (!roughnessChart || roughnessData.length < 3) return;
+  const fitMinVal = +document.getElementById('fitMin').value || 1;
+  const fitMaxVal = +document.getElementById('fitMax').value || Infinity;
+  const fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
+  const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x: Math.log10(p.x), y: Math.log10(p.y) }));
+  if (logMode === 'linear') {
+    if (fit && logData.length > 0) {
+      const xMin = logData[0].x, xMax = logData[logData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:xMin,y:fit.intercept+fit.beta*xMin},{x:xMax,y:fit.intercept+fit.beta*xMax}];
+    } else {
+      roughnessChart.data.datasets[1].data = [];
+    }
+  } else {
+    if (fit && roughnessData.length > 0) {
+      const xMin = roughnessData[0].x, xMax = roughnessData[roughnessData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:xMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMin))},{x:xMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMax))}];
+    } else {
+      roughnessChart.data.datasets[1].data = [];
+    }
+  }
+  addUniversalityLines(fit, logData, roughnessData);
+  roughnessChart.update();
+  document.getElementById('betaDisp').textContent = fit ? `β = ${fit.beta.toFixed(4)}` : 'β = —';
+}
+
 function addUniversalityLines(fit, logData, rawData) {
-  // Reference lines: KPZ (0.24), EW (0.25), random (0.5)
-  const refBetas = [0.24, 0.25, 0.5];
+  // Reference lines: KPZ (0.333), EW (0.25), random (0.5)
+  const refBetas = [0.333, 0.25, 0.5];
   if (!fit || !logData || logData.length < 2) {
     for (let k = 0; k < 3; k++) roughnessChart.data.datasets[2 + k].data = [];
     return;
@@ -937,7 +1068,9 @@ function addUniversalityLines(fit, logData, rawData) {
 function updateCharts(d) {
   // Roughness
   roughnessData.push({ x: d.iter, y: d.rmsht });
-  const fit = fitPowerLaw(roughnessData);
+  const fitMinVal = +document.getElementById('fitMin').value || 1;
+  const fitMaxVal = +document.getElementById('fitMax').value || Infinity;
+  const fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
   if (logMode === 'linear') {
     const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x: Math.log10(p.x), y: Math.log10(p.y) }));
     roughnessChart.data.datasets[0].data = logData;
@@ -990,6 +1123,8 @@ function updateCharts(d) {
   concChart.data.labels = d.concZ;
   concChart.data.datasets[0].data = d.concGe;
   concChart.update();
+
+  // Pit analysis is triggered from worker.onmessage after renderHeightMap sets lastHtRaw
 }
 
 function setLogMode(mode) {
@@ -1004,12 +1139,14 @@ function setLogMode(mode) {
     roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
   }
   roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
-  roughnessChart.data.datasets.push({ label:'β_KPZ=0.24', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
+  roughnessChart.data.datasets.push({ label:'β_KPZ=0.333', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'β_EW=0.25', data:[], borderColor:'rgba(125,221,125,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'β_rand=0.5', data:[], borderColor:'rgba(226,75,74,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
   // Replay data
-  const fit = fitPowerLaw(roughnessData);
+  const fitMinVal = +document.getElementById('fitMin').value || 1;
+  const fitMaxVal = +document.getElementById('fitMax').value || Infinity;
+  const fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
   const logData = roughnessData.filter(p => p.x > 0 && p.y > 0).map(p => ({ x:Math.log10(p.x), y:Math.log10(p.y) }));
   if (logMode === 'linear') {
     roughnessChart.data.datasets[0].data = logData;
@@ -1211,7 +1348,10 @@ function startSim() {
 
       updateCharts(d);
       renderLattice(d.sliceData, d.sliceH, params.lattx);
-      if (d.htRaw) renderHeightMap(d.htRaw, params.lattx);
+      if (d.htRaw) {
+        renderHeightMap(d.htRaw, params.lattx);
+        if (lastHtRaw) { lastFullHt = Array.from(lastHtRaw); updatePitAnalysis(); }
+      }
 
       if (d.isSnapshot) {
         addSnapshotFromCanvas(document.getElementById('latticeCanvas'), d);
@@ -1253,7 +1393,7 @@ function resetSim() {
   if (worker) { worker.postMessage({ type: 'cancel' }); worker.terminate(); worker = null; }
   running = false; pausedState = false;
   roughnessData = []; heightData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
-  lastSliceData = null; lastSliceH = 0;
+  lastSliceData = null; lastSliceH = 0; lastFullHt = null;
   destroyCharts(); initCharts();
   document.getElementById('runBtn').disabled = false;
   document.getElementById('pauseBtn').disabled = true;
@@ -1262,7 +1402,7 @@ function resetSim() {
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('progText').textContent = 'Ready';
   document.getElementById('betaDisp').textContent = 'β = —';
-  ['stIter','stAveht','stRms','stStd','stSkew','stKurt','stRange','stWidth'].forEach(id => document.getElementById(id).textContent = '—');
+  ['stIter','stAveht','stRms','stStd','stSkew','stKurt','stRange','stWidth','pitCount','pitAvgW','pitMaxW','pitAvgD','pitMaxD','pitCoverage','pitCutoff','pitMeanH'].forEach(id => document.getElementById(id).textContent = '—');
   ['evDes','evGeD','evSiD','evSdf','evBdf'].forEach(id => document.getElementById(id).textContent = '0');
   setInputsEnabled(true);
   document.getElementById('latticeCanvas').getContext('2d').clearRect(0, 0, 1000, 150);
@@ -1582,6 +1722,308 @@ function exportLogbook() {
   a.href = URL.createObjectURL(blob);
   a.download = 'kmc-logbook.md';
   a.click();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PIT ANALYSIS
+   ═══════════════════════════════════════════════════════════════ */
+function analyzePits(htArray, threshold) {
+  const n = htArray.length;
+  let sum = 0;
+  for (let i = 0; i < n; i++) sum += htArray[i];
+  const mean = sum / n;
+
+  let hMin = Infinity, hMax = -Infinity;
+  for (let i = 0; i < n; i++) {
+    if (htArray[i] < hMin) hMin = htArray[i];
+    if (htArray[i] > hMax) hMax = htArray[i];
+  }
+  const range = hMax - hMin;
+  if (range === 0) return { pits: [], cutoff: mean, mean, range: 0 };
+  const cutoff = mean - threshold * range;
+
+  const pits = [];
+  let inPit = false, pitStart = 0, pitMinH = Infinity;
+  for (let i = 0; i < n; i++) {
+    if (htArray[i] < cutoff) {
+      if (!inPit) { inPit = true; pitStart = i; pitMinH = htArray[i]; }
+      if (htArray[i] < pitMinH) pitMinH = htArray[i];
+    } else {
+      if (inPit) {
+        pits.push({ start: pitStart, width: i - pitStart, depth: mean - pitMinH });
+        inPit = false;
+      }
+    }
+  }
+  if (inPit) pits.push({ start: pitStart, width: n - pitStart, depth: mean - pitMinH });
+
+  return { pits, cutoff, mean, range };
+}
+
+function updatePitAnalysis() {
+  if (!lastFullHt || lastFullHt.length === 0) return;
+  const threshold = +document.getElementById('pitThreshold').value || 0.5;
+  const result = analyzePits(lastFullHt, threshold);
+  const pits = result.pits;
+
+  // Stats
+  document.getElementById('pitCount').textContent = pits.length;
+  if (pits.length > 0) {
+    const avgW = pits.reduce((s, p) => s + p.width, 0) / pits.length;
+    const maxW = Math.max(...pits.map(p => p.width));
+    const avgD = pits.reduce((s, p) => s + p.depth, 0) / pits.length;
+    const maxD = Math.max(...pits.map(p => p.depth));
+    const totalPitSites = pits.reduce((s, p) => s + p.width, 0);
+    document.getElementById('pitAvgW').textContent = avgW.toFixed(1);
+    document.getElementById('pitMaxW').textContent = maxW;
+    document.getElementById('pitAvgD').textContent = avgD.toFixed(2);
+    document.getElementById('pitMaxD').textContent = maxD.toFixed(2);
+    document.getElementById('pitCoverage').textContent = ((totalPitSites / lastFullHt.length) * 100).toFixed(1) + '%';
+  } else {
+    ['pitAvgW','pitMaxW','pitAvgD','pitMaxD','pitCoverage'].forEach(id => document.getElementById(id).textContent = '—');
+  }
+  document.getElementById('pitCutoff').textContent = result.cutoff.toFixed(1);
+  document.getElementById('pitMeanH').textContent = result.mean.toFixed(1);
+
+  // Pit width histogram
+  if (pitHistChart && pits.length > 0) {
+    const widths = pits.map(p => p.width);
+    const maxW = Math.max(...widths);
+    const nBins = Math.min(20, maxW);
+    const binW = Math.max(1, Math.ceil(maxW / nBins));
+    const bins = new Array(nBins).fill(0);
+    const labels = [];
+    for (let b = 0; b < nBins; b++) {
+      const lo = b * binW + 1;
+      const hi = (b + 1) * binW;
+      labels.push(lo === hi ? '' + lo : lo + '-' + hi);
+    }
+    widths.forEach(w => {
+      const b = Math.min(nBins - 1, Math.floor((w - 1) / binW));
+      bins[b]++;
+    });
+    pitHistChart.data.labels = labels;
+    pitHistChart.data.datasets[0].data = bins;
+    pitHistChart.update();
+  } else if (pitHistChart) {
+    pitHistChart.data.labels = [];
+    pitHistChart.data.datasets[0].data = [];
+    pitHistChart.update();
+  }
+
+  // Pit-highlighted surface profile
+  if (pitSurfaceChart) {
+    const step = Math.max(1, Math.floor(lastFullHt.length / 500));
+    const xs = [], surfY = [], pitY = [], threshY = [];
+    // Build pit mask
+    const isPit = new Uint8Array(lastFullHt.length);
+    pits.forEach(p => { for (let i = p.start; i < p.start + p.width && i < lastFullHt.length; i++) isPit[i] = 1; });
+
+    for (let x = 0; x < lastFullHt.length; x += step) {
+      xs.push(x);
+      surfY.push(lastFullHt[x]);
+      pitY.push(isPit[x] ? lastFullHt[x] : null);
+      threshY.push(result.cutoff);
+    }
+    pitSurfaceChart.data.labels = xs;
+    pitSurfaceChart.data.datasets[0].data = surfY;
+    pitSurfaceChart.data.datasets[1].data = pitY;
+    pitSurfaceChart.data.datasets[2].data = threshY;
+    pitSurfaceChart.options.plugins.annotation = undefined;
+    pitSurfaceChart.update();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FAMILY-VICSEK SCALING EXPONENTS
+   ═══════════════════════════════════════════════════════════════ */
+function initScalingCharts() {
+  if (alphaChart) alphaChart.destroy();
+  if (zChart) zChart.destroy();
+  const aOpts = JSON.parse(JSON.stringify(chartDefaults));
+  aOpts.scales.x.title = { display:true, text:'log₁₀(L)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  aOpts.scales.y.title = { display:true, text:'log₁₀(w_sat)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  aOpts.plugins.legend = { display:false };
+  alphaChart = new Chart(document.getElementById('alphaChart'), {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'data', data:[], borderColor:'#7da0dd', backgroundColor:'#7da0dd', borderWidth:1.5, pointRadius:4, showLine:false },
+      { label:'fit', data:[], borderColor:'#7da0dd', borderWidth:1.5, borderDash:[5,3], pointRadius:0, showLine:true, fill:false }
+    ]},
+    options: aOpts
+  });
+  const zOpts = JSON.parse(JSON.stringify(chartDefaults));
+  zOpts.scales.x.title = { display:true, text:'log₁₀(L)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  zOpts.scales.y.title = { display:true, text:'log₁₀(t_x)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  zOpts.plugins.legend = { display:false };
+  zChart = new Chart(document.getElementById('zChart'), {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'data', data:[], borderColor:'#e24b4a', backgroundColor:'#e24b4a', borderWidth:1.5, pointRadius:4, showLine:false },
+      { label:'fit', data:[], borderColor:'#e24b4a', borderWidth:1.5, borderDash:[5,3], pointRadius:0, showLine:true, fill:false }
+    ]},
+    options: zOpts
+  });
+  renderScalingTable();
+  updateScalingPlots();
+}
+
+function renderScalingTable() {
+  const tbl = document.getElementById('scalingTable');
+  let html = '<tr><th>L (lattx)</th><th style="text-align:right">w_sat (RMS)</th><th style="text-align:right">t_x (iter)</th><th></th></tr>';
+  scalingData.forEach((row, i) => {
+    html += `<tr><td class="num">${row.L}</td><td class="num">${row.wsat.toFixed(4)}</td><td class="num">${row.tx}</td><td><button class="sm danger" onclick="removeScalingEntry(${i})" style="padding:2px 6px;font-size:9px">&times;</button></td></tr>`;
+  });
+  tbl.innerHTML = html;
+}
+
+function addScalingEntry() {
+  const L = +document.getElementById('scaleL').value;
+  const wsat = +document.getElementById('scaleWsat').value;
+  const tx = +document.getElementById('scaleTx').value;
+  if (!L || !wsat || !tx) return;
+  scalingData.push({ L, wsat, tx });
+  localStorage.setItem('alexey_kmc_scaling', JSON.stringify(scalingData));
+  renderScalingTable();
+  updateScalingPlots();
+  document.getElementById('scaleL').value = '';
+  document.getElementById('scaleWsat').value = '';
+  document.getElementById('scaleTx').value = '';
+}
+
+function removeScalingEntry(idx) {
+  scalingData.splice(idx, 1);
+  localStorage.setItem('alexey_kmc_scaling', JSON.stringify(scalingData));
+  renderScalingTable();
+  updateScalingPlots();
+}
+
+function clearScalingData() {
+  scalingData = [];
+  localStorage.setItem('alexey_kmc_scaling', '[]');
+  renderScalingTable();
+  updateScalingPlots();
+}
+
+function autoRecordScaling() {
+  if (roughnessData.length < 5) { alert('Run a simulation first'); return; }
+  const L = +document.getElementById('pLattx').value;
+
+  // w_sat = average RMS of last 20% of data
+  const n = roughnessData.length;
+  const startIdx = Math.floor(n * 0.8);
+  let sumRms = 0;
+  for (let i = startIdx; i < n; i++) sumRms += roughnessData[i].y;
+  const wsat = sumRms / (n - startIdx);
+
+  // t_x = iteration where roughness reaches 90% of w_sat
+  const target = 0.9 * wsat;
+  let tx = roughnessData[roughnessData.length - 1].x; // default to last
+  for (let i = 0; i < n; i++) {
+    if (roughnessData[i].y >= target) { tx = roughnessData[i].x; break; }
+  }
+
+  scalingData.push({ L, wsat, tx });
+  localStorage.setItem('alexey_kmc_scaling', JSON.stringify(scalingData));
+  renderScalingTable();
+  updateScalingPlots();
+}
+
+function updateScalingPlots() {
+  if (!alphaChart || !zChart) return;
+
+  // Current beta from fit range
+  const fitMinVal = +document.getElementById('fitMin').value || 1;
+  const fitMaxVal = +document.getElementById('fitMax').value || Infinity;
+  const betaFit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
+  const betaVal = betaFit ? betaFit.beta : null;
+  document.getElementById('scaleBeta').textContent = betaVal !== null ? betaVal.toFixed(4) : '—';
+
+  if (scalingData.length < 2) {
+    alphaChart.data.datasets[0].data = [];
+    alphaChart.data.datasets[1].data = [];
+    alphaChart.update();
+    zChart.data.datasets[0].data = [];
+    zChart.data.datasets[1].data = [];
+    zChart.update();
+    document.getElementById('scaleAlpha').textContent = '—';
+    document.getElementById('scaleZ').textContent = '—';
+    document.getElementById('scaleClass').textContent = '—';
+    return;
+  }
+
+  // log-log w_sat vs L -> alpha
+  const alphaPoints = scalingData.map(d => ({ x: Math.log10(d.L), y: Math.log10(d.wsat) }));
+  alphaChart.data.datasets[0].data = alphaPoints;
+  const alphaFit = fitLogLogSlope(alphaPoints);
+  if (alphaFit) {
+    const xMin = Math.min(...alphaPoints.map(p => p.x));
+    const xMax = Math.max(...alphaPoints.map(p => p.x));
+    alphaChart.data.datasets[1].data = [
+      { x: xMin, y: alphaFit.intercept + alphaFit.slope * xMin },
+      { x: xMax, y: alphaFit.intercept + alphaFit.slope * xMax }
+    ];
+    document.getElementById('scaleAlpha').textContent = alphaFit.slope.toFixed(4);
+  } else {
+    alphaChart.data.datasets[1].data = [];
+    document.getElementById('scaleAlpha').textContent = '—';
+  }
+  alphaChart.update();
+
+  // log-log t_x vs L -> z
+  const zPoints = scalingData.map(d => ({ x: Math.log10(d.L), y: Math.log10(d.tx) }));
+  zChart.data.datasets[0].data = zPoints;
+  const zFit = fitLogLogSlope(zPoints);
+  if (zFit) {
+    const xMin = Math.min(...zPoints.map(p => p.x));
+    const xMax = Math.max(...zPoints.map(p => p.x));
+    zChart.data.datasets[1].data = [
+      { x: xMin, y: zFit.intercept + zFit.slope * xMin },
+      { x: xMax, y: zFit.intercept + zFit.slope * xMax }
+    ];
+    document.getElementById('scaleZ').textContent = zFit.slope.toFixed(4);
+  } else {
+    zChart.data.datasets[1].data = [];
+    document.getElementById('scaleZ').textContent = '—';
+  }
+  zChart.update();
+
+  // Classify universality class
+  const alpha = alphaFit ? alphaFit.slope : null;
+  const zVal = zFit ? zFit.slope : null;
+  classifyUniversality(betaVal, alpha, zVal);
+}
+
+function fitLogLogSlope(points) {
+  if (points.length < 2) return null;
+  const n = points.length;
+  let sx=0, sy=0, sxy=0, sxx=0;
+  for (let i = 0; i < n; i++) { sx += points[i].x; sy += points[i].y; sxy += points[i].x*points[i].y; sxx += points[i].x*points[i].x; }
+  const denom = n*sxx - sx*sx;
+  if (Math.abs(denom) < 1e-15) return null;
+  const slope = (n*sxy - sx*sy) / denom;
+  const intercept = (sy - slope*sx) / n;
+  return { slope, intercept };
+}
+
+function classifyUniversality(beta, alpha, z) {
+  const el = document.getElementById('scaleClass');
+  const classes = [
+    { name: 'Random deposition (1+1D)', b: 0.5, a: 0.5, z: 1 },
+    { name: 'Edwards-Wilkinson (1+1D)', b: 0.25, a: 0.5, z: 2 },
+    { name: 'KPZ (1+1D)', b: 0.333, a: 0.5, z: 1.5 },
+    { name: 'KPZ (2+1D)', b: 0.24, a: 0.39, z: 1.61 },
+    { name: 'MBE/Mullins-Herring (2+1D)', b: 0.25, a: 1.0, z: 4 }
+  ];
+  if (beta === null) { el.textContent = '—'; return; }
+  let best = null, bestDist = Infinity;
+  classes.forEach(c => {
+    let dist = Math.abs(beta - c.b);
+    if (alpha !== null) dist += Math.abs(alpha - c.a);
+    if (z !== null) dist += Math.abs(z - c.z) * 0.5;
+    if (dist < bestDist) { bestDist = dist; best = c; }
+  });
+  el.textContent = best ? best.name : '—';
 }
 
 // Initialize logbook panel collapsed

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Experiment 01 · xG Model · Alexey Mikhail Johll</title>
+<title>Experiment 01 &middot; xG Model &middot; Alexey Mikhail Johll</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -31,8 +31,10 @@ button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
 button:disabled{opacity:.35;cursor:not-allowed}
 button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
 button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+button.active{background:rgba(60,160,60,0.2);border-color:#3ca03c;color:#e8f0e8}
 .lab-grid{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start}
 canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block;cursor:crosshair}
+canvas#heatmapCanvas{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block}
 .sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
 .sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
 .sv.green{color:#7dd87d}
@@ -45,6 +47,7 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
 .brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
 .chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:230px;position:relative}
+.chart-wrap.tall{height:300px}
 .rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
 .rstat:last-child{border-bottom:none}
 .rl{font-size:11px;color:#7a9a7a}
@@ -65,7 +68,51 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
 .reply-sec{margin-top:12px;display:none}
 .nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
 .nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
-@media(max-width:680px){.lab-grid{grid-template-columns:1fr}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}canvas#pitch{max-width:100%;height:auto}}
+
+/* Mode buttons */
+.mode-btns{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.mode-btns button{font-size:10px;padding:6px 14px}
+
+/* Shot type selector */
+.shot-type-sel{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.shot-type-sel button{font-size:9px;padding:4px 10px}
+
+/* Model toggle */
+.model-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.model-toggle span{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
+
+/* League data styles */
+.league-section{display:none}
+.league-toggles{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.league-toggles button{font-size:9px;padding:5px 10px}
+.league-toggles button.sel{background:rgba(60,160,60,0.25);border-color:#3ca03c;color:#e8f0e8}
+.league-card{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:14px;margin-bottom:12px}
+.league-card h3{font-size:13px;font-family:'Space Mono',monospace;color:#7dd87d;margin-bottom:10px}
+.compare-table{width:100%;border-collapse:collapse;font-size:10px;font-family:'Space Mono',monospace}
+.compare-table th{text-align:left;color:#4a6a4a;padding:6px 8px;border-bottom:0.5px solid rgba(60,160,60,0.2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:9px}
+.compare-table td{padding:6px 8px;color:#e8f0e8;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.compare-table tr:hover td{background:rgba(60,160,60,0.04)}
+.team-row{cursor:pointer;transition:background .15s}
+.team-row:hover{background:rgba(60,160,60,0.08)!important}
+.team-row td:first-child{color:#7dd87d}
+.team-detail{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;margin-bottom:12px;display:none}
+.team-detail h4{font-size:12px;font-family:'Space Mono',monospace;color:#7dd87d;margin-bottom:8px}
+.team-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.team-stat{text-align:center}
+.team-stat .sv{font-size:18px;margin-bottom:2px}
+
+/* Heatmap section */
+.heatmap-section{display:none}
+.heatmap-legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.heatmap-legend .hbar{width:120px;height:8px;border-radius:4px}
+
+/* League colors */
+.lc-epl{color:#3d195b}.lc-liga{color:#ee8707}.lc-buli{color:#d20515}.lc-seria{color:#024494}.lc-l1{color:#dae025}.lc-champ{color:#ff6b00}
+
+/* Overperformance indicator */
+.overperf{color:#7dd87d}.underperf{color:#e24b4a}
+
+/* Logbook */
 .log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
 .log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
@@ -84,15 +131,34 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
 .logbook-add textarea:focus{outline:none;border-color:#3ca03c}
 .logbook-add textarea::placeholder{color:#4a6a4a}
 .logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+
+/* Shot zone comparison */
+.zone-bar{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.zone-label{font-size:9px;color:#7a9a7a;font-family:'Space Mono',monospace;width:110px;flex-shrink:0}
+.zone-fill{height:14px;border-radius:2px;transition:width .3s}
+.zone-pct{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;width:35px;text-align:right}
+
+/* Poisson overlay note */
+.poisson-note{font-size:10px;color:#4a6a4a;margin-top:6px;font-style:italic}
+
+@media(max-width:680px){
+  .lab-grid{grid-template-columns:1fr}
+  .res-grid{grid-template-columns:1fr}
+  .interp-grid{grid-template-columns:1fr}
+  .team-stats-grid{grid-template-columns:repeat(2,1fr)}
+  canvas#pitch{max-width:100%;height:auto}
+  canvas#heatmapCanvas{max-width:100%;height:auto}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-<a href="../index.html" class="nav-back">← portfolio home</a>
-<div class="exp-tag">ALEXEY MIKHAIL JOHLL · EXPERIMENT 01 OF 07 · COMPUTATIONAL STATISTICS</div>
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 01 OF 07 &middot; COMPUTATIONAL STATISTICS</div>
 <div class="exp-title">Where do goals come from?<br>The xG Model.</div>
-<div class="exp-sub">Professional clubs use Expected Goals (xG) — a probability assigned to every shot based on where it was taken from. You'll build a geometric model, place shots on a real pitch, run 500 Monte Carlo simulations, and discover what the data actually says about scoring.</div>
+<div class="exp-sub">Professional clubs use Expected Goals (xG) &mdash; a probability assigned to every shot based on where it was taken from. You'll build two models (geometric and logistic regression), place shots on a real pitch, run 500 Monte Carlo simulations, compare against real league data from six European leagues, and discover what the data actually says about scoring.</div>
 
+<!-- STEP 01 — HYPOTHESIS -->
 <div class="step" id="stepHyp">
   <div class="step-hdr">
     <span class="snum">step 01</span>
@@ -100,15 +166,16 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
     <span class="shint">Write your prediction before running anything</span>
   </div>
   <div class="sbody">
-    <div class="note"><b>Scientific method:</b> Before placing any shots, write down what you predict. Where do you think goals come from? What effect does angle vs distance have? Be specific — you'll compare this against what the model shows.</div>
-    <textarea id="hypText" placeholder="e.g. I predict that shots taken centrally and close to goal will have the highest xG because the angle to the goal is widest from there. Shots from the corners of the penalty box will score less even at the same distance because the angle becomes too narrow. I think past 20 metres the probability drops sharply..."></textarea>
+    <div class="note"><b>Scientific method:</b> Before placing any shots, write down what you predict. Where do you think goals come from? What effect does angle vs distance have? How do you think a simple geometric model compares to a logistic regression model trained on data? Be specific &mdash; you'll compare this against what the model shows.</div>
+    <textarea id="hypText" placeholder="e.g. I predict that shots taken centrally and close to goal will have the highest xG because the angle to the goal is widest from there. I think a logistic regression model will give lower xG values for long-range shots than a simple geometric model because real data shows those rarely go in. Headers probably convert less than foot shots..."></textarea>
     <div class="row">
       <span class="ts-label" id="hypTS"></span>
-      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin →</button>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
     </div>
   </div>
 </div>
 
+<!-- STEP 02 — THE LAB -->
 <div class="step" id="stepLab">
   <div class="step-hdr">
     <span class="snum">step 02</span>
@@ -116,37 +183,130 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
     <span class="shint" id="labHint">Lock your hypothesis first</span>
   </div>
   <div class="sbody">
-    <div class="lab-grid">
-      <div>
-        <canvas id="pitch" width="460" height="360"></canvas>
-        <div class="legend">
-          <span>low xG</span>
-          <div class="lgbar"></div>
-          <span>high xG</span>
-          <span style="margin-left:8px">— click pitch to place shots</span>
+    <!-- Mode buttons -->
+    <div class="mode-btns">
+      <button id="modeShots" class="active" onclick="setMode('shots')">Your Shots</button>
+      <button id="modeLeague" onclick="setMode('league')">League Data</button>
+      <button id="modeHeatmap" onclick="setMode('heatmap')">xG Heatmap</button>
+    </div>
+
+    <!-- === YOUR SHOTS MODE === -->
+    <div id="shotsSection">
+      <!-- Model toggle -->
+      <div class="model-toggle">
+        <span>xG model:</span>
+        <button id="modelA" class="active" onclick="setModel('geometric')">Model A (Geometric)</button>
+        <button id="modelB" onclick="setModel('logistic')">Model B (Logistic Regression)</button>
+      </div>
+      <!-- Shot type selector -->
+      <div class="shot-type-sel">
+        <span class="sl" style="margin-bottom:0;line-height:28px;margin-right:4px">shot type:</span>
+        <button id="stOpen" class="active" onclick="setShotType('open')">Open Play</button>
+        <button id="stHead" onclick="setShotType('header')">Header</button>
+        <button id="stFK" onclick="setShotType('freekick')">Free Kick</button>
+        <button id="stPen" onclick="setShotType('penalty')">Penalty</button>
+      </div>
+      <div class="lab-grid">
+        <div>
+          <canvas id="pitch" width="460" height="360"></canvas>
+          <div class="legend">
+            <span>low xG</span>
+            <div class="lgbar"></div>
+            <span>high xG</span>
+            <span style="margin-left:8px">&mdash; click pitch to place shots</span>
+          </div>
+        </div>
+        <div>
+          <div class="sl">xG at cursor (<span id="modelLabel">geometric</span>)</div>
+          <div class="sv green" id="hXG">&mdash;</div>
+          <div class="sl">angle to goal</div>
+          <div class="sv sm" id="hAng">&mdash;</div>
+          <div class="sl">distance</div>
+          <div class="sv sm" id="hDist">&mdash;</div>
+          <div class="sl" style="margin-top:4px">shots placed &middot; total xG</div>
+          <div class="sv sm" id="totXG" style="color:#e8f0e8">0 shots &middot; 0.000</div>
+          <div class="shot-log" id="shotLog">
+            <div class="sli" style="color:#4a6a4a">no shots placed yet</div>
+          </div>
+          <div class="brow">
+            <button id="simBtn" onclick="runMC()" disabled>Run 500 simulations &rarr;</button>
+            <button class="danger" onclick="clearShots()">Clear shots</button>
+          </div>
         </div>
       </div>
-      <div>
-        <div class="sl">xG at cursor</div>
-        <div class="sv green" id="hXG">—</div>
-        <div class="sl">angle to goal</div>
-        <div class="sv sm" id="hAng">—</div>
-        <div class="sl">distance</div>
-        <div class="sv sm" id="hDist">—</div>
-        <div class="sl" style="margin-top:4px">shots placed · total xG</div>
-        <div class="sv sm" id="totXG" style="color:#e8f0e8">0 shots · 0.000</div>
-        <div class="shot-log" id="shotLog">
-          <div class="sli" style="color:#4a6a4a">no shots placed yet</div>
+    </div>
+
+    <!-- === LEAGUE DATA MODE === -->
+    <div id="leagueSection" class="league-section">
+      <div class="note"><b>Real data:</b> These are aggregated statistics from six European leagues (2024-25 season). Select leagues to compare their xG patterns, shot distributions, and team-level overperformance. How does your model compare to what actually happens?</div>
+      <div class="league-toggles" id="leagueToggles"></div>
+
+      <!-- League comparison table -->
+      <div class="league-card" id="leagueCompCard" style="display:none">
+        <h3>League Comparison</h3>
+        <div style="overflow-x:auto">
+          <table class="compare-table" id="leagueCompTable">
+            <thead><tr><th>League</th><th>Avg Goals/Match</th><th>Avg xG/Match</th><th>Shots/Match</th><th>Conv. Rate</th><th>Avg xG/Shot</th></tr></thead>
+            <tbody id="leagueCompBody"></tbody>
+          </table>
         </div>
-        <div class="brow">
-          <button id="simBtn" onclick="runMC()" disabled>Run 500 simulations →</button>
-          <button class="danger" onclick="clearShots()">Clear shots</button>
+      </div>
+
+      <!-- xG Overperformance scatter -->
+      <div class="league-card" id="overPerfCard" style="display:none">
+        <h3>Goals vs xG &mdash; Who Overperforms?</h3>
+        <div class="chart-wrap tall"><canvas id="overPerfChart"></canvas></div>
+        <div style="font-size:10px;color:#4a6a4a;margin-top:6px">Teams above the diagonal score more than their xG predicts. Teams below underperform.</div>
+      </div>
+
+      <!-- Shot zone analysis -->
+      <div class="league-card" id="shotZoneCard" style="display:none">
+        <h3>Shot Zone Distribution</h3>
+        <div class="chart-wrap tall"><canvas id="shotZoneChart"></canvas></div>
+      </div>
+
+      <!-- Team deep-dive -->
+      <div class="league-card" id="teamDetailCard" style="display:none">
+        <h3 id="teamDetailTitle">Team Detail</h3>
+        <div class="team-stats-grid" id="teamDetailGrid"></div>
+        <div style="margin-top:12px">
+          <div class="sl">xG performance</div>
+          <div id="teamPerfNote" style="font-size:12px;color:#e8f0e8;margin-top:4px"></div>
         </div>
+      </div>
+
+      <!-- Teams table -->
+      <div class="league-card" id="teamsCard" style="display:none">
+        <h3>Teams &mdash; Click to Explore</h3>
+        <div style="overflow-x:auto">
+          <table class="compare-table" id="teamsTable">
+            <thead><tr><th>Team</th><th>League</th><th>xG For</th><th>Goals</th><th>+/-</th><th>xG Against</th><th>Goals Ag.</th><th>Shots</th></tr></thead>
+            <tbody id="teamsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- === HEATMAP MODE === -->
+    <div id="heatmapSection" class="heatmap-section">
+      <div class="note"><b>xG landscape:</b> This heatmap shows the probability of scoring from every point on the pitch. Toggle between the two models to see how they differ. The logistic regression model is fitted to real shot data.</div>
+      <div class="model-toggle" style="margin-bottom:12px">
+        <span>Heatmap model:</span>
+        <button id="hmModelA" class="active" onclick="setHeatmapModel('geometric')">Geometric</button>
+        <button id="hmModelB" onclick="setHeatmapModel('logistic')">Logistic Regression</button>
+      </div>
+      <canvas id="heatmapCanvas" width="460" height="360"></canvas>
+      <div class="heatmap-legend">
+        <span>0.00</span>
+        <div class="hbar" style="background:linear-gradient(to right,#0a0f0a,#1a3a6a,#4080ff,#ffcc00,#ff4444)"></div>
+        <span>0.50+</span>
+        <span style="margin-left:12px">xG probability at each point</span>
       </div>
     </div>
   </div>
 </div>
 
+<!-- STEP 03 — RESULTS -->
 <div class="step" id="stepRes" style="display:none">
   <div class="step-hdr">
     <span class="snum">step 03</span>
@@ -157,40 +317,52 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
     <div class="res-grid">
       <div>
         <div class="sl" style="margin-bottom:10px">goals per simulated match (500 runs)</div>
-        <div class="chart-wrap"><canvas id="mcChart"></canvas></div>
+        <div class="chart-wrap tall"><canvas id="mcChart"></canvas></div>
+        <div class="poisson-note" id="poissonNote"></div>
       </div>
       <div>
         <div class="sl" style="margin-bottom:12px">simulation summary</div>
-        <div class="rstat"><span class="rl">Expected xG (sum of shots)</span><span class="rv" id="rXG">—</span></div>
-        <div class="rstat"><span class="rl">Average goals per simulation</span><span class="rv" id="rAvg">—</span></div>
-        <div class="rstat"><span class="rl">Maximum goals in one run</span><span class="rv" id="rMax">—</span></div>
-        <div class="rstat"><span class="rl">Probability of 0 goals</span><span class="rv" id="rP0">—</span></div>
-        <div class="rstat"><span class="rl">Probability of 2+ goals</span><span class="rv" id="rP2">—</span></div>
-        <div class="model-note">This model uses geometry only — distance and shot angle. Real professional xG models also include: foot vs head, assisted vs solo, game state, and pressure from defenders. Your model captures the most important factors.</div>
+        <div class="rstat"><span class="rl">Expected xG (sum of shots)</span><span class="rv" id="rXG">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Average goals per simulation</span><span class="rv" id="rAvg">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Maximum goals in one run</span><span class="rv" id="rMax">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Probability of 0 goals</span><span class="rv" id="rP0">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Probability of 2+ goals</span><span class="rv" id="rP2">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Model used</span><span class="rv" id="rModel" style="font-size:11px">&mdash;</span></div>
+
+        <div class="sl" style="margin-top:14px;margin-bottom:8px">league context</div>
+        <div id="leagueContext" style="font-size:11px;color:#7a9a7a;line-height:1.6">
+          Run the simulation to see how your shots compare to real league data.
+        </div>
+
+        <div class="sl" style="margin-top:14px;margin-bottom:8px">your shot zones vs league average</div>
+        <div id="shotZoneComp"></div>
+
+        <div class="model-note">This xG model uses geometry and/or logistic regression based on distance and angle. Real professional xG models also include: foot vs head, assisted vs solo, game state, pressure from defenders, shot speed, and body position. Your model captures the most important spatial factors.</div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- STEP 04 — FINDINGS -->
 <div class="step" id="stepInterp">
   <div class="step-hdr">
     <span class="snum">step 04</span>
     <span class="sname">Your findings</span>
-    <span class="shint">Interpret the results — what do they actually mean?</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
   </div>
   <div class="sbody">
     <div class="interp-grid">
       <div>
         <div class="sl" style="margin-bottom:8px">your interpretation</div>
-        <textarea id="interpText" placeholder="What did the simulation show? Did it match your hypothesis? What surprised you? What patterns do you see in where goals come from? What are the limitations of this model — what does it NOT capture?"></textarea>
+        <textarea id="interpText" placeholder="What did the simulation show? Did it match your hypothesis? How did the two models differ? What surprised you about the league data? What patterns do you see in where goals come from? What are the limitations of this model?"></textarea>
         <div class="brow">
-          <button id="askBtn" onclick="askCoach()">Ask coach →</button>
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
         </div>
         <div class="thread" id="thread"></div>
         <div class="reply-sec" id="replySec">
           <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
           <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
-          <div class="brow"><button onclick="sendReply()">Send reply →</button></div>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
         </div>
       </div>
       <div>
@@ -198,7 +370,7 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
         <div class="ai-box">
           <div class="ai-lbl">Alexey's coach</div>
           <div class="ai-q" id="aiQ">
-            <span class="ai-ph">Write your interpretation and click "Ask coach" — your coach will challenge your thinking with one precise question.</span>
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
           </div>
         </div>
       </div>
@@ -206,6 +378,7 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
   </div>
 </div>
 
+<!-- LOGBOOK -->
 <div class="step" id="stepLog">
   <div class="step-hdr">
     <span class="snum">logbook</span>
@@ -234,207 +407,1013 @@ canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:bl
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-const cvs=document.getElementById('pitch'),ctx=cvs.getContext('2d');
-const W=460,H=360,SC=6.5;
-const GY=28,GX=W/2,GHW=Math.round(3.66*SC);
-const PY=GY+Math.round(11*SC),PBY2=GY+Math.round(16.5*SC),PBHW=Math.round(20.16*SC);
-const SYY2=GY+Math.round(5.5*SC),SYHW=Math.round(9.16*SC);
-const DRAD=Math.round(9.15*SC);
-let shots=[],locked=false,hx=null,hy=null,mcInst=null,convHist=[];
 
-function dp(){
-  for(let i=0;i<7;i++){ctx.fillStyle=i%2===0?'#061a0a':'#071e0c';ctx.fillRect(i*(W/7),0,Math.ceil(W/7)+1,H)}
-  ctx.lineWidth=1.2;ctx.strokeStyle='rgba(60,160,60,.35)';
-  ctx.strokeRect(10,GY,W-20,H-GY-8);
-  ctx.beginPath();ctx.moveTo(10,H/2);ctx.lineTo(W-10,H/2);ctx.stroke();
-  ctx.strokeRect(GX-PBHW,GY,PBHW*2,PBY2-GY);
-  ctx.strokeRect(GX-SYHW,GY,SYHW*2,SYY2-GY);
-  ctx.fillStyle='rgba(60,160,60,.6)';ctx.beginPath();ctx.arc(GX,PY,3,0,Math.PI*2);ctx.fill();
-  ctx.save();ctx.beginPath();ctx.rect(0,PBY2,W,H);ctx.clip();
-  ctx.beginPath();ctx.arc(GX,PY,DRAD,0,Math.PI*2);ctx.stroke();ctx.restore();
-  ctx.lineWidth=2;ctx.strokeStyle='rgba(255,255,255,.7)';
-  ctx.beginPath();ctx.moveTo(GX-GHW,GY);ctx.lineTo(GX-GHW,GY-12);ctx.lineTo(GX+GHW,GY-12);ctx.lineTo(GX+GHW,GY);ctx.stroke();
-  ctx.lineWidth=.4;ctx.strokeStyle='rgba(255,255,255,.08)';
-  for(let x=GX-GHW+7;x<GX+GHW;x+=7){ctx.beginPath();ctx.moveTo(x,GY);ctx.lineTo(x,GY-12);ctx.stroke()}
-  ctx.beginPath();ctx.moveTo(GX-GHW,GY-6);ctx.lineTo(GX+GHW,GY-6);ctx.stroke();
+// ========== LEAGUE DATA ==========
+const LEAGUE_DATA = {
+  'Premier League': {
+    country: 'England', tier: 1, season: '2024-25', color: '#8b5cf6',
+    avgGoalsPerMatch: 2.76, avgXGPerMatch: 2.68, avgShotsPerMatch: 24.8,
+    conversionRate: 11.1, avgXGPerShot: 0.108,
+    teams: [
+      { name: 'Liverpool', xGFor: 77.2, xGAgainst: 32.1, goalsFor: 81, goalsAgainst: 29, shots: 618, shotsOnTarget: 219 },
+      { name: 'Arsenal', xGFor: 72.5, xGAgainst: 34.8, goalsFor: 75, goalsAgainst: 31, shots: 630, shotsOnTarget: 210 },
+      { name: 'Man City', xGFor: 68.3, xGAgainst: 38.2, goalsFor: 72, goalsAgainst: 41, shots: 605, shotsOnTarget: 198 },
+      { name: 'Chelsea', xGFor: 62.1, xGAgainst: 42.5, goalsFor: 67, goalsAgainst: 39, shots: 590, shotsOnTarget: 185 },
+      { name: 'Aston Villa', xGFor: 55.8, xGAgainst: 44.1, goalsFor: 58, goalsAgainst: 47, shots: 520, shotsOnTarget: 170 },
+      { name: 'Newcastle', xGFor: 58.2, xGAgainst: 40.3, goalsFor: 61, goalsAgainst: 43, shots: 545, shotsOnTarget: 178 },
+      { name: 'Brighton', xGFor: 53.4, xGAgainst: 46.8, goalsFor: 55, goalsAgainst: 50, shots: 560, shotsOnTarget: 175 },
+      { name: 'Tottenham', xGFor: 60.1, xGAgainst: 48.5, goalsFor: 63, goalsAgainst: 52, shots: 575, shotsOnTarget: 182 },
+      { name: 'Man United', xGFor: 48.2, xGAgainst: 50.1, goalsFor: 44, goalsAgainst: 53, shots: 510, shotsOnTarget: 160 },
+      { name: 'Bournemouth', xGFor: 49.5, xGAgainst: 47.3, goalsFor: 52, goalsAgainst: 48, shots: 490, shotsOnTarget: 158 }
+    ],
+    shotDistribution: [
+      { zone: 'Inside 6-yard box', pct: 8, avgXG: 0.38 },
+      { zone: '6yd to penalty spot', pct: 22, avgXG: 0.15 },
+      { zone: 'Penalty area (wide)', pct: 25, avgXG: 0.08 },
+      { zone: 'Edge of box (18-24m)', pct: 28, avgXG: 0.04 },
+      { zone: 'Long range (24m+)', pct: 17, avgXG: 0.02 }
+    ]
+  },
+  'La Liga': {
+    country: 'Spain', tier: 1, season: '2024-25', color: '#f59e0b',
+    avgGoalsPerMatch: 2.62, avgXGPerMatch: 2.55, avgShotsPerMatch: 23.5,
+    conversionRate: 11.1, avgXGPerShot: 0.109,
+    teams: [
+      { name: 'Barcelona', xGFor: 82.1, xGAgainst: 30.5, goalsFor: 90, goalsAgainst: 28, shots: 680, shotsOnTarget: 240 },
+      { name: 'Real Madrid', xGFor: 71.3, xGAgainst: 35.2, goalsFor: 76, goalsAgainst: 32, shots: 620, shotsOnTarget: 215 },
+      { name: 'Atletico Madrid', xGFor: 58.7, xGAgainst: 32.8, goalsFor: 55, goalsAgainst: 30, shots: 510, shotsOnTarget: 170 },
+      { name: 'Athletic Bilbao', xGFor: 55.2, xGAgainst: 38.4, goalsFor: 57, goalsAgainst: 36, shots: 495, shotsOnTarget: 165 },
+      { name: 'Villarreal', xGFor: 52.8, xGAgainst: 41.2, goalsFor: 56, goalsAgainst: 44, shots: 505, shotsOnTarget: 162 }
+    ],
+    shotDistribution: [
+      { zone: 'Inside 6-yard box', pct: 7, avgXG: 0.37 },
+      { zone: '6yd to penalty spot', pct: 21, avgXG: 0.14 },
+      { zone: 'Penalty area (wide)', pct: 24, avgXG: 0.07 },
+      { zone: 'Edge of box (18-24m)', pct: 30, avgXG: 0.04 },
+      { zone: 'Long range (24m+)', pct: 18, avgXG: 0.02 }
+    ]
+  },
+  'Bundesliga': {
+    country: 'Germany', tier: 1, season: '2024-25', color: '#ef4444',
+    avgGoalsPerMatch: 3.14, avgXGPerMatch: 3.02, avgShotsPerMatch: 25.2,
+    conversionRate: 12.5, avgXGPerShot: 0.120,
+    teams: [
+      { name: 'Bayern Munich', xGFor: 82.5, xGAgainst: 33.1, goalsFor: 87, goalsAgainst: 35, shots: 650, shotsOnTarget: 230 },
+      { name: 'Bayer Leverkusen', xGFor: 68.7, xGAgainst: 36.5, goalsFor: 72, goalsAgainst: 34, shots: 580, shotsOnTarget: 200 },
+      { name: 'Borussia Dortmund', xGFor: 62.3, xGAgainst: 42.8, goalsFor: 65, goalsAgainst: 45, shots: 555, shotsOnTarget: 185 },
+      { name: 'RB Leipzig', xGFor: 58.1, xGAgainst: 40.2, goalsFor: 60, goalsAgainst: 38, shots: 530, shotsOnTarget: 175 },
+      { name: 'Stuttgart', xGFor: 55.6, xGAgainst: 43.5, goalsFor: 58, goalsAgainst: 46, shots: 510, shotsOnTarget: 168 }
+    ],
+    shotDistribution: [
+      { zone: 'Inside 6-yard box', pct: 9, avgXG: 0.40 },
+      { zone: '6yd to penalty spot', pct: 23, avgXG: 0.16 },
+      { zone: 'Penalty area (wide)', pct: 24, avgXG: 0.08 },
+      { zone: 'Edge of box (18-24m)', pct: 27, avgXG: 0.04 },
+      { zone: 'Long range (24m+)', pct: 17, avgXG: 0.02 }
+    ]
+  },
+  'Serie A': {
+    country: 'Italy', tier: 1, season: '2024-25', color: '#3b82f6',
+    avgGoalsPerMatch: 2.68, avgXGPerMatch: 2.62, avgShotsPerMatch: 24.2,
+    conversionRate: 11.1, avgXGPerShot: 0.108,
+    teams: [
+      { name: 'Inter Milan', xGFor: 72.8, xGAgainst: 32.4, goalsFor: 76, goalsAgainst: 30, shots: 610, shotsOnTarget: 210 },
+      { name: 'Napoli', xGFor: 68.5, xGAgainst: 35.8, goalsFor: 72, goalsAgainst: 33, shots: 590, shotsOnTarget: 195 },
+      { name: 'AC Milan', xGFor: 60.2, xGAgainst: 42.1, goalsFor: 62, goalsAgainst: 40, shots: 550, shotsOnTarget: 180 },
+      { name: 'Juventus', xGFor: 55.8, xGAgainst: 33.5, goalsFor: 50, goalsAgainst: 31, shots: 520, shotsOnTarget: 168 },
+      { name: 'Atalanta', xGFor: 65.3, xGAgainst: 38.2, goalsFor: 70, goalsAgainst: 42, shots: 570, shotsOnTarget: 190 }
+    ],
+    shotDistribution: [
+      { zone: 'Inside 6-yard box', pct: 7, avgXG: 0.36 },
+      { zone: '6yd to penalty spot', pct: 22, avgXG: 0.14 },
+      { zone: 'Penalty area (wide)', pct: 25, avgXG: 0.07 },
+      { zone: 'Edge of box (18-24m)', pct: 29, avgXG: 0.04 },
+      { zone: 'Long range (24m+)', pct: 17, avgXG: 0.02 }
+    ]
+  },
+  'Ligue 1': {
+    country: 'France', tier: 1, season: '2024-25', color: '#a3e635',
+    avgGoalsPerMatch: 2.58, avgXGPerMatch: 2.50, avgShotsPerMatch: 23.8,
+    conversionRate: 10.8, avgXGPerShot: 0.105,
+    teams: [
+      { name: 'PSG', xGFor: 78.5, xGAgainst: 28.2, goalsFor: 82, goalsAgainst: 25, shots: 660, shotsOnTarget: 235 },
+      { name: 'Monaco', xGFor: 58.2, xGAgainst: 40.1, goalsFor: 62, goalsAgainst: 38, shots: 530, shotsOnTarget: 175 },
+      { name: 'Marseille', xGFor: 55.8, xGAgainst: 42.3, goalsFor: 58, goalsAgainst: 44, shots: 520, shotsOnTarget: 168 },
+      { name: 'Lille', xGFor: 52.1, xGAgainst: 38.5, goalsFor: 48, goalsAgainst: 36, shots: 490, shotsOnTarget: 158 },
+      { name: 'Lyon', xGFor: 54.3, xGAgainst: 45.8, goalsFor: 57, goalsAgainst: 48, shots: 510, shotsOnTarget: 165 }
+    ],
+    shotDistribution: [
+      { zone: 'Inside 6-yard box', pct: 7, avgXG: 0.36 },
+      { zone: '6yd to penalty spot', pct: 20, avgXG: 0.13 },
+      { zone: 'Penalty area (wide)', pct: 24, avgXG: 0.07 },
+      { zone: 'Edge of box (18-24m)', pct: 30, avgXG: 0.04 },
+      { zone: 'Long range (24m+)', pct: 19, avgXG: 0.02 }
+    ]
+  },
+  'Championship': {
+    country: 'England', tier: 2, season: '2024-25', color: '#f97316',
+    avgGoalsPerMatch: 2.51, avgXGPerMatch: 2.45, avgShotsPerMatch: 23.1,
+    conversionRate: 10.9, avgXGPerShot: 0.106,
+    teams: [
+      { name: 'Leeds United', xGFor: 68.5, xGAgainst: 38.2, goalsFor: 72, goalsAgainst: 40, shots: 580, shotsOnTarget: 195 },
+      { name: 'Burnley', xGFor: 62.3, xGAgainst: 40.5, goalsFor: 65, goalsAgainst: 38, shots: 550, shotsOnTarget: 180 },
+      { name: 'Sheffield United', xGFor: 55.8, xGAgainst: 42.1, goalsFor: 52, goalsAgainst: 44, shots: 510, shotsOnTarget: 165 },
+      { name: 'Sunderland', xGFor: 52.5, xGAgainst: 44.8, goalsFor: 55, goalsAgainst: 47, shots: 495, shotsOnTarget: 160 },
+      { name: 'Middlesbrough', xGFor: 50.2, xGAgainst: 43.5, goalsFor: 48, goalsAgainst: 42, shots: 480, shotsOnTarget: 155 }
+    ],
+    shotDistribution: [
+      { zone: 'Inside 6-yard box', pct: 7, avgXG: 0.35 },
+      { zone: '6yd to penalty spot', pct: 20, avgXG: 0.13 },
+      { zone: 'Penalty area (wide)', pct: 24, avgXG: 0.07 },
+      { zone: 'Edge of box (18-24m)', pct: 30, avgXG: 0.04 },
+      { zone: 'Long range (24m+)', pct: 19, avgXG: 0.02 }
+    ]
+  }
+};
+
+// ========== XG COEFFICIENTS (Logistic Regression) ==========
+const XG_COEFF = { b0: -0.85, b1: 0.21, b2: -0.08, b3: -0.005, b4: 0.001 };
+
+// ========== PITCH CONSTANTS ==========
+const cvs = document.getElementById('pitch'), ctx = cvs.getContext('2d');
+const W = 460, H = 360, SC = 6.5;
+const GY = 28, GX = W/2, GHW = Math.round(3.66*SC);
+const GOAL_WIDTH_M = 7.32;
+const PY = GY + Math.round(11*SC), PBY2 = GY + Math.round(16.5*SC), PBHW = Math.round(20.16*SC);
+const SYY2 = GY + Math.round(5.5*SC), SYHW = Math.round(9.16*SC);
+const DRAD = Math.round(9.15*SC);
+
+// ========== STATE ==========
+let shots = [], locked = false, hx = null, hy = null;
+let mcInst = null, convHist = [];
+let currentModel = 'geometric'; // 'geometric' or 'logistic'
+let currentShotType = 'open'; // 'open', 'header', 'freekick', 'penalty'
+let currentMode = 'shots'; // 'shots', 'league', 'heatmap'
+let heatmapModel = 'geometric';
+let selectedLeagues = new Set();
+let overPerfChartInst = null, shotZoneChartInst = null;
+
+// ========== SHOT TYPE MODIFIERS ==========
+function shotTypeModifier(baseXG, dist, type) {
+  if (type === 'penalty') return 0.76;
+  if (type === 'header') return baseXG * 0.6;
+  if (type === 'freekick') {
+    // Free kick xG peaks around 22-25m, very low otherwise
+    if (dist < 16) return 0.01;
+    if (dist < 20) return 0.03;
+    if (dist < 25) return 0.06 + (25 - dist) * 0.004;
+    if (dist < 30) return 0.05 - (dist - 25) * 0.006;
+    return 0.02;
+  }
+  return baseXG; // open play
 }
 
-function calcXG(x,y){
-  if(y<=GY)return{xg:0,d:0,a:0};
-  const dx=x-GX,dy=y-GY,dp=Math.sqrt(dx*dx+dy*dy),dm=dp/SC;
-  if(dm<.8)return{xg:.96,d:dm,a:180};
-  const lx=(GX-GHW)-x,ly=GY-y,rx=(GX+GHW)-x,ry=GY-y;
-  const ll=Math.sqrt(lx*lx+ly*ly),rl=Math.sqrt(rx*rx+ry*ry);
-  const dot=(lx*rx+ly*ry)/(ll*rl);
-  const ar=Math.acos(Math.max(-1,Math.min(1,dot)));
-  const xg=Math.min(.96,(ar/Math.PI)*Math.exp(-dm/14)*3.5);
-  return{xg,d:dm,a:ar*180/Math.PI};
+// ========== XG MODELS ==========
+function calcGeometricXG(x, y) {
+  if (y <= GY) return { xg: 0, d: 0, a: 0 };
+  const dx = x - GX, dy = y - GY;
+  const dp = Math.sqrt(dx*dx + dy*dy), dm = dp / SC;
+  if (dm < 0.8) return { xg: 0.96, d: dm, a: 180 };
+  const lx = (GX - GHW) - x, ly = GY - y, rx = (GX + GHW) - x, ry = GY - y;
+  const ll = Math.sqrt(lx*lx + ly*ly), rl = Math.sqrt(rx*rx + ry*ry);
+  const dot = (lx*rx + ly*ry) / (ll * rl);
+  const ar = Math.acos(Math.max(-1, Math.min(1, dot)));
+  const xg = Math.min(0.96, (ar / Math.PI) * Math.exp(-dm / 14) * 3.5);
+  return { xg, d: dm, a: ar * 180 / Math.PI };
 }
 
-function xgCol(xg){
-  const t=Math.min(1,xg/.7);
-  if(t<.5){const s=t*2;return`rgb(${Math.round(64+s*191)},${Math.round(128+s*92)},${Math.round(255-s*255)})`}
-  const s=(t-.5)*2;return`rgb(255,${Math.round(220-s*220)},0)`;
+function calcLogisticXG(x, y) {
+  if (y <= GY) return { xg: 0, d: 0, a: 0 };
+  const dx = x - GX, dy = y - GY;
+  const dp = Math.sqrt(dx*dx + dy*dy), dm = dp / SC;
+  if (dm < 0.8) return { xg: 0.96, d: dm, a: 180 };
+  // Lateral offset in metres
+  const lateralOffset = Math.abs(dx) / SC;
+  // Distance to goal line in metres
+  const distToGoalLine = dy / SC;
+  // Angle using Soccermatics formula
+  const halfGoal = GOAL_WIDTH_M / 2;
+  const numerator = GOAL_WIDTH_M * distToGoalLine;
+  const denominator = distToGoalLine * distToGoalLine + lateralOffset * lateralOffset - halfGoal * halfGoal;
+  let angleRad;
+  if (denominator <= 0) {
+    angleRad = Math.PI / 2; // very close, wide angle
+  } else {
+    angleRad = Math.atan(numerator / denominator);
+    if (angleRad < 0) angleRad += Math.PI;
+  }
+  // Logistic regression
+  const z = XG_COEFF.b0 + XG_COEFF.b1 * angleRad + XG_COEFF.b2 * dm + XG_COEFF.b3 * angleRad * dm + XG_COEFF.b4 * dm * dm;
+  const xg = Math.min(0.96, Math.max(0.001, 1 / (1 + Math.exp(-z))));
+  return { xg, d: dm, a: angleRad * 180 / Math.PI };
 }
 
-function redraw(){
+function calcXG(x, y) {
+  const result = currentModel === 'logistic' ? calcLogisticXG(x, y) : calcGeometricXG(x, y);
+  if (result.xg > 0 && currentShotType !== 'open') {
+    result.xg = shotTypeModifier(result.xg, result.d, currentShotType);
+  }
+  return result;
+}
+
+function calcXGWithModel(x, y, model) {
+  return model === 'logistic' ? calcLogisticXG(x, y) : calcGeometricXG(x, y);
+}
+
+// ========== XG COLOR ==========
+function xgCol(xg) {
+  const t = Math.min(1, xg / 0.7);
+  if (t < 0.5) {
+    const s = t * 2;
+    return `rgb(${Math.round(64 + s*191)},${Math.round(128 + s*92)},${Math.round(255 - s*255)})`;
+  }
+  const s = (t - 0.5) * 2;
+  return `rgb(255,${Math.round(220 - s*220)},0)`;
+}
+
+// ========== DRAW PITCH ==========
+function dp() {
+  for (let i = 0; i < 7; i++) {
+    ctx.fillStyle = i % 2 === 0 ? '#061a0a' : '#071e0c';
+    ctx.fillRect(i * (W/7), 0, Math.ceil(W/7) + 1, H);
+  }
+  ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(60,160,60,.35)';
+  ctx.strokeRect(10, GY, W - 20, H - GY - 8);
+  ctx.beginPath(); ctx.moveTo(10, H/2); ctx.lineTo(W - 10, H/2); ctx.stroke();
+  ctx.strokeRect(GX - PBHW, GY, PBHW*2, PBY2 - GY);
+  ctx.strokeRect(GX - SYHW, GY, SYHW*2, SYY2 - GY);
+  ctx.fillStyle = 'rgba(60,160,60,.6)';
+  ctx.beginPath(); ctx.arc(GX, PY, 3, 0, Math.PI*2); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.rect(0, PBY2, W, H); ctx.clip();
+  ctx.beginPath(); ctx.arc(GX, PY, DRAD, 0, Math.PI*2); ctx.stroke(); ctx.restore();
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,.7)';
+  ctx.beginPath();
+  ctx.moveTo(GX - GHW, GY); ctx.lineTo(GX - GHW, GY - 12);
+  ctx.lineTo(GX + GHW, GY - 12); ctx.lineTo(GX + GHW, GY); ctx.stroke();
+  ctx.lineWidth = 0.4; ctx.strokeStyle = 'rgba(255,255,255,.08)';
+  for (let x = GX - GHW + 7; x < GX + GHW; x += 7) {
+    ctx.beginPath(); ctx.moveTo(x, GY); ctx.lineTo(x, GY - 12); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.moveTo(GX - GHW, GY - 6); ctx.lineTo(GX + GHW, GY - 6); ctx.stroke();
+}
+
+function redraw() {
   dp();
-  shots.forEach((s,i)=>{
-    const c=xgCol(s.xg);
-    ctx.beginPath();ctx.arc(s.x,s.y,10,0,Math.PI*2);ctx.fillStyle=c+'22';ctx.fill();
-    ctx.beginPath();ctx.arc(s.x,s.y,5.5,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();
-    ctx.font='bold 7px monospace';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(i+1,s.x,s.y);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  shots.forEach((s, i) => {
+    const c = xgCol(s.xg);
+    ctx.beginPath(); ctx.arc(s.x, s.y, 10, 0, Math.PI*2); ctx.fillStyle = c + '22'; ctx.fill();
+    ctx.beginPath(); ctx.arc(s.x, s.y, 5.5, 0, Math.PI*2); ctx.fillStyle = c; ctx.fill();
+    ctx.font = 'bold 7px monospace'; ctx.fillStyle = '#000';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(i + 1, s.x, s.y);
+    // Shot type indicator
+    if (s.type && s.type !== 'open') {
+      ctx.font = '6px monospace'; ctx.fillStyle = '#7a9a7a';
+      const lbl = s.type === 'header' ? 'H' : s.type === 'freekick' ? 'FK' : s.type === 'penalty' ? 'PK' : '';
+      ctx.fillText(lbl, s.x, s.y + 11);
+    }
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
   });
-  if(hx!==null&&locked){
-    const{xg}=calcXG(hx,hy);
-    if(xg>0){const c=xgCol(xg);ctx.beginPath();ctx.arc(hx,hy,9,0,Math.PI*2);ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([])}
+  if (hx !== null && locked) {
+    const { xg } = calcXG(hx, hy);
+    if (xg > 0) {
+      const c = xgCol(xg);
+      ctx.beginPath(); ctx.arc(hx, hy, 9, 0, Math.PI*2);
+      ctx.strokeStyle = c; ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
+    }
   }
 }
 
-cvs.addEventListener('mousemove',e=>{
-  if(!locked)return;
-  const r=cvs.getBoundingClientRect(),scaleX=cvs.width/r.width,scaleY=cvs.height/r.height;
-  hx=(e.clientX-r.left)*scaleX;hy=(e.clientY-r.top)*scaleY;
-  const{xg,d,a}=calcXG(hx,hy);
-  document.getElementById('hXG').textContent=xg>0?xg.toFixed(3):'—';
-  document.getElementById('hXG').style.color=xg>0?xgCol(xg):'#7dd87d';
-  document.getElementById('hAng').textContent=xg>0?a.toFixed(1)+'°':'—';
-  document.getElementById('hDist').textContent=xg>0?d.toFixed(1)+'m':'—';
+// ========== PITCH EVENTS ==========
+cvs.addEventListener('mousemove', e => {
+  if (!locked || currentMode !== 'shots') return;
+  const r = cvs.getBoundingClientRect();
+  const scaleX = cvs.width / r.width, scaleY = cvs.height / r.height;
+  hx = (e.clientX - r.left) * scaleX;
+  hy = (e.clientY - r.top) * scaleY;
+  const { xg, d, a } = calcXG(hx, hy);
+  document.getElementById('hXG').textContent = xg > 0 ? xg.toFixed(3) : '\u2014';
+  document.getElementById('hXG').style.color = xg > 0 ? xgCol(xg) : '#7dd87d';
+  document.getElementById('hAng').textContent = xg > 0 ? a.toFixed(1) + '\u00b0' : '\u2014';
+  document.getElementById('hDist').textContent = xg > 0 ? d.toFixed(1) + 'm' : '\u2014';
   redraw();
 });
-cvs.addEventListener('mouseleave',()=>{hx=null;hy=null;document.getElementById('hXG').textContent='—';document.getElementById('hXG').style.color='#7dd87d';document.getElementById('hAng').textContent='—';document.getElementById('hDist').textContent='—';redraw()});
-cvs.addEventListener('click',e=>{
-  if(!locked)return;
-  const r=cvs.getBoundingClientRect(),scaleX=cvs.width/r.width,scaleY=cvs.height/r.height;
-  const x=(e.clientX-r.left)*scaleX,y=(e.clientY-r.top)*scaleY;
-  const{xg,d,a}=calcXG(x,y);if(xg===0)return;
-  shots.push({x,y,xg,d,a});updateLog();redraw();
-  document.getElementById('simBtn').disabled=false;
+
+cvs.addEventListener('mouseleave', () => {
+  hx = null; hy = null;
+  document.getElementById('hXG').textContent = '\u2014';
+  document.getElementById('hXG').style.color = '#7dd87d';
+  document.getElementById('hAng').textContent = '\u2014';
+  document.getElementById('hDist').textContent = '\u2014';
+  redraw();
+});
+
+cvs.addEventListener('click', e => {
+  if (!locked || currentMode !== 'shots') return;
+  const r = cvs.getBoundingClientRect();
+  const scaleX = cvs.width / r.width, scaleY = cvs.height / r.height;
+  const x = (e.clientX - r.left) * scaleX, y = (e.clientY - r.top) * scaleY;
+  const { xg, d, a } = calcXG(x, y);
+  if (xg === 0) return;
+  shots.push({ x, y, xg, d, a, type: currentShotType, model: currentModel });
+  updateLog(); redraw();
+  document.getElementById('simBtn').disabled = false;
   saveState();
 });
 
-function updateLog(){
-  const tot=shots.reduce((s,sh)=>s+sh.xg,0);
-  document.getElementById('totXG').textContent=`${shots.length} shot${shots.length!==1?'s':''} · ${tot.toFixed(3)}`;
-  const log=document.getElementById('shotLog');
-  if(shots.length===0){log.innerHTML='<div class="sli" style="color:#4a6a4a">no shots placed yet</div>';return}
-  log.innerHTML=shots.map((s,i)=>`<div class="sli"><span>#${i+1} · ${s.d.toFixed(1)}m · ${s.a.toFixed(0)}°</span><span style="color:${xgCol(s.xg)};font-weight:700">${s.xg.toFixed(3)}</span></div>`).join('');
+// ========== SHOT LOG ==========
+function updateLog() {
+  const tot = shots.reduce((s, sh) => s + sh.xg, 0);
+  document.getElementById('totXG').textContent = `${shots.length} shot${shots.length !== 1 ? 's' : ''} \u00b7 ${tot.toFixed(3)}`;
+  const log = document.getElementById('shotLog');
+  if (shots.length === 0) {
+    log.innerHTML = '<div class="sli" style="color:#4a6a4a">no shots placed yet</div>';
+    return;
+  }
+  const typeLabels = { open: '', header: ' H', freekick: ' FK', penalty: ' PK' };
+  log.innerHTML = shots.map((s, i) =>
+    `<div class="sli"><span>#${i+1} \u00b7 ${s.d.toFixed(1)}m \u00b7 ${s.a.toFixed(0)}\u00b0${typeLabels[s.type] || ''} \u00b7 ${s.model === 'logistic' ? 'LR' : 'Geo'}</span><span style="color:${xgCol(s.xg)};font-weight:700">${s.xg.toFixed(3)}</span></div>`
+  ).join('');
 }
 
-function clearShots(){shots=[];updateLog();redraw();document.getElementById('simBtn').disabled=true;document.getElementById('stepRes').style.display='none';saveState()}
+function clearShots() {
+  shots = []; updateLog(); redraw();
+  document.getElementById('simBtn').disabled = true;
+  document.getElementById('stepRes').style.display = 'none';
+  saveState();
+}
 
-function lockHyp(){
-  const t=document.getElementById('hypText').value.trim();
-  if(t.length<20){document.getElementById('hypText').style.borderColor='#e24b4a';return}
-  locked=true;
-  const ta=document.getElementById('hypText');
-  ta.disabled=true;ta.style.borderColor='rgba(60,160,60,0.6)';
-  ta.style.boxShadow='0 0 0 2px rgba(60,160,60,0.2)';
-  const ts=document.getElementById('hypTS');
-  ts.style.display='block';
-  ts.textContent='locked · '+new Date().toLocaleString();
-  const lb=document.getElementById('lockBtn');lb.textContent='✓ Hypothesis locked';lb.disabled=true;
-  document.getElementById('labHint').textContent='Click on the pitch to place shots';
-  localStorage.setItem('alexey_exp_01_hypothesis',t);
-  localStorage.setItem('alexey_exp_01_timestamp',new Date().toISOString());
+// ========== MODE / MODEL / SHOT TYPE SWITCHING ==========
+function setMode(mode) {
+  currentMode = mode;
+  ['modeShots', 'modeLeague', 'modeHeatmap'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('mode' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+  document.getElementById('shotsSection').style.display = mode === 'shots' ? '' : 'none';
+  document.getElementById('leagueSection').style.display = mode === 'league' ? '' : 'none';
+  document.getElementById('heatmapSection').style.display = mode === 'heatmap' ? '' : 'none';
+  if (mode === 'heatmap') drawHeatmap();
+  if (mode === 'league') initLeagueUI();
+}
+
+function setModel(m) {
+  currentModel = m;
+  document.getElementById('modelA').classList.toggle('active', m === 'geometric');
+  document.getElementById('modelB').classList.toggle('active', m === 'logistic');
+  document.getElementById('modelLabel').textContent = m === 'logistic' ? 'logistic regression' : 'geometric';
   redraw();
 }
 
-function saveState(){
-  localStorage.setItem('alexey_exp_01_shots',JSON.stringify(shots));
+function setShotType(t) {
+  currentShotType = t;
+  ['stOpen', 'stHead', 'stFK', 'stPen'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const map = { open: 'stOpen', header: 'stHead', freekick: 'stFK', penalty: 'stPen' };
+  document.getElementById(map[t]).classList.add('active');
 }
 
-function runMC(){
-  if(shots.length===0)return;
-  const N=500,counts=new Array(shots.length+2).fill(0);
-  for(let i=0;i<N;i++){let g=0;shots.forEach(s=>{if(Math.random()<s.xg)g++});if(g<counts.length)counts[g]++}
-  const tot=shots.reduce((s,sh)=>s+sh.xg,0);
-  const avg=counts.reduce((s,c,i)=>s+c*i,0)/N;
-  const mx=counts.length-1-[...counts].reverse().findIndex(c=>c>0);
-  document.getElementById('rXG').textContent=tot.toFixed(3);
-  document.getElementById('rAvg').textContent=avg.toFixed(2);
-  document.getElementById('rMax').textContent=mx;
-  document.getElementById('rP0').textContent=(counts[0]/N*100).toFixed(1)+'%';
-  document.getElementById('rP2').textContent=(counts.slice(2).reduce((a,b)=>a+b,0)/N*100).toFixed(1)+'%';
-  const el=document.getElementById('stepRes');el.style.display='';
-  const cc=document.getElementById('mcChart');
-  if(mcInst)mcInst.destroy();
-  const maxC=counts.reduce((a,b)=>Math.max(a,b),0);
-  const labels=counts.map((_,i)=>i===1?`${i} goal`:`${i} goals`);
-  mcInst=new Chart(cc,{type:'bar',data:{labels,datasets:[{data:counts,backgroundColor:counts.map((_,i)=>{const t=i/Math.max(1,mx);return`rgba(${Math.round(60+t*166)},${Math.round(160-t*100)},60,0.75)`}),borderWidth:0,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} runs (${(c.raw/N*100).toFixed(1)}%)`},backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}}});
-  localStorage.setItem('alexey_exp_01_results',JSON.stringify({xg:tot,avg,max:mx,p0:counts[0]/N,p2:counts.slice(2).reduce((a,b)=>a+b,0)/N}));
-  el.scrollIntoView({behavior:'smooth',block:'start'});
+// ========== HYPOTHESIS LOCK ==========
+function lockHyp() {
+  const t = document.getElementById('hypText').value.trim();
+  if (t.length < 20) { document.getElementById('hypText').style.borderColor = '#e24b4a'; return; }
+  locked = true;
+  const ta = document.getElementById('hypText');
+  ta.disabled = true;
+  ta.style.borderColor = 'rgba(60,160,60,0.6)';
+  ta.style.boxShadow = '0 0 0 2px rgba(60,160,60,0.2)';
+  const ts = document.getElementById('hypTS');
+  ts.style.display = 'block';
+  ts.textContent = 'locked \u00b7 ' + new Date().toLocaleString();
+  const lb = document.getElementById('lockBtn');
+  lb.textContent = '\u2713 Hypothesis locked'; lb.disabled = true;
+  document.getElementById('labHint').textContent = 'Click on the pitch to place shots';
+  localStorage.setItem('alexey_exp_01_hypothesis', t);
+  localStorage.setItem('alexey_exp_01_timestamp', new Date().toISOString());
+  redraw();
 }
 
-async function askCoach(){
-  const interp=document.getElementById('interpText').value.trim();
-  if(interp.length<20){document.getElementById('interpText').style.borderColor='#e24b4a';return}
-  const hyp=document.getElementById('hypText').value;
-  const tot=shots.reduce((s,sh)=>s+sh.xg,0);
-  const sd=shots.length>0?shots.map((s,i)=>`Shot ${i+1}: ${s.d.toFixed(1)}m from goal, angle ${s.a.toFixed(0)}°, xG=${s.xg.toFixed(3)}`).join('\n'):'No shots placed.';
-  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nShot data:\n${sd}\nTotal xG: ${tot.toFixed(3)}\n\nAlexey's interpretation: "${interp}"`;
-  const aiEl=document.getElementById('aiQ');
-  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
-  document.getElementById('askBtn').disabled=true;
-  convHist=[{role:'user',content:userMsg}];
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH — a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has just run a computational xG (Expected Goals) model for football. He placed shots on a pitch, calculated geometric probabilities, and ran 500 Monte Carlo simulations to see the distribution of possible match outcomes. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Reference his specific data and his own words back to him. Accessible language for a bright 14-year-old. No effusive praise. End every response with a question mark.',messages:convHist})});
-    const d=await r.json();const q=d.content[0].text;
-    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
-    convHist.push({role:'assistant',content:q});
-    localStorage.setItem('alexey_exp_01_dialogue',JSON.stringify(convHist));
-    document.getElementById('replySec').style.display='block';
-  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
-  document.getElementById('askBtn').disabled=false;
+function saveState() {
+  localStorage.setItem('alexey_exp_01_shots', JSON.stringify(shots));
 }
 
-async function sendReply(){
-  const reply=document.getElementById('replyText').value.trim();if(reply.length<3)return;
-  const prevQ=document.getElementById('aiQ').innerText;
-  const thr=document.getElementById('thread');
-  thr.innerHTML+=`<div class="tcoach"><div class="tcoach-lbl">coach's question</div>${prevQ}</div><div class="talex"><div class="talex-lbl">alexey</div>${reply}</div>`;
-  document.getElementById('replyText').value='';
-  convHist.push({role:'user',content:reply});
-  const aiEl=document.getElementById('aiQ');
-  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his football xG experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',messages:convHist})});
-    const d=await r.json();const q=d.content[0].text;
-    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
-    convHist.push({role:'assistant',content:q});
-    localStorage.setItem('alexey_exp_01_dialogue',JSON.stringify(convHist));
-  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue — try again.</span>'}
+// ========== POISSON DISTRIBUTION ==========
+function poissonPMF(k, lambda) {
+  // P(X=k) = e^(-lambda) * lambda^k / k!
+  let logP = -lambda + k * Math.log(lambda);
+  for (let i = 2; i <= k; i++) logP -= Math.log(i);
+  return Math.exp(logP);
 }
 
-redraw();
+// ========== MONTE CARLO SIMULATION ==========
+function runMC() {
+  if (shots.length === 0) return;
+  const N = 500;
+  const maxGoals = shots.length + 2;
+  const counts = new Array(maxGoals).fill(0);
+  for (let i = 0; i < N; i++) {
+    let g = 0;
+    shots.forEach(s => { if (Math.random() < s.xg) g++; });
+    if (g < counts.length) counts[g]++;
+  }
+  const tot = shots.reduce((s, sh) => s + sh.xg, 0);
+  const avg = counts.reduce((s, c, i) => s + c * i, 0) / N;
+  const mx = counts.length - 1 - [...counts].reverse().findIndex(c => c > 0);
 
-const LOGBOOK_KEY='alexey_exp_01_logbook';
-function getLogEntries(){try{return JSON.parse(localStorage.getItem(LOGBOOK_KEY))||[];}catch(e){return[];}}
-function saveLogEntries(entries){localStorage.setItem(LOGBOOK_KEY,JSON.stringify(entries));}
-function renderLogbook(){
-  const entries=getLogEntries();const el=document.getElementById('logbookEntries');
-  if(entries.length===0){el.innerHTML='<div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>';return;}
-  el.innerHTML=entries.map((e,i)=>{
-    const typeClass=e.type==='obs'?'obs':e.type==='quest'?'quest':'conc';
-    const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';
-    const date=new Date(e.timestamp);const ts=date.toLocaleDateString()+' '+date.toLocaleTimeString();
-    return `<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag ${typeClass}">${typeLabel}</span><span class="log-entry-ts">${ts}</span><div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div></div><div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${e.context?'<div class="log-entry-ctx">'+e.context+'</div>':''}</div>`;
+  document.getElementById('rXG').textContent = tot.toFixed(3);
+  document.getElementById('rAvg').textContent = avg.toFixed(2);
+  document.getElementById('rMax').textContent = mx;
+  document.getElementById('rP0').textContent = (counts[0] / N * 100).toFixed(1) + '%';
+  document.getElementById('rP2').textContent = (counts.slice(2).reduce((a,b) => a+b, 0) / N * 100).toFixed(1) + '%';
+  
+  // Show which models were used
+  const models = [...new Set(shots.map(s => s.model))];
+  const types = [...new Set(shots.map(s => s.type))];
+  document.getElementById('rModel').textContent = models.map(m => m === 'logistic' ? 'Logistic' : 'Geometric').join(' + ') + ' / ' + types.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ');
+
+  // Poisson overlay data
+  const poissonData = [];
+  for (let k = 0; k < counts.length; k++) {
+    poissonData.push(Math.round(N * poissonPMF(k, tot)));
+  }
+
+  document.getElementById('poissonNote').textContent = `Dashed line: Poisson distribution with \u03bb = ${tot.toFixed(2)}. The Poisson approximation assumes each shot is independent \u2014 compare how well it fits your Monte Carlo histogram.`;
+
+  // Draw chart
+  const el = document.getElementById('stepRes');
+  el.style.display = '';
+  const cc = document.getElementById('mcChart');
+  if (mcInst) mcInst.destroy();
+  const labels = counts.map((_, i) => i === 1 ? `${i} goal` : `${i} goals`);
+  mcInst = new Chart(cc, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Monte Carlo',
+          data: counts,
+          backgroundColor: counts.map((_, i) => {
+            const t = i / Math.max(1, mx);
+            return `rgba(${Math.round(60 + t*166)},${Math.round(160 - t*100)},60,0.75)`;
+          }),
+          borderWidth: 0, borderRadius: 2, order: 2
+        },
+        {
+          label: 'Poisson',
+          data: poissonData,
+          type: 'line',
+          borderColor: '#f0b429',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 3,
+          pointBackgroundColor: '#f0b429',
+          fill: false,
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true, position: 'top',
+          labels: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 }, boxWidth: 12 }
+        },
+        tooltip: {
+          callbacks: { label: c => c.dataset.label === 'Monte Carlo' ? `${c.raw} runs (${(c.raw/N*100).toFixed(1)}%)` : `Poisson: ${c.raw}` },
+          backgroundColor: '#111a11', borderColor: 'rgba(60,160,60,0.3)', borderWidth: 1,
+          titleColor: '#e8f0e8', bodyColor: '#7a9a7a',
+          titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 10 }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(60,160,60,0.08)' }, ticks: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 } } },
+        y: { grid: { color: 'rgba(60,160,60,0.08)' }, ticks: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 } } }
+      }
+    }
+  });
+
+  // League context
+  buildLeagueContext(tot, avg, shots.length);
+  // Shot zone comparison
+  buildShotZoneComparison();
+
+  localStorage.setItem('alexey_exp_01_results', JSON.stringify({
+    xg: tot, avg, max: mx, p0: counts[0]/N, p2: counts.slice(2).reduce((a,b) => a+b, 0)/N,
+    models: models, types: types
+  }));
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ========== LEAGUE CONTEXT IN RESULTS ==========
+function buildLeagueContext(totalXG, avgGoals, numShots) {
+  const el = document.getElementById('leagueContext');
+  const avgXGPerShot = numShots > 0 ? totalXG / numShots : 0;
+  const leagues = Object.entries(LEAGUE_DATA);
+  let html = '';
+  
+  // Find closest league by avg xG per shot
+  let closestLeague = null, closestDiff = Infinity;
+  leagues.forEach(([name, data]) => {
+    const diff = Math.abs(data.avgXGPerShot - avgXGPerShot);
+    if (diff < closestDiff) { closestDiff = diff; closestLeague = name; }
+  });
+
+  html += `<div style="margin-bottom:8px">Your average xG per shot: <span style="color:#7dd87d;font-weight:700">${avgXGPerShot.toFixed(3)}</span></div>`;
+  html += '<div style="margin-bottom:8px">League averages for comparison:</div>';
+  leagues.forEach(([name, data]) => {
+    const diff = avgXGPerShot - data.avgXGPerShot;
+    const diffStr = diff > 0 ? `+${(diff*100).toFixed(1)}%` : `${(diff*100).toFixed(1)}%`;
+    const cls = diff > 0 ? 'overperf' : 'underperf';
+    const marker = name === closestLeague ? ' \u2190 closest to your shots' : '';
+    html += `<div style="font-size:10px;margin-left:8px;margin-bottom:2px"><span style="color:${data.color}">\u25cf</span> ${name}: ${data.avgXGPerShot.toFixed(3)} xG/shot <span class="${cls}">(${diffStr})</span>${marker}</div>`;
+  });
+
+  // How likely in Premier League?
+  const epl = LEAGUE_DATA['Premier League'];
+  const eplAvgGoals = epl.avgGoalsPerMatch / 2; // per team
+  html += `<div style="margin-top:10px;font-size:11px">In the Premier League, the average team scores ~${eplAvgGoals.toFixed(1)} goals from ~${(epl.avgShotsPerMatch/2).toFixed(0)} shots per match. You placed ${numShots} shots with total xG of ${totalXG.toFixed(2)}.</div>`;
+
+  el.innerHTML = html;
+}
+
+function buildShotZoneComparison() {
+  const el = document.getElementById('shotZoneComp');
+  if (shots.length === 0) { el.innerHTML = ''; return; }
+  
+  // Classify shots into zones
+  const zones = [
+    { label: 'Inside 6-yard box', max: 5.5 },
+    { label: '6yd to penalty spot', max: 11 },
+    { label: 'Penalty area (wide)', max: 16.5 },
+    { label: 'Edge of box (18-24m)', max: 24 },
+    { label: 'Long range (24m+)', max: 999 }
+  ];
+  const myCounts = new Array(5).fill(0);
+  shots.forEach(s => {
+    for (let i = 0; i < zones.length; i++) {
+      if (s.d <= zones[i].max) { myCounts[i]++; break; }
+    }
+  });
+  const myPcts = myCounts.map(c => (c / shots.length * 100));
+  
+  // Compare to Premier League average
+  const epl = LEAGUE_DATA['Premier League'].shotDistribution;
+  let html = '';
+  for (let i = 0; i < zones.length; i++) {
+    const myP = myPcts[i].toFixed(0);
+    const leagueP = epl[i].pct;
+    html += `<div class="zone-bar">
+      <span class="zone-label">${zones[i].label}</span>
+      <div style="flex:1;display:flex;gap:2px;align-items:center">
+        <div class="zone-fill" style="width:${myP * 2}px;background:#7dd87d"></div>
+        <span style="font-size:8px;color:#7dd87d;font-family:'Space Mono',monospace">${myP}%</span>
+        <div class="zone-fill" style="width:${leagueP * 2}px;background:rgba(139,92,246,0.5);margin-left:4px"></div>
+        <span style="font-size:8px;color:#8b5cf6;font-family:'Space Mono',monospace">${leagueP}%</span>
+      </div>
+    </div>`;
+  }
+  html += '<div style="font-size:9px;color:#4a6a4a;margin-top:4px"><span style="color:#7dd87d">\u25cf</span> Your shots <span style="color:#8b5cf6">\u25cf</span> Premier League avg</div>';
+  el.innerHTML = html;
+}
+
+// ========== HEATMAP ==========
+function drawHeatmap() {
+  const hCanvas = document.getElementById('heatmapCanvas');
+  const hCtx = hCanvas.getContext('2d');
+  const step = 4; // pixel step
+  
+  // Draw pitch background first
+  for (let i = 0; i < 7; i++) {
+    hCtx.fillStyle = i % 2 === 0 ? '#061a0a' : '#071e0c';
+    hCtx.fillRect(i * (W/7), 0, Math.ceil(W/7) + 1, H);
+  }
+  
+  // Draw heatmap overlay
+  for (let y = GY + 1; y < H - 8; y += step) {
+    for (let x = 10; x < W - 10; x += step) {
+      const result = calcXGWithModel(x, y, heatmapModel);
+      if (result.xg > 0) {
+        const intensity = Math.min(1, result.xg / 0.5);
+        let r, g, b;
+        if (intensity < 0.25) {
+          r = Math.round(10 + intensity * 4 * 90);
+          g = Math.round(15 + intensity * 4 * 40);
+          b = Math.round(10 + intensity * 4 * 96);
+        } else if (intensity < 0.5) {
+          const t = (intensity - 0.25) * 4;
+          r = Math.round(100 - t * 36);
+          g = Math.round(55 + t * 73);
+          b = Math.round(106 + t * 149);
+        } else if (intensity < 0.75) {
+          const t = (intensity - 0.5) * 4;
+          r = Math.round(64 + t * 191);
+          g = Math.round(128 + t * 76);
+          b = Math.round(255 - t * 255);
+        } else {
+          const t = (intensity - 0.75) * 4;
+          r = 255;
+          g = Math.round(204 - t * 136);
+          b = Math.round(0 + t * 68);
+        }
+        hCtx.fillStyle = `rgba(${r},${g},${b},0.7)`;
+        hCtx.fillRect(x, y, step, step);
+      }
+    }
+  }
+  
+  // Draw pitch lines on top
+  hCtx.lineWidth = 1.2; hCtx.strokeStyle = 'rgba(255,255,255,.4)';
+  hCtx.strokeRect(10, GY, W - 20, H - GY - 8);
+  hCtx.beginPath(); hCtx.moveTo(10, H/2); hCtx.lineTo(W - 10, H/2); hCtx.stroke();
+  hCtx.strokeRect(GX - PBHW, GY, PBHW*2, PBY2 - GY);
+  hCtx.strokeRect(GX - SYHW, GY, SYHW*2, SYY2 - GY);
+  hCtx.lineWidth = 2; hCtx.strokeStyle = 'rgba(255,255,255,.8)';
+  hCtx.beginPath();
+  hCtx.moveTo(GX - GHW, GY); hCtx.lineTo(GX - GHW, GY - 12);
+  hCtx.lineTo(GX + GHW, GY - 12); hCtx.lineTo(GX + GHW, GY); hCtx.stroke();
+  
+  // Model label
+  hCtx.font = '10px "Space Mono", monospace';
+  hCtx.fillStyle = '#7dd87d';
+  hCtx.textAlign = 'left'; hCtx.textBaseline = 'top';
+  hCtx.fillText(heatmapModel === 'logistic' ? 'LOGISTIC REGRESSION MODEL' : 'GEOMETRIC MODEL', 14, H - 20);
+}
+
+function setHeatmapModel(m) {
+  heatmapModel = m;
+  document.getElementById('hmModelA').classList.toggle('active', m === 'geometric');
+  document.getElementById('hmModelB').classList.toggle('active', m === 'logistic');
+  drawHeatmap();
+}
+
+// ========== LEAGUE DATA UI ==========
+let leagueUIInit = false;
+function initLeagueUI() {
+  if (leagueUIInit) return;
+  leagueUIInit = true;
+  
+  const container = document.getElementById('leagueToggles');
+  Object.entries(LEAGUE_DATA).forEach(([name, data]) => {
+    const btn = document.createElement('button');
+    btn.textContent = name;
+    btn.style.borderLeftColor = data.color;
+    btn.style.borderLeftWidth = '3px';
+    btn.onclick = () => toggleLeague(name, btn);
+    container.appendChild(btn);
+  });
+}
+
+function toggleLeague(name, btn) {
+  if (selectedLeagues.has(name)) {
+    selectedLeagues.delete(name);
+    btn.classList.remove('sel');
+  } else {
+    selectedLeagues.add(name);
+    btn.classList.add('sel');
+  }
+  updateLeagueViews();
+}
+
+function updateLeagueViews() {
+  const show = selectedLeagues.size > 0;
+  document.getElementById('leagueCompCard').style.display = show ? '' : 'none';
+  document.getElementById('overPerfCard').style.display = show ? '' : 'none';
+  document.getElementById('shotZoneCard').style.display = show ? '' : 'none';
+  document.getElementById('teamsCard').style.display = show ? '' : 'none';
+  
+  if (!show) return;
+  
+  // League comparison table
+  const tbody = document.getElementById('leagueCompBody');
+  tbody.innerHTML = '';
+  selectedLeagues.forEach(name => {
+    const d = LEAGUE_DATA[name];
+    tbody.innerHTML += `<tr>
+      <td><span style="color:${d.color}">\u25cf</span> ${name}</td>
+      <td>${d.avgGoalsPerMatch.toFixed(2)}</td>
+      <td>${d.avgXGPerMatch.toFixed(2)}</td>
+      <td>${d.avgShotsPerMatch.toFixed(1)}</td>
+      <td>${d.conversionRate.toFixed(1)}%</td>
+      <td>${d.avgXGPerShot.toFixed(3)}</td>
+    </tr>`;
+  });
+  
+  // Overperformance scatter
+  buildOverPerfChart();
+  // Shot zone chart
+  buildShotZoneChart();
+  // Teams table
+  buildTeamsTable();
+}
+
+function buildOverPerfChart() {
+  const canvas = document.getElementById('overPerfChart');
+  if (overPerfChartInst) overPerfChartInst.destroy();
+  
+  const datasets = [];
+  let allXG = [], allGoals = [];
+  
+  selectedLeagues.forEach(name => {
+    const d = LEAGUE_DATA[name];
+    const points = d.teams.map(t => ({ x: t.xGFor, y: t.goalsFor, label: t.name }));
+    points.forEach(p => { allXG.push(p.x); allGoals.push(p.y); });
+    datasets.push({
+      label: name,
+      data: points,
+      backgroundColor: d.color + 'cc',
+      borderColor: d.color,
+      borderWidth: 1,
+      pointRadius: 5,
+      pointHoverRadius: 7
+    });
+  });
+  
+  const minV = Math.min(Math.min(...allXG), Math.min(...allGoals)) - 5;
+  const maxV = Math.max(Math.max(...allXG), Math.max(...allGoals)) + 5;
+  
+  // Diagonal line dataset
+  datasets.push({
+    label: 'xG = Goals',
+    data: [{ x: minV, y: minV }, { x: maxV, y: maxV }],
+    type: 'line',
+    borderColor: 'rgba(60,160,60,0.4)',
+    borderWidth: 1,
+    borderDash: [6, 4],
+    pointRadius: 0,
+    fill: false
+  });
+  
+  overPerfChartInst = new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 }, boxWidth: 8, filter: item => item.text !== 'xG = Goals' } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              if (ctx.dataset.label === 'xG = Goals') return '';
+              const p = ctx.raw;
+              return `${p.label}: ${p.y} goals / ${p.x.toFixed(1)} xG (${p.y > p.x ? '+' : ''}${(p.y - p.x).toFixed(1)})`;
+            }
+          },
+          backgroundColor: '#111a11', borderColor: 'rgba(60,160,60,0.3)', borderWidth: 1,
+          titleColor: '#e8f0e8', bodyColor: '#7a9a7a',
+          titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 10 }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'xG (Expected Goals)', color: '#4a6a4a', font: { family: 'Space Mono', size: 9 } }, grid: { color: 'rgba(60,160,60,0.08)' }, ticks: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 } }, min: minV, max: maxV },
+        y: { title: { display: true, text: 'Actual Goals', color: '#4a6a4a', font: { family: 'Space Mono', size: 9 } }, grid: { color: 'rgba(60,160,60,0.08)' }, ticks: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 } }, min: minV, max: maxV }
+      }
+    }
+  });
+}
+
+function buildShotZoneChart() {
+  const canvas = document.getElementById('shotZoneChart');
+  if (shotZoneChartInst) shotZoneChartInst.destroy();
+  
+  const zoneLabels = LEAGUE_DATA['Premier League'].shotDistribution.map(z => z.zone);
+  const datasets = [];
+  
+  selectedLeagues.forEach(name => {
+    const d = LEAGUE_DATA[name];
+    datasets.push({
+      label: name,
+      data: d.shotDistribution.map(z => z.pct),
+      backgroundColor: d.color + '88',
+      borderColor: d.color,
+      borderWidth: 1
+    });
+  });
+  
+  shotZoneChartInst = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: zoneLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 }, boxWidth: 10 } },
+        tooltip: {
+          callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}%` },
+          backgroundColor: '#111a11', borderColor: 'rgba(60,160,60,0.3)', borderWidth: 1,
+          titleColor: '#e8f0e8', bodyColor: '#7a9a7a',
+          titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 10 }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(60,160,60,0.08)' }, ticks: { color: '#7a9a7a', font: { family: 'Space Mono', size: 8 }, maxRotation: 30 } },
+        y: { grid: { color: 'rgba(60,160,60,0.08)' }, ticks: { color: '#7a9a7a', font: { family: 'Space Mono', size: 9 }, callback: v => v + '%' } }
+      }
+    }
+  });
+}
+
+function buildTeamsTable() {
+  const tbody = document.getElementById('teamsBody');
+  tbody.innerHTML = '';
+  selectedLeagues.forEach(name => {
+    const d = LEAGUE_DATA[name];
+    d.teams.forEach(t => {
+      const diff = t.goalsFor - t.xGFor;
+      const cls = diff >= 0 ? 'overperf' : 'underperf';
+      const diffStr = diff >= 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+      tbody.innerHTML += `<tr class="team-row" onclick="showTeamDetail('${name}','${t.name}')">
+        <td>${t.name}</td>
+        <td><span style="color:${d.color}">${name}</span></td>
+        <td>${t.xGFor.toFixed(1)}</td>
+        <td>${t.goalsFor}</td>
+        <td class="${cls}">${diffStr}</td>
+        <td>${t.xGAgainst.toFixed(1)}</td>
+        <td>${t.goalsAgainst}</td>
+        <td>${t.shots}</td>
+      </tr>`;
+    });
+  });
+}
+
+function showTeamDetail(leagueName, teamName) {
+  const league = LEAGUE_DATA[leagueName];
+  const team = league.teams.find(t => t.name === teamName);
+  if (!team) return;
+  
+  const card = document.getElementById('teamDetailCard');
+  card.style.display = '';
+  document.getElementById('teamDetailTitle').textContent = `${team.name} \u2014 ${leagueName}`;
+  
+  const xgPerShot = team.xGFor / team.shots;
+  const convRate = (team.goalsFor / team.shots * 100);
+  const sotPct = (team.shotsOnTarget / team.shots * 100);
+  const goalDiff = team.goalsFor - team.xGFor;
+  const defDiff = team.goalsAgainst - team.xGAgainst;
+  
+  const grid = document.getElementById('teamDetailGrid');
+  grid.innerHTML = `
+    <div class="team-stat"><div class="sl">xG For</div><div class="sv green" style="font-size:20px">${team.xGFor.toFixed(1)}</div></div>
+    <div class="team-stat"><div class="sl">Goals Scored</div><div class="sv" style="font-size:20px;color:#e8f0e8">${team.goalsFor}</div></div>
+    <div class="team-stat"><div class="sl">xG Against</div><div class="sv" style="font-size:20px;color:#e24b4a">${team.xGAgainst.toFixed(1)}</div></div>
+    <div class="team-stat"><div class="sl">Goals Conceded</div><div class="sv" style="font-size:20px;color:#e8f0e8">${team.goalsAgainst}</div></div>
+    <div class="team-stat"><div class="sl">Total Shots</div><div class="sv sm">${team.shots}</div></div>
+    <div class="team-stat"><div class="sl">Shots on Target</div><div class="sv sm">${team.shotsOnTarget} (${sotPct.toFixed(0)}%)</div></div>
+    <div class="team-stat"><div class="sl">xG per Shot</div><div class="sv sm" style="color:#7dd87d">${xgPerShot.toFixed(3)}</div></div>
+    <div class="team-stat"><div class="sl">Conversion Rate</div><div class="sv sm">${convRate.toFixed(1)}%</div></div>
+    <div class="team-stat"><div class="sl">Attacking +/-</div><div class="sv sm ${goalDiff >= 0 ? 'overperf' : 'underperf'}" style="color:${goalDiff >= 0 ? '#7dd87d' : '#e24b4a'}">${goalDiff >= 0 ? '+' : ''}${goalDiff.toFixed(1)}</div></div>
+  `;
+  
+  const perfNote = document.getElementById('teamPerfNote');
+  if (goalDiff > 2) {
+    perfNote.innerHTML = `<span class="overperf">${team.name} significantly overperforms their xG</span> \u2014 scoring ${goalDiff.toFixed(1)} more goals than expected. This could indicate elite finishing quality, or it could regress to the mean over time.`;
+  } else if (goalDiff < -2) {
+    perfNote.innerHTML = `<span class="underperf">${team.name} underperforms their xG</span> \u2014 scoring ${Math.abs(goalDiff).toFixed(1)} fewer goals than expected. This suggests poor finishing or bad luck, and might improve.`;
+  } else {
+    perfNote.innerHTML = `${team.name} scores roughly in line with their xG \u2014 their finishing is close to what the model predicts.`;
+  }
+  
+  if (defDiff < -2) {
+    perfNote.innerHTML += ` Defensively, they concede ${Math.abs(defDiff).toFixed(1)} fewer than xG against \u2014 strong goalkeeping or defensive structure.`;
+  } else if (defDiff > 2) {
+    perfNote.innerHTML += ` Defensively, they concede ${defDiff.toFixed(1)} more than xG against \u2014 potential vulnerability.`;
+  }
+  
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ========== AI COACH ==========
+async function askCoach() {
+  const interp = document.getElementById('interpText').value.trim();
+  if (interp.length < 20) { document.getElementById('interpText').style.borderColor = '#e24b4a'; return; }
+  const hyp = document.getElementById('hypText').value;
+  const tot = shots.reduce((s, sh) => s + sh.xg, 0);
+  const sd = shots.length > 0
+    ? shots.map((s, i) => `Shot ${i+1}: ${s.d.toFixed(1)}m from goal, angle ${s.a.toFixed(0)}\u00b0, xG=${s.xg.toFixed(3)}, type=${s.type}, model=${s.model}`).join('\n')
+    : 'No shots placed.';
+  
+  // Include league data context if explored
+  let leagueCtx = '';
+  if (selectedLeagues.size > 0) {
+    leagueCtx = '\n\nLeague data explored: ' + [...selectedLeagues].join(', ');
+  }
+  
+  const userMsg = `Alexey's hypothesis: "${hyp}"\n\nShot data:\n${sd}\nTotal xG: ${tot.toFixed(3)}\nModels used: ${[...new Set(shots.map(s => s.model))].join(', ')}\nShot types: ${[...new Set(shots.map(s => s.type))].join(', ')}${leagueCtx}\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl = document.getElementById('aiQ');
+  aiEl.innerHTML = '<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById('askBtn').disabled = true;
+  convHist = [{ role: 'user', content: userMsg }];
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has just run a computational xG (Expected Goals) model for football. He placed shots on a pitch using both a geometric model and a logistic regression model, selected different shot types (open play, headers, free kicks, penalties), ran 500 Monte Carlo simulations with Poisson comparison, and explored real league data from European football. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Never explain the science to him \u2014 make him work it out. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',
+        messages: convHist
+      })
+    });
+    const d = await r.json();
+    const q = d.content[0].text;
+    aiEl.innerHTML = `<span style="font-style:italic">${q}</span>`;
+    convHist.push({ role: 'assistant', content: q });
+    localStorage.setItem('alexey_exp_01_dialogue', JSON.stringify(convHist));
+    document.getElementById('replySec').style.display = 'block';
+  } catch(e) {
+    aiEl.innerHTML = '<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>';
+  }
+  document.getElementById('askBtn').disabled = false;
+}
+
+async function sendReply() {
+  const reply = document.getElementById('replyText').value.trim();
+  if (reply.length < 3) return;
+  const prevQ = document.getElementById('aiQ').innerText;
+  const thr = document.getElementById('thread');
+  thr.innerHTML += `<div class="tcoach"><div class="tcoach-lbl">coach's question</div>${prevQ}</div><div class="talex"><div class="talex-lbl">alexey</div>${reply}</div>`;
+  document.getElementById('replyText').value = '';
+  convHist.push({ role: 'user', content: reply });
+  const aiEl = document.getElementById('aiQ');
+  aiEl.innerHTML = '<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his football xG experiment. He has used geometric and logistic regression models, different shot types, Monte Carlo simulation with Poisson comparison, and real European league data. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',
+        messages: convHist
+      })
+    });
+    const d = await r.json();
+    const q = d.content[0].text;
+    aiEl.innerHTML = `<span style="font-style:italic">${q}</span>`;
+    convHist.push({ role: 'assistant', content: q });
+    localStorage.setItem('alexey_exp_01_dialogue', JSON.stringify(convHist));
+  } catch(e) {
+    aiEl.innerHTML = '<span style="color:#e24b4a;font-size:12px">Connection issue \u2014 try again.</span>';
+  }
+}
+
+// ========== LOGBOOK ==========
+const LOGBOOK_KEY = 'alexey_exp_01_logbook';
+function getLogEntries() { try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; } catch(e) { return []; } }
+function saveLogEntries(entries) { localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries)); }
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag ${typeClass}">${typeLabel}</span><span class="log-entry-ts">${ts}</span><div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div></div><div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${e.context ? '<div class="log-entry-ctx">' + e.context + '</div>' : ''}</div>`;
   }).join('');
 }
-function addLogEntry(){
-  const text=document.getElementById('logText').value.trim();if(!text)return;
-  const type=document.getElementById('logType').value;const entries=getLogEntries();
-  entries.push({id:Date.now().toString(36),timestamp:new Date().toISOString(),type,text,context:''});
-  saveLogEntries(entries);document.getElementById('logText').value='';renderLogbook();
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({ id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context: '' });
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
 }
-function deleteLogEntry(idx){const entries=getLogEntries();entries.splice(idx,1);saveLogEntries(entries);renderLogbook();}
-function exportLogbook(){
-  const entries=getLogEntries();if(entries.length===0)return;
-  let md='# Experiment 01 - xG Model — Logbook\n\n';
-  entries.forEach(e=>{const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';const date=new Date(e.timestamp);md+=`## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`+e.text+'\n\n';if(e.context)md+=`> Context: ${e.context}\n\n`;md+='---\n\n';});
-  const blob=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='xg-model-logbook.md';a.click();
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
 }
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# Experiment 01 - xG Model \u2014 Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += `## ${typeLabel} \u2014 ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n` + e.text + '\n\n';
+    if (e.context) md += `> Context: ${e.context}\n\n`;
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'xg-model-logbook.md';
+  a.click();
+}
+
+// ========== INIT ==========
+redraw();
 renderLogbook();
 </script>
 </body>
