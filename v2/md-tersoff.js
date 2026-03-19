@@ -7,10 +7,7 @@ window.MD = MD;
 
 MD.tersoff = {
   /**
-   * Compute cutoff function fc(r)
-   * fc = 1 if r < R
-   * fc = 0.5 + 0.5*cos(pi*(r-R)/(S-R)) if R < r < S
-   * fc = 0 if r > S
+   * Cutoff function fc(r)
    */
   fc: function(r, R, S) {
     if (r < R) return 1.0;
@@ -20,7 +17,6 @@ MD.tersoff = {
 
   /**
    * Angular function g(theta) for atom i with species si
-   * g(theta) = 1 + c²/d² - c²/(d² + (h - cos(theta))²)
    */
   g: function(cosTheta, si) {
     const p = MD.params;
@@ -32,11 +28,10 @@ MD.tersoff = {
 
   /**
    * Compute total energy of the system
-   * Returns { total, pair, threebody, perAtom, surfaceEnergy }
+   * Returns { total, pair, threebody, perAtom, surfaceEnergy, bulkPerAtom, surfaceArea }
    */
   computeEnergy: function(slab) {
     const atoms = slab.atoms;
-    const box = slab.box;
     const p = MD.params;
     const n = atoms.length;
 
@@ -52,14 +47,12 @@ MD.tersoff = {
       const si = ai.species;
       const nbs = ai.neighbors;
 
-      // For each neighbor j of i
       for (let jn = 0; jn < nbs.length; jn++) {
         const j = nbs[jn].idx;
         const aj = atoms[j];
         const sj = aj.species;
         const rij = nbs[jn].r;
 
-        // Mixed parameters
         const mix = p.getMixed(si, sj);
         if (rij >= mix.S) continue;
 
@@ -67,27 +60,23 @@ MD.tersoff = {
         const fR = mix.A * Math.exp(-mix.lambda * rij);
         const fA = -mix.B * Math.exp(-mix.mu * rij);
 
-        // Repulsive pair energy (counted once per pair via i<j convention and factor)
+        // Repulsive pair energy
         epair += 0.5 * fcij * fR;
         ai.energy += 0.25 * fcij * fR;
 
-        // Compute zeta_ij = sum over k != j of fc(rik) * omega * g(theta_ijk)
+        // Compute zeta_ij
         let zetaij = 0;
         for (let kn = 0; kn < nbs.length; kn++) {
           if (kn === jn) continue;
-          const k = nbs[kn].idx;
-          const sk = atoms[k].species;
+          const sk = atoms[nbs[kn].idx].species;
           const rik = nbs[kn].r;
 
           const mixIK = p.getMixed(si, sk);
           if (rik >= mixIK.S) continue;
 
           const fcik = MD.tersoff.fc(rik, mixIK.R, mixIK.S);
-
-          // cos(theta_ijk)
           const dot = nbs[jn].dx * nbs[kn].dx + nbs[jn].dy * nbs[kn].dy + nbs[jn].dz * nbs[kn].dz;
           const cosTheta = dot / (rij * rik);
-
           const gijk = MD.tersoff.g(cosTheta, si);
           zetaij += fcik * p.omega[si][sk] * gijk;
         }
@@ -129,20 +118,89 @@ MD.tersoff = {
   },
 
   /**
-   * Run thickness sweep: build slabs of varying nz, compute surface energy
-   * @param {number} nx
-   * @param {number} ny
-   * @param {number} xGe
-   * @param {number[]} nzValues - array of thickness values
+   * Composition sweep: surface energy vs Ge fraction
+   * @param {number} nx, ny - xy cell count
+   * @param {number} nz - number of z cells (uses buildDefaultSlab)
+   * @param {number[]} xGeValues - array of Ge fractions to test
    * @param {function} onProgress - callback(i, total, result)
-   * @returns {object[]} results array
+   * @returns {object[]} results
+   */
+  compositionSweep: function(nx, ny, nz, xGeValues, onProgress) {
+    const results = [];
+    for (let i = 0; i < xGeValues.length; i++) {
+      const xGe = xGeValues[i];
+      const slab = MD.crystal.buildDefaultSlab(nx, ny, nz, xGe);
+      const energy = MD.tersoff.computeEnergy(slab);
+      const stats = MD.crystal.getStats(slab);
+      const layerDist = MD.crystal.getLayerDistribution(slab, 4);
+
+      const result = {
+        xGe: xGe,
+        nAtoms: stats.total,
+        totalEnergy: energy.total,
+        perAtom: energy.perAtom,
+        surfaceEnergy: energy.surfaceEnergy,
+        surfaceArea: energy.surfaceArea,
+        layerDistribution: layerDist
+      };
+      results.push(result);
+      if (onProgress) onProgress(i, xGeValues.length, result);
+    }
+    return results;
+  },
+
+  /**
+   * Strain sweep: surface energy vs lattice strain
+   * @param {number} nx, ny, nz
+   * @param {number} xGe
+   * @param {number[]} strainXValues - array of x strains
+   * @param {number[]} strainYValues - array of y strains
+   * @param {function} onProgress
+   * @returns {object[]} results (flat array for 2D sweep)
+   */
+  strainSweep: function(nx, ny, nz, xGe, strainXValues, strainYValues, onProgress) {
+    const results = [];
+    let count = 0;
+    const total = strainXValues.length * strainYValues.length;
+
+    for (let ix = 0; ix < strainXValues.length; ix++) {
+      for (let iy = 0; iy < strainYValues.length; iy++) {
+        const sx = strainXValues[ix];
+        const sy = strainYValues[iy];
+        const latt = MD.params.getLattice100Strained(xGe, sx, sy);
+        const slab = MD.crystal.buildDefaultSlab(nx, ny, nz, xGe, latt);
+        const energy = MD.tersoff.computeEnergy(slab);
+
+        const result = {
+          strainX: sx,
+          strainY: sy,
+          lattx: latt.lattx,
+          latty: latt.latty,
+          surfaceEnergy: energy.surfaceEnergy,
+          perAtom: energy.perAtom,
+          totalEnergy: energy.total
+        };
+        results.push(result);
+        count++;
+        if (onProgress) onProgress(count, total, result);
+      }
+    }
+    return results;
+  },
+
+  /**
+   * Thickness sweep: surface energy vs slab thickness
+   * @param {number} nx, ny
+   * @param {number} xGe
+   * @param {number[]} nzValues
+   * @param {function} onProgress
+   * @returns {object[]} results
    */
   thicknessSweep: function(nx, ny, xGe, nzValues, onProgress) {
     const results = [];
-
     for (let i = 0; i < nzValues.length; i++) {
       const nz = nzValues[i];
-      const slab = MD.crystal.buildSlab(nx, ny, nz, xGe);
+      const slab = MD.crystal.buildDefaultSlab(nx, ny, nz, xGe);
       const energy = MD.tersoff.computeEnergy(slab);
       const stats = MD.crystal.getStats(slab);
 
@@ -157,68 +215,9 @@ MD.tersoff = {
         surfaceEnergy: energy.surfaceEnergy,
         surfaceArea: energy.surfaceArea
       };
-
       results.push(result);
       if (onProgress) onProgress(i, nzValues.length, result);
     }
-
     return results;
-  },
-
-  /**
-   * Simple steepest-descent relaxation
-   * Move atoms slightly to reduce energy
-   * @param {object} slab
-   * @param {number} nSteps
-   * @param {function} onStep - callback(step, energy)
-   * @returns {number[]} energy history
-   */
-  relax: function(slab, nSteps, onStep) {
-    const atoms = slab.atoms;
-    const box = slab.box;
-    const stepSize = 0.01; // Angstrom
-    const energyHistory = [];
-
-    for (let step = 0; step < nSteps; step++) {
-      // Compute current energy
-      const e0 = MD.tersoff.computeEnergy(slab);
-      energyHistory.push(e0.total);
-      if (onStep) onStep(step, e0.total);
-
-      // For each non-fixed atom, try small perturbations
-      for (let i = 0; i < atoms.length; i++) {
-        const a = atoms[i];
-        // Skip bottom-layer atoms (fixed substrate)
-        if (a.z < slab.a0 * 0.3) continue;
-
-        // Numerical gradient in x, y, z
-        const dirs = ['x', 'y', 'z'];
-        for (const dir of dirs) {
-          const orig = a[dir];
-
-          // Forward
-          a[dir] = orig + stepSize;
-          MD.crystal.findNeighbors(atoms, box);
-          const eF = MD.tersoff.computeEnergy(slab).total;
-
-          // Backward
-          a[dir] = orig - stepSize;
-          MD.crystal.findNeighbors(atoms, box);
-          const eB = MD.tersoff.computeEnergy(slab).total;
-
-          // Gradient
-          const grad = (eF - eB) / (2 * stepSize);
-
-          // Move downhill
-          a[dir] = orig - 0.3 * stepSize * Math.sign(grad);
-        }
-      }
-
-      // Rebuild neighbors after all moves
-      MD.crystal.findNeighbors(atoms, box);
-      MD.crystal.markSurface(atoms, box);
-    }
-
-    return energyHistory;
   }
 };
