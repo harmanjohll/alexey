@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiGe Surface Dynamics · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --bg-deep: #edeae3;
+  --surface: #ffffff;
+  --border: #d4cfc5;
+  --border-light: #e8e4dc;
+  --text-primary: #1a1a18;
+  --text-secondary: #6b6560;
+  --text-tertiary: #9a9490;
+  --accent: #2d5a3d;
+  --accent-light: #3d7a52;
+  --accent-subtle: rgba(45, 90, 61, 0.08);
+  --accent-border: rgba(45, 90, 61, 0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+.page { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+
+/* Nav */
+.nav-back {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  padding: 5px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  margin-bottom: 2rem;
+  transition: all 150ms;
+}
+.nav-back:hover { color: var(--accent); border-color: var(--accent-border); }
+
+/* Header */
+.exp-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+}
+.exp-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+.exp-sub {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 640px;
+  margin-bottom: 2.5rem;
+}
+
+/* Step cards */
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.step-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg);
+}
+.snum {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.03em;
+}
+.sname {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.shint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.sbody { padding: 20px; }
+
+/* Note callout */
+.note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  padding: 12px 16px;
+  border-left: 2px solid var(--accent);
+  background: var(--accent-subtle);
+  margin-bottom: 16px;
+  border-radius: 0 2px 2px 0;
+}
+.note b { color: var(--accent); font-weight: 500; }
+
+/* Forms */
+textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 12px;
+  resize: vertical;
+  border-radius: 2px;
+  transition: border-color 200ms;
+  min-height: 110px;
+}
+textarea:focus { outline: none; border-color: var(--accent); }
+textarea::placeholder { color: var(--text-tertiary); }
+textarea:disabled { color: var(--text-secondary); background: var(--bg-deep); cursor: default; }
+
+.row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; gap: 8px; }
+.ts-label { font-size: 11px; color: var(--accent); font-family: 'JetBrains Mono', monospace; display: none; }
+
+/* Buttons */
+button, .btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 7px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 150ms;
+}
+button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+button.primary:hover:not(:disabled) { background: var(--accent-light); }
+button.active { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
+button.sm { font-size: 10px; padding: 4px 10px; }
+
+/* Lab layout */
+.lab-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+.lab-canvas-wrap {
+  position: relative;
+  background: #fafaf7;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+canvas#crystalCanvas { display: block; width: 100%; cursor: grab; }
+canvas#crystalCanvas:active { cursor: grabbing; }
+
+/* Data labels */
+.dl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
+.dv { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-primary); font-weight: 500; margin-bottom: 12px; }
+.dv.accent { color: var(--accent); }
+
+/* Controls */
+.ctrl-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.ctrl-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 80px; }
+.ctrl-group label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.04em; }
+.ctrl-group input[type=range] { width: 100%; accent-color: var(--accent); height: 4px; }
+.ctrl-group .cv { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* Color mode buttons */
+.color-btns { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+.color-btn { font-size: 10px; padding: 3px 8px; }
+
+/* Chart containers */
+.chart-wrap { background: var(--bg); border: 1px solid var(--border-light); border-radius: 2px; padding: 12px; position: relative; }
+
+/* Results */
+.res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.rstat { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-light); }
+.rstat:last-child { border-bottom: none; }
+.rl { font-size: 12px; color: var(--text-secondary); }
+.rv { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: var(--accent); }
+
+.model-note {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  margin-top: 16px;
+}
+
+/* Series */
+.series-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.series-row input { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 2px; background: var(--bg); color: var(--text-primary); width: 150px; }
+.series-row input:focus { outline: none; border-color: var(--accent); }
+.series-tag { display: inline-flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); background: var(--accent-subtle); border: 1px solid var(--accent-border); padding: 2px 8px; border-radius: 2px; }
+.series-del { background: none; border: none; color: var(--text-tertiary); font-size: 12px; cursor: pointer; padding: 0 2px; }
+.series-del:hover { color: #c0392b; }
+
+/* Interpretation */
+.interp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.ai-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 2px 2px 0;
+  padding: 16px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+}
+.ai-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+.ai-q { font-size: 14px; color: var(--text-primary); line-height: 1.7; font-style: italic; flex: 1; }
+
+.pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pd 1.2s infinite; margin-right: 6px; vertical-align: middle; }
+@keyframes pd { 0%,100%{opacity:1} 50%{opacity:0.15} }
+
+.thread { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.tcoach { background: var(--accent-subtle); border: 1px solid var(--accent-border); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--text-primary); line-height: 1.7; font-style: italic; }
+.talex { background: var(--bg); border: 1px solid var(--border-light); border-radius: 2px; padding: 10px 14px; font-size: 13px; color: var(--text-primary); line-height: 1.7; }
+.t-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 4px; font-style: normal; }
+.coach-lbl { color: var(--accent); }
+.alex-lbl { color: #6b8fa3; }
+.reply-sec { margin-top: 14px; display: none; }
+
+/* Status line */
+.status { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-tertiary); margin-top: 8px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page { padding: 2rem 1rem 4rem; }
+  .lab-grid { grid-template-columns: 1fr; }
+  .res-grid { grid-template-columns: 1fr; }
+  .interp-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<a href="index.html" class="nav-back">&larr; portfolio home</a>
+
+<div class="exp-tag">Alexey Mikhail Johll &middot; Module 01 &middot; Molecular Dynamics</div>
+<h1 class="exp-title">SiGe Surface Dynamics</h1>
+<p class="exp-sub">Build diamond cubic crystal slabs of silicon-germanium, compute their energy using the Tersoff interatomic potential, and discover how surface energy depends on slab thickness and germanium composition. The same potential your father uses in his research.</p>
+
+<!-- Step 01: Hypothesis -->
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> Before building any crystals, predict: how will surface energy change as the slab gets thicker? Will adding germanium make the surface more or less stable? What role does coordination number play? Be specific.</div>
+    <textarea id="hypText" placeholder="e.g. I predict that surface energy will decrease as the slab gets thicker because the ratio of surface atoms to bulk atoms decreases. Adding germanium might change the surface energy because Ge atoms are larger than Si and have different bond strengths..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" class="primary" onclick="MD.ui.lockHypothesis()">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 02: The Lab -->
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The crystal lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <div class="lab-grid">
+      <div>
+        <div class="lab-canvas-wrap">
+          <canvas id="crystalCanvas" width="700" height="480"></canvas>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+          <div class="color-btns">
+            <button class="color-btn active" data-mode="species" onclick="MD.ui.setColorMode('species')">Species</button>
+            <button class="color-btn" data-mode="coordination" onclick="MD.ui.setColorMode('coordination')">Coord #</button>
+            <button class="color-btn" data-mode="energy" onclick="MD.ui.setColorMode('energy')">Energy</button>
+            <button class="color-btn" data-mode="layer" onclick="MD.ui.setColorMode('layer')">Layer</button>
+          </div>
+          <button class="sm" onclick="MD.viewer.resetView()">Reset view</button>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);margin-top:4px">drag to rotate &middot; shift+drag to pan &middot; scroll to zoom</div>
+      </div>
+      <div>
+        <div class="ctrl-row">
+          <div class="ctrl-group">
+            <label>Width (cells)</label>
+            <input type="range" id="slNx" min="2" max="6" value="3" class="lab-ctrl" disabled oninput="MD.ui.updateSliderLabels()">
+            <span class="cv" id="valNx">3</span>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-group">
+            <label>Thickness (cells)</label>
+            <input type="range" id="slNz" min="2" max="8" value="4" class="lab-ctrl" disabled oninput="MD.ui.updateSliderLabels()">
+            <span class="cv" id="valNz">4</span>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-group">
+            <label>Ge composition</label>
+            <input type="range" id="slGe" min="0" max="100" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateSliderLabels()">
+            <span class="cv" id="valGe">20%</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary lab-ctrl" disabled onclick="MD.ui.buildCrystal()">Build crystal</button>
+          <button id="sweepBtn" class="lab-ctrl" disabled onclick="MD.ui.runSweep()">Run thickness sweep</button>
+        </div>
+        <div class="status" id="buildStatus">&nbsp;</div>
+
+        <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:14px">
+          <div class="dl">Atoms</div>
+          <div class="dv" id="dAtoms">&mdash;</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
+            <div><div class="dl">Si</div><div class="dv" id="dSi">&mdash;</div></div>
+            <div><div class="dl">Ge</div><div class="dv" id="dGe">&mdash;</div></div>
+            <div><div class="dl">x(Ge)</div><div class="dv" id="dXGe">&mdash;</div></div>
+            <div><div class="dl">a&#8320;</div><div class="dv" id="dA0">&mdash;</div></div>
+          </div>
+          <div class="dl">Dimensions</div>
+          <div class="dv" id="dDims">&mdash;</div>
+          <div class="dl">Total energy</div>
+          <div class="dv accent" id="dEtot">&mdash;</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
+            <div><div class="dl">E/atom</div><div class="dv" id="dEpa">&mdash;</div></div>
+            <div><div class="dl">E_surf</div><div class="dv accent" id="dEsurf">&mdash;</div></div>
+            <div><div class="dl">Surface</div><div class="dv" id="dSurf">&mdash;</div></div>
+            <div><div class="dl">Bulk</div><div class="dv" id="dBulk">&mdash;</div></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:14px">
+          <div class="dl" style="margin-bottom:6px">Coordination histogram</div>
+          <div class="chart-wrap" style="height:140px"><canvas id="coordChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 03: Results -->
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Thickness sweep results</span>
+    <span class="shint">Surface energy vs slab thickness</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="dl" style="margin-bottom:8px">Surface energy convergence</div>
+        <div class="chart-wrap" style="height:300px"><canvas id="sweepChart"></canvas></div>
+        <div class="series-row">
+          <input type="text" id="seriesName" placeholder="Series name...">
+          <button class="sm" onclick="MD.ui.saveSeries()">Save series</button>
+        </div>
+        <div id="seriesList" style="margin-top:8px"></div>
+      </div>
+      <div>
+        <div class="dl" style="margin-bottom:12px">Summary</div>
+        <div class="rstat"><span class="rl">Converged E_surf</span><span class="rv" id="rConv">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Max thickness</span><span class="rv" id="rThick">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Max atoms</span><span class="rv" id="rAtoms">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Composition</span><span class="rv" id="rComp">&mdash;</span></div>
+        <div class="status" id="sweepStatus">&nbsp;</div>
+        <div class="model-note" style="margin-top:20px">
+          <b style="color:var(--text-secondary)">Model assumptions:</b> This simulation uses Tersoff T3 parameters (PRB 39, 5566). The crystal is generated with random Ge substitution (no clustering or ordering). Surface energy is computed as (E_total &minus; N&times;E_bulk) / (2&times;A). Periodic boundaries in x,y; free surface in z. No relaxation &mdash; atoms remain at ideal lattice positions.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 04: Findings -->
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="dl" style="margin-bottom:8px">Your interpretation</div>
+        <textarea id="interpText" placeholder="What did the thickness sweep show? How does Ge composition affect surface energy? Did the results match your hypothesis? What patterns do you notice? What are the limitations of this model?"></textarea>
+        <div class="btn-row">
+          <button id="askBtn" class="primary" onclick="MD.ui.askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="dl" style="margin:14px 0 6px">Your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="btn-row"><button onclick="MD.ui.sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="dl" style="margin-bottom:8px">Coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's Coach</div>
+          <div class="ai-q" id="aiQ">
+            <span style="color:var(--text-tertiary);font-size:13px;font-style:italic">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="md-params.js"></script>
+<script src="md-crystal.js"></script>
+<script src="md-tersoff.js"></script>
+<script src="md-viewer.js"></script>
+<script src="md-ui.js"></script>
+</body>
+</html>
