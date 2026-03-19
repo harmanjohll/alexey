@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 01 · Blink · ArduinoLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;line-height:1.65}
+.wrap{max-width:1200px;margin:0 auto;padding:1.5rem 1rem}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:10px;font-family:'Space Mono',monospace}
+.exp-title{font-size:24px;font-family:'Space Mono',monospace;font-weight:700;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:700px;margin-bottom:1.5rem}
+
+/* Layout */
+.lab-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.lab-left,.lab-right{display:flex;flex-direction:column;gap:14px}
+
+/* Step card */
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:14px}
+
+/* Lesson content */
+.lesson h3{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#7dd87d;margin:14px 0 6px}
+.lesson h3:first-child{margin-top:0}
+.lesson p{font-size:12px;color:#c8d8c8;margin-bottom:8px;line-height:1.7}
+.lesson code{font-family:'Space Mono',monospace;font-size:11px;background:#0d150d;padding:1px 5px;border-radius:3px;color:#7dd87d;border:0.5px solid rgba(60,160,60,0.2)}
+.lesson pre{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:10px;margin:8px 0;overflow-x:auto}
+.lesson pre code{background:none;border:none;padding:0;color:#e8f0e8;display:block;font-size:11px;line-height:1.6}
+.lesson ul{font-size:12px;color:#c8d8c8;padding-left:18px;margin-bottom:8px}
+.lesson li{margin-bottom:3px;line-height:1.6}
+.note{font-size:11px;color:#7a9a7a;line-height:1.65;padding:8px 12px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin:10px 0;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d}
+
+/* Editor */
+#editorContainer{width:100%;height:240px;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;overflow:hidden}
+.editor-toolbar{display:flex;gap:6px;margin-top:8px;align-items:center}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.run-btn{background:rgba(60,160,60,0.1);font-weight:700}
+.stop-btn{background:rgba(226,75,74,0.08);color:#e24b4a;border-color:rgba(226,75,74,0.4);display:none}
+
+/* Simulator */
+canvas#simCanvas{width:100%;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;display:block;background:#080c08}
+
+/* Serial monitor */
+.serial{background:#080c08;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;height:100px;overflow-y:auto;padding:8px;font-family:'Space Mono',monospace;font-size:10px;color:#7dd87d;margin-top:8px}
+.serial-line{line-height:1.5}
+.serial-empty{color:#4a6a4a;font-style:italic}
+
+/* Quiz */
+.quiz-q{margin-bottom:14px}
+.quiz-q p{font-size:12px;color:#e8f0e8;margin-bottom:6px}
+.quiz-q label{display:block;font-size:11px;color:#c8d8c8;padding:5px 10px;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;margin-bottom:3px;cursor:pointer;transition:all .1s;font-family:'Space Mono',monospace}
+.quiz-q label:hover{border-color:rgba(60,160,60,0.4);background:rgba(60,160,60,0.05)}
+.quiz-q input[type="radio"]{margin-right:6px;accent-color:#3ca03c}
+.quiz-q label.correct{border-color:#3ca03c;background:rgba(60,160,60,0.1);color:#7dd87d}
+.quiz-q label.wrong{border-color:#e24b4a;background:rgba(226,75,74,0.08);color:#e24b4a}
+.quiz-result{font-family:'Space Mono',monospace;font-size:12px;padding:10px;border-radius:6px;margin-top:10px}
+.quiz-result.pass{background:rgba(60,160,60,0.1);border:0.5px solid rgba(60,160,60,0.3);color:#7dd87d}
+.quiz-result.fail{background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.3);color:#e24b4a}
+
+@media(max-width:800px){.lab-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="index.html" class="nav-back">← module list</a>
+<div class="exp-tag">MODULE 01 OF 10 · DIGITAL OUTPUT · BASICS</div>
+<div class="exp-title">Blink — Your First Arduino Program</div>
+<div class="exp-sub">Every Arduino journey starts here. You'll learn the two functions every sketch needs, how to control a digital pin, and make an LED blink at exactly 1Hz.</div>
+
+<div class="lab-layout">
+  <!-- LEFT: Lesson + Quiz -->
+  <div class="lab-left">
+    <div class="step">
+      <div class="step-hdr">
+        <span class="snum">LESSON</span>
+        <span class="sname">The Concepts</span>
+      </div>
+      <div class="sbody lesson">
+        <h3>Every Arduino Sketch Has Two Functions</h3>
+        <pre><code>void setup() {
+  // Runs ONCE when board powers on
+}
+
+void loop() {
+  // Runs FOREVER, over and over
+}</code></pre>
+        <p><code>setup()</code> is your preparation step — configure pins, set initial states. Runs exactly once.</p>
+        <p><code>loop()</code> is where the action happens. After setup finishes, loop runs continuously forever.</p>
+
+        <h3>Digital Output</h3>
+        <p>Arduino pins have two states: <code>HIGH</code> (5 volts, on) and <code>LOW</code> (0 volts, off).</p>
+        <p>Before using a pin for output, configure it:</p>
+        <pre><code>pinMode(13, OUTPUT);    // Pin 13 = output
+digitalWrite(13, HIGH); // Turn ON (5V)
+digitalWrite(13, LOW);  // Turn OFF (0V)</code></pre>
+
+        <h3>The delay() Function</h3>
+        <ul>
+          <li><code>delay(1000)</code> → pauses 1 second</li>
+          <li><code>delay(500)</code> → pauses half a second</li>
+          <li><code>delay(100)</code> → pauses 0.1 seconds</li>
+        </ul>
+        <div class="note"><b>Pin 13</b> is special — most Arduino boards have a built-in LED on it. <code>LED_BUILTIN</code> is the same as <code>13</code>.</div>
+
+        <h3>Your Task</h3>
+        <p>Write a sketch that blinks the LED on pin 13. In <code>setup()</code>, set pin 13 as OUTPUT. In <code>loop()</code>, turn it on, wait 500ms, turn it off, wait 500ms. This creates a 1Hz blink.</p>
+
+        <h3>Key Concepts</h3>
+        <ul>
+          <li><b>Digital signal:</b> only HIGH or LOW. No in-between.</li>
+          <li><b>Hz (Hertz):</b> cycles per second. 1Hz = one on/off per second.</li>
+          <li><b>Duty cycle:</b> fraction of time the signal is HIGH. 50% = equal on/off.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="step" id="quizStep">
+      <div class="step-hdr">
+        <span class="snum">QUIZ</span>
+        <span class="sname">Check Your Understanding</span>
+        <span class="shint">80% to pass</span>
+      </div>
+      <div class="sbody" id="quizBody"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Editor + Simulator -->
+  <div class="lab-right">
+    <div class="step">
+      <div class="step-hdr">
+        <span class="snum">CODE</span>
+        <span class="sname">Arduino Editor</span>
+        <span class="shint" id="simStatus">Write your sketch</span>
+      </div>
+      <div class="sbody">
+        <div id="editorContainer"></div>
+        <div class="editor-toolbar">
+          <button class="run-btn" id="runBtn" onclick="runSketch()">▶ Run</button>
+          <button class="stop-btn" id="stopBtn" onclick="stopSketch()">■ Stop</button>
+          <button onclick="resetCode()">↺ Reset</button>
+          <span style="margin-left:auto;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace" id="runTimer"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-hdr">
+        <span class="snum">SIM</span>
+        <span class="sname">Circuit Simulator</span>
+      </div>
+      <div class="sbody">
+        <canvas id="simCanvas" width="500" height="280"></canvas>
+        <div class="serial" id="serialMon">
+          <div class="serial-empty">Serial monitor — output appears here when your sketch uses Serial.println()</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Monaco Editor CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+<script>
+// ==================== EDITOR SETUP ====================
+const STARTER_CODE = `// Module 1: Blink
+// Make the LED on pin 13 blink on and off
+
+void setup() {
+  // Set pin 13 as an OUTPUT
+
+}
+
+void loop() {
+  // Turn the LED ON (HIGH)
+
+  // Wait 500 milliseconds
+
+  // Turn the LED OFF (LOW)
+
+  // Wait 500 milliseconds
+
+}`;
+
+let editor;
+require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
+require(['vs/editor/editor.main'], function() {
+  monaco.editor.defineTheme('arduinolab', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'keyword', foreground: '7dd87d' },
+      { token: 'type', foreground: '58a6ff' },
+      { token: 'string', foreground: 'f0b429' },
+      { token: 'number', foreground: '79c0ff' },
+      { token: 'comment', foreground: '4a6a4a', fontStyle: 'italic' },
+    ],
+    colors: {
+      'editor.background': '#0d150d',
+      'editor.foreground': '#e8f0e8',
+      'editor.lineHighlightBackground': '#111a1140',
+      'editorLineNumber.foreground': '#2a3a2a',
+      'editorLineNumber.activeForeground': '#4a6a4a',
+      'editor.selectionBackground': '#3ca03c30',
+      'editorCursor.foreground': '#7dd87d',
+    },
+  });
+
+  const saved = localStorage.getItem('arduino_module-01-blink_code');
+  editor = monaco.editor.create(document.getElementById('editorContainer'), {
+    value: saved || STARTER_CODE,
+    language: 'cpp',
+    theme: 'arduinolab',
+    fontSize: 12,
+    fontFamily: "'Space Mono', monospace",
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    lineNumbers: 'on',
+    renderLineHighlight: 'line',
+    tabSize: 2,
+    padding: { top: 8 },
+    wordWrap: 'on',
+  });
+
+  editor.onDidChangeModelContent(() => {
+    localStorage.setItem('arduino_module-01-blink_code', editor.getValue());
+  });
+});
+
+function resetCode() {
+  if (editor) {
+    editor.setValue(STARTER_CODE);
+    localStorage.removeItem('arduino_module-01-blink_code');
+  }
+}
+
+// ==================== ARDUINO INTERPRETER ====================
+let simRunning = false;
+let simTimeout = null;
+let simStartTime = 0;
+let ledState = false;
+let pinModes = {};
+let pinStates = {};
+let serialBuffer = [];
+
+function parseSketch(code) {
+  // Extract setup and loop function bodies
+  const setupMatch = code.match(/void\s+setup\s*\(\s*\)\s*\{([\s\S]*?)\n\}/);
+  const loopMatch = code.match(/void\s+loop\s*\(\s*\)\s*\{([\s\S]*?)\n\}/);
+  if (!setupMatch || !loopMatch) return null;
+  return {
+    setup: parseStatements(setupMatch[1]),
+    loop: parseStatements(loopMatch[1]),
+  };
+}
+
+function parseStatements(body) {
+  const stmts = [];
+  const lines = body.split('\n');
+  for (let line of lines) {
+    line = line.replace(/\/\/.*$/, '').trim();
+    if (!line || line === '{' || line === '}') continue;
+    line = line.replace(/;$/, '');
+
+    let m;
+    if ((m = line.match(/pinMode\s*\(\s*(\d+|LED_BUILTIN)\s*,\s*(OUTPUT|INPUT|INPUT_PULLUP)\s*\)/))) {
+      const pin = m[1] === 'LED_BUILTIN' ? 13 : parseInt(m[1]);
+      stmts.push({ type: 'pinMode', pin, mode: m[2] });
+    } else if ((m = line.match(/digitalWrite\s*\(\s*(\d+|LED_BUILTIN)\s*,\s*(HIGH|LOW)\s*\)/))) {
+      const pin = m[1] === 'LED_BUILTIN' ? 13 : parseInt(m[1]);
+      stmts.push({ type: 'digitalWrite', pin, value: m[2] === 'HIGH' });
+    } else if ((m = line.match(/delay\s*\(\s*(\d+)\s*\)/))) {
+      stmts.push({ type: 'delay', ms: parseInt(m[1]) });
+    } else if ((m = line.match(/Serial\.begin\s*\(\s*(\d+)\s*\)/))) {
+      stmts.push({ type: 'serialBegin', baud: parseInt(m[1]) });
+    } else if ((m = line.match(/Serial\.println\s*\(\s*"([^"]*)"\s*\)/))) {
+      stmts.push({ type: 'serialPrintln', text: m[1] });
+    } else if ((m = line.match(/Serial\.println\s*\(\s*([^)]+)\s*\)/))) {
+      stmts.push({ type: 'serialPrintln', text: m[1] });
+    }
+  }
+  return stmts;
+}
+
+function execStatement(stmt) {
+  switch (stmt.type) {
+    case 'pinMode':
+      pinModes[stmt.pin] = stmt.mode;
+      break;
+    case 'digitalWrite':
+      pinStates[stmt.pin] = stmt.value;
+      if (stmt.pin === 13) ledState = stmt.value;
+      break;
+    case 'serialBegin':
+      break;
+    case 'serialPrintln':
+      serialBuffer.push(stmt.text);
+      updateSerial();
+      break;
+  }
+}
+
+async function runLoop(stmts) {
+  for (let i = 0; i < stmts.length; i++) {
+    if (!simRunning) return;
+    const stmt = stmts[i];
+    if (stmt.type === 'delay') {
+      drawSim();
+      await new Promise(r => { simTimeout = setTimeout(r, Math.min(stmt.ms, 3000)); });
+    } else {
+      execStatement(stmt);
+      drawSim();
+    }
+  }
+  if (simRunning) {
+    requestAnimationFrame(() => runLoop(stmts));
+  }
+}
+
+function runSketch() {
+  const code = editor ? editor.getValue() : '';
+  const sketch = parseSketch(code);
+  if (!sketch) {
+    addSerialLine('[Error] Could not find setup() and loop() functions.');
+    return;
+  }
+  if (sketch.setup.length === 0 && sketch.loop.length === 0) {
+    addSerialLine('[Error] setup() and loop() are empty. Add some code!');
+    return;
+  }
+
+  simRunning = true;
+  simStartTime = Date.now();
+  pinModes = {};
+  pinStates = {};
+  ledState = false;
+  serialBuffer = [];
+  document.getElementById('serialMon').innerHTML = '';
+
+  document.getElementById('runBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = '';
+  document.getElementById('simStatus').textContent = 'Running...';
+  document.getElementById('simStatus').style.color = '#7dd87d';
+
+  // Execute setup
+  sketch.setup.forEach(s => execStatement(s));
+  drawSim();
+
+  // Start loop
+  runLoop(sketch.loop);
+
+  // Timer
+  updateTimer();
+}
+
+function stopSketch() {
+  simRunning = false;
+  if (simTimeout) clearTimeout(simTimeout);
+  document.getElementById('runBtn').style.display = '';
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('simStatus').textContent = 'Stopped';
+  document.getElementById('simStatus').style.color = '#4a6a4a';
+}
+
+function updateTimer() {
+  if (!simRunning) return;
+  const s = ((Date.now() - simStartTime) / 1000).toFixed(1);
+  document.getElementById('runTimer').textContent = `${s}s`;
+  requestAnimationFrame(updateTimer);
+}
+
+function addSerialLine(text) {
+  const mon = document.getElementById('serialMon');
+  if (mon.querySelector('.serial-empty')) mon.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'serial-line';
+  div.textContent = text;
+  mon.appendChild(div);
+  mon.scrollTop = mon.scrollHeight;
+}
+
+function updateSerial() {
+  while (serialBuffer.length > 0) {
+    addSerialLine(serialBuffer.shift());
+  }
+}
+
+// ==================== CIRCUIT DRAWING ====================
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawSim() {
+  const w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#080c08';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = '#111a1120';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+  // Arduino board
+  const bx = 30, by = 40, bw = 200, bh = 180;
+  ctx.fillStyle = '#111a11';
+  ctx.strokeStyle = 'rgba(60,160,60,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 6); ctx.fill(); ctx.stroke();
+
+  // Board label
+  ctx.font = "bold 11px 'Space Mono', monospace";
+  ctx.fillStyle = '#4a6a4a';
+  ctx.fillText('Arduino UNO', bx + 12, by + 25);
+
+  // Chip
+  ctx.fillStyle = '#0a0f0a';
+  ctx.strokeStyle = '#2a3a2a';
+  ctx.fillRect(bx + 60, by + 60, 80, 50);
+  ctx.strokeRect(bx + 60, by + 60, 80, 50);
+  ctx.font = "9px 'Space Mono', monospace";
+  ctx.fillStyle = '#2a3a2a';
+  ctx.fillText('ATmega328P', bx + 66, by + 89);
+
+  // Pin headers
+  ctx.fillStyle = '#2a3a2a';
+  for (let i = 0; i < 14; i++) {
+    ctx.fillRect(bx + 15 + i * 13, by + bh - 18, 8, 14);
+  }
+  // Pin 13 label
+  ctx.font = "bold 8px 'Space Mono', monospace";
+  ctx.fillStyle = '#7dd87d';
+  ctx.fillText('13', bx + 15 + 13 * 13 - 2, by + bh - 22);
+
+  // Wire from pin 13
+  const wx = bx + 15 + 13 * 13 + 4;
+  const wy = by + bh - 4;
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(wx, wy);
+  ctx.lineTo(wx, wy + 30);
+  ctx.lineTo(320, wy + 30);
+  ctx.lineTo(320, 80);
+  ctx.stroke();
+
+  // Resistor
+  ctx.fillStyle = '#1a2a1a';
+  ctx.strokeStyle = '#f0b429';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(310, 80, 20, 40, 3); ctx.fill(); ctx.stroke();
+  ctx.font = "8px 'Space Mono', monospace";
+  ctx.fillStyle = '#f0b429';
+  ctx.fillText('220Ω', 335, 104);
+
+  // Wire from resistor to LED
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(320, 120);
+  ctx.lineTo(320, 150);
+  ctx.stroke();
+
+  // LED
+  const lx = 320, ly = 170;
+
+  // LED glow
+  if (ledState) {
+    const grad = ctx.createRadialGradient(lx, ly, 0, lx, ly, 40);
+    grad.addColorStop(0, 'rgba(60,200,60,0.5)');
+    grad.addColorStop(0.5, 'rgba(60,200,60,0.15)');
+    grad.addColorStop(1, 'rgba(60,200,60,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(lx - 40, ly - 40, 80, 80);
+  }
+
+  // LED body
+  ctx.beginPath();
+  ctx.arc(lx, ly, 14, 0, Math.PI * 2);
+  ctx.fillStyle = ledState ? '#3ca03c' : '#1a2a1a';
+  ctx.fill();
+  ctx.strokeStyle = ledState ? '#7dd87d' : '#2a3a2a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // LED inner
+  if (ledState) {
+    ctx.beginPath();
+    ctx.arc(lx, ly, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#7dd87d';
+    ctx.fill();
+  }
+
+  // LED label
+  ctx.font = "bold 9px 'Space Mono', monospace";
+  ctx.fillStyle = ledState ? '#7dd87d' : '#4a6a4a';
+  ctx.fillText('LED', lx - 10, ly + 30);
+  ctx.font = "8px 'Space Mono', monospace";
+  ctx.fillStyle = ledState ? '#7dd87d' : '#4a6a4a';
+  ctx.fillText(ledState ? 'ON' : 'OFF', lx - 6, ly + 42);
+
+  // GND wire
+  ctx.strokeStyle = '#4a6a4a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(lx, ly + 14);
+  ctx.lineTo(lx, ly + 55);
+  ctx.stroke();
+
+  // GND symbol
+  ctx.strokeStyle = '#4a6a4a';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(lx - 10, ly + 55); ctx.lineTo(lx + 10, ly + 55); ctx.stroke();
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(lx - 6, ly + 59); ctx.lineTo(lx + 6, ly + 59); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(lx - 3, ly + 63); ctx.lineTo(lx + 3, ly + 63); ctx.stroke();
+
+  ctx.font = "8px 'Space Mono', monospace";
+  ctx.fillStyle = '#4a6a4a';
+  ctx.fillText('GND', lx - 10, ly + 76);
+
+  // Circuit label
+  ctx.font = "9px 'Space Mono', monospace";
+  ctx.fillStyle = '#2a3a2a';
+  ctx.fillText('Pin 13 → 220Ω → LED → GND', 30, h - 12);
+
+  // Status
+  ctx.font = "bold 10px 'Space Mono', monospace";
+  ctx.fillStyle = simRunning ? '#3ca03c' : '#2a3a2a';
+  ctx.fillText(simRunning ? '● RUNNING' : '○ STOPPED', w - 100, h - 12);
+}
+
+drawSim();
+
+// ==================== QUIZ ====================
+const quizData = [
+  {
+    q: 'What does the setup() function do in an Arduino program?',
+    opts: ['Runs once when the board powers on', 'Runs continuously forever', 'Sets the clock speed', 'Connects to WiFi'],
+    ans: 0,
+  },
+  {
+    q: 'What does pinMode(13, OUTPUT) do?',
+    opts: ['Turns pin 13 on', 'Reads the value of pin 13', 'Configures pin 13 to send signals out', 'Sets pin 13 to receive input'],
+    ans: 2,
+  },
+  {
+    q: 'What voltage does HIGH represent on an Arduino Uno?',
+    opts: ['3.3 volts', '5 volts', '12 volts', '1 volt'],
+    ans: 1,
+  },
+  {
+    q: 'If you call delay(1000), how long does the Arduino pause?',
+    opts: ['1 millisecond', '100 milliseconds', '1 second', '10 seconds'],
+    ans: 2,
+  },
+  {
+    q: 'To blink at 2Hz (two full cycles per second), what delay values?',
+    opts: ['delay(1000) on, delay(1000) off', 'delay(500) on, delay(500) off', 'delay(250) on, delay(250) off', 'delay(100) on, delay(100) off'],
+    ans: 2,
+  },
+];
+
+function renderQuiz() {
+  const body = document.getElementById('quizBody');
+  const passed = localStorage.getItem('arduino_module-01-blink_quiz_passed') === 'true';
+
+  if (passed) {
+    body.innerHTML = '<div class="quiz-result pass">✓ Quiz passed! Module 02 is now unlocked. <a href="module-02-digital-input.html" style="color:#7dd87d">Go to Module 02 →</a></div>';
+    return;
+  }
+
+  let html = '';
+  quizData.forEach((q, qi) => {
+    html += `<div class="quiz-q" id="qq${qi}">
+      <p><b>Q${qi + 1}.</b> ${q.q}</p>
+      ${q.opts.map((o, oi) => `<label><input type="radio" name="q${qi}" value="${oi}">${o}</label>`).join('')}
+    </div>`;
+  });
+  html += '<button onclick="submitQuiz()" id="quizSubmitBtn">Submit Quiz</button>';
+  html += '<div id="quizResult"></div>';
+  body.innerHTML = html;
+}
+
+function submitQuiz() {
+  let correct = 0;
+  quizData.forEach((q, qi) => {
+    const sel = document.querySelector(`input[name="q${qi}"]:checked`);
+    const labels = document.querySelectorAll(`#qq${qi} label`);
+    labels.forEach((l, li) => {
+      l.classList.remove('correct', 'wrong');
+      if (li === q.ans) l.classList.add('correct');
+      else if (sel && parseInt(sel.value) === li) l.classList.add('wrong');
+    });
+    if (sel && parseInt(sel.value) === q.ans) correct++;
+  });
+
+  const pct = Math.round((correct / quizData.length) * 100);
+  const passed = pct >= 80;
+  const el = document.getElementById('quizResult');
+
+  if (passed) {
+    el.className = 'quiz-result pass';
+    el.innerHTML = `✓ ${correct}/${quizData.length} (${pct}%) — Passed! Module 02 unlocked. <a href="module-02-digital-input.html" style="color:#7dd87d">Go to Module 02 →</a>`;
+    localStorage.setItem('arduino_module-01-blink_quiz_passed', 'true');
+  } else {
+    el.className = 'quiz-result fail';
+    el.innerHTML = `✗ ${correct}/${quizData.length} (${pct}%) — Need 80% to pass. Review the lesson and try again.`;
+  }
+
+  document.getElementById('quizSubmitBtn').disabled = passed;
+}
+
+renderQuiz();
+</script>
+</body>
+</html>

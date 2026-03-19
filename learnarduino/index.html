@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArduinoLab · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@0,400;0,700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.hero{margin-bottom:2.5rem}
+.hero-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.hero h1{font-size:28px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.hero p{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:1.5rem}
+.card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:16px;transition:all .15s;text-decoration:none;color:inherit;display:block}
+.card:hover:not(.locked){border-color:rgba(60,160,60,0.5);background:#162016}
+.card.locked{opacity:.45;cursor:not-allowed;pointer-events:none}
+.card.completed{border-color:rgba(60,160,60,0.4)}
+.card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.card-num{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4)}
+.card-status{margin-left:auto;font-size:10px;font-family:'Space Mono',monospace}
+.card-status.complete{color:#7dd87d}
+.card-status.progress{color:#f0b429}
+.card-status.locked-s{color:#4a6a4a}
+.card h3{font-size:14px;font-family:'Space Mono',monospace;font-weight:700;margin-bottom:4px}
+.card p{font-size:12px;color:#7a9a7a;line-height:1.5}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:9px;font-family:'Space Mono',monospace;color:#4a6a4a;background:rgba(60,160,60,0.08);border:0.5px solid rgba(60,160,60,0.15);padding:1px 6px;border-radius:3px}
+.footer{margin-top:3rem;padding-top:1.5rem;border-top:0.5px solid rgba(60,160,60,0.15)}
+.footer p{font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.progress-bar{margin-top:1.5rem;margin-bottom:1rem}
+.progress-label{font-size:10px;font-family:'Space Mono',monospace;color:#4a6a4a;margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px}
+.progress-track{height:6px;background:rgba(60,160,60,0.1);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:#3ca03c;border-radius:3px;transition:width .5s}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">← portfolio home</a>
+
+<div class="hero">
+  <div class="hero-tag">ALEXEY MIKHAIL JOHLL · ARDUINOLAB · 10 MODULES</div>
+  <h1>Arduino Learning Platform</h1>
+  <p>From blinking an LED to building state machines. Learn embedded programming through interactive simulations — write real Arduino code, see it run in your browser.</p>
+</div>
+
+<div class="progress-bar">
+  <div class="progress-label">Overall Progress · <span id="progText">0 / 10</span></div>
+  <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<div class="grid" id="moduleGrid"></div>
+
+<div class="footer">
+  <p>Each module teaches one concept. Pass the quiz (80%) to unlock the next.</p>
+  <p style="margin-top:4px">No installation required — everything runs in your browser.</p>
+</div>
+</div>
+
+<script>
+const modules = [
+  { id: 'module-01-blink', num: '01', title: 'Blink', desc: 'digitalWrite, pinMode, setup/loop, delay — make an LED blink.', tags: ['digital output', 'basics'] },
+  { id: 'module-02-digital-input', num: '02', title: 'Digital Input', desc: 'Pushbutton, digitalRead, if/else — read a button and respond.', tags: ['digital input', 'logic'] },
+  { id: 'module-03-analog', num: '03', title: 'Analog Input', desc: 'analogRead, potentiometer, Serial.println — read continuous values.', tags: ['analog', 'serial'] },
+  { id: 'module-04-pwm', num: '04', title: 'PWM & AnalogWrite', desc: 'LED fade, analogWrite, duty cycle — control brightness smoothly.', tags: ['PWM', 'analog output'] },
+  { id: 'module-05-serial', num: '05', title: 'Serial Communication', desc: 'Serial monitor, debugging, Serial.read — talk to your Arduino.', tags: ['serial', 'debug'] },
+  { id: 'module-06-servo', num: '06', title: 'Servo Control', desc: 'Servo library, sweep, position mapping — control motor angles.', tags: ['servo', 'library'] },
+  { id: 'module-07-lcd', num: '07', title: 'LCD Display', desc: 'LiquidCrystal, I2C, printing variables — display text on a screen.', tags: ['LCD', 'I2C'] },
+  { id: 'module-08-sensors', num: '08', title: 'Sensors', desc: 'DHT11 temp/humidity, ultrasonic HC-SR04 — measure the real world.', tags: ['sensors', 'data'] },
+  { id: 'module-09-state-machines', num: '09', title: 'State Machines', desc: 'Traffic light project, enum states, millis() — think in states.', tags: ['state', 'design'] },
+  { id: 'module-10-final-project', num: '10', title: 'Final Project', desc: 'Design your own circuit, write your own code, document it all.', tags: ['capstone', 'open-ended'] },
+];
+
+function getStatus(id, idx) {
+  if (localStorage.getItem(`arduino_${id}_quiz_passed`) === 'true') return 'completed';
+  if (idx === 0) return 'unlocked';
+  const prevId = modules[idx - 1].id;
+  if (localStorage.getItem(`arduino_${prevId}_quiz_passed`) === 'true') return 'unlocked';
+  return 'locked';
+}
+
+function render() {
+  const grid = document.getElementById('moduleGrid');
+  grid.innerHTML = '';
+  let completed = 0;
+
+  modules.forEach((mod, idx) => {
+    const status = getStatus(mod.id, idx);
+    if (status === 'completed') completed++;
+
+    const card = document.createElement('a');
+    card.className = `card ${status === 'locked' ? 'locked' : ''} ${status === 'completed' ? 'completed' : ''}`;
+    card.href = status !== 'locked' ? `${mod.id}.html` : '#';
+
+    const statusLabel = status === 'completed' ? '✓ COMPLETE' : status === 'unlocked' ? '● READY' : '🔒 LOCKED';
+    const statusClass = status === 'completed' ? 'complete' : status === 'unlocked' ? 'progress' : 'locked-s';
+
+    card.innerHTML = `
+      <div class="card-hdr">
+        <span class="card-num">${mod.num}</span>
+        <span class="card-status ${statusClass}">${statusLabel}</span>
+      </div>
+      <h3>${mod.title}</h3>
+      <p>${mod.desc}</p>
+      <div class="tags">${mod.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('progText').textContent = `${completed} / 10`;
+  document.getElementById('progFill').style.width = `${completed * 10}%`;
+}
+
+render();
+</script>
+</body>
+</html>
