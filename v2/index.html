@@ -37,11 +37,9 @@ body {
   padding: 4rem 1.5rem 6rem;
 }
 
-/* Header */
 .header {
   margin-bottom: 5rem;
 }
-
 .header-name {
   font-family: 'Instrument Serif', serif;
   font-size: clamp(2rem, 5vw, 3rem);
@@ -51,7 +49,6 @@ body {
   letter-spacing: -0.02em;
   margin-bottom: 0.75rem;
 }
-
 .header-subtitle {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
@@ -59,7 +56,6 @@ body {
   color: var(--text-tertiary);
   letter-spacing: 0.04em;
 }
-
 .header-line {
   width: 40px;
   height: 1px;
@@ -67,7 +63,6 @@ body {
   margin-top: 1.5rem;
 }
 
-/* Modules */
 .modules {
   display: flex;
   flex-direction: column;
@@ -88,7 +83,6 @@ body {
   transition: background 200ms ease;
   position: relative;
 }
-
 .module-card:hover {
   background: var(--bg);
 }
@@ -96,12 +90,10 @@ body {
 .module-number {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  font-weight: 400;
   color: var(--text-tertiary);
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
 }
-
 .module-title {
   font-family: 'Instrument Serif', serif;
   font-size: 1.5rem;
@@ -110,25 +102,21 @@ body {
   line-height: 1.25;
   margin-bottom: 0.5rem;
 }
-
 .module-desc {
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.7;
   max-width: 540px;
 }
-
 .module-tags {
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
   flex-wrap: wrap;
 }
-
 .tag {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  font-weight: 400;
   color: var(--accent);
   background: var(--accent-subtle);
   border: 1px solid var(--accent-border);
@@ -136,7 +124,6 @@ body {
   border-radius: 2px;
   letter-spacing: 0.03em;
 }
-
 .module-arrow {
   position: absolute;
   right: 2.25rem;
@@ -146,35 +133,29 @@ body {
   color: var(--text-tertiary);
   transition: color 200ms ease, transform 200ms ease;
 }
-
 .module-card:hover .module-arrow {
   color: var(--accent);
   transform: translateY(-50%) translateX(3px);
 }
 
-/* About */
 .about {
   border-top: 1px solid var(--border-light);
   padding-top: 3rem;
 }
-
 .about-heading {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  font-weight: 400;
   color: var(--text-tertiary);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 1rem;
 }
-
 .about-text {
   font-size: 15px;
   color: var(--text-secondary);
   line-height: 1.8;
   max-width: 560px;
 }
-
 .about-text em {
   font-style: italic;
   color: var(--text-primary);
@@ -208,24 +189,36 @@ body {
     <a href="md.html" class="module-card">
       <div class="module-number">01</div>
       <div class="module-title">SiGe Surface Dynamics</div>
-      <div class="module-desc">Tersoff molecular dynamics of silicon-germanium surfaces. Build diamond cubic slabs, run velocity Verlet integration, and measure surface energy through systematic thickness sweeps. Explore germanium segregation under varying chemical potential and temperature.</div>
+      <div class="module-desc">Tersoff molecular dynamics of silicon-germanium (100) surfaces with dimer reconstruction. Investigate surface energy as a function of composition, temperature, lattice strain, and germanium layer distribution.</div>
       <div class="module-tags">
         <span class="tag">molecular dynamics</span>
         <span class="tag">tersoff potential</span>
-        <span class="tag">monte carlo</span>
         <span class="tag">surface energy</span>
+        <span class="tag">(100) surface</span>
+      </div>
+      <span class="module-arrow">&rarr;</span>
+    </a>
+    <a href="kmc.html" class="module-card">
+      <div class="module-number">02</div>
+      <div class="module-title">SiGe Thin Film Growth</div>
+      <div class="module-desc">Kinetic Monte Carlo simulation of epitaxial thin film deposition. Watch atoms land, diffuse, and self-organise on a crystal surface. Explore how temperature, composition, and deposition rate control island formation and surface roughness.</div>
+      <div class="module-tags">
+        <span class="tag">kinetic monte carlo</span>
+        <span class="tag">epitaxial growth</span>
+        <span class="tag">diffusion</span>
+        <span class="tag">thin films</span>
       </div>
       <span class="module-arrow">&rarr;</span>
     </a>
     <a href="football.html" class="module-card">
-      <div class="module-number">02</div>
+      <div class="module-number">03</div>
       <div class="module-title">Where Do Goals Come From?</div>
-      <div class="module-desc">Build a geometric expected goals (xG) model from first principles. Place shots on a pitch, compute scoring probabilities from distance and angle, then run Monte Carlo simulations to discover what the data says about attacking positions and tactical decisions.</div>
+      <div class="module-desc">Build a geometric expected goals (xG) model from first principles. Place shots on a pitch, compute scoring probabilities from distance and angle, then run Monte Carlo simulations to discover what the data says about attacking positions.</div>
       <div class="module-tags">
         <span class="tag">expected goals</span>
         <span class="tag">monte carlo</span>
         <span class="tag">probability</span>
-        <span class="tag">tactics</span>
+        <span class="tag">statistics</span>
       </div>
       <span class="module-arrow">&rarr;</span>
     </a>

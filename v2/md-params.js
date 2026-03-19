@@ -40,6 +40,13 @@ MD.params = {
   mass_Si: 28.0855,
   mass_Ge: 72.630,
 
+  // Dimer reconstruction parameters (from common1.f90)
+  disp: 0.745,    // dimer bond displacement (Angstrom)
+  dispz: 0.1,     // dimer z-buckling (Angstrom)
+
+  // Boltzmann constant in eV/K
+  kB: 8.617333262e-5,
+
   // Mixed pair parameters (combining rules)
   getMixed: function(s1, s2) {
     const p = MD.params;
@@ -55,8 +62,37 @@ MD.params = {
     };
   },
 
-  // Vegard's law for alloy lattice constant
+  // Vegard's law for bulk cubic lattice constant
   getLattice: function(xGe) {
     return MD.params.a0_Si * (1 - xGe) + MD.params.a0_Ge * xGe;
+  },
+
+  // (100) surface lattice parameters
+  // x-axis: dimer row, y-axis: dimer bond, z: perpendicular to (100)
+  // lattx = latty = 2 * a0 / sqrt(2), lattz = a0
+  getLattice100: function(xGe) {
+    const a0 = MD.params.getLattice(xGe);
+    return {
+      lattx: 2 * a0 / Math.sqrt(2),
+      latty: 2 * a0 / Math.sqrt(2),
+      lattz: a0
+    };
+  },
+
+  // (100) surface lattice with independent strain override
+  // strainX, strainY are fractional strains (e.g. 0.05 = 5% tensile)
+  getLattice100Strained: function(xGe, strainX, strainY) {
+    const eq = MD.params.getLattice100(xGe);
+    return {
+      lattx: eq.lattx * (1 + strainX),
+      latty: eq.latty * (1 + strainY),
+      lattz: eq.lattz  // z relaxes freely (free surface)
+    };
+  },
+
+  // Mass in eV·fs²/Å² (for dynamics)
+  getMass: function(species) {
+    const amu = species === 0 ? MD.params.mass_Si : MD.params.mass_Ge;
+    return amu * 1.0364e-4; // 1 amu = 1.0364e-4 eV·fs²/Å²
   }
 };

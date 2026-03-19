@@ -33,12 +33,10 @@ body {
 
 .page { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
 
-/* Nav */
 .nav-back {
   display: inline-block;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  font-weight: 400;
   color: var(--text-tertiary);
   text-decoration: none;
   padding: 5px 12px;
@@ -49,7 +47,6 @@ body {
 }
 .nav-back:hover { color: var(--accent); border-color: var(--accent-border); }
 
-/* Header */
 .exp-tag {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
@@ -98,7 +95,6 @@ body {
   border: 1px solid var(--accent-border);
   padding: 2px 8px;
   border-radius: 2px;
-  letter-spacing: 0.03em;
 }
 .sname {
   font-family: 'JetBrains Mono', monospace;
@@ -113,7 +109,6 @@ body {
 }
 .sbody { padding: 20px; }
 
-/* Note callout */
 .note {
   font-size: 13px;
   color: var(--text-secondary);
@@ -126,7 +121,6 @@ body {
 }
 .note b { color: var(--accent); font-weight: 500; }
 
-/* Forms */
 textarea {
   width: 100%;
   background: var(--bg);
@@ -148,8 +142,7 @@ textarea:disabled { color: var(--text-secondary); background: var(--bg-deep); cu
 .row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; gap: 8px; }
 .ts-label { font-size: 11px; color: var(--accent); font-family: 'JetBrains Mono', monospace; display: none; }
 
-/* Buttons */
-button, .btn {
+button {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-primary);
@@ -167,22 +160,32 @@ button.primary:hover:not(:disabled) { background: var(--accent-light); }
 button.active { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
 button.sm { font-size: 10px; padding: 4px 10px; }
 
-/* Lab layout */
-.lab-grid {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 20px;
-  align-items: start;
+/* Investigation tabs */
+.inv-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
-.lab-canvas-wrap {
-  position: relative;
-  background: #fafaf7;
+.inv-tab {
+  padding: 6px 14px;
   border: 1px solid var(--border);
   border-radius: 2px;
-  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 150ms;
+  background: var(--surface);
 }
-canvas#crystalCanvas { display: block; width: 100%; cursor: grab; }
-canvas#crystalCanvas:active { cursor: grabbing; }
+.inv-tab.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+.inv-tab:hover:not(.active) { color: var(--text-secondary); }
+.inv-panel { display: none; }
+.inv-panel.active { display: block; }
 
 /* Data labels */
 .dl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
@@ -191,20 +194,30 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 
 /* Controls */
 .ctrl-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
-.ctrl-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 80px; }
+.ctrl-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 120px; }
 .ctrl-group label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.04em; }
 .ctrl-group input[type=range] { width: 100%; accent-color: var(--accent); height: 4px; }
 .ctrl-group .cv { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 
-/* Color mode buttons */
-.color-btns { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
-.color-btn { font-size: 10px; padding: 3px 8px; }
+/* Canvas */
+.lab-canvas-wrap {
+  background: #fafaf7;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+canvas#crystalCanvas { display: block; width: 100%; cursor: grab; }
+canvas#crystalCanvas:active { cursor: grabbing; }
 
-/* Chart containers */
+/* Color mode buttons */
+.color-btns { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+
+/* Charts */
 .chart-wrap { background: var(--bg); border: 1px solid var(--border-light); border-radius: 2px; padding: 12px; position: relative; }
 
-/* Results */
+/* Results grid */
 .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 .rstat { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-light); }
 .rstat:last-child { border-bottom: none; }
@@ -222,13 +235,8 @@ canvas#crystalCanvas:active { cursor: grabbing; }
   margin-top: 16px;
 }
 
-/* Series */
-.series-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
-.series-row input { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 2px; background: var(--bg); color: var(--text-primary); width: 150px; }
-.series-row input:focus { outline: none; border-color: var(--accent); }
-.series-tag { display: inline-flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); background: var(--accent-subtle); border: 1px solid var(--accent-border); padding: 2px 8px; border-radius: 2px; }
-.series-del { background: none; border: none; color: var(--text-tertiary); font-size: 12px; cursor: pointer; padding: 0 2px; }
-.series-del:hover { color: #c0392b; }
+/* Status */
+.status { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-tertiary); margin-top: 8px; }
 
 /* Interpretation */
 .interp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
@@ -244,7 +252,6 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 }
 .ai-lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
 .ai-q { font-size: 14px; color: var(--text-primary); line-height: 1.7; font-style: italic; flex: 1; }
-
 .pulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pd 1.2s infinite; margin-right: 6px; vertical-align: middle; }
 @keyframes pd { 0%,100%{opacity:1} 50%{opacity:0.15} }
 
@@ -256,13 +263,9 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 .alex-lbl { color: #6b8fa3; }
 .reply-sec { margin-top: 14px; display: none; }
 
-/* Status line */
-.status { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-tertiary); margin-top: 8px; }
-
 /* Responsive */
 @media (max-width: 768px) {
   .page { padding: 2rem 1rem 4rem; }
-  .lab-grid { grid-template-columns: 1fr; }
   .res-grid { grid-template-columns: 1fr; }
   .interp-grid { grid-template-columns: 1fr; }
 }
@@ -275,7 +278,7 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 
 <div class="exp-tag">Alexey Mikhail Johll &middot; Module 01 &middot; Molecular Dynamics</div>
 <h1 class="exp-title">SiGe Surface Dynamics</h1>
-<p class="exp-sub">Build diamond cubic crystal slabs of silicon-germanium, compute their energy using the Tersoff interatomic potential, and discover how surface energy depends on slab thickness and germanium composition. The same potential your father uses in his research.</p>
+<p class="exp-sub">Build (100) surface slabs of silicon-germanium with dimer reconstruction, compute energies using the Tersoff interatomic potential, and investigate how surface energy depends on germanium composition, temperature, lattice strain, and atomic layer distribution.</p>
 
 <!-- Step 01: Hypothesis -->
 <div class="step" id="stepHyp">
@@ -285,8 +288,8 @@ canvas#crystalCanvas:active { cursor: grabbing; }
     <span class="shint">Write your prediction before running anything</span>
   </div>
   <div class="sbody">
-    <div class="note"><b>Scientific method:</b> Before building any crystals, predict: how will surface energy change as the slab gets thicker? Will adding germanium make the surface more or less stable? What role does coordination number play? Be specific.</div>
-    <textarea id="hypText" placeholder="e.g. I predict that surface energy will decrease as the slab gets thicker because the ratio of surface atoms to bulk atoms decreases. Adding germanium might change the surface energy because Ge atoms are larger than Si and have different bond strengths..."></textarea>
+    <div class="note"><b>Scientific method:</b> Before running any simulations, predict: how will surface energy change with germanium content? Will temperature increase or decrease surface stability? What happens when you stretch the lattice? Where will germanium atoms prefer to sit — surface or bulk?</div>
+    <textarea id="hypText" placeholder="e.g. I predict that adding germanium will increase surface energy because Ge atoms are larger and create more strain at the surface. I think at higher temperatures the surface will become less stable. Stretching the lattice should increase energy because bonds are being pulled apart..."></textarea>
     <div class="row">
       <span class="ts-label" id="hypTS"></span>
       <button id="lockBtn" class="primary" onclick="MD.ui.lockHypothesis()">Lock hypothesis and begin &rarr;</button>
@@ -298,80 +301,210 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 <div class="step" id="stepLab">
   <div class="step-hdr">
     <span class="snum">step 02</span>
-    <span class="sname">The crystal lab</span>
+    <span class="sname">The lab</span>
     <span class="shint" id="labHint">Lock your hypothesis first</span>
   </div>
   <div class="sbody">
-    <div class="lab-grid">
-      <div>
-        <div class="lab-canvas-wrap">
-          <canvas id="crystalCanvas" width="700" height="480"></canvas>
+    <!-- Investigation tabs -->
+    <div class="inv-tabs">
+      <div class="inv-tab active" data-tab="comp" onclick="MD.ui.switchTab('comp')">E_surf vs Composition</div>
+      <div class="inv-tab" data-tab="temp" onclick="MD.ui.switchTab('temp')">E_surf vs Temperature</div>
+      <div class="inv-tab" data-tab="strain" onclick="MD.ui.switchTab('strain')">E_surf vs Strain</div>
+      <div class="inv-tab" data-tab="layers" onclick="MD.ui.switchTab('layers')">Ge Layer Distribution</div>
+    </div>
+
+    <!-- Tab A: Composition sweep -->
+    <div class="inv-panel active" id="panelComp">
+      <div class="note"><b>Investigation:</b> How does surface energy change as you add more germanium? The chemical potential &Delta;&mu; controls the relative energy cost of substituting Ge for Si.</div>
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <label>&Delta;&mu; (eV)</label>
+          <input type="range" id="slDmu" min="-200" max="200" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valDmu">0.00</span>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-          <div class="color-btns">
-            <button class="color-btn active" data-mode="species" onclick="MD.ui.setColorMode('species')">Species</button>
-            <button class="color-btn" data-mode="coordination" onclick="MD.ui.setColorMode('coordination')">Coord #</button>
-            <button class="color-btn" data-mode="energy" onclick="MD.ui.setColorMode('energy')">Energy</button>
-            <button class="color-btn" data-mode="layer" onclick="MD.ui.setColorMode('layer')">Layer</button>
-          </div>
-          <button class="sm" onclick="MD.viewer.resetView()">Reset view</button>
+        <div class="ctrl-group">
+          <label>Sweep points</label>
+          <input type="range" id="slCompPts" min="5" max="20" value="11" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valCompPts">11</span>
         </div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);margin-top:4px">drag to rotate &middot; shift+drag to pan &middot; scroll to zoom</div>
+        <div class="ctrl-group">
+          <label>Slab thickness (cells)</label>
+          <input type="range" id="slNzComp" min="3" max="6" value="3" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valNzComp">3</span>
+        </div>
       </div>
-      <div>
-        <div class="ctrl-row">
-          <div class="ctrl-group">
-            <label>Width (cells)</label>
-            <input type="range" id="slNx" min="2" max="6" value="3" class="lab-ctrl" disabled oninput="MD.ui.updateSliderLabels()">
-            <span class="cv" id="valNx">3</span>
-          </div>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-group">
-            <label>Thickness (cells)</label>
-            <input type="range" id="slNz" min="2" max="8" value="4" class="lab-ctrl" disabled oninput="MD.ui.updateSliderLabels()">
-            <span class="cv" id="valNz">4</span>
-          </div>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-group">
-            <label>Ge composition</label>
-            <input type="range" id="slGe" min="0" max="100" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateSliderLabels()">
-            <span class="cv" id="valGe">20%</span>
-          </div>
-        </div>
+      <div class="btn-row">
+        <button id="btnCompSweep" class="primary lab-ctrl" disabled onclick="MD.ui.runCompSweep()">Run composition sweep &rarr;</button>
+      </div>
+      <div class="status" id="statusComp">&nbsp;</div>
+      <div class="chart-wrap" style="height:300px;margin-top:16px;display:none" id="compChartWrap">
+        <canvas id="compChart"></canvas>
+      </div>
+    </div>
 
-        <div class="btn-row">
-          <button class="primary lab-ctrl" disabled onclick="MD.ui.buildCrystal()">Build crystal</button>
-          <button id="sweepBtn" class="lab-ctrl" disabled onclick="MD.ui.runSweep()">Run thickness sweep</button>
+    <!-- Tab B: Temperature sweep -->
+    <div class="inv-panel" id="panelTemp">
+      <div class="note"><b>Investigation:</b> How does temperature affect surface energy? Higher temperature means atoms vibrate more. The system is equilibrated at each temperature using velocity Verlet molecular dynamics.</div>
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <label>T min (K)</label>
+          <input type="range" id="slTmin" min="100" max="600" value="300" step="50" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valTmin">300</span>
         </div>
-        <div class="status" id="buildStatus">&nbsp;</div>
+        <div class="ctrl-group">
+          <label>T max (K)</label>
+          <input type="range" id="slTmax" min="400" max="1200" value="800" step="50" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valTmax">800</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Ge composition</label>
+          <input type="range" id="slGeTemp" min="0" max="100" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valGeTemp">20%</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Sweep points</label>
+          <input type="range" id="slTempPts" min="3" max="10" value="6" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valTempPts">6</span>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <label>VV steps per point</label>
+          <input type="range" id="slVVsteps" min="50" max="500" value="200" step="50" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valVVsteps">200</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Timestep (fs)</label>
+          <input type="range" id="slDt" min="1" max="5" value="2" step="0.5" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valDt">2.0</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btnTempSweep" class="primary lab-ctrl" disabled onclick="MD.ui.runTempSweep()">Run temperature sweep &rarr;</button>
+        <button id="btnTempStop" class="lab-ctrl" disabled onclick="MD.ui.stopTempSweep()" style="display:none">Stop</button>
+      </div>
+      <div class="status" id="statusTemp">&nbsp;</div>
+      <div class="chart-wrap" style="height:300px;margin-top:16px;display:none" id="tempChartWrap">
+        <canvas id="tempChart"></canvas>
+      </div>
+    </div>
 
-        <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:14px">
-          <div class="dl">Atoms</div>
-          <div class="dv" id="dAtoms">&mdash;</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
-            <div><div class="dl">Si</div><div class="dv" id="dSi">&mdash;</div></div>
-            <div><div class="dl">Ge</div><div class="dv" id="dGe">&mdash;</div></div>
-            <div><div class="dl">x(Ge)</div><div class="dv" id="dXGe">&mdash;</div></div>
-            <div><div class="dl">a&#8320;</div><div class="dv" id="dA0">&mdash;</div></div>
-          </div>
-          <div class="dl">Dimensions</div>
-          <div class="dv" id="dDims">&mdash;</div>
-          <div class="dl">Total energy</div>
-          <div class="dv accent" id="dEtot">&mdash;</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
-            <div><div class="dl">E/atom</div><div class="dv" id="dEpa">&mdash;</div></div>
-            <div><div class="dl">E_surf</div><div class="dv accent" id="dEsurf">&mdash;</div></div>
-            <div><div class="dl">Surface</div><div class="dv" id="dSurf">&mdash;</div></div>
-            <div><div class="dl">Bulk</div><div class="dv" id="dBulk">&mdash;</div></div>
-          </div>
+    <!-- Tab C: Strain sweep -->
+    <div class="inv-panel" id="panelStrain">
+      <div class="note"><b>Investigation:</b> What happens to surface energy when you stretch or compress the lattice? Vegard's law gives the equilibrium lattice constant for SiGe alloys. Here you can independently vary latt<sub>x</sub> and latt<sub>y</sub> to explore strain effects.</div>
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <label>Strain X (%)</label>
+          <input type="range" id="slStrainX" min="-100" max="100" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valStrainX">0.0%</span>
         </div>
+        <div class="ctrl-group">
+          <label>Strain Y (%)</label>
+          <input type="range" id="slStrainY" min="-100" max="100" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valStrainY">0.0%</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Ge composition</label>
+          <input type="range" id="slGeStrain" min="0" max="100" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valGeStrain">20%</span>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <label>Sweep range (%)</label>
+          <input type="range" id="slStrainRange" min="2" max="10" value="5" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valStrainRange">&plusmn;5%</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Sweep points per axis</label>
+          <input type="range" id="slStrainPts" min="5" max="15" value="9" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valStrainPts">9</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btnStrainSweep" class="primary lab-ctrl" disabled onclick="MD.ui.runStrainSweep()">Run strain sweep &rarr;</button>
+        <button class="lab-ctrl" disabled onclick="MD.ui.runSingleStrain()">Build single point</button>
+      </div>
+      <div class="status" id="statusStrain">&nbsp;</div>
+      <div class="res-grid" style="margin-top:16px;display:none" id="strainResults">
+        <div class="chart-wrap" style="height:300px"><canvas id="strainChart"></canvas></div>
+        <div>
+          <div class="dl" style="margin-bottom:8px">Current point</div>
+          <div class="rstat"><span class="rl">latt<sub>x</sub></span><span class="rv" id="rLattx">&mdash;</span></div>
+          <div class="rstat"><span class="rl">latt<sub>y</sub></span><span class="rv" id="rLatty">&mdash;</span></div>
+          <div class="rstat"><span class="rl">Strain X</span><span class="rv" id="rStrX">&mdash;</span></div>
+          <div class="rstat"><span class="rl">Strain Y</span><span class="rv" id="rStrY">&mdash;</span></div>
+          <div class="rstat"><span class="rl">E_surf</span><span class="rv" id="rEsurfStr">&mdash;</span></div>
+          <div class="rstat"><span class="rl">E/atom</span><span class="rv" id="rEpaStr">&mdash;</span></div>
+        </div>
+      </div>
+    </div>
 
-        <div style="margin-top:16px;border-top:1px solid var(--border-light);padding-top:14px">
-          <div class="dl" style="margin-bottom:6px">Coordination histogram</div>
-          <div class="chart-wrap" style="height:140px"><canvas id="coordChart"></canvas></div>
+    <!-- Tab D: Layer distribution -->
+    <div class="inv-panel" id="panelLayers">
+      <div class="note"><b>Investigation:</b> Where does germanium sit in the slab? Layers 1 &amp; N are surfaces (symmetric), 2 &amp; N-1 are sub-surface, etc. Each layer pair is averaged. For a 3&times;3 cell, each sublayer has 36 atoms.</div>
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <label>Ge composition</label>
+          <input type="range" id="slGeLayers" min="5" max="95" value="30" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valGeLayers">30%</span>
         </div>
+        <div class="ctrl-group">
+          <label>Slab thickness (cells)</label>
+          <input type="range" id="slNzLayers" min="3" max="6" value="4" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valNzLayers">4</span>
+        </div>
+        <div class="ctrl-group">
+          <label>MC swaps</label>
+          <input type="range" id="slMCswaps" min="0" max="500" value="100" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valMCswaps">100</span>
+        </div>
+        <div class="ctrl-group">
+          <label>&Delta;&mu; (eV)</label>
+          <input type="range" id="slDmuLayers" min="-200" max="200" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="cv" id="valDmuLayers">0.00</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button id="btnLayerAnalysis" class="primary lab-ctrl" disabled onclick="MD.ui.runLayerAnalysis()">Build &amp; analyze &rarr;</button>
+      </div>
+      <div class="status" id="statusLayers">&nbsp;</div>
+      <div class="res-grid" style="margin-top:16px;display:none" id="layerResults">
+        <div class="chart-wrap" style="height:280px"><canvas id="layerChart"></canvas></div>
+        <div>
+          <div class="dl" style="margin-bottom:8px">Layer pair Ge fractions</div>
+          <div id="layerStats"></div>
+          <div class="model-note" style="margin-top:12px">
+            Layers are grouped by z-coordinate. Pair 1 = surface layers (top &amp; bottom). Pair 4 = deepest interior. For random placement at x% Ge, all pairs should show ~x%. After MC swaps, segregation may appear.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crystal viewer (shared) -->
+    <div style="margin-top:20px;border-top:1px solid var(--border-light);padding-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="dl">Crystal structure</div>
+        <div class="color-btns">
+          <button class="sm active" data-mode="species" onclick="MD.ui.setColorMode('species')">Species</button>
+          <button class="sm" data-mode="coordination" onclick="MD.ui.setColorMode('coordination')">Coord #</button>
+          <button class="sm" data-mode="energy" onclick="MD.ui.setColorMode('energy')">Energy</button>
+          <button class="sm" data-mode="layer" onclick="MD.ui.setColorMode('layer')">Layer</button>
+        </div>
+      </div>
+      <div class="lab-canvas-wrap">
+        <canvas id="crystalCanvas" width="700" height="400"></canvas>
+      </div>
+      <div style="display:flex;gap:16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary)">
+        <span>drag to rotate</span>
+        <span>shift+drag to pan</span>
+        <span>scroll to zoom</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
+        <div><div class="dl">Atoms</div><div class="dv" id="dAtoms">&mdash;</div></div>
+        <div><div class="dl">Si / Ge</div><div class="dv" id="dSiGe">&mdash;</div></div>
+        <div><div class="dl">Layers</div><div class="dv" id="dLayers">&mdash;</div></div>
+        <div><div class="dl">E_surf</div><div class="dv accent" id="dEsurf">&mdash;</div></div>
       </div>
     </div>
   </div>
@@ -381,31 +514,12 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 <div class="step" id="stepRes" style="display:none">
   <div class="step-hdr">
     <span class="snum">step 03</span>
-    <span class="sname">Thickness sweep results</span>
-    <span class="shint">Surface energy vs slab thickness</span>
+    <span class="sname">Results summary</span>
+    <span class="shint">Key findings from your investigations</span>
   </div>
   <div class="sbody">
-    <div class="res-grid">
-      <div>
-        <div class="dl" style="margin-bottom:8px">Surface energy convergence</div>
-        <div class="chart-wrap" style="height:300px"><canvas id="sweepChart"></canvas></div>
-        <div class="series-row">
-          <input type="text" id="seriesName" placeholder="Series name...">
-          <button class="sm" onclick="MD.ui.saveSeries()">Save series</button>
-        </div>
-        <div id="seriesList" style="margin-top:8px"></div>
-      </div>
-      <div>
-        <div class="dl" style="margin-bottom:12px">Summary</div>
-        <div class="rstat"><span class="rl">Converged E_surf</span><span class="rv" id="rConv">&mdash;</span></div>
-        <div class="rstat"><span class="rl">Max thickness</span><span class="rv" id="rThick">&mdash;</span></div>
-        <div class="rstat"><span class="rl">Max atoms</span><span class="rv" id="rAtoms">&mdash;</span></div>
-        <div class="rstat"><span class="rl">Composition</span><span class="rv" id="rComp">&mdash;</span></div>
-        <div class="status" id="sweepStatus">&nbsp;</div>
-        <div class="model-note" style="margin-top:20px">
-          <b style="color:var(--text-secondary)">Model assumptions:</b> This simulation uses Tersoff T3 parameters (PRB 39, 5566). The crystal is generated with random Ge substitution (no clustering or ordering). Surface energy is computed as (E_total &minus; N&times;E_bulk) / (2&times;A). Periodic boundaries in x,y; free surface in z. No relaxation &mdash; atoms remain at ideal lattice positions.
-        </div>
-      </div>
+    <div id="resultsSummary">
+      <div class="model-note">Run at least one investigation in the lab above to see results here.</div>
     </div>
   </div>
 </div>
@@ -421,7 +535,7 @@ canvas#crystalCanvas:active { cursor: grabbing; }
     <div class="interp-grid">
       <div>
         <div class="dl" style="margin-bottom:8px">Your interpretation</div>
-        <textarea id="interpText" placeholder="What did the thickness sweep show? How does Ge composition affect surface energy? Did the results match your hypothesis? What patterns do you notice? What are the limitations of this model?"></textarea>
+        <textarea id="interpText" placeholder="What did your investigations show? How does Ge composition affect surface energy? Did temperature behave as you predicted? What about strain? Where does Ge prefer to sit — surface or bulk? What are the model's limitations?"></textarea>
         <div class="btn-row">
           <button id="askBtn" class="primary" onclick="MD.ui.askCoach()">Ask coach &rarr;</button>
         </div>

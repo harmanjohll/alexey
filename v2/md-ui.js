@@ -1,21 +1,36 @@
-// md-ui.js — UI controls, hypothesis management, AI coach, state persistence
+// md-ui.js — UI controls for 4 investigation tabs, hypothesis, AI coach
 
 const MD = window.MD || {};
 window.MD = MD;
 
 MD.ui = {
   locked: false,
+  currentTab: 'comp',
   slab: null,
   energy: null,
-  sweepResults: [],
-  savedSeries: [],
   convHist: [],
-  sweepChart: null,
-  coordChart: null,
-  energyChart: null,
+  worker: null,
+  tempSweepRunning: false,
+
+  // Chart instances
+  charts: {
+    comp: null,
+    temp: null,
+    strain: null,
+    layer: null,
+    coord: null
+  },
+
+  // Results storage
+  results: {
+    comp: null,
+    temp: null,
+    strain: null,
+    layers: null
+  },
 
   init: function() {
-    // Restore hypothesis if previously locked
+    // Restore hypothesis
     const savedHyp = localStorage.getItem('alexey_md_hypothesis');
     const savedTS = localStorage.getItem('alexey_md_timestamp');
     if (savedHyp && savedTS) {
@@ -23,29 +38,42 @@ MD.ui = {
       MD.ui.doLock(savedTS);
     }
 
-    // Restore saved series
-    const ss = localStorage.getItem('alexey_md_series');
-    if (ss) {
-      try { MD.ui.savedSeries = JSON.parse(ss); } catch(e) {}
-    }
-
     // Init viewer
     MD.viewer.init('crystalCanvas');
-
-    // Draw empty state
     MD.viewer.render();
 
-    // Update slider labels
-    MD.ui.updateSliderLabels();
+    MD.ui.updateLabels();
   },
 
-  updateSliderLabels: function() {
-    const nx = document.getElementById('slNx');
-    const nz = document.getElementById('slNz');
-    const ge = document.getElementById('slGe');
-    if (nx) document.getElementById('valNx').textContent = nx.value;
-    if (nz) document.getElementById('valNz').textContent = nz.value;
-    if (ge) document.getElementById('valGe').textContent = ge.value + '%';
+  updateLabels: function() {
+    const s = (id) => document.getElementById(id);
+    const v = (id) => parseFloat(document.getElementById(id)?.value || 0);
+
+    // Composition tab
+    if (s('valDmu')) s('valDmu').textContent = (v('slDmu') / 100).toFixed(2);
+    if (s('valCompPts')) s('valCompPts').textContent = v('slCompPts');
+    if (s('valNzComp')) s('valNzComp').textContent = v('slNzComp');
+
+    // Temperature tab
+    if (s('valTmin')) s('valTmin').textContent = v('slTmin');
+    if (s('valTmax')) s('valTmax').textContent = v('slTmax');
+    if (s('valGeTemp')) s('valGeTemp').textContent = v('slGeTemp') + '%';
+    if (s('valTempPts')) s('valTempPts').textContent = v('slTempPts');
+    if (s('valVVsteps')) s('valVVsteps').textContent = v('slVVsteps');
+    if (s('valDt')) s('valDt').textContent = v('slDt').toFixed(1);
+
+    // Strain tab
+    if (s('valStrainX')) s('valStrainX').textContent = (v('slStrainX') / 10).toFixed(1) + '%';
+    if (s('valStrainY')) s('valStrainY').textContent = (v('slStrainY') / 10).toFixed(1) + '%';
+    if (s('valGeStrain')) s('valGeStrain').textContent = v('slGeStrain') + '%';
+    if (s('valStrainRange')) s('valStrainRange').textContent = '\u00b1' + v('slStrainRange') + '%';
+    if (s('valStrainPts')) s('valStrainPts').textContent = v('slStrainPts');
+
+    // Layers tab
+    if (s('valGeLayers')) s('valGeLayers').textContent = v('slGeLayers') + '%';
+    if (s('valNzLayers')) s('valNzLayers').textContent = v('slNzLayers');
+    if (s('valMCswaps')) s('valMCswaps').textContent = v('slMCswaps');
+    if (s('valDmuLayers')) s('valDmuLayers').textContent = (v('slDmuLayers') / 100).toFixed(2);
   },
 
   lockHypothesis: function() {
@@ -69,74 +97,474 @@ MD.ui = {
 
     const tsEl = document.getElementById('hypTS');
     tsEl.style.display = 'block';
-    const d = new Date(ts);
-    tsEl.textContent = 'locked \u00b7 ' + d.toLocaleString();
+    tsEl.textContent = 'locked \u00b7 ' + new Date(ts).toLocaleString();
 
     document.getElementById('lockBtn').textContent = '\u2713 Hypothesis locked';
     document.getElementById('lockBtn').disabled = true;
-    document.getElementById('labHint').textContent = 'Configure and build your crystal slab';
+    document.getElementById('labHint').textContent = 'Choose an investigation tab and run it';
 
-    // Enable lab controls
     document.querySelectorAll('.lab-ctrl').forEach(el => el.disabled = false);
   },
 
-  buildCrystal: function() {
+  switchTab: function(tab) {
+    MD.ui.currentTab = tab;
+    document.querySelectorAll('.inv-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    document.querySelectorAll('.inv-panel').forEach(p => p.classList.remove('active'));
+    const panelMap = { comp: 'panelComp', temp: 'panelTemp', strain: 'panelStrain', layers: 'panelLayers' };
+    document.getElementById(panelMap[tab]).classList.add('active');
+  },
+
+  setColorMode: function(mode) {
+    MD.viewer.colorMode = mode;
+    document.querySelectorAll('.color-btns button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+    MD.viewer.render();
+  },
+
+  updateCrystalInfo: function(slab, energy) {
+    const stats = MD.crystal.getStats(slab);
+    document.getElementById('dAtoms').textContent = stats.total;
+    document.getElementById('dSiGe').textContent = stats.nSi + ' / ' + stats.nGe;
+    document.getElementById('dLayers').textContent = slab.nLayers;
+    document.getElementById('dEsurf').textContent = energy.surfaceEnergy.toFixed(4) + ' eV/\u00c5\u00b2';
+  },
+
+  // ── Investigation A: Composition Sweep ──
+  runCompSweep: function() {
     if (!MD.ui.locked) return;
+    const nPts = parseInt(document.getElementById('slCompPts').value);
+    const nz = parseInt(document.getElementById('slNzComp').value);
+    const dmu = parseFloat(document.getElementById('slDmu').value) / 100;
 
-    const nx = parseInt(document.getElementById('slNx').value);
-    const ny = nx; // keep square in x-y
-    const nz = parseInt(document.getElementById('slNz').value);
-    const xGe = parseInt(document.getElementById('slGe').value) / 100;
+    const xGeValues = [];
+    for (let i = 0; i < nPts; i++) {
+      xGeValues.push(i / (nPts - 1));
+    }
 
-    // Status
-    document.getElementById('buildStatus').textContent = 'Building...';
+    document.getElementById('btnCompSweep').disabled = true;
+    document.getElementById('statusComp').textContent = 'Running...';
 
     setTimeout(() => {
-      MD.ui.slab = MD.crystal.buildSlab(nx, ny, nz, xGe);
+      const results = MD.tersoff.compositionSweep(1, 1, nz, xGeValues, (i, total, r) => {
+        document.getElementById('statusComp').textContent =
+          `Point ${i + 1}/${total}: x(Ge)=${r.xGe.toFixed(2)}, E_surf=${r.surfaceEnergy.toFixed(4)} eV/\u00c5\u00b2`;
+      });
+
+      MD.ui.results.comp = results;
+      MD.ui.renderCompChart(results);
+
+      // Show last slab in viewer
+      const lastXGe = xGeValues[Math.floor(xGeValues.length / 2)];
+      MD.ui.slab = MD.crystal.buildDefaultSlab(1, 1, nz, lastXGe);
       MD.ui.energy = MD.tersoff.computeEnergy(MD.ui.slab);
-      const stats = MD.crystal.getStats(MD.ui.slab);
-
-      // Update data panel
-      document.getElementById('dAtoms').textContent = stats.total;
-      document.getElementById('dSi').textContent = stats.nSi;
-      document.getElementById('dGe').textContent = stats.nGe;
-      document.getElementById('dXGe').textContent = (stats.xGe * 100).toFixed(1) + '%';
-      document.getElementById('dA0').textContent = MD.ui.slab.a0.toFixed(3) + ' \u00c5';
-      document.getElementById('dDims').textContent =
-        MD.ui.slab.box.lx.toFixed(1) + ' \u00d7 ' +
-        MD.ui.slab.box.ly.toFixed(1) + ' \u00d7 ' +
-        MD.ui.slab.box.lz.toFixed(1) + ' \u00c5';
-      document.getElementById('dEtot').textContent = MD.ui.energy.total.toFixed(2) + ' eV';
-      document.getElementById('dEpa').textContent = MD.ui.energy.perAtom.toFixed(4) + ' eV';
-      document.getElementById('dEsurf').textContent = MD.ui.energy.surfaceEnergy.toFixed(4) + ' eV/\u00c5\u00b2';
-      document.getElementById('dSurf').textContent = stats.nSurface;
-      document.getElementById('dBulk').textContent = stats.nBulk;
-
-      // Render
       MD.viewer.render(MD.ui.slab);
+      MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
 
-      // Coordination chart
-      MD.ui.updateCoordChart(stats.coordHist);
+      document.getElementById('btnCompSweep').disabled = false;
+      document.getElementById('statusComp').textContent = 'Sweep complete (' + nPts + ' points)';
+      document.getElementById('stepRes').style.display = '';
 
-      // Enable sweep button
-      document.getElementById('sweepBtn').disabled = false;
-      document.getElementById('buildStatus').textContent = 'Built ' + stats.total + ' atoms';
+      MD.ui.saveResults();
     }, 50);
   },
 
-  updateCoordChart: function(hist) {
-    const ctx = document.getElementById('coordChart');
-    if (!ctx) return;
+  renderCompChart: function(results) {
+    const wrap = document.getElementById('compChartWrap');
+    wrap.style.display = '';
+    const ctx = document.getElementById('compChart');
+    if (MD.ui.charts.comp) MD.ui.charts.comp.destroy();
 
-    if (MD.ui.coordChart) MD.ui.coordChart.destroy();
+    MD.ui.charts.comp = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'E_surf vs x(Ge)',
+          data: results.map(r => ({ x: r.xGe, y: r.surfaceEnergy })),
+          borderColor: '#2d5a3d',
+          backgroundColor: 'rgba(45, 90, 61, 0.15)',
+          borderWidth: 2,
+          pointRadius: 5,
+          pointBackgroundColor: '#2d5a3d',
+          showLine: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            title: { display: true, text: 'x(Ge)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+          },
+          y: {
+            title: { display: true, text: 'E_surf (eV/\u00c5\u00b2)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+          }
+        }
+      }
+    });
+  },
 
-    MD.ui.coordChart = new Chart(ctx, {
+  // ── Investigation B: Temperature Sweep ──
+  runTempSweep: function() {
+    if (!MD.ui.locked) return;
+    const tMin = parseInt(document.getElementById('slTmin').value);
+    const tMax = parseInt(document.getElementById('slTmax').value);
+    const nPts = parseInt(document.getElementById('slTempPts').value);
+    const xGe = parseInt(document.getElementById('slGeTemp').value) / 100;
+    const nvv = parseInt(document.getElementById('slVVsteps').value);
+    const dt = parseFloat(document.getElementById('slDt').value);
+
+    const temps = [];
+    for (let i = 0; i < nPts; i++) {
+      temps.push(tMin + (tMax - tMin) * i / (nPts - 1));
+    }
+
+    document.getElementById('btnTempSweep').disabled = true;
+    document.getElementById('btnTempStop').style.display = '';
+    MD.ui.tempSweepRunning = true;
+
+    const results = [];
+    let idx = 0;
+
+    const runNext = () => {
+      if (idx >= temps.length || !MD.ui.tempSweepRunning) {
+        MD.ui.tempSweepRunning = false;
+        document.getElementById('btnTempSweep').disabled = false;
+        document.getElementById('btnTempStop').style.display = 'none';
+        document.getElementById('statusTemp').textContent = 'Sweep complete (' + results.length + ' points)';
+        MD.ui.results.temp = results;
+        MD.ui.renderTempChart(results);
+        document.getElementById('stepRes').style.display = '';
+        MD.ui.saveResults();
+        return;
+      }
+
+      const T = temps[idx];
+      document.getElementById('statusTemp').textContent =
+        `Point ${idx + 1}/${temps.length}: T=${T.toFixed(0)} K, equilibrating...`;
+
+      // Create worker, init, run steps, get energy
+      const blob = new Blob(
+        [document.querySelector ? '' : '', self.mdDynamicsCode || ''],
+        { type: 'application/javascript' }
+      );
+
+      // Use fetch to load worker code
+      fetch('md-dynamics.js').then(r => r.text()).then(code => {
+        const workerBlob = new Blob([code], { type: 'application/javascript' });
+        const w = new Worker(URL.createObjectURL(workerBlob));
+
+        w.postMessage({
+          type: 'init',
+          params: { ncx: 1, ncy: 1, nczi: 2, nczf: 4, theta: xGe, temp: T }
+        });
+
+        let stepCount = 0;
+        const stepsPerMsg = 50;
+        const totalSteps = nvv;
+
+        w.onmessage = function(e) {
+          if (e.data.type === 'init_done') {
+            // Start stepping
+            w.postMessage({
+              type: 'step',
+              step: stepCount,
+              params: { dt: dt, nvv: stepsPerMsg, temp: T, mcswap: 0, mcgc: 0, dmu: 0 }
+            });
+          } else if (e.data.type === 'update') {
+            stepCount += stepsPerMsg;
+            if (stepCount < totalSteps) {
+              w.postMessage({
+                type: 'step',
+                step: stepCount,
+                params: { dt: dt, nvv: stepsPerMsg, temp: T, mcswap: 0, mcgc: 0, dmu: 0 }
+              });
+            } else {
+              // Done with this temperature
+              results.push({
+                temperature: T,
+                energyPerAtom: e.data.energy,
+                totalEnergy: e.data.totalEnergy,
+                measuredTemp: e.data.temperature
+              });
+              w.terminate();
+              idx++;
+              MD.ui.renderTempChart(results);
+              setTimeout(runNext, 10);
+            }
+          }
+        };
+      });
+    };
+
+    runNext();
+  },
+
+  stopTempSweep: function() {
+    MD.ui.tempSweepRunning = false;
+  },
+
+  renderTempChart: function(results) {
+    const wrap = document.getElementById('tempChartWrap');
+    wrap.style.display = '';
+    const ctx = document.getElementById('tempChart');
+    if (MD.ui.charts.temp) MD.ui.charts.temp.destroy();
+
+    MD.ui.charts.temp = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'E/atom vs T',
+          data: results.map(r => ({ x: r.temperature, y: r.energyPerAtom })),
+          borderColor: '#c9913f',
+          backgroundColor: 'rgba(201, 145, 63, 0.15)',
+          borderWidth: 2,
+          pointRadius: 5,
+          pointBackgroundColor: '#c9913f',
+          showLine: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            title: { display: true, text: 'Temperature (K)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+          },
+          y: {
+            title: { display: true, text: 'E/atom (eV)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+          }
+        }
+      }
+    });
+  },
+
+  // ── Investigation C: Strain Sweep ──
+  runStrainSweep: function() {
+    if (!MD.ui.locked) return;
+    const xGe = parseInt(document.getElementById('slGeStrain').value) / 100;
+    const range = parseInt(document.getElementById('slStrainRange').value) / 100;
+    const nPts = parseInt(document.getElementById('slStrainPts').value);
+
+    const strainValues = [];
+    for (let i = 0; i < nPts; i++) {
+      strainValues.push(-range + 2 * range * i / (nPts - 1));
+    }
+
+    document.getElementById('btnStrainSweep').disabled = true;
+    document.getElementById('statusStrain').textContent = 'Running strain sweep...';
+
+    setTimeout(() => {
+      const results = MD.tersoff.strainSweep(1, 1, 3, xGe, strainValues, strainValues, (i, total, r) => {
+        document.getElementById('statusStrain').textContent =
+          `Point ${i}/${total}: \u03b5x=${(r.strainX * 100).toFixed(1)}%, \u03b5y=${(r.strainY * 100).toFixed(1)}%, E_surf=${r.surfaceEnergy.toFixed(4)}`;
+      });
+
+      MD.ui.results.strain = results;
+      document.getElementById('strainResults').style.display = '';
+      MD.ui.renderStrainChart(results, strainValues);
+
+      document.getElementById('btnStrainSweep').disabled = false;
+      document.getElementById('statusStrain').textContent = 'Sweep complete (' + results.length + ' points)';
+      document.getElementById('stepRes').style.display = '';
+      MD.ui.saveResults();
+    }, 50);
+  },
+
+  runSingleStrain: function() {
+    if (!MD.ui.locked) return;
+    const sx = parseInt(document.getElementById('slStrainX').value) / 1000;
+    const sy = parseInt(document.getElementById('slStrainY').value) / 1000;
+    const xGe = parseInt(document.getElementById('slGeStrain').value) / 100;
+
+    const latt = MD.params.getLattice100Strained(xGe, sx, sy);
+    MD.ui.slab = MD.crystal.buildDefaultSlab(1, 1, 3, xGe, latt);
+    MD.ui.energy = MD.tersoff.computeEnergy(MD.ui.slab);
+    MD.viewer.render(MD.ui.slab);
+    MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
+
+    document.getElementById('rLattx').textContent = latt.lattx.toFixed(3) + ' \u00c5';
+    document.getElementById('rLatty').textContent = latt.latty.toFixed(3) + ' \u00c5';
+    document.getElementById('rStrX').textContent = (sx * 100).toFixed(1) + '%';
+    document.getElementById('rStrY').textContent = (sy * 100).toFixed(1) + '%';
+    document.getElementById('rEsurfStr').textContent = MD.ui.energy.surfaceEnergy.toFixed(4) + ' eV/\u00c5\u00b2';
+    document.getElementById('rEpaStr').textContent = MD.ui.energy.perAtom.toFixed(4) + ' eV';
+    document.getElementById('strainResults').style.display = '';
+  },
+
+  renderStrainChart: function(results, strainValues) {
+    const ctx = document.getElementById('strainChart');
+    if (MD.ui.charts.strain) MD.ui.charts.strain.destroy();
+
+    // For 2D sweep, extract the biaxial line (strainX == strainY)
+    const biaxial = results.filter(r => Math.abs(r.strainX - r.strainY) < 0.001);
+    const xOnly = results.filter(r => Math.abs(r.strainY) < 0.001);
+    const yOnly = results.filter(r => Math.abs(r.strainX) < 0.001);
+
+    MD.ui.charts.strain = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Biaxial (\u03b5x = \u03b5y)',
+            data: biaxial.map(r => ({ x: r.strainX * 100, y: r.surfaceEnergy })),
+            borderColor: '#2d5a3d',
+            backgroundColor: 'rgba(45, 90, 61, 0.1)',
+            borderWidth: 2,
+            pointRadius: 4,
+            showLine: true,
+            tension: 0.3
+          },
+          {
+            label: 'X-strain only (\u03b5y = 0)',
+            data: xOnly.map(r => ({ x: r.strainX * 100, y: r.surfaceEnergy })),
+            borderColor: '#c9913f',
+            borderWidth: 1.5,
+            borderDash: [4, 3],
+            pointRadius: 3,
+            showLine: true,
+            tension: 0.3
+          },
+          {
+            label: 'Y-strain only (\u03b5x = 0)',
+            data: yOnly.map(r => ({ x: r.strainY * 100, y: r.surfaceEnergy })),
+            borderColor: '#6b8fa3',
+            borderWidth: 1.5,
+            borderDash: [4, 3],
+            pointRadius: 3,
+            showLine: true,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#6b6560', font: { family: 'JetBrains Mono', size: 10 } } }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Strain (%)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+          },
+          y: {
+            title: { display: true, text: 'E_surf (eV/\u00c5\u00b2)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+          }
+        }
+      }
+    });
+  },
+
+  // ── Investigation D: Layer Distribution ──
+  runLayerAnalysis: function() {
+    if (!MD.ui.locked) return;
+    const xGe = parseInt(document.getElementById('slGeLayers').value) / 100;
+    const nz = parseInt(document.getElementById('slNzLayers').value);
+    const mcSwaps = parseInt(document.getElementById('slMCswaps').value);
+    const dmu = parseFloat(document.getElementById('slDmuLayers').value) / 100;
+
+    document.getElementById('btnLayerAnalysis').disabled = true;
+    document.getElementById('statusLayers').textContent = 'Building slab...';
+
+    setTimeout(() => {
+      MD.ui.slab = MD.crystal.buildDefaultSlab(3, 3, nz, xGe);
+      MD.ui.energy = MD.tersoff.computeEnergy(MD.ui.slab);
+
+      // If MC swaps requested, run them via worker
+      if (mcSwaps > 0) {
+        document.getElementById('statusLayers').textContent = 'Running MC swaps (using Web Worker)...';
+
+        fetch('md-dynamics.js').then(r => r.text()).then(code => {
+          const workerBlob = new Blob([code], { type: 'application/javascript' });
+          const w = new Worker(URL.createObjectURL(workerBlob));
+
+          w.postMessage({
+            type: 'init',
+            params: { ncx: 3, ncy: 3, nczi: 2, nczf: 2 + nz - 1, theta: xGe, temp: 300 }
+          });
+
+          w.onmessage = function(e) {
+            if (e.data.type === 'init_done') {
+              // Run with MC swaps
+              w.postMessage({
+                type: 'step',
+                step: 0,
+                params: { dt: 0.02, nvv: 10, temp: 300, mcswap: mcSwaps, mcgc: Math.floor(mcSwaps / 2), dmu: dmu }
+              });
+            } else if (e.data.type === 'update') {
+              // Use layer composition from worker
+              const comp = e.data.layers;
+              MD.ui.results.layers = comp.pairs;
+              MD.ui.renderLayerChart(comp.pairs);
+              MD.ui.renderLayerStats(comp.pairs);
+
+              document.getElementById('layerResults').style.display = '';
+              document.getElementById('btnLayerAnalysis').disabled = false;
+              document.getElementById('statusLayers').textContent =
+                'Analysis complete (MC acceptance: ' + e.data.mcPct.toFixed(1) + '%)';
+              document.getElementById('stepRes').style.display = '';
+              MD.ui.saveResults();
+
+              // Update viewer with last slab
+              MD.viewer.render(MD.ui.slab);
+              MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
+
+              w.terminate();
+            }
+          };
+        });
+      } else {
+        // No MC — just analyze static placement
+        const dist = MD.crystal.getLayerDistribution(MD.ui.slab, 4);
+        MD.ui.results.layers = dist;
+        MD.ui.renderLayerChart(dist);
+        MD.ui.renderLayerStats(dist);
+
+        MD.viewer.render(MD.ui.slab);
+        MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
+
+        document.getElementById('layerResults').style.display = '';
+        document.getElementById('btnLayerAnalysis').disabled = false;
+        document.getElementById('statusLayers').textContent = 'Analysis complete (no MC swaps)';
+        document.getElementById('stepRes').style.display = '';
+        MD.ui.saveResults();
+      }
+    }, 50);
+  },
+
+  renderLayerChart: function(pairs) {
+    const ctx = document.getElementById('layerChart');
+    if (MD.ui.charts.layer) MD.ui.charts.layer.destroy();
+
+    MD.ui.charts.layer = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['0', '1', '2', '3', '4'],
+        labels: pairs.map(p => 'Pair ' + p.pair + '\n(' + p.layerA + ' & ' + p.layerB + ')'),
         datasets: [{
-          data: hist,
-          backgroundColor: MD.viewer.coordColors.map(c => c + 'cc'),
+          label: 'Ge fraction',
+          data: pairs.map(p => p.geFraction * 100),
+          backgroundColor: [
+            'rgba(45, 90, 61, 0.7)',
+            'rgba(201, 145, 63, 0.7)',
+            'rgba(107, 143, 163, 0.7)',
+            'rgba(160, 100, 140, 0.7)'
+          ],
           borderWidth: 0,
           borderRadius: 2
         }]
@@ -147,183 +575,46 @@ MD.ui = {
         plugins: { legend: { display: false } },
         scales: {
           x: {
-            title: { display: true, text: 'Neighbors', color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } },
+            title: { display: true, text: 'Layer pair (1=surface, 4=interior)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } },
             grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 9 } }
           },
           y: {
+            title: { display: true, text: 'Ge fraction (%)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } },
             grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } },
+            min: 0,
+            max: 100
           }
         }
       }
     });
   },
 
-  runSweep: function() {
-    if (!MD.ui.locked) return;
-
-    const nx = parseInt(document.getElementById('slNx').value);
-    const xGe = parseInt(document.getElementById('slGe').value) / 100;
-    const nzValues = [2, 3, 4, 5, 6, 7, 8];
-
-    document.getElementById('sweepStatus').textContent = 'Running sweep...';
-    document.getElementById('sweepBtn').disabled = true;
-
-    setTimeout(() => {
-      const results = MD.tersoff.thicknessSweep(nx, nx, xGe, nzValues, (i, total, r) => {
-        document.getElementById('sweepStatus').textContent =
-          `Layer ${i + 1}/${total}: ${r.nAtoms} atoms, E_surf = ${r.surfaceEnergy.toFixed(4)} eV/\u00c5\u00b2`;
-      });
-
-      MD.ui.sweepResults = results;
-
-      // Show results section
-      document.getElementById('stepRes').style.display = '';
-
-      // Update results stats
-      const last = results[results.length - 1];
-      document.getElementById('rConv').textContent = last.surfaceEnergy.toFixed(4) + ' eV/\u00c5\u00b2';
-      document.getElementById('rThick').textContent = last.thickness.toFixed(1) + ' \u00c5';
-      document.getElementById('rAtoms').textContent = last.nAtoms;
-      document.getElementById('rComp').textContent = (xGe * 100).toFixed(0) + '% Ge';
-
-      // Update sweep chart
-      MD.ui.updateSweepChart(results, xGe);
-
-      // Save results
-      localStorage.setItem('alexey_md_results', JSON.stringify({
-        sweep: results,
-        series: MD.ui.savedSeries
-      }));
-
-      document.getElementById('sweepBtn').disabled = false;
-      document.getElementById('sweepStatus').textContent = 'Sweep complete';
-      document.getElementById('stepRes').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  },
-
-  saveSeries: function() {
-    if (MD.ui.sweepResults.length === 0) return;
-    const name = document.getElementById('seriesName').value.trim();
-    if (!name) return;
-    const xGe = parseInt(document.getElementById('slGe').value) / 100;
-
-    MD.ui.savedSeries.push({
-      name: name,
-      xGe: xGe,
-      data: MD.ui.sweepResults.map(r => ({
-        nz: r.nz,
-        thickness: r.thickness,
-        surfaceEnergy: r.surfaceEnergy,
-        perAtom: r.perAtom
-      }))
-    });
-
-    localStorage.setItem('alexey_md_series', JSON.stringify(MD.ui.savedSeries));
-    document.getElementById('seriesName').value = '';
-    MD.ui.updateSweepChart(MD.ui.sweepResults, xGe);
-    MD.ui.updateSeriesList();
-  },
-
-  updateSeriesList: function() {
-    const el = document.getElementById('seriesList');
-    if (!el) return;
-    if (MD.ui.savedSeries.length === 0) {
-      el.innerHTML = '<span style="color:var(--text-tertiary);font-size:12px">No saved series yet</span>';
-      return;
-    }
-    el.innerHTML = MD.ui.savedSeries.map((s, i) =>
-      `<span class="series-tag">${s.name} <button onclick="MD.ui.deleteSeries(${i})" class="series-del">\u00d7</button></span>`
+  renderLayerStats: function(pairs) {
+    const el = document.getElementById('layerStats');
+    el.innerHTML = pairs.map(p =>
+      `<div class="rstat">
+        <span class="rl">Pair ${p.pair} (layers ${p.layerA} &amp; ${p.layerB})</span>
+        <span class="rv">${(p.geFraction * 100).toFixed(1)}%</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:8px;font-family:'JetBrains Mono',monospace">
+        ${p.nGe} Ge / ${p.nTotal} total
+      </div>`
     ).join('');
   },
 
-  deleteSeries: function(idx) {
-    MD.ui.savedSeries.splice(idx, 1);
-    localStorage.setItem('alexey_md_series', JSON.stringify(MD.ui.savedSeries));
-    MD.ui.updateSeriesList();
-    if (MD.ui.sweepResults.length > 0) {
-      const xGe = parseInt(document.getElementById('slGe').value) / 100;
-      MD.ui.updateSweepChart(MD.ui.sweepResults, xGe);
-    }
+  // ── Save/Load Results ──
+  saveResults: function() {
+    const data = {};
+    if (MD.ui.results.comp) data.comp = MD.ui.results.comp;
+    if (MD.ui.results.temp) data.temp = MD.ui.results.temp;
+    if (MD.ui.results.strain) data.strain = MD.ui.results.strain;
+    if (MD.ui.results.layers) data.layers = MD.ui.results.layers;
+    localStorage.setItem('alexey_md_results', JSON.stringify(data));
   },
 
-  updateSweepChart: function(results, currentXGe) {
-    const ctx = document.getElementById('sweepChart');
-    if (!ctx) return;
-
-    if (MD.ui.sweepChart) MD.ui.sweepChart.destroy();
-
-    const seriesColors = ['#2d5a3d', '#c9913f', '#6b8fa3', '#c0392b', '#8e44ad', '#16a085'];
-
-    const datasets = [];
-
-    // Current sweep
-    datasets.push({
-      label: 'Current (' + (currentXGe * 100).toFixed(0) + '% Ge)',
-      data: results.map(r => ({ x: r.thickness, y: r.surfaceEnergy })),
-      borderColor: '#2d5a3d',
-      backgroundColor: 'rgba(45, 90, 61, 0.1)',
-      borderWidth: 2,
-      pointRadius: 4,
-      pointBackgroundColor: '#2d5a3d',
-      fill: false,
-      tension: 0.3
-    });
-
-    // Saved series
-    MD.ui.savedSeries.forEach((s, i) => {
-      const color = seriesColors[(i + 1) % seriesColors.length];
-      datasets.push({
-        label: s.name,
-        data: s.data.map(r => ({ x: r.thickness, y: r.surfaceEnergy })),
-        borderColor: color,
-        borderWidth: 1.5,
-        borderDash: [4, 3],
-        pointRadius: 3,
-        pointBackgroundColor: color,
-        fill: false,
-        tension: 0.3
-      });
-    });
-
-    MD.ui.sweepChart = new Chart(ctx, {
-      type: 'scatter',
-      data: { datasets: datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: datasets.length > 1,
-            labels: { color: '#6b6560', font: { family: 'JetBrains Mono', size: 10 } }
-          }
-        },
-        scales: {
-          x: {
-            type: 'linear',
-            title: { display: true, text: 'Slab thickness (\u00c5)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
-          },
-          y: {
-            title: { display: true, text: 'Surface energy (eV/\u00c5\u00b2)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
-          }
-        }
-      }
-    });
-  },
-
-  setColorMode: function(mode) {
-    MD.viewer.colorMode = mode;
-    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
-    MD.viewer.render();
-  },
-
-  // AI Coach
+  // ── AI Coach ──
   askCoach: async function() {
     const interp = document.getElementById('interpText').value.trim();
     if (interp.length < 20) {
@@ -332,18 +623,32 @@ MD.ui = {
     }
 
     const hyp = document.getElementById('hypText').value;
-    const sweepSummary = MD.ui.sweepResults.length > 0
-      ? MD.ui.sweepResults.map(r =>
-          `nz=${r.nz}: ${r.nAtoms} atoms, thickness=${r.thickness.toFixed(1)}\u00c5, E_surf=${r.surfaceEnergy.toFixed(4)} eV/\u00c5\u00b2`
-        ).join('\n')
-      : 'No sweep data yet.';
 
-    const energySummary = MD.ui.energy
-      ? `Total energy: ${MD.ui.energy.total.toFixed(2)} eV, Per atom: ${MD.ui.energy.perAtom.toFixed(4)} eV, Surface energy: ${MD.ui.energy.surfaceEnergy.toFixed(4)} eV/\u00c5\u00b2`
-      : 'No energy computed yet.';
+    // Gather results summary
+    let dataSummary = '';
+    if (MD.ui.results.comp) {
+      dataSummary += 'Composition sweep: ' + MD.ui.results.comp.map(r =>
+        `x(Ge)=${r.xGe.toFixed(2)}, E_surf=${r.surfaceEnergy.toFixed(4)}`
+      ).join('; ') + '\n';
+    }
+    if (MD.ui.results.temp) {
+      dataSummary += 'Temperature sweep: ' + MD.ui.results.temp.map(r =>
+        `T=${r.temperature.toFixed(0)}K, E/atom=${r.energyPerAtom.toFixed(4)}`
+      ).join('; ') + '\n';
+    }
+    if (MD.ui.results.strain) {
+      const biax = MD.ui.results.strain.filter(r => Math.abs(r.strainX - r.strainY) < 0.001);
+      dataSummary += 'Strain (biaxial): ' + biax.map(r =>
+        `\u03b5=${(r.strainX*100).toFixed(1)}%, E_surf=${r.surfaceEnergy.toFixed(4)}`
+      ).join('; ') + '\n';
+    }
+    if (MD.ui.results.layers) {
+      dataSummary += 'Layer distribution: ' + MD.ui.results.layers.map(p =>
+        `Pair ${p.pair}: ${(p.geFraction*100).toFixed(1)}% Ge (${p.nGe}/${p.nTotal})`
+      ).join('; ') + '\n';
+    }
 
-    const userMsg = `Alexey's hypothesis: "${hyp}"\n\nCrystal data:\n${energySummary}\n\nThickness sweep:\n${sweepSummary}\n\nSaved series: ${MD.ui.savedSeries.map(s => s.name + ' (' + (s.xGe*100).toFixed(0) + '% Ge)').join(', ') || 'none'}\n\nAlexey's interpretation: "${interp}"`;
-
+    const userMsg = `Alexey's hypothesis: "${hyp}"\n\nSimulation data:\n${dataSummary || 'No data yet.'}\n\nAlexey's interpretation: "${interp}"`;
     const aiEl = document.getElementById('aiQ');
     aiEl.innerHTML = '<span class="pulse"></span><span style="color:var(--text-tertiary);font-size:12px">Coach is thinking...</span>';
     document.getElementById('askBtn').disabled = true;
@@ -357,7 +662,7 @@ MD.ui = {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: 'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore building a computational science portfolio. Alexey has just run a molecular dynamics simulation of SiGe surfaces using a simplified Tersoff potential. He built crystal slabs, computed surface energies, and explored how germanium composition affects surface stability. Ask EXACTLY ONE question per response. Never give Alexey the answer. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',
+          system: 'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore building a computational science portfolio. Alexey has just run molecular dynamics simulations of SiGe (100) surfaces using the Tersoff potential. He explored how surface energy depends on germanium composition, temperature, lattice strain, and layer-by-layer Ge distribution. Ask EXACTLY ONE question per response. Never give Alexey the answer. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',
           messages: MD.ui.convHist
         })
       });
@@ -395,7 +700,7 @@ MD.ui = {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: 'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his SiGe molecular dynamics experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',
+          system: 'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his SiGe (100) surface dynamics simulations. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',
           messages: MD.ui.convHist
         })
       });
@@ -410,5 +715,4 @@ MD.ui = {
   }
 };
 
-// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', MD.ui.init);
