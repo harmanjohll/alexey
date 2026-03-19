@@ -1,0 +1,62 @@
+[
+  {
+    "id": "m8q1",
+    "question": "How does the HC-SR04 ultrasonic sensor measure distance?",
+    "options": [
+      "It measures the intensity of reflected light",
+      "It sends a sound pulse and times how long the echo takes to return",
+      "It measures the resistance of air between the sensor and object",
+      "It uses GPS coordinates"
+    ],
+    "correct": 1,
+    "explanation": "The HC-SR04 sends a burst of 40kHz ultrasonic sound and measures the time until the echo returns. Using the speed of sound (343 m/s), the Arduino calculates distance = (time x speed) / 2. We divide by 2 because the sound travels to the object AND back."
+  },
+  {
+    "id": "m8q2",
+    "question": "Why do we divide the calculated distance by 2 when using the ultrasonic sensor?",
+    "options": [
+      "The sensor has two speakers",
+      "To convert from inches to centimeters",
+      "Because the sound travels to the object and back — the total path is twice the distance",
+      "The sensor returns double the actual time"
+    ],
+    "correct": 2,
+    "explanation": "The duration measured by pulseIn() is the total round-trip time: sound travels FROM the sensor TO the object, then bounces BACK. The actual distance to the object is only half the total path traveled."
+  },
+  {
+    "id": "m8q3",
+    "question": "What does isnan() check for, and why is it important with the DHT11?",
+    "options": [
+      "It checks if a number is negative",
+      "It checks if a value is 'Not a Number', meaning the sensor failed to respond",
+      "It checks if the sensor is connected",
+      "It checks if the value is zero"
+    ],
+    "correct": 1,
+    "explanation": "isnan() returns true if a value is NaN (Not a Number). The DHT library returns NaN when it can't communicate with the sensor. Without this check, your code might try to use invalid data, leading to incorrect output or errors."
+  },
+  {
+    "id": "m8q4",
+    "question": "Why is there a 2-second delay between DHT11 readings?",
+    "options": [
+      "To save battery power",
+      "The DHT11 hardware needs at least 1-2 seconds between readings to get accurate data",
+      "To prevent the sensor from overheating",
+      "The Arduino cannot read sensors faster than every 2 seconds"
+    ],
+    "correct": 1,
+    "explanation": "The DHT11 is a slow sensor. Its internal circuitry needs at least 1 second to complete a measurement cycle. Reading it too frequently returns stale data or errors. The DHT22 is faster but still needs 2 seconds."
+  },
+  {
+    "id": "m8q5",
+    "question": "What does pulseIn(echoPin, HIGH) do?",
+    "options": [
+      "Sends a HIGH signal on the echo pin",
+      "Waits for the pin to go HIGH, then measures how long it stays HIGH in microseconds",
+      "Returns 1 if the pin is HIGH, 0 if LOW",
+      "Sets the pin to HIGH for a specified duration"
+    ],
+    "correct": 1,
+    "explanation": "pulseIn() is a timing function. It waits for the specified pin to go HIGH, starts a timer, then stops when the pin goes back to LOW. It returns the duration in microseconds. This is how we measure the echo time from the ultrasonic sensor."
+  }
+]

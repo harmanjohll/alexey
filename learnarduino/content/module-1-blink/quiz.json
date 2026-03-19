@@ -1,0 +1,56 @@
+{
+  "moduleId": "module-1-blink",
+  "passingScore": 80,
+  "questions": [
+    {
+      "question": "What does the setup() function do in an Arduino program?",
+      "options": [
+        "Runs once when the board powers on, used for initialization",
+        "Runs continuously in a loop forever",
+        "Sets the clock speed of the Arduino",
+        "Connects the Arduino to WiFi"
+      ],
+      "correctIndex": 0
+    },
+    {
+      "question": "What does pinMode(13, OUTPUT) do?",
+      "options": [
+        "Turns pin 13 on",
+        "Reads the value of pin 13",
+        "Configures pin 13 to send signals out",
+        "Sets pin 13 to receive input"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "What voltage does a digital HIGH signal represent on an Arduino Uno?",
+      "options": [
+        "3.3 volts",
+        "5 volts",
+        "12 volts",
+        "1 volt"
+      ],
+      "correctIndex": 1
+    },
+    {
+      "question": "If you call delay(1000), how long does the Arduino pause?",
+      "options": [
+        "1 millisecond",
+        "100 milliseconds",
+        "1 second",
+        "10 seconds"
+      ],
+      "correctIndex": 2
+    },
+    {
+      "question": "To blink an LED at 2Hz (two full cycles per second), what delay values would you use?",
+      "options": [
+        "delay(1000) for on, delay(1000) for off",
+        "delay(500) for on, delay(500) for off",
+        "delay(250) for on, delay(250) for off",
+        "delay(100) for on, delay(100) for off"
+      ],
+      "correctIndex": 2
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "m7q1",
+    "question": "What does '16x2' mean when describing an LCD?",
+    "options": [
+      "16 pixels by 2 pixels",
+      "16 characters per line, 2 lines",
+      "16 colors, 2 brightness levels",
+      "16 pins, 2 data lines"
+    ],
+    "correct": 1,
+    "explanation": "A 16x2 LCD can display 16 characters on each of its 2 rows, for a total of 32 characters visible at once. Each character is actually made of a small grid of pixels, but you address them as character positions."
+  },
+  {
+    "id": "m7q2",
+    "question": "What does lcd.setCursor(5, 1) do?",
+    "options": [
+      "Moves the cursor to row 5, column 1",
+      "Moves the cursor to column 5, row 1 (second row)",
+      "Displays the number 5 on row 1",
+      "Sets the cursor blinking speed to 5"
+    ],
+    "correct": 1,
+    "explanation": "setCursor takes (column, row). Column 5 means the 6th character position (counting from 0). Row 1 is the second row (row 0 is the first). The next lcd.print() will start writing from that position."
+  },
+  {
+    "id": "m7q3",
+    "question": "Why is it better to overwrite with spaces than to use lcd.clear() when updating values?",
+    "options": [
+      "lcd.clear() doesn't work on I2C displays",
+      "lcd.clear() takes longer and causes visible screen flicker",
+      "Spaces use less memory",
+      "lcd.clear() resets the I2C connection"
+    ],
+    "correct": 1,
+    "explanation": "lcd.clear() blanks the entire screen and resets the cursor, which takes about 2 milliseconds. When called repeatedly in loop(), this creates visible flicker. Writing spaces over old characters is instant and avoids the flash."
+  },
+  {
+    "id": "m7q4",
+    "question": "What is I2C and why is it useful for connecting an LCD?",
+    "options": [
+      "A type of LCD screen",
+      "A communication protocol that needs only 2 data wires (SDA and SCL)",
+      "A faster version of Serial",
+      "An LCD brightness setting"
+    ],
+    "correct": 1,
+    "explanation": "I2C (Inter-Integrated Circuit) is a communication protocol using just two wires: SDA (data) and SCL (clock). Without I2C, an LCD needs 6-10 data wires connected to the Arduino. An I2C backpack reduces this to just 2 data wires plus power."
+  },
+  {
+    "id": "m7q5",
+    "question": "What does lcd.write(0xFF) display on the LCD?",
+    "options": [
+      "The text '0xFF'",
+      "Nothing — it clears the character",
+      "A full solid block character",
+      "The letter 'F'"
+    ],
+    "correct": 2,
+    "explanation": "0xFF is the hexadecimal code for a full block character in the LCD's character set. Unlike lcd.print() which displays text, lcd.write() sends a raw character code. This solid block is useful for building bar graphs and custom visualizations."
+  }
+]

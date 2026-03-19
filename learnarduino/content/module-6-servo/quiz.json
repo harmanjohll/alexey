@@ -1,0 +1,52 @@
+[
+  {
+    "id": "m6q1",
+    "question": "What does #include <Servo.h> do?",
+    "options": [
+      "Creates a servo motor",
+      "Includes the Servo library so you can use its functions",
+      "Connects the servo to pin 9",
+      "Starts the servo spinning"
+    ],
+    "correct": 1,
+    "explanation": "#include is a directive that imports a library — pre-written code that provides new functions. The Servo library gives you the Servo object with functions like attach(), write(), and read()."
+  },
+  {
+    "id": "m6q2",
+    "question": "What range of angles can a standard servo motor rotate to?",
+    "options": ["0 to 90 degrees", "0 to 180 degrees", "0 to 360 degrees", "-90 to 90 degrees"],
+    "correct": 1,
+    "explanation": "A standard (not continuous rotation) servo can move to any position between 0 and 180 degrees. It receives a signal telling it which angle to go to and holds that position."
+  },
+  {
+    "id": "m6q3",
+    "question": "What does myServo.attach(9) do?",
+    "options": [
+      "Moves the servo to 9 degrees",
+      "Sets the servo speed to 9",
+      "Tells the Servo object to send control signals on pin 9",
+      "Attaches 9 servos to the Arduino"
+    ],
+    "correct": 2,
+    "explanation": "attach(pin) tells the Servo object which Arduino pin the servo's signal wire is connected to. After this call, you can use write() to control the servo through that pin."
+  },
+  {
+    "id": "m6q4",
+    "question": "In the sweep example, why is there a delay(15) inside the for loop?",
+    "options": [
+      "To save power",
+      "To give the servo time to physically move to the new position",
+      "Because the Arduino can only send one signal per second",
+      "To prevent the servo from overheating"
+    ],
+    "correct": 1,
+    "explanation": "Servos are physical devices that take time to rotate. The delay gives the servo time to move 1 degree before telling it to move to the next position. Without the delay, the code would run faster than the servo can move."
+  },
+  {
+    "id": "m6q5",
+    "question": "If analogRead(A0) returns 512, what angle will map(512, 0, 1023, 0, 180) produce?",
+    "options": ["512", "0", "90", "180"],
+    "correct": 2,
+    "explanation": "512 is approximately half of 1023. The map function scales it proportionally: half of 180 is 90. So the servo moves to the middle of its range, matching the potentiometer being turned to the middle."
+  }
+]
