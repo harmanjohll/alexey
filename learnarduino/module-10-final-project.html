@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 10 · Final Project · ArduinoLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;line-height:1.65}
+.wrap{max-width:1200px;margin:0 auto;padding:1.5rem 1rem}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:10px;font-family:'Space Mono',monospace}
+.exp-title{font-size:24px;font-family:'Space Mono',monospace;font-weight:700;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:700px;margin-bottom:1.5rem}
+.lab-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.lab-left,.lab-right{display:flex;flex-direction:column;gap:14px}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4)}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a}
+.sbody{padding:14px}
+.lesson h3{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#7dd87d;margin:14px 0 6px}
+.lesson h3:first-child{margin-top:0}
+.lesson p{font-size:12px;color:#c8d8c8;margin-bottom:8px;line-height:1.7}
+.lesson code{font-family:'Space Mono',monospace;font-size:11px;background:#0d150d;padding:1px 5px;border-radius:3px;color:#7dd87d;border:0.5px solid rgba(60,160,60,0.2)}
+.lesson pre{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:10px;margin:8px 0;overflow-x:auto}
+.lesson pre code{background:none;border:none;padding:0;color:#e8f0e8;display:block;font-size:11px;line-height:1.6}
+.lesson ul{font-size:12px;color:#c8d8c8;padding-left:18px;margin-bottom:8px}
+.lesson li{margin-bottom:3px;line-height:1.6}
+.note{font-size:11px;color:#7a9a7a;line-height:1.65;padding:8px 12px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin:10px 0;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d}
+#editorContainer{width:100%;height:240px;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;overflow:hidden}
+.editor-toolbar{display:flex;gap:6px;margin-top:8px;align-items:center}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1)}
+button:disabled{opacity:.35;cursor:not-allowed}
+.run-btn{background:rgba(60,160,60,0.1);font-weight:700}
+.stop-btn{background:rgba(226,75,74,0.08);color:#e24b4a;border-color:rgba(226,75,74,0.4);display:none}
+canvas#simCanvas{width:100%;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;display:block;background:#080c08}
+.serial{background:#080c08;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;height:80px;overflow-y:auto;padding:8px;font-family:'Space Mono',monospace;font-size:10px;color:#7dd87d;margin-top:8px}
+.serial-empty{color:#4a6a4a;font-style:italic}
+.plan-area{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:12px;line-height:1.65;padding:10px;resize:vertical;border-radius:6px;min-height:100px;margin-bottom:8px}
+.plan-area:focus{outline:none;border-color:#3ca03c}
+.plan-area::placeholder{color:#4a6a4a}
+.sim-controls{margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sim-controls label{font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace}
+.sim-controls input[type="range"]{width:100px;accent-color:#3ca03c;height:4px}
+.sim-controls .val{font-size:11px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace;min-width:35px}
+.quiz-q{margin-bottom:14px}.quiz-q p{font-size:12px;color:#e8f0e8;margin-bottom:6px}
+.quiz-q label{display:block;font-size:11px;color:#c8d8c8;padding:5px 10px;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;margin-bottom:3px;cursor:pointer;font-family:'Space Mono',monospace}
+.quiz-q label:hover{border-color:rgba(60,160,60,0.4)}
+.quiz-q input[type="radio"]{margin-right:6px;accent-color:#3ca03c}
+.quiz-q label.correct{border-color:#3ca03c;background:rgba(60,160,60,0.1);color:#7dd87d}
+.quiz-q label.wrong{border-color:#e24b4a;background:rgba(226,75,74,0.08);color:#e24b4a}
+.quiz-result{font-family:'Space Mono',monospace;font-size:12px;padding:10px;border-radius:6px;margin-top:10px}
+.quiz-result.pass{background:rgba(60,160,60,0.1);border:0.5px solid rgba(60,160,60,0.3);color:#7dd87d}
+.quiz-result.fail{background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.3);color:#e24b4a}
+@media(max-width:800px){.lab-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="index.html" class="nav-back">&larr; module list</a>
+<div class="exp-tag">MODULE 10 OF 10 &middot; FINAL PROJECT &middot; CAPSTONE</div>
+<div class="exp-title">Final Project &mdash; Design Your Own</div>
+<div class="exp-sub">Combine everything you have learned &mdash; digital I/O, analog, PWM, libraries, sensors, state machines &mdash; into a project you design yourself. Plan it, build it, test it.</div>
+
+<div class="lab-layout">
+<div class="lab-left">
+  <div class="step">
+    <div class="step-hdr"><span class="snum">LESSON</span><span class="sname">Project Guide</span></div>
+    <div class="sbody lesson">
+      <h3>Design Your Project</h3>
+      <p>A good project combines at least <b>3 concepts</b> from previous modules. Think about what you want your Arduino to <b>do</b>, then work backwards to figure out <b>how</b>.</p>
+
+      <h3>Project Planning Checklist</h3>
+      <ul>
+        <li><b>Purpose:</b> What problem does your project solve? What does it do?</li>
+        <li><b>Inputs:</b> What sensors, buttons, or data does it read?</li>
+        <li><b>Processing:</b> What logic, states, or calculations does it perform?</li>
+        <li><b>Outputs:</b> What LEDs, servos, LCD text, or serial data does it produce?</li>
+        <li><b>States:</b> Does your project have different modes? Draw a state diagram.</li>
+      </ul>
+
+      <h3>Project Ideas</h3>
+      <ul>
+        <li>Distance alarm &mdash; ultrasonic sensor + LED + buzzer pattern</li>
+        <li>Temperature display &mdash; DHT11 + LCD + warning LEDs</li>
+        <li>Automated gate &mdash; ultrasonic sensor + servo + state machine</li>
+        <li>Light-tracking servo &mdash; LDR + servo + serial logging</li>
+        <li>Traffic light with pedestrian button &mdash; state machine + button + LEDs</li>
+      </ul>
+
+      <h3>Documentation Tips</h3>
+      <ul>
+        <li>Comment every section of your code explaining <b>why</b>, not just what</li>
+        <li>Use meaningful variable names: <code>distanceCm</code> not <code>d</code></li>
+        <li>Group related code into functions</li>
+        <li>Print debug info to Serial during development</li>
+      </ul>
+
+      <h3>Your Plan</h3>
+      <p>Write your project plan below. Describe what it does, what components it uses, and what states it has. Then implement it in the code editor.</p>
+      <textarea class="plan-area" id="planArea" placeholder="My project: &#10;&#10;Purpose: ...&#10;Inputs: ...&#10;Processing: ...&#10;Outputs: ...&#10;States: ..."></textarea>
+      <button onclick="savePlan()">Save Plan</button>
+      <span id="planSaved" style="font-size:10px;color:#3ca03c;margin-left:8px;display:none">Saved!</span>
+
+      <div class="note"><b>Sandbox mode:</b> The simulator below has an LED and a servo arm you can control. Use the sliders to test, or run your code to see it animate.</div>
+    </div>
+  </div>
+  <div class="step"><div class="step-hdr"><span class="snum">QUIZ</span><span class="sname">Final Assessment</span><span class="shint">80% to pass</span></div><div class="sbody" id="quizBody"></div></div>
+</div>
+<div class="lab-right">
+  <div class="step">
+    <div class="step-hdr"><span class="snum">CODE</span><span class="sname">Arduino Editor</span><span class="shint" id="simStatus">Write your sketch</span></div>
+    <div class="sbody">
+      <div id="editorContainer"></div>
+      <div class="editor-toolbar">
+        <button class="run-btn" id="runBtn" onclick="runSketch()">&#9654; Run</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopSketch()">&#9632; Stop</button>
+        <button onclick="resetCode()">&#8634; Reset</button>
+        <span style="margin-left:auto;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace" id="runTimer"></span>
+      </div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-hdr"><span class="snum">SIM</span><span class="sname">Sandbox Simulator</span></div>
+    <div class="sbody">
+      <canvas id="simCanvas" width="500" height="300"></canvas>
+      <div class="sim-controls">
+        <label>LED:</label>
+        <input type="range" id="ledSlider" min="0" max="255" value="0">
+        <span class="val" id="ledVal">0</span>
+        <label style="margin-left:12px">Servo:</label>
+        <input type="range" id="servoSlider" min="0" max="180" value="90">
+        <span class="val" id="servoVal">90&deg;</span>
+      </div>
+      <div class="serial" id="serialMon"><div class="serial-empty">Serial output appears here...</div></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+<script>
+const MOD_ID='module-10-final-project';
+const STARTER=`// Module 10: Final Project — Sandbox
+// Combine concepts: digital I/O, PWM, servo, serial
+// This starter blinks an LED and sweeps a servo
+#include <Servo.h>
+
+Servo myServo;
+const int ledPin = 9;
+int brightness = 0;
+int fadeAmount = 5;
+
+void setup() {
+  myServo.attach(10);
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Final project running!");
+}
+
+void loop() {
+  // Fade the LED
+  analogWrite(ledPin, brightness);
+  brightness += fadeAmount;
+  if (brightness <= 0 || brightness >= 255) {
+    fadeAmount = -fadeAmount;
+  }
+
+  // Sweep servo based on brightness
+  int angle = map(brightness, 0, 255, 0, 180);
+  myServo.write(angle);
+
+  Serial.print("LED: ");
+  Serial.print(brightness);
+  Serial.print("  Servo: ");
+  Serial.println(angle);
+
+  delay(30);
+}`;
+
+let editor;
+require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'}});
+require(['vs/editor/editor.main'],function(){
+  monaco.editor.defineTheme('arduinolab',{base:'vs-dark',inherit:true,rules:[{token:'keyword',foreground:'7dd87d'},{token:'comment',foreground:'4a6a4a',fontStyle:'italic'}],colors:{'editor.background':'#0d150d','editor.foreground':'#e8f0e8','editorLineNumber.foreground':'#2a3a2a','editorCursor.foreground':'#7dd87d'}});
+  const saved=localStorage.getItem(`arduino_${MOD_ID}_code`);
+  editor=monaco.editor.create(document.getElementById('editorContainer'),{value:saved||STARTER,language:'cpp',theme:'arduinolab',fontSize:12,fontFamily:"'Space Mono',monospace",minimap:{enabled:false},scrollBeyondLastLine:false,tabSize:2,padding:{top:8},wordWrap:'on'});
+  editor.onDidChangeModelContent(()=>{localStorage.setItem(`arduino_${MOD_ID}_code`,editor.getValue())});
+});
+function resetCode(){if(editor){editor.setValue(STARTER);localStorage.removeItem(`arduino_${MOD_ID}_code`)}}
+
+// Load saved plan
+const planArea=document.getElementById('planArea');
+const savedPlan=localStorage.getItem(`arduino_${MOD_ID}_plan`);
+if(savedPlan)planArea.value=savedPlan;
+function savePlan(){
+  localStorage.setItem(`arduino_${MOD_ID}_plan`,planArea.value);
+  const s=document.getElementById('planSaved');s.style.display='inline';setTimeout(()=>{s.style.display='none'},2000);
+}
+
+let simRunning=false,simTimeout=null,simStartTime=0;
+let ledBrightness=0,servoAngle=90,fadeAmount=5;
+
+const ledSlider=document.getElementById('ledSlider');
+const servoSlider=document.getElementById('servoSlider');
+const ledValEl=document.getElementById('ledVal');
+const servoValEl=document.getElementById('servoVal');
+
+ledSlider.addEventListener('input',function(){if(!simRunning){ledBrightness=+this.value;ledValEl.textContent=ledBrightness;drawSim();}});
+servoSlider.addEventListener('input',function(){if(!simRunning){servoAngle=+this.value;servoValEl.textContent=servoAngle+'\u00B0';drawSim();}});
+
+function runSketch(){
+  simRunning=true;simStartTime=Date.now();ledBrightness=0;fadeAmount=5;
+  document.getElementById('serialMon').innerHTML='';
+  document.getElementById('runBtn').style.display='none';
+  document.getElementById('stopBtn').style.display='';
+  document.getElementById('simStatus').textContent='Running...';
+  document.getElementById('simStatus').style.color='#7dd87d';
+  addSerialLine('Final project running!');
+  animateLoop();
+  updateTimer();
+}
+async function animateLoop(){
+  while(simRunning){
+    ledBrightness+=fadeAmount;
+    if(ledBrightness<=0||ledBrightness>=255)fadeAmount=-fadeAmount;
+    ledBrightness=Math.max(0,Math.min(255,ledBrightness));
+    servoAngle=Math.round(ledBrightness/255*180);
+    ledSlider.value=ledBrightness;ledValEl.textContent=ledBrightness;
+    servoSlider.value=servoAngle;servoValEl.textContent=servoAngle+'\u00B0';
+    drawSim();
+    await new Promise(r=>simTimeout=setTimeout(r,30));
+  }
+}
+function stopSketch(){
+  simRunning=false;if(simTimeout)clearTimeout(simTimeout);
+  document.getElementById('runBtn').style.display='';
+  document.getElementById('stopBtn').style.display='none';
+  document.getElementById('simStatus').textContent='Stopped';
+  document.getElementById('simStatus').style.color='#4a6a4a';
+}
+function updateTimer(){if(!simRunning)return;document.getElementById('runTimer').textContent=((Date.now()-simStartTime)/1000).toFixed(1)+'s';requestAnimationFrame(updateTimer);}
+function addSerialLine(t){const m=document.getElementById('serialMon');if(m.querySelector('.serial-empty'))m.innerHTML='';const d=document.createElement('div');d.className='serial-line';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;}
+
+const canvas=document.getElementById('simCanvas'),ctx=canvas.getContext('2d');
+function drawSim(){
+  const w=canvas.width,h=canvas.height;
+  ctx.fillStyle='#080c08';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#111a1120';ctx.lineWidth=0.5;
+  for(let x=0;x<w;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+
+  // Arduino board
+  ctx.fillStyle='#111a11';ctx.strokeStyle='rgba(60,160,60,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(30,80,140,130,6);ctx.fill();ctx.stroke();
+  ctx.font="bold 10px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';ctx.fillText('Arduino UNO',42,105);
+
+  // LED
+  const lx=260,ly=80;
+  const bright=ledBrightness/255;
+  // LED glow
+  if(bright>0){
+    const grad=ctx.createRadialGradient(lx,ly,0,lx,ly,30+bright*20);
+    grad.addColorStop(0,`rgba(125,216,125,${bright*0.5})`);
+    grad.addColorStop(1,'rgba(125,216,125,0)');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.arc(lx,ly,30+bright*20,0,Math.PI*2);ctx.fill();
+  }
+  // LED body
+  ctx.beginPath();ctx.arc(lx,ly,12,0,Math.PI*2);
+  ctx.fillStyle=`rgba(60,${100+bright*155},60,${0.2+bright*0.8})`;ctx.fill();
+  ctx.strokeStyle=bright>0.1?'#7dd87d':'#2a3a2a';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.font="8px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';ctx.fillText('LED',lx-8,ly+28);
+  ctx.fillStyle='#7a9a7a';ctx.fillText('PWM: '+ledBrightness,lx-14,ly+40);
+
+  // Servo
+  const sx=380,sy=160;
+  // Servo body
+  ctx.fillStyle='#1a2a1a';ctx.strokeStyle='#4a6a4a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(sx-25,sy-16,50,32,4);ctx.fill();ctx.stroke();
+  ctx.font="8px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';ctx.fillText('SERVO',sx-16,sy+4);
+
+  // Angle arc
+  ctx.strokeStyle='rgba(60,160,60,0.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(sx,sy,45,Math.PI,0);ctx.stroke();
+  // Tick marks
+  for(let a=0;a<=180;a+=45){
+    const rad=Math.PI-a*Math.PI/180;
+    ctx.beginPath();ctx.moveTo(sx+40*Math.cos(rad),sy-40*Math.sin(rad));ctx.lineTo(sx+50*Math.cos(rad),sy-50*Math.sin(rad));ctx.strokeStyle='#2a3a2a';ctx.stroke();
+  }
+
+  // Servo arm
+  const armRad=Math.PI-servoAngle*Math.PI/180;
+  const armLen=38;
+  ctx.strokeStyle='#7dd87d';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+armLen*Math.cos(armRad),sy-armLen*Math.sin(armRad));ctx.stroke();
+  ctx.beginPath();ctx.arc(sx+armLen*Math.cos(armRad),sy-armLen*Math.sin(armRad),3,0,Math.PI*2);ctx.fillStyle='#7dd87d';ctx.fill();
+  ctx.beginPath();ctx.arc(sx,sy,4,0,Math.PI*2);ctx.fillStyle='#3ca03c';ctx.fill();
+
+  // Servo angle readout
+  ctx.font="bold 12px 'Space Mono',monospace";ctx.fillStyle='#7dd87d';ctx.textAlign='center';
+  ctx.fillText(servoAngle+'\u00B0',sx,sy+45);ctx.textAlign='left';
+
+  // Wires
+  ctx.strokeStyle='#f0b429';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(170,140);ctx.lineTo(lx,ly);ctx.stroke();
+  ctx.strokeStyle='#4a9aaa';
+  ctx.beginPath();ctx.moveTo(170,160);ctx.lineTo(sx-25,sy);ctx.stroke();
+  ctx.font="8px 'Space Mono',monospace";
+  ctx.fillStyle='#f0b429';ctx.fillText('Pin 9',190,138);
+  ctx.fillStyle='#4a9aaa';ctx.fillText('Pin 10',190,162);
+
+  // Sandbox label
+  ctx.font="bold 10px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';ctx.textAlign='center';
+  ctx.fillText('SANDBOX MODE',w/2,25);ctx.textAlign='left';
+
+  ctx.fillStyle=simRunning?'#3ca03c':'#2a3a2a';ctx.font="bold 10px 'Space Mono',monospace";ctx.fillText(simRunning?'\u25CF RUNNING':'\u25CB STOPPED',w-100,h-10);
+}
+drawSim();
+
+const quizData=[
+  {q:'What does pinMode(pin, OUTPUT) do?',opts:['Reads the pin value','Configures the pin to send signals out','Sets the pin to HIGH','Creates a new pin'],ans:1},
+  {q:'What is the range of analogWrite()?',opts:['0 to 1','0 to 1023','0 to 255','0 to 180'],ans:2},
+  {q:'Which of these is NOT a benefit of using millis() over delay()?',opts:['Non-blocking execution','Can check sensors while waiting','Uses less memory','Multiple timers can run simultaneously'],ans:2},
+  {q:'What does map(value, 0, 1023, 0, 180) do?',opts:['Scales a value from 0-1023 range to 0-180 range','Creates a lookup table','Converts degrees to radians','Maps memory addresses'],ans:0},
+  {q:'In a state machine, what triggers a transition between states?',opts:['Only button presses','Only time elapsed','A condition being met (time, input, sensor, etc.)','States change randomly'],ans:2},
+];
+function renderQuiz(){
+  const body=document.getElementById('quizBody');
+  if(localStorage.getItem(`arduino_${MOD_ID}_quiz_passed`)==='true'){body.innerHTML='<div class="quiz-result pass">&#10003; Congratulations! You\'ve completed ArduinoLab! <a href="index.html" style="color:#7dd87d">&larr; Back to module list</a></div>';return;}
+  let h='';quizData.forEach((q,i)=>{h+=`<div class="quiz-q" id="qq${i}"><p><b>Q${i+1}.</b> ${q.q}</p>${q.opts.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}">${o}</label>`).join('')}</div>`;});
+  h+='<button onclick="submitQuiz()">Submit Quiz</button><div id="quizResult"></div>';body.innerHTML=h;
+}
+function submitQuiz(){
+  let c=0;quizData.forEach((q,i)=>{const s=document.querySelector(`input[name="q${i}"]:checked`);document.querySelectorAll(`#qq${i} label`).forEach((l,j)=>{l.classList.remove('correct','wrong');if(j===q.ans)l.classList.add('correct');else if(s&&+s.value===j)l.classList.add('wrong');});if(s&&+s.value===q.ans)c++;});
+  const p=Math.round(c/quizData.length*100),passed=p>=80,el=document.getElementById('quizResult');
+  if(passed){el.className='quiz-result pass';el.innerHTML=`&#10003; ${c}/${quizData.length} (${p}%) — Congratulations! You've completed ArduinoLab! <a href="index.html" style="color:#7dd87d">&larr; Back to module list</a>`;localStorage.setItem(`arduino_${MOD_ID}_quiz_passed`,'true');}
+  else{el.className='quiz-result fail';el.innerHTML=`&#10007; ${c}/${quizData.length} (${p}%) — Need 80%. Review and retry.`;}
+}
+renderQuiz();
+</script>
+</body>
+</html>

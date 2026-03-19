@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 09 · State Machines · ArduinoLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;line-height:1.65}
+.wrap{max-width:1200px;margin:0 auto;padding:1.5rem 1rem}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:10px;font-family:'Space Mono',monospace}
+.exp-title{font-size:24px;font-family:'Space Mono',monospace;font-weight:700;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:700px;margin-bottom:1.5rem}
+.lab-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.lab-left,.lab-right{display:flex;flex-direction:column;gap:14px}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4)}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a}
+.sbody{padding:14px}
+.lesson h3{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#7dd87d;margin:14px 0 6px}
+.lesson h3:first-child{margin-top:0}
+.lesson p{font-size:12px;color:#c8d8c8;margin-bottom:8px;line-height:1.7}
+.lesson code{font-family:'Space Mono',monospace;font-size:11px;background:#0d150d;padding:1px 5px;border-radius:3px;color:#7dd87d;border:0.5px solid rgba(60,160,60,0.2)}
+.lesson pre{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:10px;margin:8px 0;overflow-x:auto}
+.lesson pre code{background:none;border:none;padding:0;color:#e8f0e8;display:block;font-size:11px;line-height:1.6}
+.lesson ul{font-size:12px;color:#c8d8c8;padding-left:18px;margin-bottom:8px}
+.lesson li{margin-bottom:3px;line-height:1.6}
+.note{font-size:11px;color:#7a9a7a;line-height:1.65;padding:8px 12px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin:10px 0;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d}
+#editorContainer{width:100%;height:240px;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;overflow:hidden}
+.editor-toolbar{display:flex;gap:6px;margin-top:8px;align-items:center}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1)}
+button:disabled{opacity:.35;cursor:not-allowed}
+.run-btn{background:rgba(60,160,60,0.1);font-weight:700}
+.stop-btn{background:rgba(226,75,74,0.08);color:#e24b4a;border-color:rgba(226,75,74,0.4);display:none}
+canvas#simCanvas{width:100%;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;display:block;background:#080c08}
+.serial{background:#080c08;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;height:80px;overflow-y:auto;padding:8px;font-family:'Space Mono',monospace;font-size:10px;color:#7dd87d;margin-top:8px}
+.serial-empty{color:#4a6a4a;font-style:italic}
+.quiz-q{margin-bottom:14px}.quiz-q p{font-size:12px;color:#e8f0e8;margin-bottom:6px}
+.quiz-q label{display:block;font-size:11px;color:#c8d8c8;padding:5px 10px;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;margin-bottom:3px;cursor:pointer;font-family:'Space Mono',monospace}
+.quiz-q label:hover{border-color:rgba(60,160,60,0.4)}
+.quiz-q input[type="radio"]{margin-right:6px;accent-color:#3ca03c}
+.quiz-q label.correct{border-color:#3ca03c;background:rgba(60,160,60,0.1);color:#7dd87d}
+.quiz-q label.wrong{border-color:#e24b4a;background:rgba(226,75,74,0.08);color:#e24b4a}
+.quiz-result{font-family:'Space Mono',monospace;font-size:12px;padding:10px;border-radius:6px;margin-top:10px}
+.quiz-result.pass{background:rgba(60,160,60,0.1);border:0.5px solid rgba(60,160,60,0.3);color:#7dd87d}
+.quiz-result.fail{background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.3);color:#e24b4a}
+@media(max-width:800px){.lab-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="index.html" class="nav-back">&larr; module list</a>
+<div class="exp-tag">MODULE 09 OF 10 &middot; STATE MACHINES &middot; DESIGN</div>
+<div class="exp-title">State Machines &mdash; Thinking in States</div>
+<div class="exp-sub">Real systems have modes &mdash; a traffic light is red, then green, then yellow. State machines give you a clean pattern to manage these transitions without messy nested ifs.</div>
+
+<div class="lab-layout">
+<div class="lab-left">
+  <div class="step">
+    <div class="step-hdr"><span class="snum">LESSON</span><span class="sname">The Concepts</span></div>
+    <div class="sbody lesson">
+      <h3>What Is a State Machine?</h3>
+      <p>A state machine is a design pattern where your program is always in one defined <b>state</b>, and transitions between states based on conditions (time, input, sensor data).</p>
+
+      <h3>Defining States with enum</h3>
+      <pre><code>enum State {
+  RED,
+  YELLOW,
+  GREEN
+};
+
+State currentState = RED;</code></pre>
+      <p>An <code>enum</code> creates named constants &mdash; much clearer than using magic numbers like 0, 1, 2.</p>
+
+      <h3>The switch/case Pattern</h3>
+      <pre><code>switch (currentState) {
+  case RED:
+    // do red things
+    break;
+  case YELLOW:
+    // do yellow things
+    break;
+  case GREEN:
+    // do green things
+    break;
+}</code></pre>
+
+      <h3>millis() vs delay()</h3>
+      <p><code>delay()</code> blocks everything &mdash; nothing else can happen. <code>millis()</code> returns time since boot, letting you check elapsed time without blocking:</p>
+      <pre><code>unsigned long prevTime = 0;
+unsigned long interval = 5000; // 5 seconds
+
+void loop() {
+  if (millis() - prevTime >= interval) {
+    prevTime = millis();
+    // Time to transition!
+  }
+  // Other code still runs here
+}</code></pre>
+
+      <h3>Your Task</h3>
+      <p>Build a traffic light that cycles RED (5s) &rarr; GREEN (4s) &rarr; YELLOW (2s) &rarr; RED using <code>millis()</code> and <code>switch/case</code>. Watch the LEDs change in the simulator.</p>
+
+      <div class="note"><b>Why millis()?</b> With <code>delay()</code>, your Arduino is frozen. With <code>millis()</code>, it can still read buttons, update displays, and respond to events while waiting.</div>
+    </div>
+  </div>
+  <div class="step"><div class="step-hdr"><span class="snum">QUIZ</span><span class="sname">Check Your Understanding</span><span class="shint">80% to pass</span></div><div class="sbody" id="quizBody"></div></div>
+</div>
+<div class="lab-right">
+  <div class="step">
+    <div class="step-hdr"><span class="snum">CODE</span><span class="sname">Arduino Editor</span><span class="shint" id="simStatus">Write your sketch</span></div>
+    <div class="sbody">
+      <div id="editorContainer"></div>
+      <div class="editor-toolbar">
+        <button class="run-btn" id="runBtn" onclick="runSketch()">&#9654; Run</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopSketch()">&#9632; Stop</button>
+        <button onclick="resetCode()">&#8634; Reset</button>
+        <span style="margin-left:auto;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace" id="runTimer"></span>
+      </div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-hdr"><span class="snum">SIM</span><span class="sname">Circuit Simulator</span></div>
+    <div class="sbody">
+      <canvas id="simCanvas" width="500" height="300"></canvas>
+      <div class="serial" id="serialMon"><div class="serial-empty">Serial output appears here...</div></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+<script>
+const MOD_ID='module-09-state-machines';
+const STARTER=`// Module 9: Traffic Light State Machine
+// Cycle: RED (5s) -> GREEN (4s) -> YELLOW (2s) -> RED
+enum State { RED, YELLOW, GREEN };
+State currentState = RED;
+
+const int redPin = 11;
+const int yellowPin = 10;
+const int greenPin = 9;
+
+unsigned long prevTime = 0;
+
+void setup() {
+  pinMode(redPin, OUTPUT);
+  pinMode(yellowPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Traffic light started");
+}
+
+void loop() {
+  unsigned long now = millis();
+
+  switch (currentState) {
+    case RED:
+      digitalWrite(redPin, HIGH);
+      digitalWrite(yellowPin, LOW);
+      digitalWrite(greenPin, LOW);
+      if (now - prevTime >= 5000) {
+        currentState = GREEN;
+        prevTime = now;
+        Serial.println("-> GREEN");
+      }
+      break;
+
+    case GREEN:
+      digitalWrite(redPin, LOW);
+      digitalWrite(yellowPin, LOW);
+      digitalWrite(greenPin, HIGH);
+      if (now - prevTime >= 4000) {
+        currentState = YELLOW;
+        prevTime = now;
+        Serial.println("-> YELLOW");
+      }
+      break;
+
+    case YELLOW:
+      digitalWrite(redPin, LOW);
+      digitalWrite(yellowPin, HIGH);
+      digitalWrite(greenPin, LOW);
+      if (now - prevTime >= 2000) {
+        currentState = RED;
+        prevTime = now;
+        Serial.println("-> RED");
+      }
+      break;
+  }
+}`;
+
+let editor;
+require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'}});
+require(['vs/editor/editor.main'],function(){
+  monaco.editor.defineTheme('arduinolab',{base:'vs-dark',inherit:true,rules:[{token:'keyword',foreground:'7dd87d'},{token:'comment',foreground:'4a6a4a',fontStyle:'italic'}],colors:{'editor.background':'#0d150d','editor.foreground':'#e8f0e8','editorLineNumber.foreground':'#2a3a2a','editorCursor.foreground':'#7dd87d'}});
+  const saved=localStorage.getItem(`arduino_${MOD_ID}_code`);
+  editor=monaco.editor.create(document.getElementById('editorContainer'),{value:saved||STARTER,language:'cpp',theme:'arduinolab',fontSize:12,fontFamily:"'Space Mono',monospace",minimap:{enabled:false},scrollBeyondLastLine:false,tabSize:2,padding:{top:8},wordWrap:'on'});
+  editor.onDidChangeModelContent(()=>{localStorage.setItem(`arduino_${MOD_ID}_code`,editor.getValue())});
+});
+function resetCode(){if(editor){editor.setValue(STARTER);localStorage.removeItem(`arduino_${MOD_ID}_code`)}}
+
+let simRunning=false,simInterval=null,simStartTime=0;
+// Traffic light state: 0=RED, 1=GREEN, 2=YELLOW
+let tlState=0,tlTimer=0;
+const tlDurations=[5000,4000,2000]; // RED, GREEN, YELLOW
+const tlNames=['RED','GREEN','YELLOW'];
+
+function runSketch(){
+  simRunning=true;simStartTime=Date.now();tlState=0;tlTimer=Date.now();
+  document.getElementById('serialMon').innerHTML='';
+  document.getElementById('runBtn').style.display='none';
+  document.getElementById('stopBtn').style.display='';
+  document.getElementById('simStatus').textContent='Running...';
+  document.getElementById('simStatus').style.color='#7dd87d';
+  addSerialLine('Traffic light started');
+  drawSim();
+  simInterval=setInterval(function(){
+    const now=Date.now();
+    if(now-tlTimer>=tlDurations[tlState]){
+      tlState=(tlState+1)%3;
+      tlTimer=now;
+      addSerialLine('-> '+tlNames[tlState]);
+    }
+    drawSim();
+  },100);
+  updateTimer();
+}
+function stopSketch(){
+  simRunning=false;
+  if(simInterval){clearInterval(simInterval);simInterval=null;}
+  document.getElementById('runBtn').style.display='';
+  document.getElementById('stopBtn').style.display='none';
+  document.getElementById('simStatus').textContent='Stopped';
+  document.getElementById('simStatus').style.color='#4a6a4a';
+}
+function updateTimer(){if(!simRunning)return;document.getElementById('runTimer').textContent=((Date.now()-simStartTime)/1000).toFixed(1)+'s';requestAnimationFrame(updateTimer);}
+function addSerialLine(t){const m=document.getElementById('serialMon');if(m.querySelector('.serial-empty'))m.innerHTML='';const d=document.createElement('div');d.className='serial-line';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;}
+
+const canvas=document.getElementById('simCanvas'),ctx=canvas.getContext('2d');
+function drawSim(){
+  const w=canvas.width,h=canvas.height;
+  ctx.fillStyle='#080c08';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#111a1120';ctx.lineWidth=0.5;
+  for(let x=0;x<w;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  // Arduino board
+  ctx.fillStyle='#111a11';ctx.strokeStyle='rgba(60,160,60,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(20,60,140,130,6);ctx.fill();ctx.stroke();
+  ctx.font="bold 10px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';ctx.fillText('Arduino UNO',32,85);
+
+  // Traffic light housing
+  const tx=300,ty=40,tw=60,th=200;
+  ctx.fillStyle='#1a1a1a';ctx.strokeStyle='#3a3a3a';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(tx,ty,tw,th,8);ctx.fill();ctx.stroke();
+
+  // Red LED
+  const redOn=tlState===0&&simRunning;
+  ctx.beginPath();ctx.arc(tx+tw/2,ty+40,18,0,Math.PI*2);
+  ctx.fillStyle=redOn?'#ff2244':'#2a1111';ctx.fill();
+  ctx.strokeStyle=redOn?'#ff6666':'#3a2222';ctx.lineWidth=1.5;ctx.stroke();
+  if(redOn){ctx.beginPath();ctx.arc(tx+tw/2,ty+40,24,0,Math.PI*2);ctx.fillStyle='rgba(255,34,68,0.15)';ctx.fill();}
+
+  // Yellow LED
+  const yelOn=tlState===2&&simRunning;
+  ctx.beginPath();ctx.arc(tx+tw/2,ty+100,18,0,Math.PI*2);
+  ctx.fillStyle=yelOn?'#f0b429':'#2a2211';ctx.fill();
+  ctx.strokeStyle=yelOn?'#ffd060':'#3a3322';ctx.lineWidth=1.5;ctx.stroke();
+  if(yelOn){ctx.beginPath();ctx.arc(tx+tw/2,ty+100,24,0,Math.PI*2);ctx.fillStyle='rgba(240,180,41,0.15)';ctx.fill();}
+
+  // Green LED
+  const grnOn=tlState===1&&simRunning;
+  ctx.beginPath();ctx.arc(tx+tw/2,ty+160,18,0,Math.PI*2);
+  ctx.fillStyle=grnOn?'#3ca03c':'#112211';ctx.fill();
+  ctx.strokeStyle=grnOn?'#7dd87d':'#223322';ctx.lineWidth=1.5;ctx.stroke();
+  if(grnOn){ctx.beginPath();ctx.arc(tx+tw/2,ty+160,24,0,Math.PI*2);ctx.fillStyle='rgba(60,160,60,0.15)';ctx.fill();}
+
+  // Wires from Arduino to LEDs
+  ctx.lineWidth=2;
+  ctx.strokeStyle='#ff2244';ctx.beginPath();ctx.moveTo(160,110);ctx.lineTo(tx,ty+40);ctx.stroke();
+  ctx.strokeStyle='#f0b429';ctx.beginPath();ctx.moveTo(160,130);ctx.lineTo(tx,ty+100);ctx.stroke();
+  ctx.strokeStyle='#3ca03c';ctx.beginPath();ctx.moveTo(160,150);ctx.lineTo(tx,ty+160);ctx.stroke();
+  ctx.font="8px 'Space Mono',monospace";
+  ctx.fillStyle='#ff2244';ctx.fillText('Pin 11',185,108);
+  ctx.fillStyle='#f0b429';ctx.fillText('Pin 10',185,130);
+  ctx.fillStyle='#3ca03c';ctx.fillText('Pin 9',185,150);
+
+  // State label
+  if(simRunning){
+    ctx.font="bold 14px 'Space Mono',monospace";ctx.fillStyle='#7dd87d';ctx.textAlign='center';
+    ctx.fillText('State: '+tlNames[tlState],tx+tw/2,ty+th+25);
+    // Time remaining
+    const elapsed=Date.now()-tlTimer;
+    const remaining=Math.max(0,((tlDurations[tlState]-elapsed)/1000)).toFixed(1);
+    ctx.font="10px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';
+    ctx.fillText(remaining+'s remaining',tx+tw/2,ty+th+42);
+    ctx.textAlign='left';
+  }
+
+  ctx.fillStyle=simRunning?'#3ca03c':'#2a3a2a';ctx.font="bold 10px 'Space Mono',monospace";ctx.fillText(simRunning?'● RUNNING':'○ STOPPED',w-100,h-10);
+}
+drawSim();
+
+const quizData=[
+  {q:'What is a state machine?',opts:['A type of motor','A pattern where the program is always in one defined state','A way to speed up code','An Arduino library'],ans:1},
+  {q:'Why is millis() better than delay() for state machines?',opts:['millis() is more accurate','millis() uses less memory','millis() does not block — other code can still run','millis() is easier to type'],ans:2},
+  {q:'What does enum do in C++?',opts:['Creates a loop','Defines named constants for states','Imports a library','Declares a function'],ans:1},
+  {q:'In a switch/case block, what happens if you forget "break"?',opts:['The code stops','Nothing happens','Execution falls through to the next case','A compile error occurs'],ans:2},
+  {q:'What does millis() return?',opts:['Current time of day','Milliseconds since the Arduino was powered on','CPU speed in MHz','Number of loop iterations'],ans:1},
+];
+function renderQuiz(){
+  const body=document.getElementById('quizBody');
+  if(localStorage.getItem(`arduino_${MOD_ID}_quiz_passed`)==='true'){body.innerHTML='<div class="quiz-result pass">&#10003; Quiz passed! <a href="module-10-final-project.html" style="color:#7dd87d">Go to Module 10 &rarr;</a></div>';return;}
+  let h='';quizData.forEach((q,i)=>{h+=`<div class="quiz-q" id="qq${i}"><p><b>Q${i+1}.</b> ${q.q}</p>${q.opts.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}">${o}</label>`).join('')}</div>`;});
+  h+='<button onclick="submitQuiz()">Submit Quiz</button><div id="quizResult"></div>';body.innerHTML=h;
+}
+function submitQuiz(){
+  let c=0;quizData.forEach((q,i)=>{const s=document.querySelector(`input[name="q${i}"]:checked`);document.querySelectorAll(`#qq${i} label`).forEach((l,j)=>{l.classList.remove('correct','wrong');if(j===q.ans)l.classList.add('correct');else if(s&&+s.value===j)l.classList.add('wrong');});if(s&&+s.value===q.ans)c++;});
+  const p=Math.round(c/quizData.length*100),passed=p>=80,el=document.getElementById('quizResult');
+  if(passed){el.className='quiz-result pass';el.innerHTML=`&#10003; ${c}/${quizData.length} (${p}%) — Passed! <a href="module-10-final-project.html" style="color:#7dd87d">Module 10 &rarr;</a>`;localStorage.setItem(`arduino_${MOD_ID}_quiz_passed`,'true');}
+  else{el.className='quiz-result fail';el.innerHTML=`&#10007; ${c}/${quizData.length} (${p}%) — Need 80%. Review and retry.`;}
+}
+renderQuiz();
+</script>
+</body>
+</html>

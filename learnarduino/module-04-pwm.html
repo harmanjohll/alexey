@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 04 · PWM · ArduinoLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;line-height:1.65}.wrap{max-width:1200px;margin:0 auto;padding:1.5rem 1rem}.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:10px;font-family:'Space Mono',monospace}.exp-title{font-size:24px;font-family:'Space Mono',monospace;font-weight:700;margin-bottom:6px;line-height:1.2}.exp-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:700px;margin-bottom:1.5rem}.lab-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.lab-left,.lab-right{display:flex;flex-direction:column;gap:14px}.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;overflow:hidden}.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4)}.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}.shint{margin-left:auto;font-size:11px;color:#4a6a4a}.sbody{padding:14px}
+.lesson h3{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#7dd87d;margin:14px 0 6px}.lesson h3:first-child{margin-top:0}.lesson p{font-size:12px;color:#c8d8c8;margin-bottom:8px;line-height:1.7}.lesson code{font-family:'Space Mono',monospace;font-size:11px;background:#0d150d;padding:1px 5px;border-radius:3px;color:#7dd87d;border:0.5px solid rgba(60,160,60,0.2)}.lesson pre{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:10px;margin:8px 0;overflow-x:auto}.lesson pre code{background:none;border:none;padding:0;color:#e8f0e8;display:block;font-size:11px;line-height:1.6}.lesson ul{font-size:12px;color:#c8d8c8;padding-left:18px;margin-bottom:8px}.lesson li{margin-bottom:3px;line-height:1.6}.note{font-size:11px;color:#7a9a7a;line-height:1.65;padding:8px 12px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin:10px 0;border-radius:0 4px 4px 0}.note b{color:#7dd87d}
+#editorContainer{width:100%;height:240px;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;overflow:hidden}.editor-toolbar{display:flex;gap:6px;margin-top:8px;align-items:center}button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s}button:hover:not(:disabled){background:rgba(60,160,60,0.1)}button:disabled{opacity:.35;cursor:not-allowed}.run-btn{background:rgba(60,160,60,0.1);font-weight:700}.stop-btn{background:rgba(226,75,74,0.08);color:#e24b4a;border-color:rgba(226,75,74,0.4);display:none}
+canvas#simCanvas{width:100%;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;display:block;background:#080c08}.serial{background:#080c08;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;height:80px;overflow-y:auto;padding:8px;font-family:'Space Mono',monospace;font-size:10px;color:#7dd87d;margin-top:8px}.serial-empty{color:#4a6a4a;font-style:italic}
+.quiz-q{margin-bottom:14px}.quiz-q p{font-size:12px;color:#e8f0e8;margin-bottom:6px}.quiz-q label{display:block;font-size:11px;color:#c8d8c8;padding:5px 10px;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;margin-bottom:3px;cursor:pointer;font-family:'Space Mono',monospace}.quiz-q label:hover{border-color:rgba(60,160,60,0.4)}.quiz-q input[type="radio"]{margin-right:6px;accent-color:#3ca03c}.quiz-q label.correct{border-color:#3ca03c;background:rgba(60,160,60,0.1);color:#7dd87d}.quiz-q label.wrong{border-color:#e24b4a;background:rgba(226,75,74,0.08);color:#e24b4a}.quiz-result{font-family:'Space Mono',monospace;font-size:12px;padding:10px;border-radius:6px;margin-top:10px}.quiz-result.pass{background:rgba(60,160,60,0.1);border:0.5px solid rgba(60,160,60,0.3);color:#7dd87d}.quiz-result.fail{background:rgba(226,75,74,0.08);border:0.5px solid rgba(226,75,74,0.3);color:#e24b4a}
+@media(max-width:800px){.lab-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="index.html" class="nav-back">← module list</a>
+<div class="exp-tag">MODULE 04 OF 10 · PWM · ANALOG OUTPUT</div>
+<div class="exp-title">PWM & AnalogWrite — Fading an LED</div>
+<div class="exp-sub">Digital pins are on or off — but PWM fakes analog output by switching on and off thousands of times per second. The result: smooth brightness control.</div>
+
+<div class="lab-layout">
+<div class="lab-left">
+  <div class="step">
+    <div class="step-hdr"><span class="snum">LESSON</span><span class="sname">The Concepts</span></div>
+    <div class="sbody lesson">
+      <h3>What Is PWM?</h3>
+      <p>PWM (Pulse Width Modulation) rapidly switches a pin between HIGH and LOW. The <b>duty cycle</b> — the percentage of time spent HIGH — controls effective brightness or speed.</p>
+      <ul>
+        <li>0% duty cycle = always OFF (0V effective)</li>
+        <li>50% duty cycle = half brightness (2.5V effective)</li>
+        <li>100% duty cycle = always ON (5V effective)</li>
+      </ul>
+
+      <h3>analogWrite()</h3>
+      <pre><code>analogWrite(9, 127);  // 50% brightness (0-255 range)
+analogWrite(9, 0);    // OFF
+analogWrite(9, 255);  // Full brightness</code></pre>
+      <p>Range: <code>0</code> (off) to <code>255</code> (full on). Only works on PWM pins: <b>3, 5, 6, 9, 10, 11</b> (marked with ~ on the board).</p>
+
+      <h3>Fading with a for Loop</h3>
+      <pre><code>// Fade up
+for (int brightness = 0; brightness <= 255; brightness += 5) {
+  analogWrite(9, brightness);
+  delay(30);
+}
+// Fade down
+for (int brightness = 255; brightness >= 0; brightness -= 5) {
+  analogWrite(9, brightness);
+  delay(30);
+}</code></pre>
+
+      <h3>Your Task</h3>
+      <p>Fade an LED smoothly from off to full brightness and back. Watch the LED's glow change in the simulator.</p>
+
+      <div class="note"><b>Not true analog:</b> analogWrite doesn't output a true analog voltage. It's still digital — just switching very fast (490Hz or 980Hz).</div>
+    </div>
+  </div>
+  <div class="step"><div class="step-hdr"><span class="snum">QUIZ</span><span class="sname">Check Your Understanding</span><span class="shint">80% to pass</span></div><div class="sbody" id="quizBody"></div></div>
+</div>
+<div class="lab-right">
+  <div class="step">
+    <div class="step-hdr"><span class="snum">CODE</span><span class="sname">Arduino Editor</span><span class="shint" id="simStatus">Write your sketch</span></div>
+    <div class="sbody">
+      <div id="editorContainer"></div>
+      <div class="editor-toolbar">
+        <button class="run-btn" id="runBtn" onclick="runSketch()">▶ Run</button>
+        <button class="stop-btn" id="stopBtn" onclick="stopSketch()">■ Stop</button>
+        <button onclick="resetCode()">↺ Reset</button>
+        <span style="margin-left:auto;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace" id="runTimer"></span>
+      </div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-hdr"><span class="snum">SIM</span><span class="sname">Circuit Simulator</span></div>
+    <div class="sbody">
+      <canvas id="simCanvas" width="500" height="280"></canvas>
+      <div class="serial" id="serialMon"><div class="serial-empty">Serial output appears here...</div></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+<script>
+const MOD_ID='module-04-pwm';
+const STARTER=`// Module 4: PWM & AnalogWrite
+// Fade an LED on pin 9 smoothly up and down
+
+void setup() {
+  pinMode(9, OUTPUT);
+}
+
+void loop() {
+  // Fade up from 0 to 255
+  for (int b = 0; b <= 255; b += 5) {
+    analogWrite(9, b);
+    delay(30);
+  }
+  // Fade down from 255 to 0
+  for (int b = 255; b >= 0; b -= 5) {
+    analogWrite(9, b);
+    delay(30);
+  }
+}`;
+
+let editor;
+require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'}});
+require(['vs/editor/editor.main'],function(){
+  monaco.editor.defineTheme('arduinolab',{base:'vs-dark',inherit:true,rules:[{token:'keyword',foreground:'7dd87d'},{token:'comment',foreground:'4a6a4a',fontStyle:'italic'}],colors:{'editor.background':'#0d150d','editor.foreground':'#e8f0e8','editorLineNumber.foreground':'#2a3a2a','editorCursor.foreground':'#7dd87d'}});
+  const saved=localStorage.getItem(`arduino_${MOD_ID}_code`);
+  editor=monaco.editor.create(document.getElementById('editorContainer'),{value:saved||STARTER,language:'cpp',theme:'arduinolab',fontSize:12,fontFamily:"'Space Mono',monospace",minimap:{enabled:false},scrollBeyondLastLine:false,tabSize:2,padding:{top:8},wordWrap:'on'});
+  editor.onDidChangeModelContent(()=>{localStorage.setItem(`arduino_${MOD_ID}_code`,editor.getValue())});
+});
+function resetCode(){if(editor){editor.setValue(STARTER);localStorage.removeItem(`arduino_${MOD_ID}_code`)}}
+
+let simRunning=false,simTimeout=null,simStartTime=0,brightness=0;
+
+function runSketch(){
+  simRunning=true;simStartTime=Date.now();brightness=0;
+  document.getElementById('runBtn').style.display='none';
+  document.getElementById('stopBtn').style.display='';
+  document.getElementById('simStatus').textContent='Running...';
+  document.getElementById('simStatus').style.color='#7dd87d';
+  fadeLoop();updateTimer();
+}
+async function fadeLoop(){
+  while(simRunning){
+    for(let b=0;b<=255&&simRunning;b+=5){brightness=b;drawSim();await new Promise(r=>simTimeout=setTimeout(r,30));}
+    for(let b=255;b>=0&&simRunning;b-=5){brightness=b;drawSim();await new Promise(r=>simTimeout=setTimeout(r,30));}
+  }
+}
+function stopSketch(){simRunning=false;if(simTimeout)clearTimeout(simTimeout);document.getElementById('runBtn').style.display='';document.getElementById('stopBtn').style.display='none';document.getElementById('simStatus').textContent='Stopped';document.getElementById('simStatus').style.color='#4a6a4a';}
+function updateTimer(){if(!simRunning)return;document.getElementById('runTimer').textContent=((Date.now()-simStartTime)/1000).toFixed(1)+'s';requestAnimationFrame(updateTimer);}
+
+const canvas=document.getElementById('simCanvas'),ctx=canvas.getContext('2d');
+function drawSim(){
+  const w=canvas.width,h=canvas.height;
+  ctx.fillStyle='#080c08';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#111a1120';ctx.lineWidth=0.5;
+  for(let x=0;x<w;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  // Board
+  ctx.fillStyle='#111a11';ctx.strokeStyle='rgba(60,160,60,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(30,40,170,170,6);ctx.fill();ctx.stroke();
+  ctx.font="bold 10px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';ctx.fillText('Arduino UNO',42,65);
+
+  // LED with variable brightness
+  const lx=330,ly=130;
+  const alpha=brightness/255;
+  if(alpha>0&&simRunning){
+    const glowSize=20+alpha*30;
+    const g=ctx.createRadialGradient(lx,ly,0,lx,ly,glowSize);
+    g.addColorStop(0,`rgba(60,200,60,${alpha*0.7})`);
+    g.addColorStop(0.5,`rgba(60,200,60,${alpha*0.2})`);
+    g.addColorStop(1,'rgba(60,200,60,0)');
+    ctx.fillStyle=g;
+    ctx.fillRect(lx-glowSize,ly-glowSize,glowSize*2,glowSize*2);
+  }
+  ctx.beginPath();ctx.arc(lx,ly,16,0,Math.PI*2);
+  const ledR=Math.round(26+alpha*34),ledG=Math.round(42+alpha*158),ledB=Math.round(26+alpha*34);
+  ctx.fillStyle=simRunning?`rgb(${ledR},${ledG},${ledB})`:'#1a2a1a';
+  ctx.fill();ctx.strokeStyle=simRunning&&alpha>0.1?'#7dd87d':'#2a3a2a';ctx.lineWidth=2;ctx.stroke();
+
+  // PWM value
+  ctx.font="bold 20px 'Space Mono',monospace";ctx.fillStyle='#7dd87d';ctx.textAlign='center';
+  ctx.fillText(simRunning?brightness:'—',lx,ly+50);
+  ctx.font="8px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';
+  ctx.fillText('/ 255',lx,ly+63);
+  ctx.font="bold 9px 'Space Mono',monospace";
+  ctx.fillText('PWM Pin 9',lx,ly-25);
+  ctx.textAlign='left';
+
+  // Duty cycle bar
+  const barX=250,barY=230,barW=200,barH=12;
+  ctx.fillStyle='#1a2a1a';ctx.fillRect(barX,barY,barW,barH);
+  ctx.fillStyle='#3ca03c';ctx.fillRect(barX,barY,barW*alpha,barH);
+  ctx.strokeStyle='#2a3a2a';ctx.strokeRect(barX,barY,barW,barH);
+  ctx.font="8px 'Space Mono',monospace";ctx.fillStyle='#4a6a4a';
+  ctx.fillText('Duty: '+Math.round(alpha*100)+'%',barX,barY-4);
+
+  // Wire
+  ctx.strokeStyle='#f0b429';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(200,130);ctx.lineTo(lx-16,ly);ctx.stroke();
+
+  ctx.fillStyle=simRunning?'#3ca03c':'#2a3a2a';ctx.font="bold 10px 'Space Mono',monospace";ctx.fillText(simRunning?'● RUNNING':'○ STOPPED',w-100,h-10);
+}
+drawSim();
+
+const quizData=[
+  {q:'What range of values does analogWrite() accept?',opts:['0 to 1023','0 to 255','0 to 5','0 to 180'],ans:1},
+  {q:'What does PWM stand for?',opts:['Power Width Modulation','Pulse Width Modulation','Pin Wire Management','Programmable Wave Mode'],ans:1},
+  {q:'Which Arduino Uno pins support PWM?',opts:['All digital pins','Only pins 0 and 1','Pins 3, 5, 6, 9, 10, 11','Only analog pins'],ans:2},
+  {q:'If analogWrite(9, 127) is called, what is the approximate duty cycle?',opts:['25%','50%','75%','100%'],ans:1},
+  {q:'Why does a for loop work well for fading an LED?',opts:['It automatically sets PWM frequency','It increments the brightness value step by step','It is the only way to call analogWrite','It makes the LED blink'],ans:1},
+];
+function renderQuiz(){
+  const body=document.getElementById('quizBody');
+  if(localStorage.getItem(`arduino_${MOD_ID}_quiz_passed`)==='true'){body.innerHTML='<div class="quiz-result pass">✓ Quiz passed! <a href="module-05-serial.html" style="color:#7dd87d">Go to Module 05 →</a></div>';return;}
+  let h='';quizData.forEach((q,i)=>{h+=`<div class="quiz-q" id="qq${i}"><p><b>Q${i+1}.</b> ${q.q}</p>${q.opts.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}">${o}</label>`).join('')}</div>`;});
+  h+='<button onclick="submitQuiz()">Submit Quiz</button><div id="quizResult"></div>';body.innerHTML=h;
+}
+function submitQuiz(){
+  let c=0;quizData.forEach((q,i)=>{const s=document.querySelector(`input[name="q${i}"]:checked`);document.querySelectorAll(`#qq${i} label`).forEach((l,j)=>{l.classList.remove('correct','wrong');if(j===q.ans)l.classList.add('correct');else if(s&&+s.value===j)l.classList.add('wrong');});if(s&&+s.value===q.ans)c++;});
+  const p=Math.round(c/quizData.length*100),passed=p>=80,el=document.getElementById('quizResult');
+  if(passed){el.className='quiz-result pass';el.innerHTML=`✓ ${c}/${quizData.length} (${p}%) — Passed! <a href="module-05-serial.html" style="color:#7dd87d">Module 05 →</a>`;localStorage.setItem(`arduino_${MOD_ID}_quiz_passed`,'true');}
+  else{el.className='quiz-result fail';el.innerHTML=`✗ ${c}/${quizData.length} (${p}%) — Need 80%. Review and retry.`;}
+}
+renderQuiz();
+</script>
+</body>
+</html>
