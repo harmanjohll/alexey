@@ -1,0 +1,57 @@
+[
+  {
+    "id": "m5q1",
+    "question": "What does Serial.available() return?",
+    "options": [
+      "true or false",
+      "The number of bytes waiting to be read",
+      "The last character received",
+      "The baud rate"
+    ],
+    "correct": 1,
+    "explanation": "Serial.available() returns the number of bytes (characters) that have arrived over serial and are waiting in the receive buffer. If it returns 0, there's nothing to read yet."
+  },
+  {
+    "id": "m5q2",
+    "question": "When you type '7' in the Serial Monitor, what value does Serial.read() return?",
+    "options": ["7", "55 (the ASCII code for '7')", "0", "49"],
+    "correct": 1,
+    "explanation": "Serial.read() returns the ASCII value of the character. The character '7' has ASCII value 55. If you store it in a char variable, it appears as '7', but internally it's the number 55."
+  },
+  {
+    "id": "m5q3",
+    "question": "How do you convert the character '5' to the integer 5?",
+    "options": [
+      "int(character)",
+      "character - '0'",
+      "character * 1",
+      "Serial.parseInt()"
+    ],
+    "correct": 1,
+    "explanation": "ASCII digit characters are sequential: '0'=48, '1'=49, ..., '9'=57. Subtracting '0' (48) from any digit character gives you the numeric value. So '5' (53) minus '0' (48) equals 5."
+  },
+  {
+    "id": "m5q4",
+    "question": "Why should you check Serial.available() > 0 before calling Serial.read()?",
+    "options": [
+      "Serial.read() crashes without it",
+      "It prevents reading when no data has arrived, which would return -1",
+      "It speeds up the serial connection",
+      "It is required by the Arduino compiler"
+    ],
+    "correct": 1,
+    "explanation": "If you call Serial.read() when no data is available, it returns -1 (meaning 'nothing to read'). Checking Serial.available() first ensures you only read when actual data has arrived."
+  },
+  {
+    "id": "m5q5",
+    "question": "What does the .trim() method do when used on a String from Serial.readString()?",
+    "options": [
+      "Converts the string to lowercase",
+      "Removes whitespace, newlines, and carriage returns from the start and end",
+      "Shortens the string to 10 characters",
+      "Removes all spaces from the string"
+    ],
+    "correct": 1,
+    "explanation": "When the Serial Monitor sends a string, it often includes a newline character (\\n) or carriage return (\\r) at the end. The trim() method removes these invisible characters from both ends so you can compare the string cleanly."
+  }
+]

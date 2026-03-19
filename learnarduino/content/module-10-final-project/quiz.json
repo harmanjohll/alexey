@@ -1,0 +1,62 @@
+[
+  {
+    "id": "m10q1",
+    "question": "When planning an Arduino project, what should you do FIRST?",
+    "options": [
+      "Start writing code immediately",
+      "Buy the most expensive components",
+      "Define what the project does and plan inputs, outputs, and states",
+      "Copy code from the internet"
+    ],
+    "correct": 2,
+    "explanation": "Good engineering starts with planning. Define what your project does, list the components and concepts you'll use, plan the states (if using a state machine), and sketch the wiring. This saves time debugging later because you have a clear picture of the whole system."
+  },
+  {
+    "id": "m10q2",
+    "question": "What does randomSeed(analogRead(A0)) do and why is it useful?",
+    "options": [
+      "Reads a sensor on pin A0",
+      "Seeds the random number generator with electrical noise so random() produces unpredictable values",
+      "Generates a random voltage on pin A0",
+      "Connects to the internet to get a random number"
+    ],
+    "correct": 1,
+    "explanation": "Without a seed, random() produces the same sequence every time. analogRead() on an unconnected pin picks up tiny electrical fluctuations (noise), giving a different seed each run. This makes random() truly unpredictable — important for games!"
+  },
+  {
+    "id": "m10q3",
+    "question": "Why is it better to build and test one component at a time rather than wiring everything at once?",
+    "options": [
+      "Arduino can only connect to one component",
+      "It is faster to wire everything at once",
+      "Testing incrementally makes it easy to find which part has a problem when something goes wrong",
+      "Components interfere with each other"
+    ],
+    "correct": 2,
+    "explanation": "When you test components one at a time, you know each piece works before adding the next. If something breaks after adding a new component, the problem is in the new addition. Wiring everything at once and debugging is much harder because the bug could be anywhere."
+  },
+  {
+    "id": "m10q4",
+    "question": "What is the purpose of adding Serial.println() statements throughout your project code?",
+    "options": [
+      "It makes the code run faster",
+      "It is required for the Arduino to function",
+      "It provides debugging output so you can see what the program is doing internally",
+      "It saves data to the Arduino's memory"
+    ],
+    "correct": 2,
+    "explanation": "Serial.println() is your window into the program's behavior. By printing state changes, sensor values, and decision points, you can see exactly what your code is doing and where things go wrong. This is the most important debugging technique for Arduino projects."
+  },
+  {
+    "id": "m10q5",
+    "question": "Which of these is a good variable name and why?",
+    "options": [
+      "x — it's short and fast to type",
+      "temperatureSensorPin — it clearly describes what the variable represents",
+      "temp — it could mean temperature or temporary",
+      "pin1 — it tells you it's a pin"
+    ],
+    "correct": 1,
+    "explanation": "Good variable names describe their purpose clearly. 'temperatureSensorPin' tells you exactly what it is — the pin connected to a temperature sensor. 'x', 'temp', and 'pin1' are ambiguous. When you read your code weeks later (or someone else reads it), clear names save time."
+  }
+]
