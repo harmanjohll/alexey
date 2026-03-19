@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alexey Mikhail Johll · Computational Science</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --bg-deep: #edeae3;
+  --surface: #ffffff;
+  --border: #d4cfc5;
+  --border-light: #e8e4dc;
+  --text-primary: #1a1a18;
+  --text-secondary: #6b6560;
+  --text-tertiary: #9a9490;
+  --accent: #2d5a3d;
+  --accent-light: #3d7a52;
+  --accent-subtle: rgba(45, 90, 61, 0.08);
+  --accent-border: rgba(45, 90, 61, 0.2);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 6rem;
+}
+
+/* Header */
+.header {
+  margin-bottom: 5rem;
+}
+
+.header-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.header-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+
+.header-line {
+  width: 40px;
+  height: 1px;
+  background: var(--accent);
+  margin-top: 1.5rem;
+}
+
+/* Modules */
+.modules {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border-light);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4rem;
+}
+
+.module-card {
+  display: block;
+  background: var(--surface);
+  padding: 2rem 2.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background 200ms ease;
+  position: relative;
+}
+
+.module-card:hover {
+  background: var(--bg);
+}
+
+.module-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.module-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.25;
+  margin-bottom: 0.5rem;
+}
+
+.module-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 540px;
+}
+
+.module-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.03em;
+}
+
+.module-arrow {
+  position: absolute;
+  right: 2.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--text-tertiary);
+  transition: color 200ms ease, transform 200ms ease;
+}
+
+.module-card:hover .module-arrow {
+  color: var(--accent);
+  transform: translateY(-50%) translateX(3px);
+}
+
+/* About */
+.about {
+  border-top: 1px solid var(--border-light);
+  padding-top: 3rem;
+}
+
+.about-heading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.about-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 560px;
+}
+
+.about-text em {
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+.footer {
+  margin-top: 4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 600px) {
+  .page { padding: 2.5rem 1rem 4rem; }
+  .header { margin-bottom: 3rem; }
+  .module-card { padding: 1.5rem; }
+  .module-arrow { right: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <h1 class="header-name">Alexey Mikhail Johll</h1>
+    <div class="header-subtitle">Computational Science Portfolio &middot; Singapore &middot; 2025&ndash;2026</div>
+    <div class="header-line"></div>
+  </header>
+
+  <div class="modules">
+    <a href="md.html" class="module-card">
+      <div class="module-number">01</div>
+      <div class="module-title">SiGe Surface Dynamics</div>
+      <div class="module-desc">Tersoff molecular dynamics of silicon-germanium surfaces. Build diamond cubic slabs, run velocity Verlet integration, and measure surface energy through systematic thickness sweeps. Explore germanium segregation under varying chemical potential and temperature.</div>
+      <div class="module-tags">
+        <span class="tag">molecular dynamics</span>
+        <span class="tag">tersoff potential</span>
+        <span class="tag">monte carlo</span>
+        <span class="tag">surface energy</span>
+      </div>
+      <span class="module-arrow">&rarr;</span>
+    </a>
+    <a href="football.html" class="module-card">
+      <div class="module-number">02</div>
+      <div class="module-title">Where Do Goals Come From?</div>
+      <div class="module-desc">Build a geometric expected goals (xG) model from first principles. Place shots on a pitch, compute scoring probabilities from distance and angle, then run Monte Carlo simulations to discover what the data says about attacking positions and tactical decisions.</div>
+      <div class="module-tags">
+        <span class="tag">expected goals</span>
+        <span class="tag">monte carlo</span>
+        <span class="tag">probability</span>
+        <span class="tag">tactics</span>
+      </div>
+      <span class="module-arrow">&rarr;</span>
+    </a>
+  </div>
+
+  <div class="about">
+    <div class="about-heading">About this portfolio</div>
+    <p class="about-text">
+      Each module begins with a question and a simulation. The computation amplifies thinking &mdash; it does not replace it. Every hypothesis, every interpretation, and every dialogue with the AI coach is logged and timestamped. <em>The ideas are his.</em>
+    </p>
+  </div>
+
+  <div class="footer">
+    Alexey Mikhail Johll &middot; 2025&ndash;2026
+  </div>
+
+</div>
+</body>
+</html>
