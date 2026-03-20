@@ -190,9 +190,27 @@ async function runFullSweep() {
       var partialFit = layerData.length >= 2 ? fitLinear(layerData.map(function(d) { return {x: d.nLayers, y: d.etotal}; })) : null;
       updateLayerPlot(layerData, partialFit);
 
+      // Progressive energy fit equation display
+      if (partialFit) {
+        var partialSurfE = partialFit.intercept / 2;
+        document.getElementById('fitResult').style.display = '';
+        document.getElementById('fitValue').textContent = partialSurfE.toFixed(4) + ' eV';
+        document.getElementById('fitDetail').textContent = 'E = ' + partialFit.slope.toFixed(4) + ' \u00D7 N + ' + partialFit.intercept.toFixed(4) + '  |  R\u00B2 = ' + partialFit.r2.toFixed(6);
+      }
+
       // Composition regression: N_Ge vs N_layers (progressive)
       var partialCompFit = layerData.length >= 2 ? fitLinear(layerData.map(function(d) { return {x: d.nLayers, y: d.geFrac * d.natom}; })) : null;
       updateCompositionPlot(layerData, partialCompFit);
+
+      // Progressive composition fit equation display
+      if (partialCompFit) {
+        var atomsPerLayer = params.ncx * params.ncy * 4;
+        var partialXBulk = partialCompFit.slope / atomsPerLayer;
+        var partialGeExcess = partialCompFit.intercept / 2;
+        document.getElementById('compFitResult').style.display = '';
+        document.getElementById('compFitValue').textContent = partialXBulk.toFixed(4);
+        document.getElementById('compFitDetail').textContent = 'N_Ge = ' + partialCompFit.slope.toFixed(2) + ' \u00D7 N + ' + partialCompFit.intercept.toFixed(2) + '  |  R\u00B2 = ' + partialCompFit.r2.toFixed(6) + '  |  \u0394\u0393 = ' + partialGeExcess.toFixed(1) + ' atoms/surface';
+      }
 
       // Show symmetric layer profile averaged across all ncz runs so far
       updateGeLayerPlot(layerData);
@@ -284,8 +302,28 @@ async function runSingleMuSweep() {
     renderRawTable(currentLayerData);
     var partialFit = currentLayerData.length >= 2 ? fitLinear(currentLayerData.map(function(d) { return {x: d.nLayers, y: d.etotal}; })) : null;
     updateLayerPlot(currentLayerData, partialFit);
+
+    // Progressive energy fit equation display
+    if (partialFit) {
+      var partialSurfE = partialFit.intercept / 2;
+      document.getElementById('fitResult').style.display = '';
+      document.getElementById('fitValue').textContent = partialSurfE.toFixed(4) + ' eV';
+      document.getElementById('fitDetail').textContent = 'E = ' + partialFit.slope.toFixed(4) + ' \u00D7 N + ' + partialFit.intercept.toFixed(4) + '  |  R\u00B2 = ' + partialFit.r2.toFixed(6);
+    }
+
     var partialCompFit = currentLayerData.length >= 2 ? fitLinear(currentLayerData.map(function(d) { return {x: d.nLayers, y: d.geFrac * d.natom}; })) : null;
     updateCompositionPlot(currentLayerData, partialCompFit);
+
+    // Progressive composition fit equation display
+    if (partialCompFit) {
+      var atomsPerLayer = params.ncx * params.ncy * 4;
+      var partialXBulk = partialCompFit.slope / atomsPerLayer;
+      var partialGeExcess = partialCompFit.intercept / 2;
+      document.getElementById('compFitResult').style.display = '';
+      document.getElementById('compFitValue').textContent = partialXBulk.toFixed(4);
+      document.getElementById('compFitDetail').textContent = 'N_Ge = ' + partialCompFit.slope.toFixed(2) + ' \u00D7 N + ' + partialCompFit.intercept.toFixed(2) + '  |  R\u00B2 = ' + partialCompFit.r2.toFixed(6) + '  |  \u0394\u0393 = ' + partialGeExcess.toFixed(1) + ' atoms/surface';
+    }
+
     updateGeLayerPlot(currentLayerData);
   }
 

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMC Portal · SiGe Thin Film Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>(function(){var t=localStorage.getItem('alexey_theme')||'light';document.documentElement.setAttribute('data-theme',t)})()</script>
+</head>
+<body>
+<button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="portal-tag">KMC PORTAL &middot; 2D KINETIC MONTE CARLO</div>
+<div class="portal-title">SiGe Thin Film Simulator</div>
+<div class="portal-sub">Faithful browser implementation of a 2D Kinetic Monte Carlo simulation for Silicon-Germanium thin film etching. Replicates the FORTRAN90 physics: desorption, surface diffusion, and bulk diffusion with Metropolis energy criterion on a full-scale lattice. Computation runs in a Web Worker.</div>
+
+<!-- PARAMETERS -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">PARAMS</span>
+    <span class="sname">Simulation Parameters</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div style="margin-bottom:10px">
+      <button class="preset-btn active" onclick="loadPreset('default',this)">FORTRAN Default</button>
+      <button class="preset-btn" onclick="loadPreset('highGe',this)">High Ge (&theta;=0.5)</button>
+      <button class="preset-btn" onclick="loadPreset('highTemp',this)">High Temp (800K)</button>
+      <button class="preset-btn" onclick="loadPreset('noDesorp',this)">No Desorption</button>
+    </div>
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Composition</div>
+        <div class="param-row"><span class="param-lbl">&theta; (Ge fraction)</span><input type="number" id="pTheta" value="0.2" step="0.05" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">P_des</span><input type="number" id="pPdes" value="0.1" step="0.05" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">P_Ge</span><input type="number" id="pPge" value="1.0" step="0.1" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">P_Si</span><input type="number" id="pPsi" value="0.0" step="0.1" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">envt</span><input type="number" id="pEnvt" value="0" step="1" min="0" max="8"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Energetics <span class="unit">(kcal/mol)</span></div>
+        <div class="param-row"><span class="param-lbl">E_SiSi</span><input type="number" id="pEsisi" value="-1.6835" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_SiGe</span><input type="number" id="pEsige" value="-1.534" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_GeGe</span><input type="number" id="pEgege" value="-1.365" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_SiVc</span><input type="number" id="pEsivc" value="0.37375" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_GeVc</span><input type="number" id="pEgevc" value="0.0" step="0.01"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Simulation</div>
+        <div class="param-row"><span class="param-lbl">Temp <span class="unit">K</span></span><input type="number" id="pTemp" value="500" step="50" min="100" max="2000"></div>
+        <div class="param-row"><span class="param-lbl">niter1 <span class="unit">outer</span></span><input type="number" id="pNiter1" value="100" step="10" min="1" max="10000"></div>
+        <div class="param-row"><span class="param-lbl">niter2 <span class="unit">&times;lattx</span></span><input type="number" id="pNiter2" value="20000" step="1000" min="1000"></div>
+        <div class="param-row"><span class="param-lbl">lattx</span><input type="number" id="pLattx" value="500" step="100" min="50" max="2000"></div>
+        <div class="param-row"><span class="param-lbl">lattz</span><input type="number" id="pLattz" value="2000" step="500" min="500" max="10000"></div>
+        <div class="param-row"><span class="param-lbl">zstop</span><input type="number" id="pZstop" value="1800" step="100"></div>
+        <div class="param-row"><span class="param-lbl">zlo</span><input type="number" id="pZlo" value="1500" step="100"></div>
+        <div class="param-row"><span class="param-lbl">seed</span><input type="number" id="pSeed" value="-381791011" step="1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
+  <div class="mode-tab" onclick="setMode('tsweep')">Temperature Sweep</div>
+  <div class="mode-tab" onclick="setMode('csweep')">Composition Sweep</div>
+</div>
+
+<!-- SINGLE RUN MODE -->
+<div class="mode-section active" id="modeSingle">
+<div class="controls">
+  <button id="runBtn" onclick="startSim()">&#9654; Run Simulation</button>
+  <button id="pauseBtn" onclick="pauseSim()" disabled>&#9208; Pause</button>
+  <button id="resumeBtn" onclick="resumeSim()" disabled style="display:none">&#9654; Resume</button>
+  <button id="resetBtn" onclick="resetSim()" class="danger">&#8634; Reset</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    <span class="progress-text" id="progText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- TEMPERATURE SWEEP MODE -->
+<div class="mode-section" id="modeTsweep">
+<div class="note"><b>Investigation:</b> How does substrate temperature affect film roughness and surface statistics? Sweep T across a range while keeping all other parameters fixed.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>T min (K)</label><input type="number" id="tswTmin" value="300" step="50"></div>
+  <div class="sweep-item"><label>T max (K)</label><input type="number" id="tswTmax" value="1000" step="50"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="tswPts" value="5" min="3" max="20"></div>
+  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="tswNiter" value="50" step="10" min="10"></div>
+</div>
+<div class="controls">
+  <button id="tswRunBtn" onclick="runTempSweep()">&#9654; Run Temperature Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="tswProgFill"></div></div>
+    <span class="progress-text" id="tswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- COMPOSITION SWEEP MODE -->
+<div class="mode-section" id="modeCsweep">
+<div class="note"><b>Investigation:</b> How does the Ge fraction (&theta;) affect surface morphology? Sweep &theta; from 0 (pure Si) to 1 (pure Ge).</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>&theta; min</label><input type="number" id="cswThetaMin" value="0" step="0.1" min="0" max="1"></div>
+  <div class="sweep-item"><label>&theta; max</label><input type="number" id="cswThetaMax" value="1" step="0.1" min="0" max="1"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="cswPts" value="6" min="3" max="20"></div>
+  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="cswNiter" value="50" step="10" min="10"></div>
+</div>
+<div class="controls">
+  <button id="cswRunBtn" onclick="runCompSweep()">&#9654; Run Composition Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="cswProgFill"></div></div>
+    <span class="progress-text" id="cswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SINGLE RUN DASHBOARD -->
+<div class="dashboard" id="singleDash">
+  <!-- Lattice visualization -->
+  <div class="lattice-section">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Lattice Cross-Section</span>
+        <button class="sm" id="viewCross" onclick="setView('cross')" style="background:var(--accent-subtle)">Cross-section</button>
+        <button class="sm" id="viewHmap" onclick="setView('hmap')">Height map</button>
+        <label style="margin-left:auto">Zoom <input type="range" id="zoomSlider" min="1" max="8" value="2" step="1" oninput="applyZoom()"><span id="zoomVal">2x</span></label>
+      </div>
+      <div class="lattice-wrap" id="latticeWrap">
+        <canvas id="latticeCanvas" width="500" height="150"></canvas>
+        <div class="lattice-tooltip" id="latticeTip"></div>
+      </div>
+      <div class="heightmap-wrap" id="hmapWrap" style="display:none">
+        <canvas id="hmapCanvas" width="500" height="40"></canvas>
+      </div>
+      <div class="legend">
+        <span><span class="legend-swatch" style="background:#26A69A"></span>Si</span>
+        <span><span class="legend-swatch" style="background:#FF7043"></span>Ge</span>
+        <span><span class="legend-swatch" style="background:#0a0f0a;border:0.5px solid var(--border)"></span>Vacancy</span>
+        <span style="margin-left:auto;color:var(--text-tertiary)">hover for details</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">Surface Statistics</div>
+      <div class="stat-grid four">
+        <div class="stat-item"><div class="stat-label">Iteration</div><div class="stat-value" id="stIter">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Avg Height</div><div class="stat-value" id="stAveht">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">RMS Roughness</div><div class="stat-value" id="stRms">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Std Dev</div><div class="stat-value" id="stStd">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Skewness</div><div class="stat-value" id="stSkew">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Kurtosis (excess)</div><div class="stat-value" id="stKurt">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Height Range</div><div class="stat-value sm" id="stRange">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Surface Width</div><div class="stat-value sm" id="stWidth">&mdash;</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Events (cumulative)</div>
+      <table class="events-table">
+        <tr><th>Type</th><th style="text-align:right">Count</th></tr>
+        <tr><td>Desorptions</td><td class="num" id="evDes">0</td></tr>
+        <tr><td>&nbsp; &mdash; Ge</td><td class="num" id="evGeD">0</td></tr>
+        <tr><td>&nbsp; &mdash; Si</td><td class="num" id="evSiD">0</td></tr>
+        <tr><td>Surface diffusion</td><td class="num" id="evSdf">0</td></tr>
+        <tr><td>Bulk diffusion</td><td class="num" id="evBdf">0</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Row 2: Roughness + Height -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">RMS Roughness (log-log)</span>
+        <button class="sm active" id="logLinBtn" onclick="setLogMode('linear')">log&#8321;&#8320; linear</button>
+        <button class="sm" id="logScaleBtn" onclick="setLogMode('logscale')">log-scale axes</button>
+        <span class="beta-display" id="betaDisp">&beta; = &mdash;</span>
+        <span style="font-size:9px;color:var(--text-tertiary);margin-left:8px">fit range:</span>
+        <input type="number" id="fitMin" value="10" min="1" style="width:50px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
+        <span style="font-size:9px;color:var(--text-tertiary)">to</span>
+        <input type="number" id="fitMax" value="10000" min="10" style="width:60px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
+      </div>
+      <div class="chart-wrap"><canvas id="roughnessChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Average Height vs Iteration</div>
+      <div class="chart-wrap"><canvas id="heightChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Stats evolution + Height distribution -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Statistics vs Iteration</div>
+      <div class="chart-wrap"><canvas id="statsChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Height Distribution (current)</div>
+      <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Surface + Concentration -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Profile &mdash; ht(x)</div>
+      <div class="chart-wrap"><canvas id="surfaceChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Concentration Profile &mdash; Ge fraction vs depth</div>
+      <div class="chart-wrap"><canvas id="concChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 5: Pit Analysis -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Pit Analysis</span>
+        <span style="font-size:9px;color:var(--text-tertiary);margin-left:8px">threshold:</span>
+        <input type="number" id="pitThreshold" value="0.5" min="0.05" max="2.0" step="0.05" style="width:55px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
+        <span style="font-size:9px;color:var(--text-tertiary)">&times; range below mean</span>
+        <button class="sm" onclick="updatePitAnalysis()" style="margin-left:8px">Refresh</button>
+      </div>
+      <div class="stat-grid four" id="pitStats">
+        <div class="stat-item"><div class="stat-label">Pit Count</div><div class="stat-value sm" id="pitCount">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Avg Pit Width</div><div class="stat-value sm" id="pitAvgW">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Max Pit Width</div><div class="stat-value sm" id="pitMaxW">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Avg Pit Depth</div><div class="stat-value sm" id="pitAvgD">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Max Pit Depth</div><div class="stat-value sm" id="pitMaxD">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Pit Coverage</div><div class="stat-value sm" id="pitCoverage">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Cutoff Height</div><div class="stat-value sm" id="pitCutoff">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Mean Height</div><div class="stat-value sm" id="pitMeanH">&mdash;</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Pit Width Distribution</div>
+      <div class="chart-wrap"><canvas id="pitHistChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 6: Pit surface + Scaling Exponents -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Profile with Pits Highlighted</div>
+      <div class="chart-wrap"><canvas id="pitSurfaceChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Family-Vicsek Scaling Exponents</span>
+        <button class="sm" onclick="autoRecordScaling()">Auto-record current run</button>
+        <button class="sm danger" onclick="clearScalingData()">Clear data</button>
+      </div>
+      <div style="margin-bottom:10px">
+        <table class="events-table" id="scalingTable">
+          <tr><th>L (lattx)</th><th style="text-align:right">w_sat (RMS)</th><th style="text-align:right">t_x (iter)</th><th></th></tr>
+        </table>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace">Manual add:</span>
+          <input type="number" id="scaleL" placeholder="L" style="width:60px;font-size:10px;padding:2px 4px">
+          <input type="number" id="scaleWsat" placeholder="w_sat" step="0.001" style="width:70px;font-size:10px;padding:2px 4px">
+          <input type="number" id="scaleTx" placeholder="t_x" style="width:60px;font-size:10px;padding:2px 4px">
+          <button class="sm" onclick="addScalingEntry()">Add</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="height:140px;position:relative"><canvas id="alphaChart"></canvas></div>
+        <div style="height:140px;position:relative"><canvas id="zChart"></canvas></div>
+      </div>
+      <div class="stat-grid four" id="scalingStats">
+        <div class="stat-item"><div class="stat-label">&beta; (growth)</div><div class="stat-value sm" id="scaleBeta" style="color:#f0b429">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">&alpha; (roughness)</div><div class="stat-value sm" id="scaleAlpha" style="color:#7da0dd">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">z = &alpha;/&beta; (dynamic)</div><div class="stat-value sm" id="scaleZ" style="color:#e24b4a">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Class match</div><div class="stat-value sm" id="scaleClass" style="font-size:10px;color:#7dd87d">&mdash;</div></div>
+      </div>
+      <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:8px;line-height:1.6">
+        1+1D: <span style="color:#7da0dd">Random &beta;=0.5</span> &middot; <span style="color:#7dd87d">EW &beta;=0.25 &alpha;=0.5 z=2</span> &middot; <span style="color:#f0b429">KPZ &beta;=0.333 &alpha;=0.5 z=1.5</span><br>
+        2+1D: <span style="color:#7dd87d">EW &beta;&asymp;0 (log) z=2</span> &middot; <span style="color:#f0b429">KPZ &beta;&asymp;0.24 &alpha;&asymp;0.39 z&asymp;1.61</span> &middot; <span style="color:#dd8844">MBE &beta;=0.25 &alpha;=1 z=4</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPERATURE SWEEP DASHBOARD -->
+<div class="dashboard" id="tswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">RMS Roughness vs Temperature</div>
+      <div class="chart-wrap"><canvas id="tswRoughChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Skewness vs Temperature</div>
+      <div class="chart-wrap"><canvas id="tswSkewChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Kurtosis vs Temperature</div>
+      <div class="chart-wrap"><canvas id="tswKurtChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Summary</div>
+      <div id="tswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSITION SWEEP DASHBOARD -->
+<div class="dashboard" id="cswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">RMS Roughness vs &theta; (Ge fraction)</div>
+      <div class="chart-wrap"><canvas id="cswRoughChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Skewness vs &theta; (Ge fraction)</div>
+      <div class="chart-wrap"><canvas id="cswSkewChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Kurtosis vs &theta; (Ge fraction)</div>
+      <div class="chart-wrap"><canvas id="cswKurtChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Summary</div>
+      <div id="cswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SNAPSHOTS -->
+<div class="panel" id="snapPanel">
+  <div class="panel-hdr" onclick="togglePanel('snapPanel')">
+    <span class="snum">SNAPS</span>
+    <span class="sname">Iteration Snapshots</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="snap-strip" id="snapStrip">
+      <div style="font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel collapsed" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run a simulation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="lattice-render.js"></script>
+<script src="charts.js"></script>
+<script src="data.js"></script>
+<script src="sweep.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
