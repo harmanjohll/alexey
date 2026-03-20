@@ -54,9 +54,6 @@ MD.ui = {
     MD.viewer.init('crystalCanvas');
     MD.viewer.render();
 
-    // Bind slider labels
-    MD.ui.updateLabels();
-
     // Bind y-metric toggles
     document.querySelectorAll('.y-tog').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -71,32 +68,15 @@ MD.ui = {
     });
   },
 
-  // ── Slider label updates ──
+  // ── Segmented button selector ──
 
-  updateLabels: function() {
-    var s = function(id) { return document.getElementById(id); };
-    var v = function(id) {
-      var el = document.getElementById(id);
-      return el ? parseFloat(el.value) : 0;
-    };
-
-    // Slab dimensions
-    if (s('valNx')) s('valNx').textContent = v('slNx');
-    if (s('valNy')) s('valNy').textContent = v('slNy');
-    if (s('valNz')) s('valNz').textContent = v('slNz');
-
-    // Strain
-    if (s('valEx')) s('valEx').textContent = (v('slEx') / 10).toFixed(1) + '%';
-    if (s('valEy')) s('valEy').textContent = (v('slEy') / 10).toFixed(1) + '%';
-
-    // Dynamics
-    if (s('valT')) s('valT').textContent = v('slT');
-    if (s('valDt')) s('valDt').textContent = (v('slDt') / 10).toFixed(1);
-    if (s('valVV')) s('valVV').textContent = v('slVV');
-
-    // MC
-    if (s('valMC')) s('valMC').textContent = v('slMC');
-    if (s('valDmu')) s('valDmu').textContent = (v('slDmu') / 100).toFixed(2);
+  setSeg: function(param, val) {
+    var group = document.getElementById('seg' + param.charAt(0).toUpperCase() + param.slice(1));
+    if (!group) return;
+    group.setAttribute('data-value', val);
+    group.querySelectorAll('.seg-btn').forEach(function(b) {
+      b.classList.toggle('on', parseInt(b.textContent) === val);
+    });
   },
 
   // ── Hypothesis ──
@@ -138,7 +118,7 @@ MD.ui = {
     if (validParams.indexOf(param) === -1) return;
 
     // Map sweep params to HTML IDs
-    var sliderMap = { T: 'slT', dmu: 'slDmu', ex: 'slEx', ey: 'slEy' };
+    var inputMap = { T: 'inT', dmu: 'inDmu', ex: 'inEx', ey: 'inEy' };
     var cfgMap = { T: 'sweepT', dmu: 'sweepDmu', ex: 'sweepEx', ey: 'sweepEy' };
 
     if (MD.ui.sweepParam === param) {
@@ -152,19 +132,16 @@ MD.ui = {
       var p = validParams[i];
       var togBtn = document.querySelector('[data-sweep="' + p + '"]');
       var cfgRow = document.getElementById(cfgMap[p]);
-      var slider = document.getElementById(sliderMap[p]);
-      var sliderRow = slider ? slider.closest('.param-row') : null;
+      var inp = document.getElementById(inputMap[p]);
 
       if (p === MD.ui.sweepParam) {
         if (togBtn) { togBtn.classList.add('active'); togBtn.textContent = 'sweeping'; }
-        if (cfgRow) cfgRow.style.display = '';
-        if (sliderRow) sliderRow.style.opacity = '0.3';
-        if (slider) slider.disabled = true;
+        if (cfgRow) cfgRow.style.display = 'flex';
+        if (inp) { inp.disabled = true; inp.style.opacity = '0.3'; }
       } else {
         if (togBtn) { togBtn.classList.remove('active'); togBtn.textContent = 'sweep'; }
         if (cfgRow) cfgRow.style.display = 'none';
-        if (sliderRow) sliderRow.style.opacity = '1';
-        if (slider && MD.ui.locked) slider.disabled = false;
+        if (inp && MD.ui.locked) { inp.disabled = false; inp.style.opacity = '1'; }
       }
     }
   },
@@ -216,16 +193,16 @@ MD.ui = {
 
   readParams: function() {
     return {
-      nx: parseInt(document.getElementById('slNx').value),
-      ny: parseInt(document.getElementById('slNy').value),
-      nz: parseInt(document.getElementById('slNz').value),
-      T: parseInt(document.getElementById('slT').value),
-      dt: parseFloat(document.getElementById('slDt').value) / 10,  // slider 5..50 → 0.5..5.0 fs
-      vv: parseInt(document.getElementById('slVV').value),
-      mc: parseInt(document.getElementById('slMC').value),
-      dmu: parseInt(document.getElementById('slDmu').value) / 100,
-      ex: parseInt(document.getElementById('slEx').value) / 10,   // slider -50..50 → -5.0..5.0
-      ey: parseInt(document.getElementById('slEy').value) / 10
+      nx: parseInt(document.getElementById('segNx').getAttribute('data-value')),
+      ny: parseInt(document.getElementById('segNy').getAttribute('data-value')),
+      nz: parseInt(document.getElementById('segNz').getAttribute('data-value')),
+      T: parseFloat(document.getElementById('inT').value),
+      dt: parseFloat(document.getElementById('inDt').value),
+      vv: parseInt(document.getElementById('inVV').value),
+      mc: parseInt(document.getElementById('inMC').value),
+      dmu: parseFloat(document.getElementById('inDmu').value),
+      ex: parseFloat(document.getElementById('inEx').value),
+      ey: parseFloat(document.getElementById('inEy').value)
     };
   },
 
