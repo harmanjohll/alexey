@@ -268,21 +268,129 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 
-/* Parameter panel */
+/* Parameter panel — compact grid */
 .param-panel { margin-bottom: 20px; }
-.param-group { margin-bottom: 16px; }
-.param-group-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-light); }
-.param-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; min-height: 28px; }
-.param-row label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary); min-width: 70px; flex-shrink: 0; }
-.param-row input[type=range] { flex: 1; accent-color: var(--accent); height: 4px; min-width: 80px; }
-.param-row .pv { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); min-width: 55px; text-align: right; }
-.sweep-tog { font-size: 9px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; border-radius: 2px; background: transparent; border: 1px solid var(--border); color: var(--text-tertiary); cursor: pointer; transition: all 150ms; flex-shrink: 0; }
+.param-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  margin-bottom: 16px;
+}
+.pg { /* param group cell */ }
+.pg-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-light);
+}
+.prow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.prow label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
+/* Segmented button group for small discrete values */
+.seg-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.seg-btn {
+  padding: 4px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 120ms;
+  border-radius: 0;
+  min-width: 32px;
+  text-align: center;
+}
+.seg-btn:last-child { border-right: none; }
+.seg-btn:hover { background: var(--accent-subtle); color: var(--accent); }
+.seg-btn.on { background: var(--accent); color: white; }
+.seg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.seg-btn:disabled:hover { background: transparent; color: var(--text-secondary); }
+.seg-btn:disabled.on { background: var(--accent); color: white; opacity: 0.3; }
+
+/* Compact number input */
+.num-input {
+  width: 68px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 2px;
+  text-align: right;
+  transition: border-color 150ms;
+}
+.num-input:focus { outline: none; border-color: var(--accent); }
+.num-input:disabled { opacity: 0.35; cursor: not-allowed; }
+.prow .unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  min-width: 20px;
+}
+
+/* Sweep toggle + config */
+.sweep-tog {
+  font-size: 9px;
+  padding: 3px 7px;
+  font-family: 'JetBrains Mono', monospace;
+  border-radius: 2px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 150ms;
+  flex-shrink: 0;
+  margin-left: auto;
+}
 .sweep-tog.active { background: var(--accent-subtle); border-color: var(--accent-border); color: var(--accent); }
-.sweep-config { display: none; padding: 4px 0 8px 80px; gap: 8px; align-items: center; }
-.sweep-config.active { display: flex; }
+.sweep-config {
+  display: none;
+  padding: 2px 0 6px 60px;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 .sweep-config label { font-size: 10px; color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; }
-.sweep-config input[type=number] { width: 60px; background: var(--bg); border: 1px solid var(--border); color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 3px 6px; border-radius: 2px; }
+.sweep-config input[type=number] {
+  width: 56px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 2px;
+  text-align: right;
+}
 .sweep-config input[type=number]:focus { outline: none; border-color: var(--accent); }
+
+@media (max-width: 560px) {
+  .param-grid { grid-template-columns: 1fr; }
+}
 
 /* Pipeline */
 .pipeline { display: flex; align-items: center; gap: 6px; margin: 16px 0; flex-wrap: wrap; }
@@ -357,103 +465,116 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
   </div>
   <div class="sbody">
 
-    <!-- Unified parameter panel -->
+    <!-- Compact parameter panel -->
     <div class="param-panel">
+      <div class="param-grid">
 
-      <!-- Slab group -->
-      <div class="param-group">
-        <div class="param-group-title">Slab</div>
-        <div class="param-row">
-          <label>n<sub>x</sub></label>
-          <input type="range" id="slNx" min="1" max="4" value="2" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valNx">2</span>
+        <!-- Slab — button selectors for tiny ranges -->
+        <div class="pg">
+          <div class="pg-title">Slab size</div>
+          <div class="prow">
+            <label>n<sub>x</sub></label>
+            <div class="seg-group" id="segNx" data-param="nx" data-value="2">
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nx',1)">1</button>
+              <button class="seg-btn lab-ctrl on" disabled onclick="MD.ui.setSeg('nx',2)">2</button>
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nx',3)">3</button>
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nx',4)">4</button>
+            </div>
+          </div>
+          <div class="prow">
+            <label>n<sub>y</sub></label>
+            <div class="seg-group" id="segNy" data-param="ny" data-value="2">
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('ny',1)">1</button>
+              <button class="seg-btn lab-ctrl on" disabled onclick="MD.ui.setSeg('ny',2)">2</button>
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('ny',3)">3</button>
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('ny',4)">4</button>
+            </div>
+          </div>
+          <div class="prow">
+            <label>n<sub>z</sub></label>
+            <div class="seg-group" id="segNz" data-param="nz" data-value="3">
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',2)">2</button>
+              <button class="seg-btn lab-ctrl on" disabled onclick="MD.ui.setSeg('nz',3)">3</button>
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',4)">4</button>
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',5)">5</button>
+              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',6)">6</button>
+            </div>
+          </div>
         </div>
-        <div class="param-row">
-          <label>n<sub>y</sub></label>
-          <input type="range" id="slNy" min="1" max="4" value="2" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valNy">2</span>
+
+        <!-- Strain — number inputs with sweep -->
+        <div class="pg">
+          <div class="pg-title">Strain</div>
+          <div class="prow">
+            <label>&epsilon;<sub>x</sub></label>
+            <input type="number" id="inEx" class="num-input lab-ctrl" disabled value="0.0" min="-5" max="5" step="0.5">
+            <span class="unit">%</span>
+            <button class="sweep-tog" data-sweep="ex" onclick="MD.ui.toggleSweep('ex')">sweep</button>
+          </div>
+          <div class="sweep-config" id="sweepEx">
+            <label>min</label><input type="number" id="swExMin" value="-3" step="0.5">
+            <label>max</label><input type="number" id="swExMax" value="3" step="0.5">
+            <label>N</label><input type="number" id="swExN" value="7" min="2" max="20">
+          </div>
+          <div class="prow">
+            <label>&epsilon;<sub>y</sub></label>
+            <input type="number" id="inEy" class="num-input lab-ctrl" disabled value="0.0" min="-5" max="5" step="0.5">
+            <span class="unit">%</span>
+            <button class="sweep-tog" data-sweep="ey" onclick="MD.ui.toggleSweep('ey')">sweep</button>
+          </div>
+          <div class="sweep-config" id="sweepEy">
+            <label>min</label><input type="number" id="swEyMin" value="-3" step="0.5">
+            <label>max</label><input type="number" id="swEyMax" value="3" step="0.5">
+            <label>N</label><input type="number" id="swEyN" value="7" min="2" max="20">
+          </div>
         </div>
-        <div class="param-row">
-          <label>n<sub>z</sub></label>
-          <input type="range" id="slNz" min="2" max="6" value="3" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valNz">3</span>
+
+        <!-- Dynamics — number inputs -->
+        <div class="pg">
+          <div class="pg-title">Dynamics</div>
+          <div class="prow">
+            <label>T</label>
+            <input type="number" id="inT" class="num-input lab-ctrl" disabled value="300" min="100" max="1200" step="50">
+            <span class="unit">K</span>
+            <button class="sweep-tog" data-sweep="T" onclick="MD.ui.toggleSweep('T')">sweep</button>
+          </div>
+          <div class="sweep-config" id="sweepT">
+            <label>min</label><input type="number" id="swTMin" value="300" step="50">
+            <label>max</label><input type="number" id="swTMax" value="800" step="50">
+            <label>N</label><input type="number" id="swTN" value="6" min="2" max="20">
+          </div>
+          <div class="prow">
+            <label>dt</label>
+            <input type="number" id="inDt" class="num-input lab-ctrl" disabled value="2.0" min="0.5" max="5.0" step="0.5">
+            <span class="unit">fs</span>
+          </div>
+          <div class="prow">
+            <label>VV steps</label>
+            <input type="number" id="inVV" class="num-input lab-ctrl" disabled value="200" min="50" max="500" step="10">
+          </div>
         </div>
+
+        <!-- Monte Carlo — number inputs -->
+        <div class="pg">
+          <div class="pg-title">Monte Carlo</div>
+          <div class="prow">
+            <label>MC swaps</label>
+            <input type="number" id="inMC" class="num-input lab-ctrl" disabled value="100" min="0" max="500" step="10">
+          </div>
+          <div class="prow">
+            <label>&Delta;&mu;</label>
+            <input type="number" id="inDmu" class="num-input lab-ctrl" disabled value="0.00" min="-2" max="2" step="0.05">
+            <span class="unit">eV</span>
+            <button class="sweep-tog" data-sweep="dmu" onclick="MD.ui.toggleSweep('dmu')">sweep</button>
+          </div>
+          <div class="sweep-config" id="sweepDmu">
+            <label>min</label><input type="number" id="swDmuMin" value="-1.5" step="0.1">
+            <label>max</label><input type="number" id="swDmuMax" value="1.5" step="0.1">
+            <label>N</label><input type="number" id="swDmuN" value="7" min="2" max="20">
+          </div>
+        </div>
+
       </div>
-
-      <!-- Strain group -->
-      <div class="param-group">
-        <div class="param-group-title">Strain</div>
-        <div class="param-row">
-          <label>&epsilon;<sub>x</sub></label>
-          <input type="range" id="slEx" min="-50" max="50" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valEx">0.0%</span>
-          <button class="sweep-tog" data-sweep="ex" onclick="MD.ui.toggleSweep('ex')">sweep</button>
-        </div>
-        <div class="sweep-config" id="sweepEx">
-          <label>min</label><input type="number" id="swExMin" value="-3" step="0.5">
-          <label>max</label><input type="number" id="swExMax" value="3" step="0.5">
-          <label>N</label><input type="number" id="swExN" value="7" min="2" max="20">
-        </div>
-        <div class="param-row">
-          <label>&epsilon;<sub>y</sub></label>
-          <input type="range" id="slEy" min="-50" max="50" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valEy">0.0%</span>
-          <button class="sweep-tog" data-sweep="ey" onclick="MD.ui.toggleSweep('ey')">sweep</button>
-        </div>
-        <div class="sweep-config" id="sweepEy">
-          <label>min</label><input type="number" id="swEyMin" value="-3" step="0.5">
-          <label>max</label><input type="number" id="swEyMax" value="3" step="0.5">
-          <label>N</label><input type="number" id="swEyN" value="7" min="2" max="20">
-        </div>
-      </div>
-
-      <!-- Dynamics group -->
-      <div class="param-group">
-        <div class="param-group-title">Dynamics</div>
-        <div class="param-row">
-          <label>T (K)</label>
-          <input type="range" id="slT" min="100" max="1200" value="300" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valT">300</span>
-          <button class="sweep-tog" data-sweep="T" onclick="MD.ui.toggleSweep('T')">sweep</button>
-        </div>
-        <div class="sweep-config" id="sweepT">
-          <label>min</label><input type="number" id="swTMin" value="300" step="50">
-          <label>max</label><input type="number" id="swTMax" value="800" step="50">
-          <label>N</label><input type="number" id="swTN" value="6" min="2" max="20">
-        </div>
-        <div class="param-row">
-          <label>dt (fs)</label>
-          <input type="range" id="slDt" min="5" max="50" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valDt">2.0</span>
-        </div>
-        <div class="param-row">
-          <label>VV steps</label>
-          <input type="range" id="slVV" min="50" max="500" value="200" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valVV">200</span>
-        </div>
-      </div>
-
-      <!-- Monte Carlo group -->
-      <div class="param-group">
-        <div class="param-group-title">Monte Carlo</div>
-        <div class="param-row">
-          <label>MC swaps</label>
-          <input type="range" id="slMC" min="0" max="500" value="100" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valMC">100</span>
-        </div>
-        <div class="param-row">
-          <label>&Delta;&mu; (eV)</label>
-          <input type="range" id="slDmu" min="-200" max="200" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="pv" id="valDmu">0.00</span>
-          <button class="sweep-tog" data-sweep="dmu" onclick="MD.ui.toggleSweep('dmu')">sweep</button>
-        </div>
-        <div class="sweep-config" id="sweepDmu">
-          <label>min</label><input type="number" id="swDmuMin" value="-1.5" step="0.1">
-          <label>max</label><input type="number" id="swDmuMax" value="1.5" step="0.1">
-          <label>N</label><input type="number" id="swDmuN" value="7" min="2" max="20">
-        </div>
-      </div>
-
     </div>
 
     <!-- Pipeline -->
