@@ -23,29 +23,32 @@ function fitLinear(data) {
 }
 
 function computeSymmetricLayers(layerDataArray) {
-  // layerDataArray: array of simulation results, each with .layers = [{si, ge}, ...] and .ncz
-  // Returns array of 4 Ge fractions [layer1, layer2, layer3, layer4] averaged across all entries
+  // layerDataArray: array of simulation results, each with .layers = [{si, ge}, ...]
+  // Layers are sorted bottom-to-top (by z).
+  // Symmetric pairing: layer[0] (bottom surface) with layer[N-1] (top surface), etc.
+  // Returns array of 4 Ge fractions [surface, surface-1, surface-2, surface-3]
   var sums = [0, 0, 0, 0];
   var counts = [0, 0, 0, 0];
 
   for (var e = 0; e < layerDataArray.length; e++) {
     var entry = layerDataArray[e];
     var layers = entry.layers;
-    var N = 4 * entry.ncz + 1;
+    if (!layers || layers.length === 0) continue;
+    var N = layers.length;
 
     for (var k = 0; k < 4; k++) {
-      var topIdx = k;           // layer k from surface (0-indexed)
-      var botIdx = N - 1 - k;   // symmetric partner from bottom
+      var botIdx = k;           // k-th layer from bottom
+      var topIdx = N - 1 - k;   // symmetric partner from top
 
-      if (topIdx >= layers.length || botIdx >= layers.length) continue;
+      if (botIdx >= N || topIdx < 0 || botIdx > topIdx) continue;
 
-      var geTop = layers[topIdx].ge;
       var geBot = layers[botIdx].ge;
-      var totalTop = layers[topIdx].si + layers[topIdx].ge;
+      var geTop = layers[topIdx].ge;
       var totalBot = layers[botIdx].si + layers[botIdx].ge;
-      var totalAtoms = totalTop + totalBot;
+      var totalTop = layers[topIdx].si + layers[topIdx].ge;
+      var totalAtoms = totalBot + totalTop;
 
-      var geFrac = totalAtoms > 0 ? (geTop + geBot) / totalAtoms : 0;
+      var geFrac = totalAtoms > 0 ? (geBot + geTop) / totalAtoms : 0;
 
       sums[k] += geFrac;
       counts[k] += 1;

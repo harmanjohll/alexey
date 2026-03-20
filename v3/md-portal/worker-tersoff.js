@@ -37,8 +37,10 @@ const SMAX = Math.max(S[0][0], S[0][1], S[1][0], S[1][1]);
 let natom = 0, pos, vel, acc, species, fx, fy, fz;
 let totlx, totly, totlz, energy;
 let mcAccept = 0, mcTotal = 0;
+let storedNcz = 2; // stored from init for physical layer count
 
 function buildSlab(ncx, ncy, ncz, theta, lattxOverride, lattyOverride, lattzOverride) {
+  storedNcz = ncz;
   const aSi = 5.431, aGe = 5.657;
   const a0 = (1 - theta) * aSi + theta * aGe;
   // Use overrides if provided, otherwise compute from theta
@@ -372,19 +374,36 @@ function mcGrandCanonical(nSteps, kT, dmu) {
 }
 
 function layerComposition(nLayers) {
-  if (!nLayers) nLayers = 8;
-  let zmin = Infinity, zmax = -Infinity;
-  for (let i = 0; i < natom; i++) {
-    if (pos[i*3+2] < zmin) zmin = pos[i*3+2];
-    if (pos[i*3+2] > zmax) zmax = pos[i*3+2];
-  }
-  const dz = (zmax - zmin + 0.01) / nLayers;
+  // Cluster atoms into crystallographic z-planes by sorting z-positions
+  // and grouping atoms within a tolerance (0.5 Å)
+  const TOL = 0.5; // Angstroms — atoms within this dz are on the same plane
+
+  // Sort atom indices by z-position
+  const indices = [];
+  for (let i = 0; i < natom; i++) indices.push(i);
+  indices.sort(function(a, b) { return pos[a*3+2] - pos[b*3+2]; });
+
+  // Group into planes by z-clustering — directly count Si/Ge
   const layers = [];
-  for (let l = 0; l < nLayers; l++) layers.push({si: 0, ge: 0});
-  for (let i = 0; i < natom; i++) {
-    const l = Math.min(nLayers - 1, Math.floor((pos[i*3+2] - zmin) / dz));
-    if (species[i] === 0) layers[l].si++; else layers[l].ge++;
+  let planeZ = pos[indices[0]*3+2];
+  let si = 0, ge = 0;
+
+  for (let k = 0; k < natom; k++) {
+    const idx = indices[k];
+    const z = pos[idx*3+2];
+    if (z - planeZ > TOL) {
+      // Close current plane, start new one
+      layers.push({si: si, ge: ge});
+      si = 0; ge = 0;
+      planeZ = z;
+    }
+    if (species[idx] === 0) si++; else ge++;
+    // Update running average z for this plane
+    planeZ = (planeZ * (si + ge - 1) + z) / (si + ge);
   }
+  // Push last plane
+  layers.push({si: si, ge: ge});
+
   return layers;
 }
 
@@ -424,7 +443,7 @@ self.onmessage = function(e) {
     const epa = energy / natom;
     let nSi = 0, nGe = 0;
     for (let i = 0; i < natom; i++) { if (species[i] === 0) nSi++; else nGe++; }
-    const layers = layerComposition(6);
+    const layers = layerComposition();
     const mcPct = mcTotal > 0 ? (mcAccept / mcTotal * 100) : 0;
 
     const posOut = new Float64Array(pos);

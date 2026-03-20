@@ -110,12 +110,31 @@ function updateLiveCharts(energyHistory, tempHistory, layers) {
   if (lCanvas && layers && layers.length > 0) {
     var lLabels = layers.map(function(_, i) { return 'L' + (i + 1); });
     var lData   = layers.map(function(l) { return l.ge / Math.max(1, l.si + l.ge); });
+    // Color surface layers (first 2 and last 2) differently from bulk
+    var nL = layers.length;
+    var lColors = layers.map(function(_, i) {
+      if (i <= 1 || i >= nL - 2) return 'rgba(226,75,74,0.5)'; // surface: reddish
+      return 'rgba(221,136,68,0.5)'; // bulk: orange
+    });
+    var lBorders = layers.map(function(_, i) {
+      if (i <= 1 || i >= nL - 2) return '#e24b4a';
+      return '#dd8844';
+    });
 
+    // Destroy and recreate when layer count changes (different ncz)
     if (layerChartInst) {
-      layerChartInst.data.labels = lLabels;
-      layerChartInst.data.datasets[0].data = lData;
-      layerChartInst.update('none');
-    } else {
+      if (layerChartInst.data.labels.length !== lLabels.length) {
+        layerChartInst.destroy();
+        layerChartInst = null;
+      } else {
+        layerChartInst.data.labels = lLabels;
+        layerChartInst.data.datasets[0].data = lData;
+        layerChartInst.data.datasets[0].backgroundColor = lColors;
+        layerChartInst.data.datasets[0].borderColor = lBorders;
+        layerChartInst.update('none');
+      }
+    }
+    if (!layerChartInst) {
       var lOpts = cloneDefaults();
       lOpts.scales.x.title = { display: true, text: 'Layer (bottom\u2192top)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
       lOpts.scales.y.title = { display: true, text: 'Ge fraction', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
@@ -127,8 +146,8 @@ function updateLiveCharts(energyHistory, tempHistory, layers) {
           labels: lLabels,
           datasets: [{
             data: lData,
-            backgroundColor: 'rgba(221,136,68,0.6)',
-            borderColor: '#dd8844',
+            backgroundColor: lColors,
+            borderColor: lBorders,
             borderWidth: 1,
             borderRadius: 2
           }]
@@ -200,30 +219,68 @@ function updateLayerPlot(sweepData, fitResult) {
 }
 
 /* ─── 4. updateGeLayerPlot ─── */
+/* Shows symmetric Ge layer profile (surface → bulk) averaged across all ncz runs */
 
-function updateGeLayerPlot(layers) {
+function updateGeLayerPlot(layerDataArray) {
   var canvas = document.getElementById('dlGeLayerChart');
-  if (!canvas || !layers || layers.length === 0) return;
+  if (!canvas) return;
 
   if (dlGeLayerChartInst) { dlGeLayerChartInst.destroy(); dlGeLayerChartInst = null; }
 
-  var labels = layers.map(function(_, i) { return 'L' + (i + 1); });
-  var data   = layers.map(function(l) { return l.ge / Math.max(1, l.si + l.ge); });
+  if (!layerDataArray || layerDataArray.length === 0) return;
+
+  // If passed a single layers array (backward compat), wrap it
+  var dataArr = layerDataArray;
+  if (layerDataArray[0] && layerDataArray[0].si !== undefined) {
+    // Single layers array passed — compute Ge fraction per layer
+    var labels = layerDataArray.map(function(_, i) { return 'L' + (i + 1); });
+    var data = layerDataArray.map(function(l) { return l.ge / Math.max(1, l.si + l.ge); });
+    var opts = cloneDefaults();
+    opts.scales.x.title = { display: true, text: 'Layer (bottom\u2192top)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+    opts.scales.y.title = { display: true, text: 'Ge fraction', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+    opts.scales.y.min = 0;
+    opts.scales.y.max = 1;
+    dlGeLayerChartInst = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: 'rgba(221,136,68,0.6)',
+          borderColor: '#dd8844',
+          borderWidth: 1,
+          borderRadius: 2
+        }]
+      },
+      options: opts
+    });
+    return;
+  }
+
+  // Array of simulation results — compute symmetric layer profile
+  var symLayers = computeSymmetricLayers(dataArr);
+  var labels = ['Surface', 'Surface-1', 'Surface-2', 'Surface-3'];
+  var colors = [
+    'rgba(226,75,74,0.6)', 'rgba(221,136,68,0.6)',
+    'rgba(221,184,77,0.5)', 'rgba(180,180,100,0.4)'
+  ];
+  var borders = ['#e24b4a', '#dd8844', '#ddb84d', '#b4b464'];
 
   var opts = cloneDefaults();
-  opts.scales.x.title = { display: true, text: 'Layer (bottom\u2192top)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
-  opts.scales.y.title = { display: true, text: 'Ge fraction', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+  opts.scales.x.title = { display: true, text: 'Layer (surface \u2192 bulk)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+  opts.scales.y.title = { display: true, text: 'Avg Ge fraction', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
   opts.scales.y.min = 0;
   opts.scales.y.max = 1;
+  opts.plugins.legend.display = false;
 
   dlGeLayerChartInst = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: labels,
       datasets: [{
-        data: data,
-        backgroundColor: 'rgba(221,136,68,0.6)',
-        borderColor: '#dd8844',
+        data: symLayers,
+        backgroundColor: colors,
+        borderColor: borders,
         borderWidth: 1,
         borderRadius: 2
       }]
