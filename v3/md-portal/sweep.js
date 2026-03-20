@@ -190,29 +190,48 @@ async function runFullSweep() {
       var partialFit = layerData.length >= 2 ? fitLinear(layerData.map(function(d) { return {x: d.nLayers, y: d.etotal}; })) : null;
       updateLayerPlot(layerData, partialFit);
 
+      // Composition regression: N_Ge vs N_layers (progressive)
+      var partialCompFit = layerData.length >= 2 ? fitLinear(layerData.map(function(d) { return {x: d.nLayers, y: d.geFrac * d.natom}; })) : null;
+      updateCompositionPlot(layerData, partialCompFit);
+
       // Show symmetric layer profile averaged across all ncz runs so far
       updateGeLayerPlot(layerData);
     }
 
     if (cancelled) break;
 
+    // --- Energy regression ---
     var fitData = layerData.map(function(d) { return {x: d.nLayers, y: d.etotal}; });
     var fit = fitLinear(fitData);
     var surfE = fit.intercept / 2;
-    var avgGeFrac = layerData.reduce(function(s, d) { return s + d.geFrac; }, 0) / layerData.length;
-    var symLayers = computeSymmetricLayers(layerData);
 
     document.getElementById('fitResult').style.display = '';
     document.getElementById('fitValue').textContent = surfE.toFixed(4) + ' eV';
-    document.getElementById('fitDetail').textContent = 'y = ' + fit.slope.toFixed(4) + ' \u00D7 N + ' + fit.intercept.toFixed(4) + '  |  R\u00B2 = ' + fit.r2.toFixed(6);
+    document.getElementById('fitDetail').textContent = 'E = ' + fit.slope.toFixed(4) + ' \u00D7 N + ' + fit.intercept.toFixed(4) + '  |  R\u00B2 = ' + fit.r2.toFixed(6);
 
-    var entry = {mu: mu, surfE: surfE, r2: fit.r2, geFrac: avgGeFrac, layers: symLayers};
+    // --- Composition regression: N_Ge vs N_layers ---
+    var compFitData = layerData.map(function(d) { return {x: d.nLayers, y: d.geFrac * d.natom}; });
+    var compFit = fitLinear(compFitData);
+    // atoms per bulk layer = ncx * ncy * 4 = 3 * 3 * 4 = 36
+    var atomsPerLayer = params.ncx * params.ncy * 4;
+    var xBulk = compFit.slope / atomsPerLayer;
+    var geExcess = compFit.intercept / 2; // Ge excess per surface (in atoms)
+
+    document.getElementById('compFitResult').style.display = '';
+    document.getElementById('compFitValue').textContent = xBulk.toFixed(4);
+    document.getElementById('compFitDetail').textContent = 'N_Ge = ' + compFit.slope.toFixed(2) + ' \u00D7 N + ' + compFit.intercept.toFixed(2) + '  |  R\u00B2 = ' + compFit.r2.toFixed(6) + '  |  \u0394\u0393 = ' + geExcess.toFixed(1) + ' atoms/surface';
+
+    var avgGeFrac = layerData.reduce(function(s, d) { return s + d.geFrac; }, 0) / layerData.length;
+    var symLayers = computeSymmetricLayers(layerData);
+
+    var entry = {mu: mu, surfE: surfE, r2: fit.r2, xBulk: xBulk, geFrac: avgGeFrac, geExcess: geExcess, compR2: compFit.r2, layers: symLayers};
     window.summaryData.push(entry);
     window.rawDataMap[mu.toFixed(3)] = layerData;
 
     renderSummaryTable(window.summaryData);
     updateMasterPlot(window.summaryData);
     updateLayerPlot(layerData, fit);
+    updateCompositionPlot(layerData, compFit);
   }
 
   running = false;
@@ -265,11 +284,25 @@ async function runSingleMuSweep() {
     renderRawTable(currentLayerData);
     var partialFit = currentLayerData.length >= 2 ? fitLinear(currentLayerData.map(function(d) { return {x: d.nLayers, y: d.etotal}; })) : null;
     updateLayerPlot(currentLayerData, partialFit);
+    var partialCompFit = currentLayerData.length >= 2 ? fitLinear(currentLayerData.map(function(d) { return {x: d.nLayers, y: d.geFrac * d.natom}; })) : null;
+    updateCompositionPlot(currentLayerData, partialCompFit);
     updateGeLayerPlot(currentLayerData);
   }
 
   if (!cancelled && currentLayerData.length >= 2) {
     recalcFitFromTable(currentLayerData);
+
+    // Composition regression for single mu sweep
+    var compFitData = currentLayerData.map(function(d) { return {x: d.nLayers, y: d.geFrac * d.natom}; });
+    var compFit = fitLinear(compFitData);
+    var atomsPerLayer = params.ncx * params.ncy * 4;
+    var xBulk = compFit.slope / atomsPerLayer;
+    var geExcess = compFit.intercept / 2;
+
+    document.getElementById('compFitResult').style.display = '';
+    document.getElementById('compFitValue').textContent = xBulk.toFixed(4);
+    document.getElementById('compFitDetail').textContent = 'N_Ge = ' + compFit.slope.toFixed(2) + ' \u00D7 N + ' + compFit.intercept.toFixed(2) + '  |  R\u00B2 = ' + compFit.r2.toFixed(6) + '  |  \u0394\u0393 = ' + geExcess.toFixed(1) + ' atoms/surface';
+    updateCompositionPlot(currentLayerData, compFit);
   }
 
   running = false;

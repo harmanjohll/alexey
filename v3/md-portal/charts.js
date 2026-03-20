@@ -5,6 +5,7 @@ var energyChartInst = null;
 var tempChartInst   = null;
 var layerChartInst  = null;
 var dlLayerChartInst   = null;
+var dlCompChartInst    = null;
 var dlGeLayerChartInst = null;
 var dlSurfGeChartInst  = null;
 
@@ -39,6 +40,7 @@ function destroyAllCharts() {
   if (tempChartInst)      { tempChartInst.destroy();      tempChartInst      = null; }
   if (layerChartInst)     { layerChartInst.destroy();     layerChartInst     = null; }
   if (dlLayerChartInst)   { dlLayerChartInst.destroy();   dlLayerChartInst   = null; }
+  if (dlCompChartInst)    { dlCompChartInst.destroy();    dlCompChartInst    = null; }
   if (dlGeLayerChartInst) { dlGeLayerChartInst.destroy(); dlGeLayerChartInst = null; }
   if (dlSurfGeChartInst)  { dlSurfGeChartInst.destroy();  dlSurfGeChartInst  = null; }
 }
@@ -218,6 +220,67 @@ function updateLayerPlot(sweepData, fitResult) {
   });
 }
 
+/* ─── 3b. updateCompositionPlot ─── */
+/* Parallel to updateLayerPlot: N_Ge vs N_layers scatter + regression */
+
+function updateCompositionPlot(sweepData, fitResult) {
+  var canvas = document.getElementById('dlCompChart');
+  if (!canvas) return;
+
+  if (dlCompChartInst) { dlCompChartInst.destroy(); dlCompChartInst = null; }
+
+  var points = sweepData.map(function(d) { return { x: d.nLayers, y: d.geFrac * d.natom }; });
+
+  var datasets = [{
+    label: 'N_Ge',
+    data: points,
+    type: 'scatter',
+    backgroundColor: '#3dcfb0',
+    pointRadius: 6,
+    borderColor: '#2a9a80',
+    borderWidth: 1
+  }];
+
+  var hasFit = fitResult && fitResult.slope !== undefined && fitResult.intercept !== undefined;
+
+  if (hasFit) {
+    var xVals = points.map(function(p) { return p.x; });
+    var xMin  = Math.min.apply(null, xVals);
+    var xMax  = Math.max.apply(null, xVals);
+    var range = xMax - xMin || 1;
+    var x0 = xMin - range * 0.15;
+    var x1 = xMax + range * 0.15;
+    datasets.push({
+      label: 'Linear fit',
+      data: [
+        { x: x0, y: fitResult.slope * x0 + fitResult.intercept },
+        { x: x1, y: fitResult.slope * x1 + fitResult.intercept }
+      ],
+      type: 'scatter',
+      showLine: true,
+      borderColor: 'rgba(61,207,176,0.6)',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      fill: false
+    });
+  }
+
+  var opts = cloneDefaults();
+  opts.scales.x.title = { display: true, text: 'N_layers (4\u00d7ncz + 1)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+  opts.scales.y.title = { display: true, text: 'N_Ge (total Ge atoms)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+  opts.plugins.legend.display = hasFit;
+  if (hasFit) {
+    opts.plugins.legend.labels = { color: '#8a8a8a', font: { family: 'JetBrains Mono', size: 9 } };
+  }
+
+  dlCompChartInst = new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets: datasets },
+    options: opts
+  });
+}
+
 /* ─── 4. updateGeLayerPlot ─── */
 /* Shows symmetric Ge layer profile (surface → bulk) averaged across all ncz runs */
 
@@ -297,11 +360,14 @@ function updateMasterPlot(surfaceEnergyData) {
 
   if (dlSurfGeChartInst) { dlSurfGeChartInst.destroy(); dlSurfGeChartInst = null; }
 
-  var points = surfaceEnergyData.map(function(d) { return { x: d.geFrac, y: d.surfE }; });
+  // Use xBulk (from composition regression) if available, fallback to geFrac
+  var points = surfaceEnergyData.map(function(d) {
+    return { x: d.xBulk != null ? d.xBulk : d.geFrac, y: d.surfE };
+  });
 
   var opts = cloneDefaults();
-  opts.scales.x.title = { display: true, text: 'Ge Fraction', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
-  opts.scales.y.title = { display: true, text: 'Surface Energy (eV)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+  opts.scales.x.title = { display: true, text: 'Bulk Ge Fraction x_bulk (from regression)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
+  opts.scales.y.title = { display: true, text: 'Surface Energy \u03B3 (eV)', color: '#5a5a5a', font: { family: 'JetBrains Mono', size: 9 } };
 
   dlSurfGeChartInst = new Chart(canvas, {
     type: 'scatter',
