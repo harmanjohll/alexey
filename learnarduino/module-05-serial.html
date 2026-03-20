@@ -221,11 +221,10 @@ async function runLoop(stmts){
     }
     else if(s.type==='ifChar'){
       if(window._lastChar!==s.ch){
-        let depth=0;
-        for(let j=i+1;j<stmts.length;j++){
-          if(stmts[j].type==='ifChar')depth++;
-          else if(depth===0){i=j-1;break;}
-        }
+        // Skip all statements until the next ifChar or end of stmts
+        let j=i+1;
+        while(j<stmts.length&&stmts[j].type!=='ifChar'){j++;}
+        i=j-1;
       }
     }
     else{exec(s);drawSim();}
