@@ -78,6 +78,11 @@ function updateLiveStats(msg) {
   document.getElementById('statGeFrac').textContent = (msg.nGe / msg.natom).toFixed(3);
   document.getElementById('statStep').textContent = msg.step + 1;
   document.getElementById('statMcPct').textContent = msg.mcPct.toFixed(1);
+  // Show number of crystallographic layers detected
+  if (msg.layers) {
+    var lyrLabel = document.getElementById('layerChartLabel');
+    if (lyrLabel) lyrLabel.textContent = 'Ge Layer Distribution (' + msg.layers.length + ' planes)';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

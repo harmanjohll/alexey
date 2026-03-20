@@ -17,8 +17,16 @@ function runSinglePoint(params) {
     var step = 0;
     var halfSteps = Math.floor(params.niter1 / 2);
     var prodEnergies = [];
+    // Production-averaged composition data
+    var prodGeFracs = [];
+    var prodLayerAccum = null; // accumulated {si, ge} per layer over production steps
+    var prodLayerCount = 0;
     var lastUpdate = null;
     var boxDims = null;
+
+    // Reset energy/temp history for this specific run
+    energyHistory = [];
+    tempHistory = [];
 
     w.onmessage = function(e) {
       var msg = e.data;
@@ -38,6 +46,22 @@ function runSinglePoint(params) {
 
         if (step >= halfSteps) {
           prodEnergies.push(msg.energy);
+          prodGeFracs.push(msg.nGe / msg.natom);
+
+          // Accumulate layer composition for production averaging
+          if (msg.layers && msg.layers.length > 0) {
+            if (!prodLayerAccum) {
+              prodLayerAccum = [];
+              for (var li = 0; li < msg.layers.length; li++) {
+                prodLayerAccum.push({si: 0, ge: 0});
+              }
+            }
+            for (var li = 0; li < msg.layers.length && li < prodLayerAccum.length; li++) {
+              prodLayerAccum[li].si += msg.layers[li].si;
+              prodLayerAccum[li].ge += msg.layers[li].ge;
+            }
+            prodLayerCount++;
+          }
         }
 
         var progEl = document.getElementById('progressText');
@@ -51,6 +75,19 @@ function runSinglePoint(params) {
         } else {
           w.terminate();
           var avgE = prodEnergies.length > 0 ? prodEnergies.reduce(function(a, b) { return a + b; }, 0) / prodEnergies.length : 0;
+          var avgGeFrac = prodGeFracs.length > 0 ? prodGeFracs.reduce(function(a, b) { return a + b; }, 0) / prodGeFracs.length : 0;
+
+          // Compute production-averaged layer composition
+          var avgLayers = [];
+          if (prodLayerAccum && prodLayerCount > 0) {
+            for (var li = 0; li < prodLayerAccum.length; li++) {
+              avgLayers.push({
+                si: prodLayerAccum[li].si / prodLayerCount,
+                ge: prodLayerAccum[li].ge / prodLayerCount
+              });
+            }
+          }
+
           var nLayers = 4 * params.ncz + 1;
           resolve({
             ncz: params.ncz,
@@ -60,8 +97,8 @@ function runSinglePoint(params) {
             etotal: avgE * msg.natom,
             nSi: msg.nSi,
             nGe: msg.nGe,
-            geFrac: msg.nGe / msg.natom,
-            layers: msg.layers || []
+            geFrac: avgGeFrac,
+            layers: avgLayers.length > 0 ? avgLayers : (msg.layers || [])
           });
         }
       }
@@ -120,8 +157,6 @@ async function runFullSweep() {
     var layerData = [];
     currentLayerData = layerData;
 
-    energyHistory = [];
-    tempHistory = [];
     destroyAllCharts();
 
     document.getElementById('statMuGe').textContent = mu.toFixed(2);
@@ -155,7 +190,8 @@ async function runFullSweep() {
       var partialFit = layerData.length >= 2 ? fitLinear(layerData.map(function(d) { return {x: d.nLayers, y: d.etotal}; })) : null;
       updateLayerPlot(layerData, partialFit);
 
-      updateGeLayerPlot(result.layers);
+      // Show symmetric layer profile averaged across all ncz runs so far
+      updateGeLayerPlot(layerData);
     }
 
     if (cancelled) break;
@@ -200,8 +236,6 @@ async function runSingleMuSweep() {
   var mu = params.muStart;
 
   currentLayerData = [];
-  energyHistory = [];
-  tempHistory = [];
   destroyAllCharts();
 
   document.getElementById('statMuGe').textContent = mu.toFixed(2);
@@ -231,7 +265,7 @@ async function runSingleMuSweep() {
     renderRawTable(currentLayerData);
     var partialFit = currentLayerData.length >= 2 ? fitLinear(currentLayerData.map(function(d) { return {x: d.nLayers, y: d.etotal}; })) : null;
     updateLayerPlot(currentLayerData, partialFit);
-    updateGeLayerPlot(result.layers);
+    updateGeLayerPlot(currentLayerData);
   }
 
   if (!cancelled && currentLayerData.length >= 2) {
