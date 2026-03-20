@@ -575,12 +575,20 @@ const quizData = [
   },
 ];
 
+function resetProgress() {
+  if (!confirm('Reset quiz and code for this module?')) return;
+  localStorage.removeItem('arduino_module-01-blink_quiz_passed');
+  localStorage.removeItem('arduino_module-01-blink_code');
+  if (editor) editor.setValue(STARTER_CODE);
+  renderQuiz();
+}
+
 function renderQuiz() {
   const body = document.getElementById('quizBody');
   const passed = localStorage.getItem('arduino_module-01-blink_quiz_passed') === 'true';
 
   if (passed) {
-    body.innerHTML = '<div class="quiz-result pass">✓ Quiz passed! Module 02 is now unlocked. <a href="module-02-digital-input.html" style="color:#7dd87d">Go to Module 02 →</a></div>';
+    body.innerHTML = '<div class="quiz-result pass">✓ Quiz passed! Module 02 is now unlocked. <a href="module-02-digital-input.html" style="color:#7dd87d">Go to Module 02 →</a></div><button class="danger" onclick="resetProgress()" style="margin-top:10px">↺ Reset Module Progress</button>';
     return;
   }
 
@@ -592,6 +600,7 @@ function renderQuiz() {
     </div>`;
   });
   html += '<button onclick="submitQuiz()" id="quizSubmitBtn">Submit Quiz</button>';
+  html += ' <button class="danger" onclick="resetProgress()">↺ Reset Module</button>';
   html += '<div id="quizResult"></div>';
   body.innerHTML = html;
 }
