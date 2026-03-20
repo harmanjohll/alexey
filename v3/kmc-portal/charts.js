@@ -163,16 +163,21 @@ function fitLogLogSlope(points) {
   return { slope: slope, intercept: intercept };
 }
 
-function addUniversalityLines(fit, logData, rawData) {
+function addUniversalityLines(fit, logData, rawData, fitMinVal, fitMaxVal) {
   var refBetas = [0.333, 0.25, 0.5];
   if (!fit || !logData || logData.length < 2) {
     for (var k = 0; k < 3; k++) roughnessChart.data.datasets[2 + k].data = [];
     return;
   }
+  // Anchor reference lines at the midpoint of the fit range (not first data point)
+  var fMin = Math.log10(Math.max(1, fitMinVal || 1));
+  var fMax = Math.log10(fitMaxVal && isFinite(fitMaxVal) ? fitMaxVal : rawData[rawData.length-1].x);
+  var midX = (fMin + fMax) / 2;
+  var midY = fit.intercept + fit.beta * midX;
   var xMin = logData[0].x, xMax = logData[logData.length - 1].x;
   for (var k = 0; k < 3; k++) {
     var b = refBetas[k];
-    var refIntercept = logData[0].y - b * logData[0].x;
+    var refIntercept = midY - b * midX;
     if (logMode === 'linear') {
       roughnessChart.data.datasets[2 + k].data = [
         { x: xMin, y: refIntercept + b * xMin },
@@ -198,18 +203,20 @@ function updateCharts(d) {
     var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
     roughnessChart.data.datasets[0].data = logData;
     if (fit && logData.length > 0) {
-      var xMin = logData[0].x, xMax = logData[logData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:xMin,y:fit.intercept+fit.beta*xMin},{x:xMax,y:fit.intercept+fit.beta*xMax}];
+      var fMinLog = Math.log10(Math.max(1, fitMinVal));
+      var fMaxLog = Math.log10(isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x);
+      roughnessChart.data.datasets[1].data = [{x:fMinLog,y:fit.intercept+fit.beta*fMinLog},{x:fMaxLog,y:fit.intercept+fit.beta*fMaxLog}];
     }
-    addUniversalityLines(fit, logData, roughnessData);
+    addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   } else {
     roughnessChart.data.datasets[0].data = roughnessData;
     if (fit && roughnessData.length > 0) {
-      var xMin = roughnessData[0].x, xMax = roughnessData[roughnessData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:xMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMin))},{x:xMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMax))}];
+      var fMin = Math.max(1, fitMinVal);
+      var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
     }
     var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
-    addUniversalityLines(fit, logData, roughnessData);
+    addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   }
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
@@ -254,16 +261,18 @@ function refitBeta() {
   var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
   if (logMode === 'linear') {
     if (fit && logData.length > 0) {
-      var xMin = logData[0].x, xMax = logData[logData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:xMin,y:fit.intercept+fit.beta*xMin},{x:xMax,y:fit.intercept+fit.beta*xMax}];
+      var fMinLog = Math.log10(Math.max(1, fitMinVal));
+      var fMaxLog = Math.log10(isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x);
+      roughnessChart.data.datasets[1].data = [{x:fMinLog,y:fit.intercept+fit.beta*fMinLog},{x:fMaxLog,y:fit.intercept+fit.beta*fMaxLog}];
     } else { roughnessChart.data.datasets[1].data = []; }
   } else {
     if (fit && roughnessData.length > 0) {
-      var xMin = roughnessData[0].x, xMax = roughnessData[roughnessData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:xMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMin))},{x:xMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMax))}];
+      var fMin = Math.max(1, fitMinVal);
+      var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
     } else { roughnessChart.data.datasets[1].data = []; }
   }
-  addUniversalityLines(fit, logData, roughnessData);
+  addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
 }
@@ -291,17 +300,19 @@ function setLogMode(mode) {
   if (logMode === 'linear') {
     roughnessChart.data.datasets[0].data = logData;
     if (fit && logData.length > 0) {
-      var xMin = logData[0].x, xMax = logData[logData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:xMin,y:fit.intercept+fit.beta*xMin},{x:xMax,y:fit.intercept+fit.beta*xMax}];
+      var fMinLog = Math.log10(Math.max(1, fitMinVal));
+      var fMaxLog = Math.log10(isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x);
+      roughnessChart.data.datasets[1].data = [{x:fMinLog,y:fit.intercept+fit.beta*fMinLog},{x:fMaxLog,y:fit.intercept+fit.beta*fMaxLog}];
     }
   } else {
     roughnessChart.data.datasets[0].data = roughnessData;
     if (fit && roughnessData.length > 0) {
-      var xMin = roughnessData[0].x, xMax = roughnessData[roughnessData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:xMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMin))},{x:xMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(xMax))}];
+      var fMin = Math.max(1, fitMinVal);
+      var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
+      roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
     }
   }
-  addUniversalityLines(fit, logData, roughnessData);
+  addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
 }

@@ -132,8 +132,8 @@ function computeOutput(iiter1) {
 
   // Concentration profile
   var concZ = [], concGe = [];
-  var cStart = Math.max(0, zmax - 10);
-  var cEnd = Math.min(lattz, zmin + 50);
+  var cStart = Math.max(0, zmax - 5);
+  var cEnd = Math.min(lattz, zmin + 20);
   for (var z = cStart; z < cEnd; z += 2) {
     var nSi = 0, nGe = 0;
     for (var x = 0; x < lattx; x++) {
