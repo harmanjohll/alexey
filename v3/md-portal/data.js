@@ -67,7 +67,7 @@ function renderSummaryTable(summaryData) {
   if (!tbody) return;
 
   if (!summaryData || summaryData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#7a9a7a;font-style:italic;">No data yet. Run a sweep to populate.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#7a9a7a;font-style:italic;">No data yet. Run a sweep to populate.</td></tr>';
     return;
   }
 
@@ -79,7 +79,9 @@ function renderSummaryTable(summaryData) {
       + '<td>' + (d.mu != null ? d.mu.toFixed(2) : '') + '</td>'
       + '<td>' + (d.surfE != null ? d.surfE.toFixed(4) : '') + '</td>'
       + '<td>' + (d.r2 != null ? d.r2.toFixed(6) : '') + '</td>'
-      + '<td>' + (d.geFrac != null ? d.geFrac.toFixed(4) : '') + '</td>'
+      + '<td>' + (d.xBulk != null ? d.xBulk.toFixed(4) : (d.geFrac != null ? d.geFrac.toFixed(4) : '')) + '</td>'
+      + '<td>' + (d.compR2 != null ? d.compR2.toFixed(6) : '') + '</td>'
+      + '<td>' + (d.geExcess != null ? d.geExcess.toFixed(1) : '') + '</td>'
       + '<td>' + (l[0] != null ? l[0].toFixed(4) : '') + '</td>'
       + '<td>' + (l[1] != null ? l[1].toFixed(4) : '') + '</td>'
       + '<td>' + (l[2] != null ? l[2].toFixed(4) : '') + '</td>'
@@ -94,19 +96,21 @@ function renderRawTable(layerData) {
   if (!tbody) return;
 
   if (!layerData || layerData.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#7a9a7a;font-style:italic;">No layer data. Run simulation first.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#7a9a7a;font-style:italic;">No layer data. Run simulation first.</td></tr>';
     return;
   }
 
   var html = '';
   for (var i = 0; i < layerData.length; i++) {
     var d = layerData[i];
+    var nGe = d.geFrac != null ? Math.round(d.geFrac * d.natom) : '';
     html += '<tr>'
       + '<td>' + d.ncz + '</td>'
       + '<td>' + d.nLayers + '</td>'
       + '<td contenteditable="true" data-idx="' + i + '" data-field="natom">' + d.natom + '</td>'
       + '<td contenteditable="true" data-idx="' + i + '" data-field="epa">' + (d.epa != null ? d.epa.toFixed(4) : '') + '</td>'
       + '<td contenteditable="true" data-idx="' + i + '" data-field="etotal">' + (d.etotal != null ? d.etotal.toFixed(4) : '') + '</td>'
+      + '<td>' + nGe + '</td>'
       + '<td>' + (d.geFrac != null ? d.geFrac.toFixed(4) : '') + '</td>'
       + '</tr>';
   }
@@ -189,7 +193,7 @@ function recalcFitFromTable(layerData) {
 function exportCSV(summaryData) {
   if (!summaryData || summaryData.length === 0) return;
 
-  var lines = ['mu_Ge,Surface_Energy_eV,R2,Ge_Fraction,Ge_L1,Ge_L2,Ge_L3,Ge_L4'];
+  var lines = ['mu_Ge,Surface_Energy_eV,E_R2,x_bulk,comp_R2,Ge_Excess_atoms,Ge_L1,Ge_L2,Ge_L3,Ge_L4'];
   for (var i = 0; i < summaryData.length; i++) {
     var d = summaryData[i];
     var l = d.layers || [];
@@ -197,7 +201,9 @@ function exportCSV(summaryData) {
       d.mu != null ? d.mu.toFixed(2) : '',
       d.surfE != null ? d.surfE.toFixed(4) : '',
       d.r2 != null ? d.r2.toFixed(6) : '',
-      d.geFrac != null ? d.geFrac.toFixed(4) : '',
+      d.xBulk != null ? d.xBulk.toFixed(4) : (d.geFrac != null ? d.geFrac.toFixed(4) : ''),
+      d.compR2 != null ? d.compR2.toFixed(6) : '',
+      d.geExcess != null ? d.geExcess.toFixed(1) : '',
       l[0] != null ? l[0].toFixed(4) : '',
       l[1] != null ? l[1].toFixed(4) : '',
       l[2] != null ? l[2].toFixed(4) : '',
@@ -238,7 +244,7 @@ function exportJSON(summaryData, rawData) {
 function copyToClipboard(summaryData) {
   if (!summaryData || summaryData.length === 0) return;
 
-  var lines = ['mu_Ge\tSurface_Energy_eV\tR2\tGe_Fraction\tGe_L1\tGe_L2\tGe_L3\tGe_L4'];
+  var lines = ['mu_Ge\tSurface_Energy_eV\tE_R2\tx_bulk\tcomp_R2\tGe_Excess\tGe_L1\tGe_L2\tGe_L3\tGe_L4'];
   for (var i = 0; i < summaryData.length; i++) {
     var d = summaryData[i];
     var l = d.layers || [];
@@ -246,7 +252,9 @@ function copyToClipboard(summaryData) {
       d.mu != null ? d.mu.toFixed(2) : '',
       d.surfE != null ? d.surfE.toFixed(4) : '',
       d.r2 != null ? d.r2.toFixed(6) : '',
-      d.geFrac != null ? d.geFrac.toFixed(4) : '',
+      d.xBulk != null ? d.xBulk.toFixed(4) : (d.geFrac != null ? d.geFrac.toFixed(4) : ''),
+      d.compR2 != null ? d.compR2.toFixed(6) : '',
+      d.geExcess != null ? d.geExcess.toFixed(1) : '',
       l[0] != null ? l[0].toFixed(4) : '',
       l[1] != null ? l[1].toFixed(4) : '',
       l[2] != null ? l[2].toFixed(4) : '',

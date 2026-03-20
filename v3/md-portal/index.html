@@ -146,36 +146,51 @@
     <span class="toggle">&blacktriangledown; collapse</span>
   </div>
   <div class="panel-body">
+    <!-- Row 1: Two parallel regression charts -->
     <div class="dash-row">
       <div class="dash-card">
         <div class="card-label">E_total vs N_layers</div>
         <div class="chart-wrap tall"><canvas id="dlLayerChart"></canvas></div>
-      </div>
-      <div class="dash-card">
-        <div id="fitResult" style="display:none">
+        <div id="fitResult" style="display:none;margin-top:10px">
           <div class="fit-result">
-            <div class="fit-label">Surface Energy (intercept / 2)</div>
+            <div class="fit-label">Surface Energy &gamma; = intercept / 2</div>
             <div class="fit-value" id="fitValue">&mdash;</div>
             <div class="fit-detail" id="fitDetail"></div>
           </div>
         </div>
-        <div style="margin-top:14px">
-          <div class="card-label">Ge Distribution by Layer</div>
-          <div class="chart-wrap"><canvas id="dlGeLayerChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">N_Ge vs N_layers</div>
+        <div class="chart-wrap tall"><canvas id="dlCompChart"></canvas></div>
+        <div id="compFitResult" style="display:none;margin-top:10px">
+          <div class="fit-result">
+            <div class="fit-label">Bulk Ge Fraction x_bulk = slope / atoms_per_layer</div>
+            <div class="fit-value" id="compFitValue">&mdash;</div>
+            <div class="fit-detail" id="compFitDetail"></div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Row 2: Ge layer distribution -->
+    <div class="dash-row" style="margin-top:14px">
+      <div class="dash-card">
+        <div class="card-label">Ge Distribution by Layer (symmetric surface &rarr; bulk)</div>
+        <div class="chart-wrap"><canvas id="dlGeLayerChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Raw data table -->
     <div style="margin-top:14px">
       <div class="card-label">Per-ncellz Data (current &mu;_Ge)</div>
       <table class="data-table">
         <thead>
           <tr>
-            <th>ncz</th><th>N_layers</th><th>natom</th><th>E/atom (eV)</th><th>E_total (eV)</th><th>Ge frac</th>
+            <th>ncz</th><th>N_layers</th><th>natom</th><th>E/atom (eV)</th><th>E_total (eV)</th><th>N_Ge</th><th>Ge frac (global)</th>
           </tr>
         </thead>
         <tbody id="rawTableBody">
-          <tr><td colspan="6" style="text-align:center;color:var(--text-tertiary);font-style:italic">No data yet. Run a sweep.</td></tr>
+          <tr><td colspan="7" style="text-align:center;color:var(--text-tertiary);font-style:italic">No data yet. Run a sweep.</td></tr>
         </tbody>
       </table>
       <div class="controls">
@@ -205,11 +220,11 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>&mu;_Ge</th><th>Surf. E (eV)</th><th>R&sup2;</th><th>Ge frac</th><th>Ge L1</th><th>Ge L2</th><th>Ge L3</th><th>Ge L4</th>
+              <th>&mu;_Ge</th><th>&gamma; (eV)</th><th>E R&sup2;</th><th>x_bulk</th><th>comp R&sup2;</th><th>&Delta;&Gamma; (atoms)</th><th>Ge L1</th><th>Ge L2</th><th>Ge L3</th><th>Ge L4</th>
             </tr>
           </thead>
           <tbody id="summaryTableBody">
-            <tr><td colspan="8" style="text-align:center;color:var(--text-tertiary);font-style:italic">No data yet.</td></tr>
+            <tr><td colspan="10" style="text-align:center;color:var(--text-tertiary);font-style:italic">No data yet.</td></tr>
           </tbody>
         </table>
         <div class="export-row">
