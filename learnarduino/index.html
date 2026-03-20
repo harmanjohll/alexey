@@ -58,6 +58,7 @@ body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2
 <div class="footer">
   <p>Each module teaches one concept. Pass the quiz (80%) to unlock the next.</p>
   <p style="margin-top:4px">No installation required — everything runs in your browser.</p>
+  <button class="danger" onclick="resetAll()" style="margin-top:16px;background:transparent;border:0.5px solid rgba(226,75,74,0.4);color:#e24b4a;font-family:'Space Mono',monospace;font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer">↺ Reset All Progress</button>
 </div>
 </div>
 
@@ -113,6 +114,15 @@ function render() {
 
   document.getElementById('progText').textContent = `${completed} / 10`;
   document.getElementById('progFill').style.width = `${completed * 10}%`;
+}
+
+function resetAll() {
+  if (!confirm('Reset ALL module progress? This clears all quiz results, saved code, and unlocks.')) return;
+  modules.forEach(mod => {
+    localStorage.removeItem(`arduino_${mod.id}_quiz_passed`);
+    localStorage.removeItem(`arduino_${mod.id}_code`);
+  });
+  render();
 }
 
 render();

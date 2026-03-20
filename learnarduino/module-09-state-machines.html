@@ -316,11 +316,12 @@ const quizData=[
   {q:'In a switch/case block, what happens if you forget "break"?',opts:['The code stops','Nothing happens','Execution falls through to the next case','A compile error occurs'],ans:2},
   {q:'What does millis() return?',opts:['Current time of day','Milliseconds since the Arduino was powered on','CPU speed in MHz','Number of loop iterations'],ans:1},
 ];
+function resetProgress(){if(!confirm("Reset quiz and code for this module?"))return;localStorage.removeItem(`arduino_${MOD_ID}_quiz_passed`);localStorage.removeItem(`arduino_${MOD_ID}_code`);if(editor)editor.setValue(STARTER);renderQuiz();}
 function renderQuiz(){
   const body=document.getElementById('quizBody');
-  if(localStorage.getItem(`arduino_${MOD_ID}_quiz_passed`)==='true'){body.innerHTML='<div class="quiz-result pass">&#10003; Quiz passed! <a href="module-10-final-project.html" style="color:#7dd87d">Go to Module 10 &rarr;</a></div>';return;}
+  if(localStorage.getItem(`arduino_${MOD_ID}_quiz_passed`)==='true'){body.innerHTML='<div class="quiz-result pass">&#10003; Quiz passed! <a href="module-10-final-project.html" style="color:#7dd87d">Go to Module 10 &rarr;</a></div><button class="danger" onclick="resetProgress()" style="margin-top:10px">↺ Reset Module Progress</button>';return;}
   let h='';quizData.forEach((q,i)=>{h+=`<div class="quiz-q" id="qq${i}"><p><b>Q${i+1}.</b> ${q.q}</p>${q.opts.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}">${o}</label>`).join('')}</div>`;});
-  h+='<button onclick="submitQuiz()">Submit Quiz</button><div id="quizResult"></div>';body.innerHTML=h;
+  h+='<button onclick="submitQuiz()">Submit Quiz</button> <button class="danger" onclick="resetProgress()">↺ Reset Module</button><div id="quizResult"></div>';body.innerHTML=h;
 }
 function submitQuiz(){
   let c=0;quizData.forEach((q,i)=>{const s=document.querySelector(`input[name="q${i}"]:checked`);document.querySelectorAll(`#qq${i} label`).forEach((l,j)=>{l.classList.remove('correct','wrong');if(j===q.ans)l.classList.add('correct');else if(s&&+s.value===j)l.classList.add('wrong');});if(s&&+s.value===q.ans)c++;});
