@@ -169,9 +169,16 @@ function computeForces() {
       }
     }
   }
+  // --- Pass 1: compute bond-order bij for all directed (i,j) pairs ---
+  const bijArr = new Array(natom);
+  const fcArr = new Array(natom);
+  const fAArr = new Array(natom);
   for (let i = 0; i < natom; i++) {
     const si = species[i];
     const nn = neighbors[i].length;
+    bijArr[i] = new Float64Array(nn);
+    fcArr[i] = new Float64Array(nn);
+    fAArr[i] = new Float64Array(nn);
     for (let pa = 0; pa < nn; pa++) {
       const j = neighbors[i][pa];
       const sj = species[j];
@@ -180,6 +187,8 @@ function computeForces() {
       const Rij = R[si][sj], Sij = S[si][sj];
       const fcij = cutoffFunc(rij, Rij, Sij);
       const fAij = -B[si][sj] * Math.exp(-MU[si][sj] * rij);
+      fcArr[i][pa] = fcij;
+      fAArr[i][pa] = fAij;
       let zetaij = 0;
       for (let pb = 0; pb < nn; pb++) {
         if (pb === pa) continue;
@@ -196,12 +205,54 @@ function computeForces() {
       }
       const bz = PARAMS.beta[si] * zetaij;
       const bzn = Math.pow(Math.abs(bz), PARAMS.nexp[si]);
-      const bij = CHI[si][sj] * Math.pow(1.0 + bzn, -0.5 / PARAMS.nexp[si]);
-      energy += 0.5 * fcij * bij * fAij;
+      bijArr[i][pa] = CHI[si][sj] * Math.pow(1.0 + bzn, -0.5 / PARAMS.nexp[si]);
+    }
+  }
+
+  // --- Pass 2: energy (full double sum with 0.5) + symmetrized forces (half-pair) ---
+  // Build reverse lookup: for pair (i,j), find the index pb in neighbors[j] where neighbors[j][pb] === i
+  const revIdx = new Array(natom);
+  for (let i = 0; i < natom; i++) {
+    revIdx[i] = new Int32Array(neighbors[i].length);
+    for (let pa = 0; pa < neighbors[i].length; pa++) {
+      const j = neighbors[i][pa];
+      // Find i in neighbors[j]
+      let found = -1;
+      for (let pb = 0; pb < neighbors[j].length; pb++) {
+        if (neighbors[j][pb] === i) { found = pb; break; }
+      }
+      revIdx[i][pa] = found;
+    }
+  }
+
+  // Energy: full double-sum with factor 0.5 (standard Tersoff)
+  for (let i = 0; i < natom; i++) {
+    for (let pa = 0; pa < neighbors[i].length; pa++) {
+      energy += 0.5 * fcArr[i][pa] * bijArr[i][pa] * fAArr[i][pa];
+    }
+  }
+
+  // Forces: half-pair loop with symmetrized bond-order → Newton's 3rd law
+  for (let i = 0; i < natom; i++) {
+    const si = species[i];
+    for (let pa = 0; pa < neighbors[i].length; pa++) {
+      const j = neighbors[i][pa];
+      if (j <= i) continue; // half-pair: only i < j
+      const sj = species[j];
+      const xij = nbrDx[i][pa], yij = nbrDy[i][pa], zij = nbrDz[i][pa];
+      const rij = nbrR[i][pa];
+      const fcij = fcArr[i][pa];
+      const fAij = fAArr[i][pa];
+      const bij = bijArr[i][pa];
+      const pb = revIdx[i][pa]; // index of i in neighbors[j]
+      const bji = pb >= 0 ? bijArr[j][pb] : bij; // fallback to bij if not found
+      const bavg = 0.5 * (bij + bji);
+      const Rij = R[si][sj], Sij = S[si][sj];
       const dfA_dr = -MU[si][sj] * fAij;
       const dfc_dr = dcutoffFunc(rij, Rij, Sij);
-      const fattr = -0.5 * (fcij * bij * dfA_dr + dfc_dr * bij * fAij) / rij;
+      const fattr = -(fcij * bavg * dfA_dr + dfc_dr * bavg * fAij) / rij;
       fx[i] += fattr * xij; fy[i] += fattr * yij; fz[i] += fattr * zij;
+      fx[j] -= fattr * xij; fy[j] -= fattr * yij; fz[j] -= fattr * zij;
     }
   }
 }
@@ -293,6 +344,11 @@ function mcSwap(nSteps, kT) {
 }
 
 function mcGrandCanonical(nSteps, kT, dmu) {
+  // dmu = mu_ge (chemical potential of Ge, with mu_si = 0 as reference)
+  // Si->Ge (s1i=0): del_mu = +dmu (positive dmu favors Ge incorporation)
+  //   acceptance: dE - dmu <= 0  =>  dE <= dmu  (higher dmu = easier to swap to Ge)
+  // Ge->Si (s1i=1): del_mu = -dmu
+  //   acceptance: dE + dmu <= 0  =>  dE <= -dmu (higher dmu = harder to revert to Si)
   if (nSteps <= 0 || natom < 1 || kT < 1e-12) return;
   for (let s = 0; s < nSteps; s++) {
     const a = Math.floor(Math.random() * natom);

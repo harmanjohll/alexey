@@ -142,7 +142,7 @@ async function runFullSweep() {
         niter2: params.niter2,
         niter3: params.niter3,
         niter4: params.niter4,
-        dmu: -mu,  // NEGATED: Worker expects dmu = mu_si - mu_ge; mu_si = 0, so dmu = -mu_ge
+        dmu: mu,  // dmu = mu_ge (positive favors Ge incorporation); mu_si = 0 reference
         lattx: params.lattx,
         latty: params.latty,
         lattz: params.lattz,
@@ -220,7 +220,7 @@ async function runSingleMuSweep() {
       niter2: params.niter2,
       niter3: params.niter3,
       niter4: params.niter4,
-      dmu: -mu,  // NEGATED: Worker expects dmu = mu_si - mu_ge
+      dmu: mu,  // dmu = mu_ge (positive favors Ge incorporation); mu_si = 0 reference
       lattx: params.lattx,
       latty: params.latty,
       lattz: params.lattz,
