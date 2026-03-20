@@ -174,44 +174,11 @@ button.primary:hover:not(:disabled) { background: var(--accent-light); }
 button.active { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
 button.sm { font-size: 10px; padding: 4px 10px; }
 
-/* Investigation tabs */
-.inv-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-.inv-tab {
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  transition: all 150ms;
-  background: var(--surface);
-}
-.inv-tab.active {
-  background: var(--accent-subtle);
-  color: var(--accent);
-  border-color: var(--accent-border);
-}
-.inv-tab:hover:not(.active) { color: var(--text-secondary); }
-.inv-panel { display: none; }
-.inv-panel.active { display: block; }
-
 /* Data labels */
 .dl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
 .dv { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-primary); font-weight: 500; margin-bottom: 12px; }
 .dv.accent { color: var(--accent); }
 
-/* Controls */
-.ctrl-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
-.ctrl-group { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 120px; }
-.ctrl-group label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.04em; }
-.ctrl-group input[type=range] { width: 100%; accent-color: var(--accent); height: 4px; }
-.ctrl-group .cv { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 
 /* Canvas */
@@ -301,6 +268,46 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 
+/* Parameter panel */
+.param-panel { margin-bottom: 20px; }
+.param-group { margin-bottom: 16px; }
+.param-group-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-light); }
+.param-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; min-height: 28px; }
+.param-row label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary); min-width: 70px; flex-shrink: 0; }
+.param-row input[type=range] { flex: 1; accent-color: var(--accent); height: 4px; min-width: 80px; }
+.param-row .pv { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); min-width: 55px; text-align: right; }
+.sweep-tog { font-size: 9px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; border-radius: 2px; background: transparent; border: 1px solid var(--border); color: var(--text-tertiary); cursor: pointer; transition: all 150ms; flex-shrink: 0; }
+.sweep-tog.active { background: var(--accent-subtle); border-color: var(--accent-border); color: var(--accent); }
+.sweep-config { display: none; padding: 4px 0 8px 80px; gap: 8px; align-items: center; }
+.sweep-config.active { display: flex; }
+.sweep-config label { font-size: 10px; color: var(--text-tertiary); font-family: 'JetBrains Mono', monospace; }
+.sweep-config input[type=number] { width: 60px; background: var(--bg); border: 1px solid var(--border); color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 3px 6px; border-radius: 2px; }
+.sweep-config input[type=number]:focus { outline: none; border-color: var(--accent); }
+
+/* Pipeline */
+.pipeline { display: flex; align-items: center; gap: 6px; margin: 16px 0; flex-wrap: wrap; }
+.pipe-stage { padding: 5px 12px; border: 1px solid var(--border); border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-tertiary); cursor: pointer; transition: all 150ms; user-select: none; }
+.pipe-stage.locked { color: var(--accent); border-color: var(--accent-border); background: var(--accent-subtle); cursor: default; }
+.pipe-stage.on { color: var(--accent); border-color: var(--accent-border); background: var(--accent-subtle); }
+.pipe-arrow { color: var(--text-tertiary); font-size: 12px; }
+
+/* Y-axis toggle */
+.y-toggles { display: flex; gap: 4px; margin-bottom: 10px; }
+.y-tog { font-size: 10px; padding: 3px 10px; }
+.y-tog.active { background: var(--accent-subtle); border-color: var(--accent-border); color: var(--accent); }
+
+/* Data table */
+.data-table-wrap { max-height: 300px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 2px; margin-top: 12px; }
+table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+.data-table th { position: sticky; top: 0; background: var(--bg-deep); color: var(--text-tertiary); font-weight: 500; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; }
+.data-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+.data-table tr:hover td { background: var(--accent-subtle); }
+.data-table tr.selected td { background: var(--accent-subtle); border-color: var(--accent-border); }
+.data-table .num { text-align: right; }
+
+/* Run controls */
+.run-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .page { padding: 2rem 1rem 4rem; }
@@ -349,179 +356,155 @@ canvas#crystalCanvas:active { cursor: grabbing; }
     <span class="shint" id="labHint">Lock your hypothesis first</span>
   </div>
   <div class="sbody">
-    <!-- Investigation tabs -->
-    <div class="inv-tabs">
-      <div class="inv-tab active" data-tab="comp" onclick="MD.ui.switchTab('comp')">E_surf vs Composition</div>
-      <div class="inv-tab" data-tab="temp" onclick="MD.ui.switchTab('temp')">E_surf vs Temperature</div>
-      <div class="inv-tab" data-tab="strain" onclick="MD.ui.switchTab('strain')">E_surf vs Strain</div>
-      <div class="inv-tab" data-tab="layers" onclick="MD.ui.switchTab('layers')">Ge Layer Distribution</div>
-    </div>
 
-    <!-- Tab A: Composition sweep -->
-    <div class="inv-panel active" id="panelComp">
-      <div class="note"><b>Investigation:</b> How does surface energy change as you add more germanium? The chemical potential &Delta;&mu; controls the relative energy cost of substituting Ge for Si.</div>
-      <div class="ctrl-row">
-        <div class="ctrl-group">
+    <!-- Unified parameter panel -->
+    <div class="param-panel">
+
+      <!-- Slab group -->
+      <div class="param-group">
+        <div class="param-group-title">Slab</div>
+        <div class="param-row">
+          <label>n<sub>x</sub></label>
+          <input type="range" id="slNx" min="1" max="4" value="2" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valNx">2</span>
+        </div>
+        <div class="param-row">
+          <label>n<sub>y</sub></label>
+          <input type="range" id="slNy" min="1" max="4" value="2" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valNy">2</span>
+        </div>
+        <div class="param-row">
+          <label>n<sub>z</sub></label>
+          <input type="range" id="slNz" min="2" max="6" value="3" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valNz">3</span>
+        </div>
+      </div>
+
+      <!-- Strain group -->
+      <div class="param-group">
+        <div class="param-group-title">Strain</div>
+        <div class="param-row">
+          <label>&epsilon;<sub>x</sub></label>
+          <input type="range" id="slEx" min="-50" max="50" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valEx">0.0%</span>
+          <button class="sweep-tog" data-sweep="ex" onclick="MD.ui.toggleSweep('ex')">sweep</button>
+        </div>
+        <div class="sweep-config" id="sweepEx">
+          <label>min</label><input type="number" id="swExMin" value="-3" step="0.5">
+          <label>max</label><input type="number" id="swExMax" value="3" step="0.5">
+          <label>N</label><input type="number" id="swExN" value="7" min="2" max="20">
+        </div>
+        <div class="param-row">
+          <label>&epsilon;<sub>y</sub></label>
+          <input type="range" id="slEy" min="-50" max="50" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valEy">0.0%</span>
+          <button class="sweep-tog" data-sweep="ey" onclick="MD.ui.toggleSweep('ey')">sweep</button>
+        </div>
+        <div class="sweep-config" id="sweepEy">
+          <label>min</label><input type="number" id="swEyMin" value="-3" step="0.5">
+          <label>max</label><input type="number" id="swEyMax" value="3" step="0.5">
+          <label>N</label><input type="number" id="swEyN" value="7" min="2" max="20">
+        </div>
+      </div>
+
+      <!-- Dynamics group -->
+      <div class="param-group">
+        <div class="param-group-title">Dynamics</div>
+        <div class="param-row">
+          <label>T (K)</label>
+          <input type="range" id="slT" min="100" max="1200" value="300" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valT">300</span>
+          <button class="sweep-tog" data-sweep="T" onclick="MD.ui.toggleSweep('T')">sweep</button>
+        </div>
+        <div class="sweep-config" id="sweepT">
+          <label>min</label><input type="number" id="swTMin" value="300" step="50">
+          <label>max</label><input type="number" id="swTMax" value="800" step="50">
+          <label>N</label><input type="number" id="swTN" value="6" min="2" max="20">
+        </div>
+        <div class="param-row">
+          <label>dt (fs)</label>
+          <input type="range" id="slDt" min="5" max="50" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valDt">2.0</span>
+        </div>
+        <div class="param-row">
+          <label>VV steps</label>
+          <input type="range" id="slVV" min="50" max="500" value="200" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valVV">200</span>
+        </div>
+      </div>
+
+      <!-- Monte Carlo group -->
+      <div class="param-group">
+        <div class="param-group-title">Monte Carlo</div>
+        <div class="param-row">
+          <label>MC swaps</label>
+          <input type="range" id="slMC" min="0" max="500" value="100" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
+          <span class="pv" id="valMC">100</span>
+        </div>
+        <div class="param-row">
           <label>&Delta;&mu; (eV)</label>
           <input type="range" id="slDmu" min="-200" max="200" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valDmu">0.00</span>
+          <span class="pv" id="valDmu">0.00</span>
+          <button class="sweep-tog" data-sweep="dmu" onclick="MD.ui.toggleSweep('dmu')">sweep</button>
         </div>
-        <div class="ctrl-group">
-          <label>Sweep points</label>
-          <input type="range" id="slCompPts" min="5" max="20" value="11" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valCompPts">11</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Slab thickness (cells)</label>
-          <input type="range" id="slNzComp" min="3" max="6" value="3" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valNzComp">3</span>
+        <div class="sweep-config" id="sweepDmu">
+          <label>min</label><input type="number" id="swDmuMin" value="-1.5" step="0.1">
+          <label>max</label><input type="number" id="swDmuMax" value="1.5" step="0.1">
+          <label>N</label><input type="number" id="swDmuN" value="7" min="2" max="20">
         </div>
       </div>
-      <div class="btn-row">
-        <button id="btnCompSweep" class="primary lab-ctrl" disabled onclick="MD.ui.runCompSweep()">Run composition sweep &rarr;</button>
-      </div>
-      <div class="status" id="statusComp">&nbsp;</div>
-      <div class="chart-wrap" style="height:300px;margin-top:16px;display:none" id="compChartWrap">
-        <canvas id="compChart"></canvas>
-      </div>
+
     </div>
 
-    <!-- Tab B: Temperature sweep -->
-    <div class="inv-panel" id="panelTemp">
-      <div class="note"><b>Investigation:</b> How does temperature affect surface energy? Higher temperature means atoms vibrate more. The system is equilibrated at each temperature using velocity Verlet molecular dynamics.</div>
-      <div class="ctrl-row">
-        <div class="ctrl-group">
-          <label>T min (K)</label>
-          <input type="range" id="slTmin" min="100" max="600" value="300" step="50" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valTmin">300</span>
-        </div>
-        <div class="ctrl-group">
-          <label>T max (K)</label>
-          <input type="range" id="slTmax" min="400" max="1200" value="800" step="50" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valTmax">800</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Ge composition</label>
-          <input type="range" id="slGeTemp" min="0" max="100" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valGeTemp">20%</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Sweep points</label>
-          <input type="range" id="slTempPts" min="3" max="10" value="6" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valTempPts">6</span>
-        </div>
-      </div>
-      <div class="ctrl-row">
-        <div class="ctrl-group">
-          <label>VV steps per point</label>
-          <input type="range" id="slVVsteps" min="50" max="500" value="200" step="50" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valVVsteps">200</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Timestep (fs)</label>
-          <input type="range" id="slDt" min="1" max="5" value="2" step="0.5" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valDt">2.0</span>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button id="btnTempSweep" class="primary lab-ctrl" disabled onclick="MD.ui.runTempSweep()">Run temperature sweep &rarr;</button>
-        <button id="btnTempStop" class="lab-ctrl" disabled onclick="MD.ui.stopTempSweep()" style="display:none">Stop</button>
-      </div>
-      <div class="status" id="statusTemp">&nbsp;</div>
-      <div class="chart-wrap" style="height:300px;margin-top:16px;display:none" id="tempChartWrap">
-        <canvas id="tempChart"></canvas>
-      </div>
+    <!-- Pipeline -->
+    <div class="pipeline">
+      <div class="pipe-stage locked" data-stage="build">Build &#10003;</div>
+      <span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-stage" data-stage="equil" onclick="MD.ui.toggleStage('equil')">Equilibrate &#9675;</div>
+      <span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-stage" data-stage="mc" onclick="MD.ui.toggleStage('mc')">MC &#9675;</div>
+      <span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-stage locked" data-stage="measure">Measure &#10003;</div>
     </div>
 
-    <!-- Tab C: Strain sweep -->
-    <div class="inv-panel" id="panelStrain">
-      <div class="note"><b>Investigation:</b> What happens to surface energy when you stretch or compress the lattice? Vegard's law gives the equilibrium lattice constant for SiGe alloys. Here you can independently vary latt<sub>x</sub> and latt<sub>y</sub> to explore strain effects.</div>
-      <div class="ctrl-row">
-        <div class="ctrl-group">
-          <label>Strain X (%)</label>
-          <input type="range" id="slStrainX" min="-100" max="100" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valStrainX">0.0%</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Strain Y (%)</label>
-          <input type="range" id="slStrainY" min="-100" max="100" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valStrainY">0.0%</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Ge composition</label>
-          <input type="range" id="slGeStrain" min="0" max="100" value="20" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valGeStrain">20%</span>
-        </div>
-      </div>
-      <div class="ctrl-row">
-        <div class="ctrl-group">
-          <label>Sweep range (%)</label>
-          <input type="range" id="slStrainRange" min="2" max="10" value="5" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valStrainRange">&plusmn;5%</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Sweep points per axis</label>
-          <input type="range" id="slStrainPts" min="5" max="15" value="9" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valStrainPts">9</span>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button id="btnStrainSweep" class="primary lab-ctrl" disabled onclick="MD.ui.runStrainSweep()">Run strain sweep &rarr;</button>
-        <button class="lab-ctrl" disabled onclick="MD.ui.runSingleStrain()">Build single point</button>
-      </div>
-      <div class="status" id="statusStrain">&nbsp;</div>
-      <div class="res-grid" style="margin-top:16px;display:none" id="strainResults">
-        <div class="chart-wrap" style="height:300px"><canvas id="strainChart"></canvas></div>
-        <div>
-          <div class="dl" style="margin-bottom:8px">Current point</div>
-          <div class="rstat"><span class="rl">latt<sub>x</sub></span><span class="rv" id="rLattx">&mdash;</span></div>
-          <div class="rstat"><span class="rl">latt<sub>y</sub></span><span class="rv" id="rLatty">&mdash;</span></div>
-          <div class="rstat"><span class="rl">Strain X</span><span class="rv" id="rStrX">&mdash;</span></div>
-          <div class="rstat"><span class="rl">Strain Y</span><span class="rv" id="rStrY">&mdash;</span></div>
-          <div class="rstat"><span class="rl">E_surf</span><span class="rv" id="rEsurfStr">&mdash;</span></div>
-          <div class="rstat"><span class="rl">E/atom</span><span class="rv" id="rEpaStr">&mdash;</span></div>
-        </div>
-      </div>
+    <!-- Run controls -->
+    <div class="run-controls">
+      <button id="btnRun" class="primary lab-ctrl" disabled onclick="MD.ui.runSimulation()">Run &rarr;</button>
+      <button id="btnStop" style="display:none" onclick="MD.ui.stopRun()">Stop</button>
+      <button onclick="MD.ui.clearResults()">Clear results</button>
+      <span class="status" id="runStatus">&nbsp;</span>
     </div>
 
-    <!-- Tab D: Layer distribution -->
-    <div class="inv-panel" id="panelLayers">
-      <div class="note"><b>Investigation:</b> Where does germanium sit in the slab? Layers 1 &amp; N are surfaces (symmetric), 2 &amp; N-1 are sub-surface, etc. Each layer pair is averaged. For a 3&times;3 cell, each sublayer has 36 atoms.</div>
-      <div class="ctrl-row">
-        <div class="ctrl-group">
-          <label>Ge composition</label>
-          <input type="range" id="slGeLayers" min="5" max="95" value="30" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valGeLayers">30%</span>
-        </div>
-        <div class="ctrl-group">
-          <label>Slab thickness (cells)</label>
-          <input type="range" id="slNzLayers" min="3" max="6" value="4" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valNzLayers">4</span>
-        </div>
-        <div class="ctrl-group">
-          <label>MC swaps</label>
-          <input type="range" id="slMCswaps" min="0" max="500" value="100" step="10" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valMCswaps">100</span>
-        </div>
-        <div class="ctrl-group">
-          <label>&Delta;&mu; (eV)</label>
-          <input type="range" id="slDmuLayers" min="-200" max="200" value="0" class="lab-ctrl" disabled oninput="MD.ui.updateLabels()">
-          <span class="cv" id="valDmuLayers">0.00</span>
-        </div>
+    <!-- Results area -->
+    <div id="resultsArea" style="display:none;margin-top:20px">
+      <div class="y-toggles">
+        <button class="sm y-tog active" data-metric="esurf" onclick="MD.ui.setYMetric('esurf')">E_surf</button>
+        <button class="sm y-tog" data-metric="epa" onclick="MD.ui.setYMetric('epa')">E/atom</button>
+        <button class="sm y-tog" data-metric="xge" onclick="MD.ui.setYMetric('xge')">x(Ge)</button>
+      </div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="mainChart"></canvas>
+      </div>
+      <div class="data-table-wrap">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>T (K)</th>
+              <th>&Delta;&mu; (eV)</th>
+              <th>&epsilon;<sub>x</sub> (%)</th>
+              <th>&epsilon;<sub>y</sub> (%)</th>
+              <th class="num">E_surf</th>
+              <th class="num">E/atom</th>
+              <th class="num">x(Ge)</th>
+              <th>Layers</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody"></tbody>
+        </table>
       </div>
       <div class="btn-row">
-        <button id="btnLayerAnalysis" class="primary lab-ctrl" disabled onclick="MD.ui.runLayerAnalysis()">Build &amp; analyze &rarr;</button>
-      </div>
-      <div class="status" id="statusLayers">&nbsp;</div>
-      <div class="res-grid" style="margin-top:16px;display:none" id="layerResults">
-        <div class="chart-wrap" style="height:280px"><canvas id="layerChart"></canvas></div>
-        <div>
-          <div class="dl" style="margin-bottom:8px">Layer pair Ge fractions</div>
-          <div id="layerStats"></div>
-          <div class="model-note" style="margin-top:12px">
-            Layers are grouped by z-coordinate. Pair 1 = surface layers (top &amp; bottom). Pair 4 = deepest interior. For random placement at x% Ge, all pairs should show ~x%. After MC swaps, segregation may appear.
-          </div>
-        </div>
+        <button onclick="MD.ui.exportCSV()">Export CSV</button>
       </div>
     </div>
 
@@ -555,16 +538,14 @@ canvas#crystalCanvas:active { cursor: grabbing; }
 </div>
 
 <!-- Step 03: Results -->
-<div class="step" id="stepRes" style="display:none">
+<div class="step" id="stepRes">
   <div class="step-hdr">
     <span class="snum">step 03</span>
     <span class="sname">Results summary</span>
     <span class="shint">Key findings from your investigations</span>
   </div>
   <div class="sbody">
-    <div id="resultsSummary">
-      <div class="model-note">Run at least one investigation in the lab above to see results here.</div>
-    </div>
+    <div class="model-note">Results are shown in the lab above. Run investigations to populate the data table.</div>
   </div>
 </div>
 
