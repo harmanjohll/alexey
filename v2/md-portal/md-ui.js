@@ -1,88 +1,113 @@
-// md-ui.js — UI controls for 4 investigation tabs, hypothesis, AI coach
+// md-ui.js — Unified simulation UI: parameter panel, pipeline, sweep, results table + chart
 
 const MD = window.MD || {};
 window.MD = MD;
 
 MD.ui = {
   locked: false,
-  currentTab: 'comp',
+  sweepParam: null,       // null | 'T' | 'dmu' | 'ex' | 'ey'
+  stages: { equil: false, mc: false },
+  running: false,
+  stopRequested: false,
+
+  results: [],            // [{T, dmu, ex, ey, esurf, epa, xge, layers}]
+  chart: null,
+  yMetric: 'esurf',       // 'esurf' | 'epa' | 'xge'
+
   slab: null,
   energy: null,
   convHist: [],
-  worker: null,
-  tempSweepRunning: false,
 
-  // Chart instances
-  charts: {
-    comp: null,
-    temp: null,
-    strain: null,
-    layer: null,
-    coord: null
-  },
-
-  // Results storage
-  results: {
-    comp: null,
-    temp: null,
-    strain: null,
-    layers: null
-  },
+  // ── Initialization ──
 
   init: function() {
     // Restore hypothesis
-    const savedHyp = localStorage.getItem('alexey_md_hypothesis');
-    const savedTS = localStorage.getItem('alexey_md_timestamp');
+    var savedHyp = localStorage.getItem('alexey_md_hypothesis');
+    var savedTS = localStorage.getItem('alexey_md_timestamp');
     if (savedHyp && savedTS) {
       document.getElementById('hypText').value = savedHyp;
       MD.ui.doLock(savedTS);
     }
 
-    // Init viewer
+    // Restore saved results
+    var savedResults = localStorage.getItem('alexey_md_results');
+    if (savedResults) {
+      try {
+        MD.ui.results = JSON.parse(savedResults);
+        if (MD.ui.results.length > 0) {
+          var area = document.getElementById('resultsArea');
+          if (area) area.style.display = '';
+          MD.ui.renderChart();
+          MD.ui.renderTable();
+          document.getElementById('stepRes').style.display = '';
+        }
+      } catch (e) { /* ignore corrupt data */ }
+    }
+
+    // Restore dialogue
+    var savedDialogue = localStorage.getItem('alexey_md_dialogue');
+    if (savedDialogue) {
+      try { MD.ui.convHist = JSON.parse(savedDialogue); } catch (e) { /* ignore */ }
+    }
+
+    // Init crystal viewer
     MD.viewer.init('crystalCanvas');
     MD.viewer.render();
 
+    // Bind slider labels
     MD.ui.updateLabels();
+
+    // Bind y-metric toggles
+    document.querySelectorAll('.y-tog').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        MD.ui.setYMetric(btn.getAttribute('data-metric'));
+      });
+    });
+
+    // Hide all sweep config rows initially
+    ['sweepT', 'sweepDmu', 'sweepEx', 'sweepEy'].forEach(function(id) {
+      var cfg = document.getElementById(id);
+      if (cfg) cfg.style.display = 'none';
+    });
   },
+
+  // ── Slider label updates ──
 
   updateLabels: function() {
-    const s = (id) => document.getElementById(id);
-    const v = (id) => parseFloat(document.getElementById(id)?.value || 0);
+    var s = function(id) { return document.getElementById(id); };
+    var v = function(id) {
+      var el = document.getElementById(id);
+      return el ? parseFloat(el.value) : 0;
+    };
 
-    // Composition tab
+    // Slab dimensions
+    if (s('valNx')) s('valNx').textContent = v('slNx');
+    if (s('valNy')) s('valNy').textContent = v('slNy');
+    if (s('valNz')) s('valNz').textContent = v('slNz');
+
+    // Strain
+    if (s('valEx')) s('valEx').textContent = (v('slEx') / 10).toFixed(1) + '%';
+    if (s('valEy')) s('valEy').textContent = (v('slEy') / 10).toFixed(1) + '%';
+
+    // Dynamics
+    if (s('valT')) s('valT').textContent = v('slT');
+    if (s('valDt')) s('valDt').textContent = (v('slDt') / 10).toFixed(1);
+    if (s('valVV')) s('valVV').textContent = v('slVV');
+
+    // MC
+    if (s('valMC')) s('valMC').textContent = v('slMC');
     if (s('valDmu')) s('valDmu').textContent = (v('slDmu') / 100).toFixed(2);
-    if (s('valCompPts')) s('valCompPts').textContent = v('slCompPts');
-    if (s('valNzComp')) s('valNzComp').textContent = v('slNzComp');
-
-    // Temperature tab
-    if (s('valTmin')) s('valTmin').textContent = v('slTmin');
-    if (s('valTmax')) s('valTmax').textContent = v('slTmax');
-    if (s('valGeTemp')) s('valGeTemp').textContent = v('slGeTemp') + '%';
-    if (s('valTempPts')) s('valTempPts').textContent = v('slTempPts');
-    if (s('valVVsteps')) s('valVVsteps').textContent = v('slVVsteps');
-    if (s('valDt')) s('valDt').textContent = v('slDt').toFixed(1);
-
-    // Strain tab
-    if (s('valStrainX')) s('valStrainX').textContent = (v('slStrainX') / 10).toFixed(1) + '%';
-    if (s('valStrainY')) s('valStrainY').textContent = (v('slStrainY') / 10).toFixed(1) + '%';
-    if (s('valGeStrain')) s('valGeStrain').textContent = v('slGeStrain') + '%';
-    if (s('valStrainRange')) s('valStrainRange').textContent = '\u00b1' + v('slStrainRange') + '%';
-    if (s('valStrainPts')) s('valStrainPts').textContent = v('slStrainPts');
-
-    // Layers tab
-    if (s('valGeLayers')) s('valGeLayers').textContent = v('slGeLayers') + '%';
-    if (s('valNzLayers')) s('valNzLayers').textContent = v('slNzLayers');
-    if (s('valMCswaps')) s('valMCswaps').textContent = v('slMCswaps');
-    if (s('valDmuLayers')) s('valDmuLayers').textContent = (v('slDmuLayers') / 100).toFixed(2);
   },
 
+  // ── Hypothesis ──
+
   lockHypothesis: function() {
-    const t = document.getElementById('hypText').value.trim();
+    var t = document.getElementById('hypText').value.trim();
     if (t.length < 20) {
       document.getElementById('hypText').style.borderColor = '#c0392b';
       return;
     }
-    const ts = new Date().toISOString();
+    var ts = new Date().toISOString();
     localStorage.setItem('alexey_md_hypothesis', t);
     localStorage.setItem('alexey_md_timestamp', ts);
     MD.ui.doLock(ts);
@@ -90,243 +115,377 @@ MD.ui = {
 
   doLock: function(ts) {
     MD.ui.locked = true;
-    const ta = document.getElementById('hypText');
+    var ta = document.getElementById('hypText');
     ta.disabled = true;
     ta.style.borderColor = 'rgba(45, 90, 61, 0.5)';
     ta.style.boxShadow = '0 0 0 2px rgba(45, 90, 61, 0.15)';
 
-    const tsEl = document.getElementById('hypTS');
+    var tsEl = document.getElementById('hypTS');
     tsEl.style.display = 'block';
     tsEl.textContent = 'locked \u00b7 ' + new Date(ts).toLocaleString();
 
     document.getElementById('lockBtn').textContent = '\u2713 Hypothesis locked';
     document.getElementById('lockBtn').disabled = true;
-    document.getElementById('labHint').textContent = 'Choose an investigation tab and run it';
+    document.getElementById('labHint').textContent = 'Set parameters, configure pipeline, and run';
 
-    document.querySelectorAll('.lab-ctrl').forEach(el => el.disabled = false);
+    document.querySelectorAll('.lab-ctrl').forEach(function(el) { el.disabled = false; });
   },
 
-  switchTab: function(tab) {
-    MD.ui.currentTab = tab;
-    document.querySelectorAll('.inv-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-    document.querySelectorAll('.inv-panel').forEach(p => p.classList.remove('active'));
-    const panelMap = { comp: 'panelComp', temp: 'panelTemp', strain: 'panelStrain', layers: 'panelLayers' };
-    document.getElementById(panelMap[tab]).classList.add('active');
+  // ── Sweep toggles ──
+
+  toggleSweep: function(param) {
+    var validParams = ['T', 'dmu', 'ex', 'ey'];
+    if (validParams.indexOf(param) === -1) return;
+
+    // Map sweep params to HTML IDs
+    var sliderMap = { T: 'slT', dmu: 'slDmu', ex: 'slEx', ey: 'slEy' };
+    var cfgMap = { T: 'sweepT', dmu: 'sweepDmu', ex: 'sweepEx', ey: 'sweepEy' };
+
+    if (MD.ui.sweepParam === param) {
+      MD.ui.sweepParam = null;
+    } else {
+      MD.ui.sweepParam = param;
+    }
+
+    // Update all toggle buttons, config rows, and slider visibility
+    for (var i = 0; i < validParams.length; i++) {
+      var p = validParams[i];
+      var togBtn = document.querySelector('[data-sweep="' + p + '"]');
+      var cfgRow = document.getElementById(cfgMap[p]);
+      var slider = document.getElementById(sliderMap[p]);
+      var sliderRow = slider ? slider.closest('.param-row') : null;
+
+      if (p === MD.ui.sweepParam) {
+        if (togBtn) { togBtn.classList.add('active'); togBtn.textContent = 'sweeping'; }
+        if (cfgRow) cfgRow.style.display = '';
+        if (sliderRow) sliderRow.style.opacity = '0.3';
+        if (slider) slider.disabled = true;
+      } else {
+        if (togBtn) { togBtn.classList.remove('active'); togBtn.textContent = 'sweep'; }
+        if (cfgRow) cfgRow.style.display = 'none';
+        if (sliderRow) sliderRow.style.opacity = '1';
+        if (slider && MD.ui.locked) slider.disabled = false;
+      }
+    }
   },
+
+  // ── Pipeline stage toggles ──
+
+  toggleStage: function(stage) {
+    if (stage !== 'equil' && stage !== 'mc') return;
+    if (MD.ui.running) return;
+
+    MD.ui.stages[stage] = !MD.ui.stages[stage];
+
+    var el = document.querySelector('[data-stage="' + stage + '"]');
+    if (el) {
+      if (MD.ui.stages[stage]) {
+        el.classList.add('on');
+        el.innerHTML = (stage === 'equil' ? 'Equilibrate' : 'MC') + ' &#10003;';
+      } else {
+        el.classList.remove('on');
+        el.innerHTML = (stage === 'equil' ? 'Equilibrate' : 'MC') + ' &#9675;';
+      }
+    }
+  },
+
+  // ── Color mode ──
 
   setColorMode: function(mode) {
     MD.viewer.colorMode = mode;
-    document.querySelectorAll('.color-btns button').forEach(b => b.classList.remove('active'));
-    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+    document.querySelectorAll('.color-btns button').forEach(function(b) { b.classList.remove('active'); });
+    var active = document.querySelector('[data-mode="' + mode + '"]');
+    if (active) active.classList.add('active');
     MD.viewer.render();
   },
 
   updateCrystalInfo: function(slab, energy) {
-    const stats = MD.crystal.getStats(slab);
-    document.getElementById('dAtoms').textContent = stats.total;
-    document.getElementById('dSiGe').textContent = stats.nSi + ' / ' + stats.nGe;
-    document.getElementById('dLayers').textContent = slab.nLayers;
-    document.getElementById('dEsurf').textContent = energy.surfaceEnergy.toFixed(4) + ' eV/\u00c5\u00b2';
+    var stats = MD.crystal.getStats(slab);
+    var el;
+    el = document.getElementById('dAtoms');
+    if (el) el.textContent = stats.total;
+    el = document.getElementById('dSiGe');
+    if (el) el.textContent = stats.nSi + ' / ' + stats.nGe;
+    el = document.getElementById('dLayers');
+    if (el) el.textContent = slab.nLayers;
+    el = document.getElementById('dEsurf');
+    if (el) el.textContent = energy.surfaceEnergy.toFixed(4) + ' eV/\u00c5\u00b2';
   },
 
-  // ── Investigation A: Composition Sweep ──
-  runCompSweep: function() {
-    if (!MD.ui.locked) return;
-    const nPts = parseInt(document.getElementById('slCompPts').value);
-    const nz = parseInt(document.getElementById('slNzComp').value);
-    const dmu = parseFloat(document.getElementById('slDmu').value) / 100;
+  // ── Read parameter values from sliders ──
 
-    const xGeValues = [];
-    for (let i = 0; i < nPts; i++) {
-      xGeValues.push(i / (nPts - 1));
+  readParams: function() {
+    return {
+      nx: parseInt(document.getElementById('slNx').value),
+      ny: parseInt(document.getElementById('slNy').value),
+      nz: parseInt(document.getElementById('slNz').value),
+      T: parseInt(document.getElementById('slT').value),
+      dt: parseFloat(document.getElementById('slDt').value) / 10,  // slider 5..50 → 0.5..5.0 fs
+      vv: parseInt(document.getElementById('slVV').value),
+      mc: parseInt(document.getElementById('slMC').value),
+      dmu: parseInt(document.getElementById('slDmu').value) / 100,
+      ex: parseInt(document.getElementById('slEx').value) / 10,   // slider -50..50 → -5.0..5.0
+      ey: parseInt(document.getElementById('slEy').value) / 10
+    };
+  },
+
+  readSweepConfig: function(param) {
+    // HTML IDs: swTMin/swTMax/swTN, swExMin/swExMax/swExN, swDmuMin etc.
+    var idMap = { T: 'T', dmu: 'Dmu', ex: 'Ex', ey: 'Ey' };
+    var id = idMap[param] || param;
+    return {
+      min: parseFloat(document.getElementById('sw' + id + 'Min').value),
+      max: parseFloat(document.getElementById('sw' + id + 'Max').value),
+      n: parseInt(document.getElementById('sw' + id + 'N').value) || 6
+    };
+  },
+
+  // ── Main run logic ──
+
+  runSimulation: async function() {
+    if (!MD.ui.locked || MD.ui.running) return;
+    MD.ui.running = true;
+    MD.ui.stopRequested = false;
+
+    // UI: disable run, show stop
+    var btnRun = document.getElementById('btnRun');
+    var btnStop = document.getElementById('btnStop');
+    if (btnRun) btnRun.disabled = true;
+    if (btnStop) btnStop.style.display = '';
+
+    // Read all param values
+    var params = MD.ui.readParams();
+
+    // Determine sweep values
+    var sweepValues = [null]; // no sweep = single run
+    if (MD.ui.sweepParam) {
+      var cfg = MD.ui.readSweepConfig(MD.ui.sweepParam);
+      sweepValues = [];
+      for (var i = 0; i < cfg.n; i++) {
+        sweepValues.push(cfg.min + (cfg.max - cfg.min) * i / Math.max(1, cfg.n - 1));
+      }
     }
 
-    document.getElementById('btnCompSweep').disabled = true;
-    document.getElementById('statusComp').textContent = 'Running...';
+    document.getElementById('resultsArea').style.display = '';
 
-    setTimeout(() => {
-      const results = MD.tersoff.compositionSweep(1, 1, nz, xGeValues, (i, total, r) => {
-        document.getElementById('statusComp').textContent =
-          `Point ${i + 1}/${total}: x(Ge)=${r.xGe.toFixed(2)}, E_surf=${r.surfaceEnergy.toFixed(4)} eV/\u00c5\u00b2`;
+    for (var i = 0; i < sweepValues.length; i++) {
+      if (MD.ui.stopRequested) break;
+
+      var runParams = Object.assign({}, params);
+      if (MD.ui.sweepParam && sweepValues[i] !== null) {
+        runParams[MD.ui.sweepParam] = sweepValues[i];
+      }
+
+      MD.ui.updateStatus('Run ' + (i + 1) + '/' + sweepValues.length + '...');
+
+      var result = await MD.ui.executePipeline(runParams);
+      if (result) {
+        MD.ui.results.push(result);
+        MD.ui.renderChart();
+        MD.ui.renderTable();
+      }
+    }
+
+    MD.ui.running = false;
+    if (btnRun) btnRun.disabled = false;
+    if (btnStop) btnStop.style.display = 'none';
+    MD.ui.updateStatus('Done (' + MD.ui.results.length + ' points)');
+    MD.ui.saveResults();
+
+    // Show step 03
+    document.getElementById('stepRes').style.display = '';
+  },
+
+  // ── Execute pipeline for one parameter set ──
+
+  executePipeline: function(p) {
+    var needsWorker = MD.ui.stages.equil || MD.ui.stages.mc;
+
+    if (!needsWorker) {
+      // STATIC: main-thread Tersoff computation
+      var strainX = p.ex / 100;   // percent to fraction
+      var strainY = p.ey / 100;
+      var latt = MD.params.getLattice100Strained(0, strainX, strainY);
+      var slab = MD.crystal.buildDefaultSlab(p.nx, p.ny, p.nz, 0, latt);
+      var energy = MD.tersoff.computeEnergy(slab);
+
+      MD.ui.slab = slab;
+      MD.ui.energy = energy;
+      MD.viewer.render(slab);
+      MD.ui.updateCrystalInfo(slab, energy);
+
+      var stats = MD.crystal.getStats(slab);
+      return Promise.resolve({
+        T: p.T, dmu: p.dmu, ex: p.ex, ey: p.ey,
+        esurf: energy.surfaceEnergy,
+        epa: energy.perAtom,
+        xge: stats.nGe / stats.total,
+        layers: null
       });
-
-      MD.ui.results.comp = results;
-      MD.ui.renderCompChart(results);
-
-      // Show last slab in viewer
-      const lastXGe = xGeValues[Math.floor(xGeValues.length / 2)];
-      MD.ui.slab = MD.crystal.buildDefaultSlab(1, 1, nz, lastXGe);
-      MD.ui.energy = MD.tersoff.computeEnergy(MD.ui.slab);
-      MD.viewer.render(MD.ui.slab);
-      MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
-
-      document.getElementById('btnCompSweep').disabled = false;
-      document.getElementById('statusComp').textContent = 'Sweep complete (' + nPts + ' points)';
-      document.getElementById('stepRes').style.display = '';
-
-      MD.ui.saveResults();
-    }, 50);
-  },
-
-  renderCompChart: function(results) {
-    const wrap = document.getElementById('compChartWrap');
-    wrap.style.display = '';
-    const ctx = document.getElementById('compChart');
-    if (MD.ui.charts.comp) MD.ui.charts.comp.destroy();
-
-    MD.ui.charts.comp = new Chart(ctx, {
-      type: 'scatter',
-      data: {
-        datasets: [{
-          label: 'E_surf vs x(Ge)',
-          data: results.map(r => ({ x: r.xGe, y: r.surfaceEnergy })),
-          borderColor: '#2d5a3d',
-          backgroundColor: 'rgba(45, 90, 61, 0.15)',
-          borderWidth: 2,
-          pointRadius: 5,
-          pointBackgroundColor: '#2d5a3d',
-          showLine: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: {
-            title: { display: true, text: 'x(Ge)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
-          },
-          y: {
-            title: { display: true, text: 'E_surf (eV/\u00c5\u00b2)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
-          }
-        }
-      }
-    });
-  },
-
-  // ── Investigation B: Temperature Sweep ──
-  runTempSweep: function() {
-    if (!MD.ui.locked) return;
-    const tMin = parseInt(document.getElementById('slTmin').value);
-    const tMax = parseInt(document.getElementById('slTmax').value);
-    const nPts = parseInt(document.getElementById('slTempPts').value);
-    const xGe = parseInt(document.getElementById('slGeTemp').value) / 100;
-    const nvv = parseInt(document.getElementById('slVVsteps').value);
-    const dt = parseFloat(document.getElementById('slDt').value);
-
-    const temps = [];
-    for (let i = 0; i < nPts; i++) {
-      temps.push(tMin + (tMax - tMin) * i / (nPts - 1));
     }
 
-    document.getElementById('btnTempSweep').disabled = true;
-    document.getElementById('btnTempStop').style.display = '';
-    MD.ui.tempSweepRunning = true;
+    // DYNAMIC: use web worker
+    return new Promise(function(resolve) {
+      fetch('md-dynamics.js').then(function(r) { return r.text(); }).then(function(code) {
+        var workerBlob = new Blob([code], { type: 'application/javascript' });
+        var w = new Worker(URL.createObjectURL(workerBlob));
 
-    const results = [];
-    let idx = 0;
+        var strainX = p.ex / 100;
+        var strainY = p.ey / 100;
+        var latt = MD.params.getLattice100Strained(0, strainX, strainY);
 
-    const runNext = () => {
-      if (idx >= temps.length || !MD.ui.tempSweepRunning) {
-        MD.ui.tempSweepRunning = false;
-        document.getElementById('btnTempSweep').disabled = false;
-        document.getElementById('btnTempStop').style.display = 'none';
-        document.getElementById('statusTemp').textContent = 'Sweep complete (' + results.length + ' points)';
-        MD.ui.results.temp = results;
-        MD.ui.renderTempChart(results);
-        document.getElementById('stepRes').style.display = '';
-        MD.ui.saveResults();
-        return;
-      }
-
-      const T = temps[idx];
-      document.getElementById('statusTemp').textContent =
-        `Point ${idx + 1}/${temps.length}: T=${T.toFixed(0)} K, equilibrating...`;
-
-      // Create worker, init, run steps, get energy
-      const blob = new Blob(
-        [document.querySelector ? '' : '', self.mdDynamicsCode || ''],
-        { type: 'application/javascript' }
-      );
-
-      // Use fetch to load worker code
-      fetch('md-dynamics.js').then(r => r.text()).then(code => {
-        const workerBlob = new Blob([code], { type: 'application/javascript' });
-        const w = new Worker(URL.createObjectURL(workerBlob));
+        // Closure variable for storing intermediate update data
+        // (cannot store on worker object since transferable buffers invalidate it)
+        var lastUpdate = null;
+        var phase = 'init';
 
         w.postMessage({
           type: 'init',
-          params: { ncx: 1, ncy: 1, nczi: 2, nczf: 4, theta: xGe, temp: T }
+          params: {
+            ncx: p.nx, ncy: p.ny,
+            nczi: 2, nczf: 2 + p.nz - 1,
+            theta: 0,   // Pure Si start; MC will introduce Ge via dmu
+            temp: p.T,
+            lattOverride: latt
+          }
         });
-
-        let stepCount = 0;
-        const stepsPerMsg = 50;
-        const totalSteps = nvv;
 
         w.onmessage = function(e) {
           if (e.data.type === 'init_done') {
-            // Start stepping
-            w.postMessage({
-              type: 'step',
-              step: stepCount,
-              params: { dt: dt, nvv: stepsPerMsg, temp: T, mcswap: 0, mcgc: 0, dmu: 0 }
-            });
-          } else if (e.data.type === 'update') {
-            stepCount += stepsPerMsg;
-            if (stepCount < totalSteps) {
+            if (MD.ui.stages.equil) {
+              phase = 'equil';
+              MD.ui.updateStatus(MD.ui._statusPrefix() + ' equilibrating...');
               w.postMessage({
                 type: 'step',
-                step: stepCount,
-                params: { dt: dt, nvv: stepsPerMsg, temp: T, mcswap: 0, mcgc: 0, dmu: 0 }
+                step: 0,
+                params: {
+                  dt: p.dt,
+                  nvv: p.vv,
+                  temp: p.T,
+                  mcswap: 0,
+                  mcgc: 0,
+                  dmu: 0
+                }
+              });
+            } else if (MD.ui.stages.mc) {
+              phase = 'mc';
+              MD.ui.updateStatus(MD.ui._statusPrefix() + ' MC...');
+              w.postMessage({
+                type: 'step',
+                step: 0,
+                params: {
+                  dt: p.dt,
+                  nvv: 0,
+                  temp: p.T,
+                  mcswap: p.mc,
+                  mcgc: Math.floor(p.mc / 2),
+                  dmu: p.dmu
+                }
               });
             } else {
-              // Done with this temperature
-              results.push({
-                temperature: T,
-                energyPerAtom: e.data.energy,
-                totalEnergy: e.data.totalEnergy,
-                measuredTemp: e.data.temperature
-              });
-              w.terminate();
-              idx++;
-              MD.ui.renderTempChart(results);
-              setTimeout(runNext, 10);
+              // Just measure from initial state
+              phase = 'measure';
+              w.postMessage({ type: 'get_surface_energy' });
             }
+          } else if (e.data.type === 'update') {
+            lastUpdate = {
+              nGe: e.data.nGe,
+              nSi: e.data.nSi,
+              natom: e.data.natom,
+              energy: e.data.energy,
+              temperature: e.data.temperature,
+              layers: e.data.layers,
+              mcPct: e.data.mcPct
+            };
+
+            if (phase === 'equil' && MD.ui.stages.mc) {
+              // Equilibration done, now run MC phase
+              phase = 'mc';
+              MD.ui.updateStatus(MD.ui._statusPrefix() + ' MC...');
+              w.postMessage({
+                type: 'step',
+                step: 1,
+                params: {
+                  dt: p.dt,
+                  nvv: 0,
+                  temp: p.T,
+                  mcswap: p.mc,
+                  mcgc: Math.floor(p.mc / 2),
+                  dmu: p.dmu
+                }
+              });
+            } else {
+              // Done with dynamics/MC - request surface energy measurement
+              phase = 'final';
+              w.postMessage({ type: 'get_surface_energy' });
+            }
+          } else if (e.data.type === 'surface_energy') {
+            w.terminate();
+            var update = lastUpdate || {};
+            resolve({
+              T: p.T, dmu: p.dmu, ex: p.ex, ey: p.ey,
+              esurf: e.data.surfaceEnergy,
+              epa: e.data.energyPerAtom,
+              xge: (update.nGe || 0) / (update.natom || 1),
+              layers: update.layers || null
+            });
           }
         };
+
+        w.onerror = function() { w.terminate(); resolve(null); };
       });
-    };
-
-    runNext();
+    });
   },
 
-  stopTempSweep: function() {
-    MD.ui.tempSweepRunning = false;
+  stopRun: function() {
+    MD.ui.stopRequested = true;
   },
 
-  renderTempChart: function(results) {
-    const wrap = document.getElementById('tempChartWrap');
-    wrap.style.display = '';
-    const ctx = document.getElementById('tempChart');
-    if (MD.ui.charts.temp) MD.ui.charts.temp.destroy();
+  updateStatus: function(msg) {
+    var el = document.getElementById('runStatus');
+    if (el) el.textContent = msg;
+    MD.ui.updateStatus.last = msg;
+  },
 
-    MD.ui.charts.temp = new Chart(ctx, {
+  _statusPrefix: function() {
+    var el = document.getElementById('runStatus');
+    if (!el) return 'Running';
+    var t = el.textContent;
+    var m = t.match(/^Run \d+\/\d+/);
+    return m ? m[0] : 'Running';
+  },
+
+  // ── Results chart ──
+
+  renderChart: function() {
+    var ctx = document.getElementById('mainChart');
+    if (!ctx) return;
+    if (MD.ui.chart) MD.ui.chart.destroy();
+    if (MD.ui.results.length === 0) return;
+
+    // Determine x-axis from sweep param
+    var xKey = MD.ui.sweepParam || 'T';
+    var xLabels = { T: 'Temperature (K)', dmu: '\u0394\u03bc (eV)', ex: '\u03b5x (%)', ey: '\u03b5y (%)' };
+    var yLabels = { esurf: 'E_surf (eV/\u00c5\u00b2)', epa: 'E/atom (eV)', xge: 'x(Ge)' };
+    var yKey = MD.ui.yMetric;
+
+    // Theme-aware colors
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var lineColor = isDark ? '#3dcfb0' : '#2d5a3d';
+    var gridColor = isDark ? 'rgba(61,207,176,0.08)' : 'rgba(0,0,0,0.05)';
+    var tickColor = isDark ? '#5a5a5a' : '#9a9490';
+
+    MD.ui.chart = new Chart(ctx, {
       type: 'scatter',
       data: {
         datasets: [{
-          label: 'E/atom vs T',
-          data: results.map(r => ({ x: r.temperature, y: r.energyPerAtom })),
-          borderColor: '#c9913f',
-          backgroundColor: 'rgba(201, 145, 63, 0.15)',
+          label: yLabels[yKey] || yKey,
+          data: MD.ui.results.map(function(r) { return { x: r[xKey], y: r[yKey] }; }),
+          borderColor: lineColor,
+          backgroundColor: lineColor + '22',
           borderWidth: 2,
           pointRadius: 5,
-          pointBackgroundColor: '#c9913f',
+          pointBackgroundColor: lineColor,
           showLine: true,
           tension: 0.3
         }]
@@ -337,379 +496,188 @@ MD.ui = {
         plugins: { legend: { display: false } },
         scales: {
           x: {
-            title: { display: true, text: 'Temperature (K)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+            title: { display: true, text: xLabels[xKey] || xKey, color: tickColor, font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: gridColor },
+            ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 } }
           },
           y: {
-            title: { display: true, text: 'E/atom (eV)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
+            title: { display: true, text: yLabels[yKey] || yKey, color: tickColor, font: { family: 'JetBrains Mono', size: 11 } },
+            grid: { color: gridColor },
+            ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 } }
           }
         }
       }
     });
   },
 
-  // ── Investigation C: Strain Sweep ──
-  runStrainSweep: function() {
-    if (!MD.ui.locked) return;
-    const xGe = parseInt(document.getElementById('slGeStrain').value) / 100;
-    const range = parseInt(document.getElementById('slStrainRange').value) / 100;
-    const nPts = parseInt(document.getElementById('slStrainPts').value);
+  // ── Results table ──
 
-    const strainValues = [];
-    for (let i = 0; i < nPts; i++) {
-      strainValues.push(-range + 2 * range * i / (nPts - 1));
-    }
-
-    document.getElementById('btnStrainSweep').disabled = true;
-    document.getElementById('statusStrain').textContent = 'Running strain sweep...';
-
-    setTimeout(() => {
-      const results = MD.tersoff.strainSweep(1, 1, 3, xGe, strainValues, strainValues, (i, total, r) => {
-        document.getElementById('statusStrain').textContent =
-          `Point ${i}/${total}: \u03b5x=${(r.strainX * 100).toFixed(1)}%, \u03b5y=${(r.strainY * 100).toFixed(1)}%, E_surf=${r.surfaceEnergy.toFixed(4)}`;
-      });
-
-      MD.ui.results.strain = results;
-      document.getElementById('strainResults').style.display = '';
-      MD.ui.renderStrainChart(results, strainValues);
-
-      document.getElementById('btnStrainSweep').disabled = false;
-      document.getElementById('statusStrain').textContent = 'Sweep complete (' + results.length + ' points)';
-      document.getElementById('stepRes').style.display = '';
-      MD.ui.saveResults();
-    }, 50);
+  renderTable: function() {
+    var body = document.getElementById('dataTableBody');
+    if (!body) return;
+    body.innerHTML = MD.ui.results.map(function(r, i) {
+      var sel = (i === MD.ui.results.length - 1) ? ' class="selected"' : '';
+      return '<tr onclick="MD.ui.selectRow(' + i + ')"' + sel + '>' +
+        '<td class="num">' + (i + 1) + '</td>' +
+        '<td class="num">' + r.T + '</td>' +
+        '<td class="num">' + r.dmu.toFixed(2) + '</td>' +
+        '<td class="num">' + r.ex.toFixed(1) + '</td>' +
+        '<td class="num">' + r.ey.toFixed(1) + '</td>' +
+        '<td class="num">' + r.esurf.toFixed(4) + '</td>' +
+        '<td class="num">' + r.epa.toFixed(4) + '</td>' +
+        '<td class="num">' + (r.xge * 100).toFixed(1) + '%</td>' +
+        '</tr>';
+    }).join('');
   },
 
-  runSingleStrain: function() {
-    if (!MD.ui.locked) return;
-    const sx = parseInt(document.getElementById('slStrainX').value) / 1000;
-    const sy = parseInt(document.getElementById('slStrainY').value) / 1000;
-    const xGe = parseInt(document.getElementById('slGeStrain').value) / 100;
-
-    const latt = MD.params.getLattice100Strained(xGe, sx, sy);
-    MD.ui.slab = MD.crystal.buildDefaultSlab(1, 1, 3, xGe, latt);
-    MD.ui.energy = MD.tersoff.computeEnergy(MD.ui.slab);
-    MD.viewer.render(MD.ui.slab);
-    MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
-
-    document.getElementById('rLattx').textContent = latt.lattx.toFixed(3) + ' \u00c5';
-    document.getElementById('rLatty').textContent = latt.latty.toFixed(3) + ' \u00c5';
-    document.getElementById('rStrX').textContent = (sx * 100).toFixed(1) + '%';
-    document.getElementById('rStrY').textContent = (sy * 100).toFixed(1) + '%';
-    document.getElementById('rEsurfStr').textContent = MD.ui.energy.surfaceEnergy.toFixed(4) + ' eV/\u00c5\u00b2';
-    document.getElementById('rEpaStr').textContent = MD.ui.energy.perAtom.toFixed(4) + ' eV';
-    document.getElementById('strainResults').style.display = '';
+  selectRow: function(idx) {
+    document.querySelectorAll('.data-table tr').forEach(function(tr) { tr.classList.remove('selected'); });
+    var rows = document.querySelectorAll('.data-table tbody tr');
+    if (rows[idx]) rows[idx].classList.add('selected');
   },
 
-  renderStrainChart: function(results, strainValues) {
-    const ctx = document.getElementById('strainChart');
-    if (MD.ui.charts.strain) MD.ui.charts.strain.destroy();
+  // ── Y-axis metric toggle ──
 
-    // For 2D sweep, extract the biaxial line (strainX == strainY)
-    const biaxial = results.filter(r => Math.abs(r.strainX - r.strainY) < 0.001);
-    const xOnly = results.filter(r => Math.abs(r.strainY) < 0.001);
-    const yOnly = results.filter(r => Math.abs(r.strainX) < 0.001);
-
-    MD.ui.charts.strain = new Chart(ctx, {
-      type: 'scatter',
-      data: {
-        datasets: [
-          {
-            label: 'Biaxial (\u03b5x = \u03b5y)',
-            data: biaxial.map(r => ({ x: r.strainX * 100, y: r.surfaceEnergy })),
-            borderColor: '#2d5a3d',
-            backgroundColor: 'rgba(45, 90, 61, 0.1)',
-            borderWidth: 2,
-            pointRadius: 4,
-            showLine: true,
-            tension: 0.3
-          },
-          {
-            label: 'X-strain only (\u03b5y = 0)',
-            data: xOnly.map(r => ({ x: r.strainX * 100, y: r.surfaceEnergy })),
-            borderColor: '#c9913f',
-            borderWidth: 1.5,
-            borderDash: [4, 3],
-            pointRadius: 3,
-            showLine: true,
-            tension: 0.3
-          },
-          {
-            label: 'Y-strain only (\u03b5x = 0)',
-            data: yOnly.map(r => ({ x: r.strainY * 100, y: r.surfaceEnergy })),
-            borderColor: '#6b8fa3',
-            borderWidth: 1.5,
-            borderDash: [4, 3],
-            pointRadius: 3,
-            showLine: true,
-            tension: 0.3
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { color: '#6b6560', font: { family: 'JetBrains Mono', size: 10 } } }
-        },
-        scales: {
-          x: {
-            title: { display: true, text: 'Strain (%)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
-          },
-          y: {
-            title: { display: true, text: 'E_surf (eV/\u00c5\u00b2)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 11 } },
-            grid: { color: 'rgba(0,0,0,0.05)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } }
-          }
-        }
-      }
-    });
+  setYMetric: function(metric) {
+    MD.ui.yMetric = metric;
+    document.querySelectorAll('.y-tog').forEach(function(b) { b.classList.remove('active'); });
+    var active = document.querySelector('.y-tog[data-metric="' + metric + '"]');
+    if (active) active.classList.add('active');
+    MD.ui.renderChart();
   },
 
-  // ── Investigation D: Layer Distribution ──
-  runLayerAnalysis: function() {
-    if (!MD.ui.locked) return;
-    const xGe = parseInt(document.getElementById('slGeLayers').value) / 100;
-    const nz = parseInt(document.getElementById('slNzLayers').value);
-    const mcSwaps = parseInt(document.getElementById('slMCswaps').value);
-    const dmu = parseFloat(document.getElementById('slDmuLayers').value) / 100;
+  // ── Clear results ──
 
-    document.getElementById('btnLayerAnalysis').disabled = true;
-    document.getElementById('statusLayers').textContent = 'Building slab...';
-
-    setTimeout(() => {
-      MD.ui.slab = MD.crystal.buildDefaultSlab(3, 3, nz, xGe);
-      MD.ui.energy = MD.tersoff.computeEnergy(MD.ui.slab);
-
-      // If MC swaps requested, run them via worker
-      if (mcSwaps > 0) {
-        document.getElementById('statusLayers').textContent = 'Running MC swaps (using Web Worker)...';
-
-        fetch('md-dynamics.js').then(r => r.text()).then(code => {
-          const workerBlob = new Blob([code], { type: 'application/javascript' });
-          const w = new Worker(URL.createObjectURL(workerBlob));
-
-          w.postMessage({
-            type: 'init',
-            params: { ncx: 3, ncy: 3, nczi: 2, nczf: 2 + nz - 1, theta: xGe, temp: 300 }
-          });
-
-          w.onmessage = function(e) {
-            if (e.data.type === 'init_done') {
-              // Run with MC swaps
-              w.postMessage({
-                type: 'step',
-                step: 0,
-                params: { dt: 0.02, nvv: 10, temp: 300, mcswap: mcSwaps, mcgc: Math.floor(mcSwaps / 2), dmu: dmu }
-              });
-            } else if (e.data.type === 'update') {
-              // Use layer composition from worker
-              const comp = e.data.layers;
-              MD.ui.results.layers = comp.pairs;
-              MD.ui.renderLayerChart(comp.pairs);
-              MD.ui.renderLayerStats(comp.pairs);
-
-              document.getElementById('layerResults').style.display = '';
-              document.getElementById('btnLayerAnalysis').disabled = false;
-              document.getElementById('statusLayers').textContent =
-                'Analysis complete (MC acceptance: ' + e.data.mcPct.toFixed(1) + '%)';
-              document.getElementById('stepRes').style.display = '';
-              MD.ui.saveResults();
-
-              // Update viewer with last slab
-              MD.viewer.render(MD.ui.slab);
-              MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
-
-              w.terminate();
-            }
-          };
-        });
-      } else {
-        // No MC — just analyze static placement
-        const dist = MD.crystal.getLayerDistribution(MD.ui.slab, 4);
-        MD.ui.results.layers = dist;
-        MD.ui.renderLayerChart(dist);
-        MD.ui.renderLayerStats(dist);
-
-        MD.viewer.render(MD.ui.slab);
-        MD.ui.updateCrystalInfo(MD.ui.slab, MD.ui.energy);
-
-        document.getElementById('layerResults').style.display = '';
-        document.getElementById('btnLayerAnalysis').disabled = false;
-        document.getElementById('statusLayers').textContent = 'Analysis complete (no MC swaps)';
-        document.getElementById('stepRes').style.display = '';
-        MD.ui.saveResults();
-      }
-    }, 50);
+  clearResults: function() {
+    MD.ui.results = [];
+    if (MD.ui.chart) { MD.ui.chart.destroy(); MD.ui.chart = null; }
+    var body = document.getElementById('dataTableBody');
+    if (body) body.innerHTML = '';
+    var area = document.getElementById('resultsArea');
+    if (area) area.style.display = 'none';
+    MD.ui.updateStatus('');
+    localStorage.removeItem('alexey_md_results');
   },
 
-  renderLayerChart: function(pairs) {
-    const ctx = document.getElementById('layerChart');
-    if (MD.ui.charts.layer) MD.ui.charts.layer.destroy();
+  // ── Export CSV ──
 
-    MD.ui.charts.layer = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: pairs.map(p => 'Pair ' + p.pair + '\n(' + p.layerA + ' & ' + p.layerB + ')'),
-        datasets: [{
-          label: 'Ge fraction',
-          data: pairs.map(p => p.geFraction * 100),
-          backgroundColor: [
-            'rgba(45, 90, 61, 0.7)',
-            'rgba(201, 145, 63, 0.7)',
-            'rgba(107, 143, 163, 0.7)',
-            'rgba(160, 100, 140, 0.7)'
-          ],
-          borderWidth: 0,
-          borderRadius: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: {
-            title: { display: true, text: 'Layer pair (1=surface, 4=interior)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } },
-            grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 9 } }
-          },
-          y: {
-            title: { display: true, text: 'Ge fraction (%)', color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } },
-            grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: { color: '#9a9490', font: { family: 'JetBrains Mono', size: 10 } },
-            min: 0,
-            max: 100
-          }
-        }
-      }
-    });
+  exportCSV: function() {
+    if (MD.ui.results.length === 0) return;
+    var header = 'Run,T(K),dmu(eV),ex(%),ey(%),E_surf(eV/A2),E/atom(eV),x(Ge)\n';
+    var rows = MD.ui.results.map(function(r, i) {
+      return [i + 1, r.T, r.dmu.toFixed(3), r.ex.toFixed(2), r.ey.toFixed(2),
+              r.esurf.toFixed(6), r.epa.toFixed(6), r.xge.toFixed(4)].join(',');
+    }).join('\n');
+    var blob = new Blob([header + rows], { type: 'text/csv' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'md_results.csv';
+    a.click();
   },
 
-  renderLayerStats: function(pairs) {
-    const el = document.getElementById('layerStats');
-    el.innerHTML = pairs.map(p =>
-      `<div class="rstat">
-        <span class="rl">Pair ${p.pair} (layers ${p.layerA} &amp; ${p.layerB})</span>
-        <span class="rv">${(p.geFraction * 100).toFixed(1)}%</span>
-      </div>
-      <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:8px;font-family:'JetBrains Mono',monospace">
-        ${p.nGe} Ge / ${p.nTotal} total
-      </div>`
-    ).join('');
-  },
+  // ── Save / Load ──
 
-  // ── Save/Load Results ──
   saveResults: function() {
-    const data = {};
-    if (MD.ui.results.comp) data.comp = MD.ui.results.comp;
-    if (MD.ui.results.temp) data.temp = MD.ui.results.temp;
-    if (MD.ui.results.strain) data.strain = MD.ui.results.strain;
-    if (MD.ui.results.layers) data.layers = MD.ui.results.layers;
-    localStorage.setItem('alexey_md_results', JSON.stringify(data));
+    localStorage.setItem('alexey_md_results', JSON.stringify(MD.ui.results));
   },
 
   // ── AI Coach ──
+
   askCoach: async function() {
-    const interp = document.getElementById('interpText').value.trim();
+    var interp = document.getElementById('interpText').value.trim();
     if (interp.length < 20) {
       document.getElementById('interpText').style.borderColor = '#c0392b';
       return;
     }
 
-    const hyp = document.getElementById('hypText').value;
+    var hyp = document.getElementById('hypText').value;
 
     // Gather results summary
-    let dataSummary = '';
-    if (MD.ui.results.comp) {
-      dataSummary += 'Composition sweep: ' + MD.ui.results.comp.map(r =>
-        `x(Ge)=${r.xGe.toFixed(2)}, E_surf=${r.surfaceEnergy.toFixed(4)}`
-      ).join('; ') + '\n';
-    }
-    if (MD.ui.results.temp) {
-      dataSummary += 'Temperature sweep: ' + MD.ui.results.temp.map(r =>
-        `T=${r.temperature.toFixed(0)}K, E/atom=${r.energyPerAtom.toFixed(4)}`
-      ).join('; ') + '\n';
-    }
-    if (MD.ui.results.strain) {
-      const biax = MD.ui.results.strain.filter(r => Math.abs(r.strainX - r.strainY) < 0.001);
-      dataSummary += 'Strain (biaxial): ' + biax.map(r =>
-        `\u03b5=${(r.strainX*100).toFixed(1)}%, E_surf=${r.surfaceEnergy.toFixed(4)}`
-      ).join('; ') + '\n';
-    }
-    if (MD.ui.results.layers) {
-      dataSummary += 'Layer distribution: ' + MD.ui.results.layers.map(p =>
-        `Pair ${p.pair}: ${(p.geFraction*100).toFixed(1)}% Ge (${p.nGe}/${p.nTotal})`
-      ).join('; ') + '\n';
+    var dataSummary = '';
+    if (MD.ui.results.length > 0) {
+      dataSummary = MD.ui.results.map(function(r, i) {
+        return 'Run ' + (i + 1) + ': T=' + r.T + 'K, \u0394\u03bc=' + r.dmu.toFixed(2) + 'eV, ' +
+          '\u03b5x=' + r.ex.toFixed(1) + '%, \u03b5y=' + r.ey.toFixed(1) + '%, ' +
+          'E_surf=' + r.esurf.toFixed(4) + ' eV/\u00c5\u00b2, E/atom=' + r.epa.toFixed(4) + ' eV, ' +
+          'x(Ge)=' + (r.xge * 100).toFixed(1) + '%';
+      }).join('\n');
     }
 
-    const userMsg = `Alexey's hypothesis: "${hyp}"\n\nSimulation data:\n${dataSummary || 'No data yet.'}\n\nAlexey's interpretation: "${interp}"`;
-    const aiEl = document.getElementById('aiQ');
+    var sweepInfo = MD.ui.sweepParam
+      ? 'Sweep parameter: ' + MD.ui.sweepParam
+      : 'No sweep (single parameter set)';
+
+    var pipelineInfo = 'Pipeline: Build' +
+      (MD.ui.stages.equil ? ' \u2192 Equilibrate' : '') +
+      (MD.ui.stages.mc ? ' \u2192 MC' : '') +
+      ' \u2192 Measure';
+
+    var userMsg = 'Alexey\'s hypothesis: "' + hyp + '"\n\n' +
+      'Setup: ' + sweepInfo + '. ' + pipelineInfo + '.\n\n' +
+      'Simulation data:\n' + (dataSummary || 'No data yet.') + '\n\n' +
+      'Alexey\'s interpretation: "' + interp + '"';
+
+    var aiEl = document.getElementById('aiQ');
     aiEl.innerHTML = '<span class="pulse"></span><span style="color:var(--text-tertiary);font-size:12px">Coach is thinking...</span>';
     document.getElementById('askBtn').disabled = true;
 
     MD.ui.convHist = [{ role: 'user', content: userMsg }];
 
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
+      var r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: 'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore building a computational science portfolio. Alexey has just run molecular dynamics simulations of SiGe (100) surfaces using the Tersoff potential. He explored how surface energy depends on germanium composition, temperature, lattice strain, and layer-by-layer Ge distribution. Ask EXACTLY ONE question per response. Never give Alexey the answer. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',
+          system: 'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore building a computational science portfolio. Alexey has run molecular dynamics simulations of SiGe (100) surfaces using the Tersoff potential. He uses a unified simulation with a configurable pipeline (Build \u2192 Equilibrate \u2192 Monte Carlo \u2192 Measure) and can sweep temperature, chemical potential \u0394\u03bc, or strain \u03b5x/\u03b5y to study how surface energy, energy per atom, and Ge fraction respond. Ask EXACTLY ONE question per response. Never give Alexey the answer. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',
           messages: MD.ui.convHist
         })
       });
-      const d = await r.json();
-      const q = d.content[0].text;
+      var d = await r.json();
+      var q = d.content[0].text;
       aiEl.innerHTML = '<span style="font-style:italic">' + q + '</span>';
       MD.ui.convHist.push({ role: 'assistant', content: q });
       localStorage.setItem('alexey_md_dialogue', JSON.stringify(MD.ui.convHist));
       document.getElementById('replySec').style.display = 'block';
-    } catch(e) {
+    } catch (e) {
       aiEl.innerHTML = '<span style="color:#c0392b;font-size:12px">Coach unavailable. Write your own follow-up question.</span>';
     }
     document.getElementById('askBtn').disabled = false;
   },
 
   sendReply: async function() {
-    const reply = document.getElementById('replyText').value.trim();
+    var reply = document.getElementById('replyText').value.trim();
     if (reply.length < 3) return;
 
-    const prevQ = document.getElementById('aiQ').innerText;
-    const thr = document.getElementById('thread');
+    var prevQ = document.getElementById('aiQ').innerText;
+    var thr = document.getElementById('thread');
     thr.innerHTML += '<div class="tcoach"><div class="t-lbl coach-lbl">coach</div>' + prevQ + '</div>' +
       '<div class="talex"><div class="t-lbl alex-lbl">alexey</div>' + reply + '</div>';
 
     document.getElementById('replyText').value = '';
     MD.ui.convHist.push({ role: 'user', content: reply });
 
-    const aiEl = document.getElementById('aiQ');
+    var aiEl = document.getElementById('aiQ');
     aiEl.innerHTML = '<span class="pulse"></span><span style="color:var(--text-tertiary);font-size:12px">Coach is thinking...</span>';
 
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
+      var r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: 'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his SiGe (100) surface dynamics simulations. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',
+          system: 'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his SiGe (100) surface dynamics simulations using a unified pipeline (Build \u2192 Equilibrate \u2192 MC \u2192 Measure) with parameter sweeps. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',
           messages: MD.ui.convHist
         })
       });
-      const d = await r.json();
-      const q = d.content[0].text;
+      var d = await r.json();
+      var q = d.content[0].text;
       aiEl.innerHTML = '<span style="font-style:italic">' + q + '</span>';
       MD.ui.convHist.push({ role: 'assistant', content: q });
       localStorage.setItem('alexey_md_dialogue', JSON.stringify(MD.ui.convHist));
-    } catch(e) {
+    } catch (e) {
       aiEl.innerHTML = '<span style="color:#c0392b;font-size:12px">Connection issue \u2014 try again.</span>';
     }
   }
