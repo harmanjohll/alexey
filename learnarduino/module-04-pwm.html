@@ -122,7 +122,7 @@ let simRunning=false,simTimeout=null,simStartTime=0,brightness=0;
 function runSketch(){
   simRunning=true;simStartTime=Date.now();brightness=0;
   document.getElementById('runBtn').style.display='none';
-  document.getElementById('stopBtn').style.display='';
+  document.getElementById('stopBtn').style.display='inline-block';
   document.getElementById('simStatus').textContent='Running...';
   document.getElementById('simStatus').style.color='#7dd87d';
   fadeLoop();updateTimer();
@@ -133,7 +133,7 @@ async function fadeLoop(){
     for(let b=255;b>=0&&simRunning;b-=5){brightness=b;drawSim();await new Promise(r=>simTimeout=setTimeout(r,30));}
   }
 }
-function stopSketch(){simRunning=false;if(simTimeout)clearTimeout(simTimeout);document.getElementById('runBtn').style.display='';document.getElementById('stopBtn').style.display='none';document.getElementById('simStatus').textContent='Stopped';document.getElementById('simStatus').style.color='#4a6a4a';}
+function stopSketch(){simRunning=false;if(simTimeout)clearTimeout(simTimeout);document.getElementById('runBtn').style.display='inline-block';document.getElementById('stopBtn').style.display='none';document.getElementById('simStatus').textContent='Stopped';document.getElementById('simStatus').style.color='#4a6a4a';}
 function updateTimer(){if(!simRunning)return;document.getElementById('runTimer').textContent=((Date.now()-simStartTime)/1000).toFixed(1)+'s';requestAnimationFrame(updateTimer);}
 
 const canvas=document.getElementById('simCanvas'),ctx=canvas.getContext('2d');

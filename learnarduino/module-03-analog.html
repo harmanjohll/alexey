@@ -119,7 +119,7 @@ function runSketch(){
   simRunning=true;simStartTime=Date.now();
   document.getElementById('serialMon').innerHTML='';
   document.getElementById('runBtn').style.display='none';
-  document.getElementById('stopBtn').style.display='';
+  document.getElementById('stopBtn').style.display='inline-block';
   document.getElementById('simStatus').textContent='Running...';
   document.getElementById('simStatus').style.color='#7dd87d';
   simLoop();updateTimer();
@@ -131,7 +131,7 @@ async function simLoop(){
     await new Promise(r=>simTimeout=setTimeout(r,250));
   }
 }
-function stopSketch(){simRunning=false;if(simTimeout)clearTimeout(simTimeout);document.getElementById('runBtn').style.display='';document.getElementById('stopBtn').style.display='none';document.getElementById('simStatus').textContent='Stopped';document.getElementById('simStatus').style.color='#4a6a4a';}
+function stopSketch(){simRunning=false;if(simTimeout)clearTimeout(simTimeout);document.getElementById('runBtn').style.display='inline-block';document.getElementById('stopBtn').style.display='none';document.getElementById('simStatus').textContent='Stopped';document.getElementById('simStatus').style.color='#4a6a4a';}
 function updateTimer(){if(!simRunning)return;document.getElementById('runTimer').textContent=((Date.now()-simStartTime)/1000).toFixed(1)+'s';requestAnimationFrame(updateTimer);}
 function addSerialLine(t){const m=document.getElementById('serialMon');if(m.querySelector('.serial-empty'))m.innerHTML='';const d=document.createElement('div');d.className='serial-line';d.textContent=t;m.appendChild(d);m.scrollTop=m.scrollHeight;if(m.children.length>50)m.removeChild(m.firstChild);}
 
