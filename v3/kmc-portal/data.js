@@ -5,43 +5,126 @@ try { scalingData = JSON.parse(localStorage.getItem('alexey_kmc_scaling') || '[]
 var LOGBOOK_KEY = 'alexey_kmc_logbook';
 
 /* ── Pit Analysis ── */
-function analyzePits(htArray, threshold) {
+function analyzePits(htArray, opts) {
+  /* opts: { method:'sigma'|'range'|'slope', k:1.0, minWidth:3, gapMerge:2, slopeThresh:1.0 } */
+  if (!opts) opts = {};
+  var method = opts.method || 'sigma';
+  var k = opts.k !== undefined ? opts.k : 1.0;
+  var minWidth = opts.minWidth !== undefined ? opts.minWidth : 3;
+  var gapMerge = opts.gapMerge !== undefined ? opts.gapMerge : 2;
+  var slopeThresh = opts.slopeThresh !== undefined ? opts.slopeThresh : 1.0;
+
   var n = htArray.length;
+  if (n === 0) return { pits: [], cutoff: 0, mean: 0, range: 0, sigma: 0 };
+
   var sum = 0;
   for (var i = 0; i < n; i++) sum += htArray[i];
   var mean = sum / n;
 
   var hMin = Infinity, hMax = -Infinity;
+  var m2 = 0;
   for (var i = 0; i < n; i++) {
     if (htArray[i] < hMin) hMin = htArray[i];
     if (htArray[i] > hMax) hMax = htArray[i];
+    var d = htArray[i] - mean;
+    m2 += d * d;
   }
+  var sigma = Math.sqrt(m2 / n);
   var range = hMax - hMin;
-  if (range === 0) return { pits: [], cutoff: mean, mean: mean, range: 0 };
-  var cutoff = mean - threshold * range;
+  if (range === 0) return { pits: [], cutoff: mean, mean: mean, range: 0, sigma: 0 };
 
-  var pits = [];
+  var cutoff;
+  var belowCutoff;
+
+  if (method === 'slope') {
+    // Slope-based: find pit regions by local gradient
+    // Compute forward difference gradient
+    var grad = new Float64Array(n);
+    for (var i = 0; i < n - 1; i++) grad[i] = htArray[i + 1] - htArray[i];
+    grad[n - 1] = 0;
+
+    // Mark pit interiors: regions below mean where bounded by steep slopes
+    belowCutoff = new Uint8Array(n);
+    cutoff = mean; // pits must be below mean
+    var inDescent = false, descentStart = -1;
+    for (var i = 0; i < n; i++) {
+      if (grad[i] > slopeThresh) {
+        // steep ascending slope = potential right edge of pit
+        inDescent = false;
+      } else if (grad[i] < -slopeThresh) {
+        // steep descending slope = potential left edge of pit
+        if (!inDescent) { inDescent = true; descentStart = i; }
+      }
+      // Mark below-mean regions that follow a descent
+      if (htArray[i] < mean) belowCutoff[i] = 1;
+    }
+  } else {
+    // Threshold-based methods
+    if (method === 'sigma') {
+      cutoff = mean - k * sigma;
+    } else {
+      cutoff = mean - k * range;
+    }
+    belowCutoff = new Uint8Array(n);
+    for (var i = 0; i < n; i++) {
+      if (htArray[i] < cutoff) belowCutoff[i] = 1;
+    }
+  }
+
+  // Extract contiguous regions
+  var rawPits = [];
   var inPit = false, pitStart = 0, pitMinH = Infinity;
   for (var i = 0; i < n; i++) {
-    if (htArray[i] < cutoff) {
+    if (belowCutoff[i]) {
       if (!inPit) { inPit = true; pitStart = i; pitMinH = htArray[i]; }
       if (htArray[i] < pitMinH) pitMinH = htArray[i];
     } else {
       if (inPit) {
-        pits.push({ start: pitStart, width: i - pitStart, depth: mean - pitMinH });
+        rawPits.push({ start: pitStart, end: i, width: i - pitStart, depth: mean - pitMinH, minH: pitMinH });
         inPit = false;
       }
     }
   }
-  if (inPit) pits.push({ start: pitStart, width: n - pitStart, depth: mean - pitMinH });
+  if (inPit) rawPits.push({ start: pitStart, end: n, width: n - pitStart, depth: mean - pitMinH, minH: pitMinH });
 
-  return { pits: pits, cutoff: cutoff, mean: mean, range: range };
+  // Merge pits separated by small gaps
+  var merged = [];
+  for (var i = 0; i < rawPits.length; i++) {
+    if (merged.length > 0) {
+      var last = merged[merged.length - 1];
+      var gap = rawPits[i].start - last.end;
+      if (gap <= gapMerge) {
+        // Merge: extend last pit to include this one
+        last.end = rawPits[i].end;
+        last.width = last.end - last.start;
+        if (rawPits[i].minH < last.minH) last.minH = rawPits[i].minH;
+        last.depth = mean - last.minH;
+        continue;
+      }
+    }
+    merged.push({ start: rawPits[i].start, end: rawPits[i].end, width: rawPits[i].width, depth: rawPits[i].depth, minH: rawPits[i].minH });
+  }
+
+  // Filter by minimum width
+  var pits = [];
+  for (var i = 0; i < merged.length; i++) {
+    if (merged[i].width >= minWidth) {
+      pits.push({ start: merged[i].start, width: merged[i].width, depth: merged[i].depth });
+    }
+  }
+
+  return { pits: pits, cutoff: cutoff, mean: mean, range: range, sigma: sigma, method: method };
 }
 
 function updatePitAnalysis() {
   if (!lastFullHt || lastFullHt.length === 0) return;
-  var threshold = +document.getElementById('pitThreshold').value || 0.5;
-  var result = analyzePits(lastFullHt, threshold);
+  var methodEl = document.getElementById('pitMethod');
+  var method = methodEl ? methodEl.value : 'sigma';
+  var k = +(document.getElementById('pitThreshold').value) || 1.0;
+  var minW = +(document.getElementById('pitMinWidth') || {}).value || 3;
+  var gapM = +(document.getElementById('pitGapMerge') || {}).value || 2;
+  var slopeT = +(document.getElementById('pitSlopeThresh') || {}).value || 1.0;
+  var result = analyzePits(lastFullHt, { method: method, k: k, minWidth: minW, gapMerge: gapM, slopeThresh: slopeT });
   var pits = result.pits;
 
   document.getElementById('pitCount').textContent = pits.length;
@@ -59,7 +142,7 @@ function updatePitAnalysis() {
   } else {
     ['pitAvgW','pitMaxW','pitAvgD','pitMaxD','pitCoverage'].forEach(function(id) { document.getElementById(id).textContent = '\u2014'; });
   }
-  document.getElementById('pitCutoff').textContent = result.cutoff.toFixed(1);
+  document.getElementById('pitCutoff').textContent = result.cutoff.toFixed(1) + (result.sigma > 0 ? ' (\u03C3=' + result.sigma.toFixed(2) + ')' : '');
   document.getElementById('pitMeanH').textContent = result.mean.toFixed(1);
 
   // Pit width histogram
