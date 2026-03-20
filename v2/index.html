@@ -3,282 +3,333 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alexey Mikhail Johll · Computational Science</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Alexey Mikhail Johll · Computational Science Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f7f5f0;
-  --bg-deep: #edeae3;
-  --surface: #ffffff;
-  --border: #d4cfc5;
-  --border-light: #e8e4dc;
-  --text-primary: #1a1a18;
-  --text-secondary: #6b6560;
-  --text-tertiary: #9a9490;
-  --accent: #2d5a3d;
-  --accent-light: #3d7a52;
-  --accent-subtle: rgba(45, 90, 61, 0.08);
-  --accent-border: rgba(45, 90, 61, 0.2);
-}
-[data-theme="dark"] {
-  --bg: #0a0a0a;
-  --bg-deep: #060606;
-  --surface: #141414;
-  --border: rgba(61, 207, 176, 0.12);
-  --border-light: rgba(61, 207, 176, 0.06);
-  --text-primary: #e8e8e8;
-  --text-secondary: #8a8a8a;
-  --text-tertiary: #5a5a5a;
-  --accent: #3dcfb0;
-  --accent-light: #6eddc5;
-  --accent-subtle: rgba(61, 207, 176, 0.08);
-  --accent-border: rgba(61, 207, 176, 0.2);
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.hero{text-align:center;padding:4rem 1rem 3rem}
+.hero-name{font-family:'Space Mono',monospace;font-size:clamp(22px,4vw,36px);font-weight:700;color:#e8f0e8;letter-spacing:2px;margin-bottom:8px}
+.hero-sub{font-family:'Space Mono',monospace;font-size:clamp(13px,2vw,16px);color:#7a9a7a;margin-bottom:6px}
+.hero-loc{font-size:12px;color:#4a6a4a;font-family:'Space Mono',monospace}
 
-body {
-  background: var(--bg);
-  color: var(--text-primary);
-  font-family: 'DM Sans', system-ui, sans-serif;
-  line-height: 1.7;
-  min-height: 100vh;
-}
+.section-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.section-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;padding-left:2px}
+.section-count{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.section-line{flex:1;height:0.5px;background:rgba(60,160,60,0.15)}
 
-.page {
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 4rem 1.5rem 6rem;
-}
+.grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:3rem}
 
-.header {
-  margin-bottom: 5rem;
-}
-.header-name {
-  font-family: 'Instrument Serif', serif;
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 400;
-  color: var(--text-primary);
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.75rem;
-}
-.header-subtitle {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  font-weight: 300;
-  color: var(--text-tertiary);
-  letter-spacing: 0.04em;
-}
-.header-line {
-  width: 40px;
-  height: 1px;
-  background: var(--accent);
-  margin-top: 1.5rem;
-}
+.card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:border-color .15s,background .15s}
+.card:hover{border-color:rgba(60,160,60,0.5);background:#162016}
+.card-inner{padding:16px 18px}
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.card-num{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.card-status{font-size:9px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:4px;margin-left:auto;white-space:nowrap}
+.status-not-started{background:rgba(74,106,74,0.15);color:#4a6a4a;border:0.5px solid rgba(74,106,74,0.3)}
+.status-in-progress{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.status-complete{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4)}
+.card-title{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:#e8f0e8;margin-bottom:4px;line-height:1.3}
+.card-desc{font-size:13px;color:#7a9a7a;line-height:1.6;margin-bottom:10px}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;padding:2px 7px;border:0.5px solid rgba(60,160,60,0.15);border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.card-badge{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px;margin-left:auto}
+.badge-live{background:rgba(40,160,200,0.15);color:#5dc0dd;border:0.5px solid rgba(40,160,200,0.3)}
 
-.modules {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  background: var(--border-light);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 4rem;
-}
+.about{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:24px;margin-bottom:2rem}
+.about p{font-size:14px;color:#7a9a7a;line-height:1.8}
 
-.module-card {
-  display: block;
-  background: var(--surface);
-  padding: 2rem 2.25rem;
-  text-decoration: none;
-  color: inherit;
-  transition: background 200ms ease;
-  position: relative;
-}
-.module-card:hover {
-  background: var(--bg);
-}
+.logbook-link{display:inline-block;font-size:12px;color:#7dd87d;font-family:'Space Mono',monospace;text-decoration:none;border:0.5px solid rgba(60,160,60,0.3);padding:8px 16px;border-radius:4px;transition:all .15s;margin-bottom:3rem}
+.logbook-link:hover{background:rgba(60,160,60,0.1);border-color:#3ca03c}
 
-.module-number {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-.module-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--text-primary);
-  line-height: 1.25;
-  margin-bottom: 0.5rem;
-}
-.module-desc {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  max-width: 540px;
-}
-.module-tags {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  flex-wrap: wrap;
-}
-.tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--accent);
-  background: var(--accent-subtle);
-  border: 1px solid var(--accent-border);
-  padding: 2px 8px;
-  border-radius: 2px;
-  letter-spacing: 0.03em;
-}
-.module-arrow {
-  position: absolute;
-  right: 2.25rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
-  color: var(--text-tertiary);
-  transition: color 200ms ease, transform 200ms ease;
-}
-.module-card:hover .module-arrow {
-  color: var(--accent);
-  transform: translateY(-50%) translateX(3px);
-}
+.section-empty{padding:24px;text-align:center;font-size:12px;color:#4a6a4a;font-style:italic;background:#111a11;border:0.5px solid rgba(60,160,60,0.15);border-radius:8px;border-style:dashed}
 
-.about {
-  border-top: 1px solid var(--border-light);
-  padding-top: 3rem;
-}
-.about-heading {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-}
-.about-text {
-  font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.8;
-  max-width: 560px;
-}
-.about-text em {
-  font-style: italic;
-  color: var(--text-primary);
-}
-
-.footer {
-  margin-top: 4rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
-.theme-toggle {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: all 200ms;
-  z-index: 100;
-}
-.theme-toggle:hover { border-color: var(--accent); }
-.theme-toggle svg { width: 18px; height: 18px; color: var(--text-secondary); transition: color 200ms; }
-.theme-toggle:hover svg { color: var(--accent); }
-.theme-toggle .icon-sun { display: none; }
-[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
-[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-
-@media (max-width: 600px) {
-  .page { padding: 2.5rem 1rem 4rem; }
-  .header { margin-bottom: 3rem; }
-  .module-card { padding: 1.5rem; }
-  .module-arrow { right: 1.5rem; }
-}
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
 </style>
-<script>(function(){var t=localStorage.getItem('alexey_theme')||'light';document.documentElement.setAttribute('data-theme',t)})()</script>
 </head>
 <body>
-<script>function toggleTheme(){var h=document.documentElement,c=h.getAttribute('data-theme')||'light',n=c==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('alexey_theme',n)}</script>
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-</button>
-<div class="page">
+<div class="wrap">
 
-  <header class="header">
-    <h1 class="header-name">Alexey Mikhail Johll</h1>
-    <div class="header-subtitle">Computational Science Portfolio &middot; Singapore &middot; 2025&ndash;2026</div>
-    <div class="header-line"></div>
-  </header>
+<div class="hero">
+  <div class="hero-name">ALEXEY MIKHAIL JOHLL</div>
+  <div class="hero-sub">Computational Science Portfolio</div>
+  <div class="hero-loc">Singapore · 2025–2026</div>
+</div>
 
-  <div class="modules">
-    <a href="md-portal/md.html" class="module-card">
-      <div class="module-number">01</div>
-      <div class="module-title">SiGe Surface Dynamics</div>
-      <div class="module-desc">Tersoff molecular dynamics of silicon-germanium (100) surfaces with dimer reconstruction. Investigate surface energy as a function of composition, temperature, lattice strain, and germanium layer distribution.</div>
-      <div class="module-tags">
-        <span class="tag">molecular dynamics</span>
-        <span class="tag">tersoff potential</span>
-        <span class="tag">surface energy</span>
-        <span class="tag">(100) surface</span>
+<!-- ═══════════════ EXPERIMENTS ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Experiments</span>
+  <span class="section-count">7 modules</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid" id="expGrid"></div>
+
+<!-- ═══════════════ ABOUT ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">About this portfolio</span>
+  <span class="section-line"></span>
+</div>
+<div class="about">
+  <p>Each experiment begins with a question Alexey writes himself. The computation amplifies his thinking — it does not replace it. Every hypothesis, every interpretation, every dialogue with the AI coach is logged and timestamped. The ideas are his.</p>
+</div>
+
+<!-- ═══════════════ COMPUTATIONAL ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Computational</span>
+  <span class="section-count">7 research tools</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid" id="compGrid">
+  <a class="card" href="kmc-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(60,160,60,0.15)">KMC</span>
       </div>
-      <span class="module-arrow">&rarr;</span>
-    </a>
-    <a href="kmc.html" class="module-card">
-      <div class="module-number">02</div>
-      <div class="module-title">SiGe Thin Film Growth</div>
-      <div class="module-desc">Kinetic Monte Carlo simulation of epitaxial thin film deposition. Watch atoms land, diffuse, and self-organise on a crystal surface. Explore how temperature, composition, and deposition rate control island formation and surface roughness.</div>
-      <div class="module-tags">
-        <span class="tag">kinetic monte carlo</span>
-        <span class="tag">epitaxial growth</span>
-        <span class="tag">diffusion</span>
-        <span class="tag">thin films</span>
+      <div class="card-title">SiGe Thin Film Simulator</div>
+      <div class="card-desc">2D Kinetic Monte Carlo simulation of Silicon-Germanium thin film etching. Full-scale lattice with desorption, surface diffusion, and bulk diffusion.</div>
+      <div class="card-tags"><span class="tag">kinetic monte carlo</span><span class="tag">materials science</span><span class="tag">web worker</span></div>
+    </div>
+  </a>
+  <a class="card" href="qmc-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(60,80,160,0.15);color:#7da0dd;border-color:rgba(60,80,160,0.4)">QMC</span>
       </div>
-      <span class="module-arrow">&rarr;</span>
-    </a>
-    <a href="football.html" class="module-card">
-      <div class="module-number">03</div>
-      <div class="module-title">Where Do Goals Come From?</div>
-      <div class="module-desc">Build a geometric expected goals (xG) model from first principles. Place shots on a pitch, compute scoring probabilities from distance and angle, then run Monte Carlo simulations to discover what the data says about attacking positions.</div>
-      <div class="module-tags">
-        <span class="tag">expected goals</span>
-        <span class="tag">monte carlo</span>
-        <span class="tag">probability</span>
-        <span class="tag">statistics</span>
+      <div class="card-title">Quantum Particle in a Box</div>
+      <div class="card-desc">Variational and Diffusion Monte Carlo for quantum confinement in 1D, 2D, and 3D. Parameter sweeps, VMC vs DMC comparison, energy level diagrams.</div>
+      <div class="card-tags"><span class="tag">quantum monte carlo</span><span class="tag">fractal geometry</span><span class="tag">convergence study</span></div>
+    </div>
+  </a>
+  <a class="card" href="ising-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(200,60,60,0.15);color:#dd7d7d;border-color:rgba(200,60,60,0.4)">ISING</span>
       </div>
-      <span class="module-arrow">&rarr;</span>
-    </a>
-  </div>
+      <div class="card-title">2D Ising Model</div>
+      <div class="card-desc">Metropolis Monte Carlo on a 2D spin lattice. Explore the ferromagnetic phase transition at T<sub>c</sub> &asymp; 2.269. Temperature sweeps and hysteresis loops.</div>
+      <div class="card-tags"><span class="tag">statistical mechanics</span><span class="tag">phase transition</span><span class="tag">monte carlo</span></div>
+    </div>
+  </a>
+  <a class="card" href="percolation-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(160,120,60,0.15);color:#ddb07d;border-color:rgba(160,120,60,0.4)">PERC</span>
+      </div>
+      <div class="card-title">2D Site Percolation</div>
+      <div class="card-desc">Site percolation on a square lattice. Find the critical threshold p<sub>c</sub> &asymp; 0.593 where a spanning cluster emerges. Cluster size distributions and fractal analysis.</div>
+      <div class="card-tags"><span class="tag">critical phenomena</span><span class="tag">percolation</span><span class="tag">phase transition</span></div>
+    </div>
+  </a>
+  <a class="card" href="dla-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(60,160,120,0.15);color:#7dddb0;border-color:rgba(60,160,120,0.4)">DLA</span>
+      </div>
+      <div class="card-title">Diffusion-Limited Aggregation</div>
+      <div class="card-desc">Grow fractal aggregates from random walkers. Measure fractal dimension D &asymp; 1.71. Investigate how sticking probability affects morphology.</div>
+      <div class="card-tags"><span class="tag">fractal growth</span><span class="tag">diffusion</span><span class="tag">self-organization</span></div>
+    </div>
+  </a>
+  <a class="card" href="lbm-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(100,60,180,0.15);color:#b07ddd;border-color:rgba(100,60,180,0.4)">LBM</span>
+      </div>
+      <div class="card-title">Lattice Boltzmann Fluid</div>
+      <div class="card-desc">D2Q9 Lattice Boltzmann simulation of flow past obstacles. Velocity, vorticity, and pressure fields. Watch vortex shedding at high Reynolds numbers.</div>
+      <div class="card-tags"><span class="tag">fluid dynamics</span><span class="tag">navier-stokes</span><span class="tag">vortex shedding</span></div>
+    </div>
+  </a>
+  <a class="card" href="md-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(200,160,40,0.15);color:#ddb84d;border-color:rgba(200,160,40,0.4)">MD</span>
+      </div>
+      <div class="card-title">SiGe Surface Dynamics</div>
+      <div class="card-desc">Tersoff potential molecular dynamics for silicon-germanium surfaces. Diamond cubic slab with dimer reconstruction, velocity Verlet integration, and Monte Carlo species swaps. Real-time 3D visualization.</div>
+      <div class="card-tags"><span class="tag">molecular dynamics</span><span class="tag">tersoff potential</span><span class="tag">three.js 3D</span></div>
+    </div>
+  </a>
+</div>
 
-  <div class="about">
-    <div class="about-heading">About this portfolio</div>
-    <p class="about-text">
-      Each module begins with a question and a simulation. The computation amplifies thinking &mdash; it does not replace it. Every hypothesis, every interpretation, and every dialogue with the AI coach is logged and timestamped. <em>The ideas are his.</em>
-    </p>
-  </div>
+<!-- ═══════════════ ENGINEERING ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Engineering</span>
+  <span class="section-count">5 modules</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid" id="engGrid">
+  <a class="card" href="arduino-portal/index.html?tab=dcmotor">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">DC MOTOR</span>
+        <span class="card-badge badge-live">WEB SERIAL</span>
+      </div>
+      <div class="card-title">DC Motor Simulator</div>
+      <div class="card-desc">PWM duty cycle, back-EMF, torque curves. Euler integration of motor equations. Overlay live Arduino RPM data.</div>
+      <div class="card-tags"><span class="tag">motor control</span><span class="tag">PWM</span><span class="tag">euler integration</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-portal/index.html?tab=servo">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">SERVO</span>
+        <span class="card-badge badge-live">WEB SERIAL</span>
+      </div>
+      <div class="card-title">Servo Control Lab</div>
+      <div class="card-desc">Pulse-width modulation, sweep patterns, angular response curves. Send pulse widths directly to hardware servos.</div>
+      <div class="card-tags"><span class="tag">servo</span><span class="tag">pulse width</span><span class="tag">motion control</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-portal/index.html?tab=pid">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">PID</span>
+        <span class="card-badge badge-live">WEB SERIAL</span>
+      </div>
+      <div class="card-title">PID Controller Tuner</div>
+      <div class="card-desc">Tune Kp, Ki, Kd gains. Visualise overshoot, settling time, and steady-state error. Push gains to Arduino and compare.</div>
+      <div class="card-tags"><span class="tag">PID</span><span class="tag">control theory</span><span class="tag">tuning</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-playground/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(200,160,40,0.15);color:#ddb84d;border-color:rgba(200,160,40,0.4)">PLAYGROUND</span>
+      </div>
+      <div class="card-title">Arduino Playground</div>
+      <div class="card-desc">Virtual Arduino Uno with LEDs, buttons, potentiometers, servos, and buzzer. Wire components, write sketches, run them in the browser &mdash; no hardware needed.</div>
+      <div class="card-tags"><span class="tag">virtual arduino</span><span class="tag">circuit building</span><span class="tag">code editor</span></div>
+    </div>
+  </a>
+  <a class="card" href="arduino-portal/index.html?tab=builds">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(74,106,74,0.15);color:#7a9a7a;border-color:rgba(74,106,74,0.3)">LOG</span>
+      </div>
+      <div class="card-title">Build Log</div>
+      <div class="card-desc">Investigation cards, saved experiments, and notes from motor/servo/PID sessions.</div>
+      <div class="card-tags"><span class="tag">documentation</span><span class="tag">logbook</span></div>
+    </div>
+  </a>
+</div>
 
-  <div class="footer">
-    Alexey Mikhail Johll &middot; 2025&ndash;2026
-  </div>
+<!-- ═══════════════ FIELD WORK ═══════════════ -->
+<div class="section-hdr">
+  <span class="section-label">Field Work</span>
+  <span class="section-count">coming soon</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid" id="fieldGrid">
+  <div class="section-empty">Outdoor experiments and observational science &mdash; coming soon.</div>
+</div>
+
+<a href="guide.html" class="logbook-link" style="margin-right:10px">How to use this portfolio &rarr;</a>
+<a href="logbook.html" class="logbook-link">View full logbook &rarr;</a>
 
 </div>
+
+<script>
+const experiments = [
+  {
+    num: '01',
+    folder: 'experiment-01-xg-model',
+    title: 'Where Do Goals Come From?',
+    subtitle: 'The xG Model',
+    desc: 'Build a geometric expected-goals model, place shots on a real pitch, and run 500 Monte Carlo simulations.',
+    tags: ['statistics', 'probability', 'monte carlo'],
+    lsKey: 'alexey_exp_01'
+  },
+  {
+    num: '02',
+    folder: 'experiment-02-orbital-mechanics',
+    title: 'Planets That Never Collide',
+    subtitle: 'Orbital Mechanics',
+    desc: 'Simulate a 2D solar system with Newtonian gravity. Add planets, set velocities, watch orbits form or destabilise.',
+    tags: ['physics', 'newtonian mechanics', 'simulation'],
+    lsKey: 'alexey_exp_02'
+  },
+  {
+    num: '03',
+    folder: 'experiment-03-chaos-logistic',
+    title: 'The Edge of Chaos',
+    subtitle: 'Logistic Map',
+    desc: 'One equation, one parameter, completely deterministic — yet it produces chaos. Explore the bifurcation diagram.',
+    tags: ['dynamical systems', 'chaos theory'],
+    lsKey: 'alexey_exp_03'
+  },
+  {
+    num: '04',
+    folder: 'experiment-04-fractal-coastline',
+    title: 'How Long Is a Coastline?',
+    subtitle: 'Fractal Dimension',
+    desc: 'Discover the coastline paradox: measured length depends on ruler size. Generate Koch snowflakes and estimate area with Monte Carlo.',
+    tags: ['fractal geometry', 'monte carlo'],
+    lsKey: 'alexey_exp_04'
+  },
+  {
+    num: '05',
+    folder: 'experiment-05-random-walk',
+    title: "The Drunkard's Walk",
+    subtitle: 'Random Walk',
+    desc: 'Simulate hundreds of random walkers and discover that spread grows as \u221AN, not N.',
+    tags: ['probability', 'statistical physics', 'monte carlo'],
+    lsKey: 'alexey_exp_05'
+  },
+  {
+    num: '06',
+    folder: 'experiment-06-double-pendulum',
+    title: 'Two Pendulums, Two Futures',
+    subtitle: 'Double Pendulum',
+    desc: 'Two nearly identical starting conditions diverge completely. A visual introduction to sensitive dependence.',
+    tags: ['classical mechanics', 'chaos theory'],
+    lsKey: 'alexey_exp_06'
+  },
+  {
+    num: '07',
+    folder: 'experiment-07-stellar-data',
+    title: 'Reading Starlight',
+    subtitle: 'HR Diagram',
+    desc: 'Plot real Hipparcos star data by temperature vs luminosity. The Main Sequence emerges from the data.',
+    tags: ['astrophysics', 'data science'],
+    lsKey: 'alexey_exp_07'
+  }
+];
+
+function getStatus(lsKey) {
+  const dialogue = localStorage.getItem(lsKey + '_dialogue');
+  const hypothesis = localStorage.getItem(lsKey + '_hypothesis');
+  if (dialogue) return 'COMPLETE';
+  if (hypothesis) return 'IN PROGRESS';
+  return 'NOT STARTED';
+}
+
+function statusClass(status) {
+  if (status === 'COMPLETE') return 'status-complete';
+  if (status === 'IN PROGRESS') return 'status-in-progress';
+  return 'status-not-started';
+}
+
+const grid = document.getElementById('expGrid');
+experiments.forEach(exp => {
+  const status = getStatus(exp.lsKey);
+  const card = document.createElement('a');
+  card.className = 'card';
+  card.href = exp.folder + '/index.html';
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">EXP ${exp.num}</span>
+        <span class="card-status ${statusClass(status)}">${status}</span>
+      </div>
+      <div class="card-title">${exp.title}</div>
+      <div class="card-desc">${exp.desc}</div>
+      <div class="card-tags">${exp.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    </div>`;
+  grid.appendChild(card);
+});
+</script>
 </body>
 </html>

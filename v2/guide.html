@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Use This Portfolio · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.sbody{padding:18px}
+.sbody p{margin-bottom:12px;font-size:14px;color:#e8f0e8;line-height:1.7}
+.sbody p:last-child{margin-bottom:0}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+.ref-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+.ref-card{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px 14px}
+.ref-num{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:4px}
+.ref-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:3px}
+.ref-desc{font-size:12px;color:#7a9a7a;line-height:1.5}
+.tip{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-bottom:8px}
+.tip-icon{font-size:16px;flex-shrink:0;line-height:1}
+.tip-text{font-size:13px;color:#e8f0e8;line-height:1.6}
+.tip-text b{color:#7dd87d}
+.section-break{height:0.5px;background:rgba(60,160,60,0.15);margin:2rem 0}
+.arduino-req{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.arduino-req-item{background:#0d150d;border:0.5px solid rgba(40,160,200,0.2);border-radius:6px;padding:10px 14px}
+.arduino-req-item .req-label{font-size:10px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.arduino-req-item .req-text{font-size:12px;color:#7a9a7a;line-height:1.5}
+.resource-list{margin-top:10px}
+.resource-item{padding:8px 14px;border-bottom:0.5px solid rgba(60,160,60,0.1);display:flex;gap:12px;align-items:baseline}
+.resource-item:last-child{border-bottom:none}
+.resource-name{font-size:12px;font-weight:700;color:#5dc0dd;font-family:'Space Mono',monospace;white-space:nowrap}
+.resource-desc{font-size:12px;color:#7a9a7a}
+@media(min-width:560px){.ref-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.arduino-req{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">GUIDE &middot; HOW TO USE THIS PORTFOLIO</div>
+<div class="exp-title">Hey Alexey, here's how<br>everything works.</div>
+<div class="exp-sub">This is your computational science portfolio. It's built around one idea: <strong>your thinking comes first</strong>. The computer helps you test your ideas &mdash; but the ideas are always yours. This guide walks you through how to use every part of the site.</div>
+
+<!-- ═══════ THE BIG IDEA ═══════ -->
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">THE BIG IDEA</span>
+    <span class="sname">Your thinking is the product</span>
+  </div>
+  <div class="sbody">
+    <p>Every experiment follows the same pattern. You <strong>predict</strong> what will happen, then you <strong>test</strong> it with a simulation, then you <strong>explain</strong> what you found. An AI Coach then asks you one question to push your thinking further.</p>
+    <p>The simulation is just a tool. <strong>Your hypothesis and your interpretation are the real work.</strong></p>
+  </div>
+</div>
+
+<!-- ═══════ THE 4 STEPS ═══════ -->
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Write your hypothesis</span>
+  </div>
+  <div class="sbody">
+    <p>Before you touch anything, write down what you think will happen. Be specific. For example: <em>"I predict that shots from the centre of the penalty box will have the highest probability because the angle to the goal is widest."</em></p>
+    <p>When you're happy with your prediction, click <strong>"Lock hypothesis and begin"</strong>. This timestamps your prediction and saves it &mdash; you can't change it after locking. That's the point: it proves this was your thinking <em>before</em> seeing the data.</p>
+    <div class="note"><b>Why lock it?</b> In real science, you commit to your prediction before running the experiment. It keeps you honest and makes your results more meaningful.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">Run the experiment</span>
+  </div>
+  <div class="sbody">
+    <p>Once your hypothesis is locked, the lab opens up. Each experiment has different controls &mdash; sliders, buttons, or a canvas where you click to set things up.</p>
+    <p>Play around. Move the sliders. Place shots on the pitch. Add planets. Change the temperature. The simulation updates in real time so you can see what happens.</p>
+    <p>When you're ready, click the button to run the full simulation (like "Run 500 simulations" in the xG experiment).</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">See the results</span>
+  </div>
+  <div class="sbody">
+    <p>After the simulation runs, you'll see charts, numbers, and summaries. These show you what actually happened &mdash; the data. Compare this to what you predicted in Step 1.</p>
+    <p>Did it match your hypothesis? Were you surprised? What pattern do you notice?</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Talk to your AI Coach</span>
+  </div>
+  <div class="sbody">
+    <p>Write what you think the results mean in the interpretation box. Be honest &mdash; if something surprised you, say so. If you're not sure about something, say that too.</p>
+    <p>Click <strong>"Ask coach"</strong> and your AI Coach will read your hypothesis, your data, and your interpretation. It will ask you <em>exactly one question</em> &mdash; never gives you the answer, just pushes your thinking.</p>
+    <p>You can reply, and the Coach will ask another question. This back-and-forth is saved automatically.</p>
+    <div class="note"><b>The Coach's rules:</b> It never tells you the answer. It never explains the science to you. It just asks sharp questions that make you think harder. That's what good mentors do.</div>
+  </div>
+</div>
+
+<div class="section-break"></div>
+
+<!-- ═══════ NAVIGATING THE PORTFOLIO ═══════ -->
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">NAVIGATE</span>
+    <span class="sname">What's on the home page</span>
+  </div>
+  <div class="sbody">
+    <p>Your <a href="index.html" style="color:#7dd87d">portfolio home page</a> has three main sections:</p>
+
+    <p><strong style="color:#7dd87d">Experiments (7 modules)</strong> &mdash; These are the core of your portfolio. They follow the 4-step flow above. Start with Experiment 01 and work through them in order. Each one teaches you something different: probability, gravity, chaos, fractals, random processes, and astrophysics.</p>
+
+    <p><strong style="color:#ddb84d">Computational Tools (7 research tools)</strong> &mdash; These are more advanced simulations for deeper exploration. They include Kinetic Monte Carlo, Quantum Monte Carlo, the Ising Model, Percolation, Diffusion-Limited Aggregation, Lattice Boltzmann fluids, and Molecular Dynamics. Use these once you've finished the core experiments.</p>
+
+    <p><strong style="color:#5dc0dd">Engineering (5 modules)</strong> &mdash; The Arduino section. Simulate DC motors, servos, and PID controllers. If you plug in a real Arduino, you can control actual hardware from your browser.</p>
+  </div>
+</div>
+
+<!-- ═══════ THE 7 EXPERIMENTS ═══════ -->
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">EXPERIMENTS</span>
+    <span class="sname">Quick reference</span>
+  </div>
+  <div class="sbody">
+    <div class="ref-grid">
+      <div class="ref-card">
+        <div class="ref-num">01</div>
+        <div class="ref-title">Where Do Goals Come From?</div>
+        <div class="ref-desc">Place football shots on a pitch. The computer calculates the probability of each shot going in (xG). Run 500 simulations to see how many goals you'd score on average.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-num">02</div>
+        <div class="ref-title">Planets That Never Collide</div>
+        <div class="ref-desc">Build a mini solar system. Drag to set speed and direction. Find the sweet spot between flying away and crashing in. Discover what makes orbits stable.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-num">03</div>
+        <div class="ref-title">The Edge of Chaos</div>
+        <div class="ref-desc">One simple equation: multiply, subtract, repeat. Drag a slider and watch order suddenly break into chaos. Deterministic but unpredictable.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-num">04</div>
+        <div class="ref-title">How Long Is a Coastline?</div>
+        <div class="ref-desc">Measure a fractal with smaller and smaller rulers. The length keeps growing toward infinity, but the area stays finite. Build Koch snowflakes to see why.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-num">05</div>
+        <div class="ref-title">The Drunkard's Walk</div>
+        <div class="ref-desc">Send hundreds of random walkers stumbling around. After N steps, they spread out by only &radic;N. Four times more steps = only twice as far.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-num">06</div>
+        <div class="ref-title">Two Pendulums, Two Futures</div>
+        <div class="ref-desc">Start two double pendulums with almost the same angle (difference of 0.001&deg;). Watch them diverge completely. Chaos in action.</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-num">07</div>
+        <div class="ref-title">Reading Starlight</div>
+        <div class="ref-desc">Plot real stars by temperature vs brightness. Structure appears: the Main Sequence, Red Giants, White Dwarfs. Data telling a physical story.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-break"></div>
+
+<!-- ═══════ YOUR LOGBOOK ═══════ -->
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">LOGBOOK</span>
+    <span class="sname">Your research journal</span>
+  </div>
+  <div class="sbody">
+    <p>Everything you do is saved automatically in your browser. Your hypotheses, timestamps, simulation results, and coach dialogues are all stored locally.</p>
+    <p>The <a href="logbook.html" style="color:#7dd87d">logbook page</a> pulls all your entries together in one place. You can search, filter by experiment, and export your notes.</p>
+    <div class="note"><b>Important:</b> Your data is saved in <em>this browser on this device</em>. If you clear your browser data or switch to a different computer, your progress resets. That's fine &mdash; your work is about the thinking, not the saved state.</div>
+  </div>
+</div>
+
+<!-- ═══════ TIPS ═══════ -->
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum">TIPS</span>
+    <span class="sname">Good to know</span>
+  </div>
+  <div class="sbody">
+    <div class="tip">
+      <span class="tip-icon">1.</span>
+      <span class="tip-text"><b>Work in order.</b> Experiments 01 through 07 build on each other. Start with the xG model and go from there.</span>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">2.</span>
+      <span class="tip-text"><b>Write in your own words.</b> Don't try to sound fancy. Say what you actually think. That's what makes your portfolio real.</span>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">3.</span>
+      <span class="tip-text"><b>It's OK to be wrong.</b> A hypothesis that doesn't match the data is not a failure &mdash; it's interesting. Write about <em>why</em> you were surprised.</span>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">4.</span>
+      <span class="tip-text"><b>Refresh to reset.</b> If something looks stuck, refresh the page. Your locked hypothesis and saved data will still be there.</span>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">5.</span>
+      <span class="tip-text"><b>Works offline.</b> After the page loads the first time, everything runs in your browser. No internet needed (except for the AI Coach).</span>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">6.</span>
+      <span class="tip-text"><b>Mobile works too.</b> You can run experiments on your phone, but a laptop or desktop is better for the simulations with lots of controls.</span>
+    </div>
+  </div>
+</div>
+
+<div class="section-break"></div>
+
+<!-- ═══════ ARDUINO ═══════ -->
+<div class="step">
+  <div class="step-hdr">
+    <span class="snum" style="background:rgba(40,160,200,0.15);color:#5dc0dd;border-color:rgba(40,160,200,0.4)">ARDUINO</span>
+    <span class="sname">Connecting real hardware</span>
+  </div>
+  <div class="sbody">
+    <p>The Arduino section can connect to a <strong>real Arduino board</strong> plugged into your computer via USB. This means you can control actual motors and servos from the same web page that runs the simulation.</p>
+
+    <p><strong>What works right now:</strong></p>
+    <div class="tip">
+      <span class="tip-icon" style="color:#5dc0dd">&#9679;</span>
+      <span class="tip-text">Read live RPM data from a DC motor encoder and overlay it on the simulation chart</span>
+    </div>
+    <div class="tip">
+      <span class="tip-icon" style="color:#5dc0dd">&#9679;</span>
+      <span class="tip-text">Send pulse widths directly to a servo motor connected to the Arduino</span>
+    </div>
+    <div class="tip">
+      <span class="tip-icon" style="color:#5dc0dd">&#9679;</span>
+      <span class="tip-text">Push PID tuning gains (Kp, Ki, Kd) to the Arduino and compare simulation vs real hardware response</span>
+    </div>
+
+    <p style="margin-top:14px"><strong>What you need:</strong></p>
+    <div class="arduino-req">
+      <div class="arduino-req-item">
+        <div class="req-label">Browser</div>
+        <div class="req-text">Chrome or Edge (Web Serial API is not supported in Firefox or Safari)</div>
+      </div>
+      <div class="arduino-req-item">
+        <div class="req-label">Connection</div>
+        <div class="req-text">HTTPS required (GitHub Pages works perfectly)</div>
+      </div>
+      <div class="arduino-req-item">
+        <div class="req-label">Hardware</div>
+        <div class="req-text">Arduino Uno/Nano + USB cable + motor or servo</div>
+      </div>
+      <div class="arduino-req-item">
+        <div class="req-label">Arduino sketch</div>
+        <div class="req-text">Flash a sketch that reads serial commands and sends sensor data back</div>
+      </div>
+    </div>
+
+    <p style="margin-top:14px"><strong>Useful open-source Arduino libraries (GitHub):</strong></p>
+    <div class="resource-list" style="background:#0d150d;border:0.5px solid rgba(40,160,200,0.2);border-radius:6px;padding:6px 0">
+      <div class="resource-item">
+        <span class="resource-name">arduino/Arduino</span>
+        <span class="resource-desc">The Arduino IDE and core libraries &mdash; start here</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">arduino-libraries/Servo</span>
+        <span class="resource-desc">Official servo motor control library</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">br3ttb/Arduino-PID-Library</span>
+        <span class="resource-desc">PID controller &mdash; matches the PID tuner in the portal</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">firmata/arduino</span>
+        <span class="resource-desc">Firmata protocol &mdash; lets your browser control Arduino pins directly</span>
+      </div>
+      <div class="resource-item">
+        <span class="resource-name">PowerBroker2/SerialTransfer</span>
+        <span class="resource-desc">Structured serial communication (packets instead of raw text)</span>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:14px;border-left-color:#5dc0dd"><b>How it works:</b> Click "Connect Arduino" in the serial bar at the top of the Arduino portal. Your browser will ask you to select the USB port. Once connected, the green dot lights up, and live data starts flowing. The Arduino sketch on your board needs to match the serial protocol expected by the portal (baud rate, message format).</div>
+  </div>
+</div>
+
+<div class="section-break"></div>
+
+<div style="text-align:center;padding:2rem 0;font-size:12px;color:#4a6a4a;font-family:'Space Mono',monospace">
+  Made for Alexey &middot; Singapore &middot; 2025&ndash;2026
+</div>
+
+</div>
+</body>
+</html>

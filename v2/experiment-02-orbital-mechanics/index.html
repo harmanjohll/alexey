@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment 02 · Orbital Mechanics · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:18px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+button.active{background:rgba(60,160,60,0.2);border-color:#3ca03c}
+.lab-grid{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
+.sv.sm{font-size:15px}
+.brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:180px;position:relative}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.rstat:last-child{border-bottom:none}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
+.interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
+.thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
+.talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.reply-sec{margin-top:12px;display:none}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.ctrl-bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:end}
+.ctrl-group{display:flex;flex-direction:column;gap:2px}
+.ctrl-group label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.ctrl-group input[type=range]{width:110px;accent-color:#3ca03c;height:4px}
+.ctrl-group .cv{font-size:10px;color:#7dd87d;font-family:'Space Mono',monospace}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.planet-log{max-height:120px;overflow-y:auto;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:10px;background:#0d150d}
+.pli{display:flex;justify-content:space-between;padding:5px 10px;font-size:10px;font-family:'Space Mono',monospace;color:#7a9a7a;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.pli:last-child{border-bottom:none}
+#simCanvas{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block;cursor:crosshair}
+@media(max-width:680px){.lab-grid{grid-template-columns:1fr}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}#simCanvas{max-width:100%;height:auto}}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 02 OF 07 &middot; COMPUTATIONAL PHYSICS</div>
+<div class="exp-title">Planets that never collide &mdash;<br>Orbital Mechanics.</div>
+<div class="exp-sub">Gravity is just one equation: F&nbsp;=&nbsp;GMm/r&sup2;. You'll place planets around a star, set their velocities by dragging, and watch Newtonian orbits form &mdash; or fall apart. No calculus. Just forces computed as small velocity changes every frame.</div>
+
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> Before launching any planets, write down what you predict. What determines whether a planet orbits stably, spirals in, or escapes? How does velocity direction and magnitude matter? Be specific.</div>
+    <textarea id="hypText" placeholder="e.g. I predict that a planet placed close to the star with a high sideways velocity will form a stable orbit. If the velocity is too low, the planet will spiral into the star. If too high, it will escape. I think the shape of the orbit will be an ellipse..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The orbital lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <div class="lab-grid">
+      <div>
+        <div id="canvasContainer"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace">
+          <span>click to place &middot; drag to set velocity &middot; max 5 planets</span>
+        </div>
+        <div class="ctrl-bar">
+          <div class="ctrl-group">
+            <label>Star mass</label>
+            <input type="range" id="slMass" min="50" max="500" value="100" oninput="updMass()">
+            <span class="cv" id="cvMass">1.0&times;</span>
+          </div>
+          <div class="ctrl-group">
+            <label>Trail length</label>
+            <input type="range" id="slTrail" min="50" max="500" value="200" oninput="updTrail()">
+            <span class="cv" id="cvTrail">200</span>
+          </div>
+          <div class="ctrl-group">
+            <label>Speed</label>
+            <input type="range" id="slSpeed" min="25" max="400" value="100" oninput="updSpeed()">
+            <span class="cv" id="cvSpeed">1.0&times;</span>
+          </div>
+          <button id="btnForce" onclick="togForce()" style="font-size:10px;padding:5px 10px">Forces: off</button>
+          <button id="btnVel" onclick="togVel()" style="font-size:10px;padding:5px 10px">Velocity: off</button>
+          <button id="btnPause" onclick="togPause()" style="font-size:10px;padding:5px 10px">&#9654; Play</button>
+        </div>
+        <div class="preset-row">
+          <button onclick="preset('stable')" style="font-size:10px;padding:4px 10px">Stable orbit</button>
+          <button onclick="preset('elliptical')" style="font-size:10px;padding:4px 10px">Elliptical</button>
+          <button onclick="preset('binary')" style="font-size:10px;padding:4px 10px">Binary</button>
+          <button onclick="preset('escape')" style="font-size:10px;padding:4px 10px">Near escape</button>
+        </div>
+        <div class="brow">
+          <button onclick="clearLast()">Clear last planet</button>
+          <button class="danger" onclick="resetSim()">Reset simulation</button>
+        </div>
+      </div>
+      <div>
+        <div class="sl">Selected planet</div>
+        <div class="sv sm" id="pName" style="color:#4a9eff">&mdash;</div>
+        <div class="sl">Speed</div>
+        <div class="sv sm" id="pSpeed">&mdash;</div>
+        <div class="sl">Distance from star</div>
+        <div class="sv sm" id="pDist">&mdash;</div>
+        <div class="sl">Orbital energy</div>
+        <div class="sv sm" id="pEnergy">&mdash;</div>
+        <div class="sl">Status</div>
+        <div class="sv sm" id="pStatus">&mdash;</div>
+        <div class="sl" style="margin-top:8px">Planets</div>
+        <div class="sv sm" id="pCount">0 / 5</div>
+        <div class="sl">Sim time</div>
+        <div class="sv sm" id="pTime">0.0s</div>
+        <div class="planet-log" id="planetLog">
+          <div class="pli" style="color:#4a6a4a">no planets yet</div>
+        </div>
+        <div class="brow">
+          <button id="recBtn" onclick="recordObs()" disabled>Record observations &rarr;</button>
+        </div>
+      </div>
+    </div>
+    <div class="sl" style="margin-top:16px">Total system energy over time</div>
+    <div class="chart-wrap" style="margin-top:6px"><canvas id="eChart"></canvas></div>
+  </div>
+</div>
+
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Simulation results</span>
+    <span class="shint">Summary of your orbital experiments</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="sl" style="margin-bottom:12px">observation summary</div>
+        <div class="rstat"><span class="rl">Total planets placed</span><span class="rv" id="rTotal">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Stable orbits</span><span class="rv" id="rStable">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Escaped planets</span><span class="rv" id="rEscaped">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Absorbed by star</span><span class="rv" id="rAbsorbed">&mdash;</span></div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:12px">energy &amp; integration</div>
+        <div class="rstat"><span class="rl">Energy drift from start</span><span class="rv" id="rDrift">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Longest orbit (est. revolutions)</span><span class="rv" id="rOrbits">&mdash;</span></div>
+        <div class="model-note">This simulation uses Euler integration &mdash; the simplest method. Each frame, velocity changes by a small amount based on the current force. Real space agencies use more sophisticated integration methods (like Runge-Kutta) for accuracy over long time periods.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">your interpretation</div>
+        <textarea id="interpText" placeholder="What did you observe about stable vs unstable orbits? How did initial velocity affect the outcome? Did the energy stay constant? What surprised you? What are the limitations of this simulation?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLog">
+  <div class="step-hdr">
+    <span class="snum">logbook</span>
+    <span class="sname">Experiment Logbook</span>
+  </div>
+  <div class="sbody">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+let locked=false,paused=true,showForce=false,showVel=false;
+let planets=[],totalPlaced=0,absorbedCount=0,escapedCount=0;
+let starMass=100,maxTrail=200,simSpeed=1,simTime=0,frameCount=0;
+let dragging=false,dragPx=0,dragPy=0,dragMx=0,dragMy=0;
+let selectedIdx=0,convHist=[],eChart=null;
+let energyData=[],energyLabels=[],initEnergy=null;
+const G=800,dt=0.3,CW=600,CH=500,MAXP=5;
+const COLS=['#4a9eff','#ff6b6b','#ffd93d','#6bcb77','#c77dff'];
+let stars=[];
+let p5i=null;
+
+for(let i=0;i<120;i++)stars.push({x:Math.random()*CW,y:Math.random()*CH,a:Math.random()*0.4+0.1,s:Math.random()*1.5+0.5});
+
+function starR(){return Math.max(12,Math.log(starMass/10)*10)}
+
+const sketch=function(p){
+p5i=p;
+p.setup=function(){
+  const c=p.createCanvas(CW,CH);c.parent('canvasContainer');c.id('simCanvas');
+  c.style('cursor','crosshair');
+};
+p.draw=function(){
+  p.background(6,10,6);
+  stars.forEach(s=>{p.noStroke();p.fill(255,255,255,s.a*255);p.ellipse(s.x,s.y,s.s,s.s)});
+  const cx=CW/2,cy=CH/2,sr=starR();
+  // star glow
+  for(let i=3;i>0;i--){p.noStroke();p.fill(255,240,200,10*i);p.ellipse(cx,cy,sr*2+i*12,sr*2+i*12)}
+  p.fill(255,245,220);p.noStroke();p.ellipse(cx,cy,sr*2,sr*2);
+  p.fill(255,220,150,120);p.ellipse(cx,cy,sr*1.2,sr*1.2);
+
+  if(!locked||paused){drawPlanets(p,cx,cy);if(dragging)drawDragArrow(p);return}
+
+  // physics step
+  const steps=Math.max(1,Math.round(simSpeed*2));
+  for(let s=0;s<steps;s++){
+    const alive=planets.filter(pl=>pl.alive);
+    alive.forEach(pl=>{
+      // gravity from star
+      const dx=pl.x-cx,dy=pl.y-cy;
+      const r=Math.sqrt(dx*dx+dy*dy);
+      if(r<sr){pl.alive=false;pl.status='Absorbed';absorbedCount++;return}
+      const diag=Math.sqrt(CW*CW+CH*CH);
+      if(r>diag*1.5){pl.alive=false;pl.status='Escaped';escapedCount++;return}
+      const F=G*starMass/(r*r);
+      const ax=-F*dx/r,ay=-F*dy/r;
+      // gravity from other planets (small masses)
+      alive.forEach(o=>{
+        if(o===pl||!o.alive)return;
+        const odx=pl.x-o.x,ody=pl.y-o.y;
+        const or=Math.sqrt(odx*odx+ody*ody);
+        if(or<3)return;
+        const oF=G*0.3/(or*or);
+        pl.vx+=-oF*odx/or*dt;
+        pl.vy+=-oF*ody/or*dt;
+      });
+      pl.vx+=ax*dt;pl.vy+=ay*dt;
+      pl.x+=pl.vx*dt;pl.y+=pl.vy*dt;
+      pl.trail.push({x:pl.x,y:pl.y});
+      if(pl.trail.length>maxTrail)pl.trail.shift();
+      // track angle for orbit counting
+      const angle=Math.atan2(pl.y-cy,pl.x-cx);
+      if(pl.prevAngle!==undefined){
+        let da=angle-pl.prevAngle;
+        if(da>Math.PI)da-=2*Math.PI;
+        if(da<-Math.PI)da+=2*Math.PI;
+        pl.totalAngle=(pl.totalAngle||0)+Math.abs(da);
+      }
+      pl.prevAngle=angle;
+    });
+    simTime+=dt*0.016;
+    frameCount++;
+  }
+
+  drawPlanets(p,cx,cy);
+  if(dragging)drawDragArrow(p);
+
+  // energy tracking
+  if(frameCount%10===0){
+    const te=calcTotalEnergy(cx,cy);
+    if(initEnergy===null&&planets.some(pl=>pl.alive))initEnergy=te;
+    energyData.push(te);energyLabels.push(simTime.toFixed(1));
+    if(energyData.length>200){energyData.shift();energyLabels.shift()}
+    updEChart();
+  }
+  if(frameCount>300)document.getElementById('recBtn').disabled=false;
+  updPanel();
+};
+
+p.mousePressed=function(){
+  if(!locked||!overCanvas(p))return;
+  const alive=planets.filter(pl=>pl.alive);
+  if(alive.length>=MAXP)return;
+  dragging=true;dragPx=p.mouseX;dragPy=p.mouseY;dragMx=p.mouseX;dragMy=p.mouseY;
+};
+p.mouseDragged=function(){
+  if(dragging){dragMx=p.mouseX;dragMy=p.mouseY}
+};
+p.mouseReleased=function(){
+  if(!dragging)return;
+  dragging=false;
+  const alive=planets.filter(pl=>pl.alive);
+  if(alive.length>=MAXP)return;
+  const cx=CW/2,cy=CH/2,sr=starR();
+  const dx=dragPx-cx,dy=dragPy-cy;
+  if(Math.sqrt(dx*dx+dy*dy)<sr+5)return;
+  const vScale=0.02;
+  const vx=(dragMx-dragPx)*vScale,vy=(dragMy-dragPy)*vScale;
+  const idx=totalPlaced%MAXP;
+  planets.push({x:dragPx,y:dragPy,vx,vy,mass:1,color:COLS[idx],trail:[{x:dragPx,y:dragPy}],alive:true,status:'Orbiting',prevAngle:Math.atan2(dragPy-cy,dragPx-cx),totalAngle:0});
+  totalPlaced++;selectedIdx=planets.length-1;
+  if(paused){paused=false;document.getElementById('btnPause').innerHTML='&#9646;&#9646; Pause'}
+  updLog();saveState();
+};
+};
+
+function overCanvas(p){return p.mouseX>=0&&p.mouseX<=CW&&p.mouseY>=0&&p.mouseY<=CH}
+
+function drawPlanets(p,cx,cy){
+  planets.forEach((pl,i)=>{
+    if(!pl.alive){
+      // draw ghost trail
+      if(pl.trail.length>1){
+        p.noFill();p.strokeWeight(1);
+        for(let j=1;j<pl.trail.length;j++){
+          const a=Math.floor((j/pl.trail.length)*40);
+          const col=p.color(pl.color);col.setAlpha(a);p.stroke(col);
+          p.line(pl.trail[j-1].x,pl.trail[j-1].y,pl.trail[j].x,pl.trail[j].y);
+        }
+      }
+      return;
+    }
+    // trail
+    if(pl.trail.length>1){
+      p.noFill();p.strokeWeight(1.5);
+      for(let j=1;j<pl.trail.length;j++){
+        const a=Math.floor((j/pl.trail.length)*180);
+        const col=p.color(pl.color);col.setAlpha(a);p.stroke(col);
+        p.line(pl.trail[j-1].x,pl.trail[j-1].y,pl.trail[j].x,pl.trail[j].y);
+      }
+    }
+    // force vector
+    if(showForce){
+      const dx=pl.x-cx,dy=pl.y-cy,r=Math.sqrt(dx*dx+dy*dy);
+      const F=G*starMass/(r*r);
+      const fLen=Math.min(50,F*8);
+      const fx=-dx/r*fLen,fy=-dy/r*fLen;
+      p.stroke(255,100,60,200);p.strokeWeight(2);
+      p.line(pl.x,pl.y,pl.x+fx,pl.y+fy);
+      drawArrowHead(p,pl.x+fx,pl.y+fy,Math.atan2(fy,fx),'rgba(255,100,60,0.8)');
+    }
+    // velocity vector
+    if(showVel){
+      const vLen=Math.sqrt(pl.vx*pl.vx+pl.vy*pl.vy)*30;
+      const vdx=pl.vx/Math.sqrt(pl.vx*pl.vx+pl.vy*pl.vy+0.001)*Math.min(50,vLen);
+      const vdy=pl.vy/Math.sqrt(pl.vx*pl.vx+pl.vy*pl.vy+0.001)*Math.min(50,vLen);
+      p.stroke(60,220,60,200);p.strokeWeight(2);
+      p.line(pl.x,pl.y,pl.x+vdx,pl.y+vdy);
+      drawArrowHead(p,pl.x+vdx,pl.y+vdy,Math.atan2(vdy,vdx),'rgba(60,220,60,0.8)');
+    }
+    // planet body
+    const sz=i===selectedIdx?9:7;
+    p.noStroke();
+    p.fill(p.color(pl.color+'44'));p.ellipse(pl.x,pl.y,sz*2.5,sz*2.5);
+    p.fill(pl.color);p.ellipse(pl.x,pl.y,sz*2,sz*2);
+    p.fill(255,255,255,100);p.ellipse(pl.x-sz*0.3,pl.y-sz*0.3,sz*0.6,sz*0.6);
+  });
+}
+
+function drawArrowHead(p,x,y,angle,col){
+  p.push();p.translate(x,y);p.rotate(angle);
+  p.noStroke();p.fill(col);
+  p.triangle(0,0,-8,-4,-8,4);
+  p.pop();
+}
+
+function drawDragArrow(p){
+  p.stroke(60,255,60,200);p.strokeWeight(2);
+  p.line(dragPx,dragPy,dragMx,dragMy);
+  const ang=Math.atan2(dragMy-dragPy,dragMx-dragPx);
+  drawArrowHead(p,dragMx,dragMy,ang,'rgba(60,255,60,0.9)');
+  // preview planet
+  const idx=totalPlaced%MAXP;
+  p.noStroke();p.fill(COLS[idx]);p.ellipse(dragPx,dragPy,14,14);
+  // speed label
+  const d=Math.sqrt((dragMx-dragPx)**2+(dragMy-dragPy)**2);
+  p.fill(200);p.noStroke();p.textSize(10);p.textFont('monospace');
+  p.text('v='+(d*0.02).toFixed(2),dragPx+12,dragPy-12);
+}
+
+function calcTotalEnergy(cx,cy){
+  let ke=0,pe=0;
+  planets.forEach(pl=>{
+    if(!pl.alive)return;
+    const v2=pl.vx*pl.vx+pl.vy*pl.vy;
+    ke+=0.5*v2;
+    const dx=pl.x-cx,dy=pl.y-cy,r=Math.sqrt(dx*dx+dy*dy);
+    pe+=-G*starMass/r;
+  });
+  return ke+pe;
+}
+
+function updPanel(){
+  const pl=planets[selectedIdx];
+  if(!pl||!pl.alive){
+    if(pl&&!pl.alive){
+      document.getElementById('pStatus').textContent=pl.status;
+      document.getElementById('pStatus').style.color=pl.status==='Escaped'?'#ffd93d':'#e24b4a';
+    }
+  }else{
+    const cx=CW/2,cy=CH/2;
+    const spd=Math.sqrt(pl.vx*pl.vx+pl.vy*pl.vy);
+    const dx=pl.x-cx,dy=pl.y-cy,dist=Math.sqrt(dx*dx+dy*dy);
+    const ke=0.5*spd*spd,pe=-G*starMass/dist;
+    document.getElementById('pName').textContent='Planet '+(selectedIdx+1);
+    document.getElementById('pName').style.color=pl.color;
+    document.getElementById('pSpeed').textContent=spd.toFixed(3);
+    document.getElementById('pDist').textContent=dist.toFixed(1)+'px';
+    document.getElementById('pEnergy').textContent=(ke+pe).toFixed(1);
+    document.getElementById('pStatus').textContent=pl.status;
+    document.getElementById('pStatus').style.color='#7dd87d';
+  }
+  document.getElementById('pCount').textContent=planets.filter(p=>p.alive).length+' / '+MAXP;
+  document.getElementById('pTime').textContent=simTime.toFixed(1)+'s';
+}
+
+function updLog(){
+  const log=document.getElementById('planetLog');
+  if(planets.length===0){log.innerHTML='<div class="pli" style="color:#4a6a4a">no planets yet</div>';return}
+  log.innerHTML=planets.map((pl,i)=>{
+    const s=pl.alive?'Orbiting':pl.status;
+    const col=pl.alive?pl.color:(pl.status==='Escaped'?'#ffd93d':'#e24b4a');
+    return`<div class="pli"><span style="color:${pl.color}">#${i+1}</span><span style="color:${col}">${s}</span></div>`;
+  }).join('');
+}
+
+function updMass(){starMass=+document.getElementById('slMass').value;document.getElementById('cvMass').textContent=(starMass/100).toFixed(1)+'x'}
+function updTrail(){maxTrail=+document.getElementById('slTrail').value;document.getElementById('cvTrail').textContent=maxTrail}
+function updSpeed(){simSpeed=+document.getElementById('slSpeed').value/100;document.getElementById('cvSpeed').textContent=simSpeed.toFixed(1)+'x'}
+
+function togForce(){showForce=!showForce;const b=document.getElementById('btnForce');b.textContent='Forces: '+(showForce?'on':'off');showForce?b.classList.add('active'):b.classList.remove('active')}
+function togVel(){showVel=!showVel;const b=document.getElementById('btnVel');b.textContent='Velocity: '+(showVel?'on':'off');showVel?b.classList.add('active'):b.classList.remove('active')}
+function togPause(){paused=!paused;document.getElementById('btnPause').innerHTML=paused?'&#9654; Play':'&#9646;&#9646; Pause'}
+
+function clearLast(){
+  if(planets.length===0)return;
+  const last=planets.pop();
+  if(last.alive){}else if(last.status==='Escaped')escapedCount--;else if(last.status==='Absorbed')absorbedCount--;
+  selectedIdx=Math.max(0,planets.length-1);
+  updLog();updPanel();saveState();
+}
+
+function resetSim(){
+  planets=[];totalPlaced=0;absorbedCount=0;escapedCount=0;
+  simTime=0;frameCount=0;selectedIdx=0;
+  energyData=[];energyLabels=[];initEnergy=null;
+  paused=true;document.getElementById('btnPause').innerHTML='&#9654; Play';
+  document.getElementById('stepRes').style.display='none';
+  document.getElementById('recBtn').disabled=true;
+  updLog();updPanel();updEChart();saveState();
+}
+
+function preset(type){
+  resetSim();
+  const cx=CW/2,cy=CH/2;
+  if(type==='stable'){
+    const r=140,v=Math.sqrt(G*starMass/r)*0.95;
+    planets.push({x:cx+r,y:cy,vx:0,vy:v*0.02/0.02,mass:1,color:COLS[0],trail:[{x:cx+r,y:cy}],alive:true,status:'Orbiting',prevAngle:0,totalAngle:0});
+    // fix velocity to actual units
+    planets[0].vy=v;
+    totalPlaced=1;
+  }else if(type==='elliptical'){
+    const r=100,v=Math.sqrt(G*starMass/r)*0.65;
+    planets.push({x:cx+r,y:cy,vx:0,vy:v,mass:1,color:COLS[1],trail:[{x:cx+r,y:cy}],alive:true,status:'Orbiting',prevAngle:0,totalAngle:0});
+    totalPlaced=1;
+  }else if(type==='binary'){
+    const r=150,v=Math.sqrt(G*starMass/r)*0.9;
+    planets.push({x:cx+r,y:cy,vx:0,vy:v,mass:1,color:COLS[0],trail:[{x:cx+r,y:cy}],alive:true,status:'Orbiting',prevAngle:0,totalAngle:0});
+    planets.push({x:cx-r,y:cy,vx:0,vy:-v,mass:1,color:COLS[3],trail:[{x:cx-r,y:cy}],alive:true,status:'Orbiting',prevAngle:Math.PI,totalAngle:0});
+    totalPlaced=2;
+  }else if(type==='escape'){
+    const r=120,v=Math.sqrt(G*starMass/r)*1.5;
+    planets.push({x:cx+r,y:cy,vx:0,vy:v,mass:1,color:COLS[4],trail:[{x:cx+r,y:cy}],alive:true,status:'Orbiting',prevAngle:0,totalAngle:0});
+    totalPlaced=1;
+  }
+  selectedIdx=0;paused=false;
+  document.getElementById('btnPause').innerHTML='&#9646;&#9646; Pause';
+  updLog();saveState();
+}
+
+function updEChart(){
+  if(!eChart){
+    const cc=document.getElementById('eChart');
+    eChart=new Chart(cc,{type:'line',data:{labels:energyLabels,datasets:[{data:energyData,borderColor:'#3ca03c',borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:'rgba(60,160,60,0.08)',tension:0.2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{display:true,grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#4a6a4a',font:{family:'Space Mono',size:8},maxTicksLimit:6}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#4a6a4a',font:{family:'Space Mono',size:8},maxTicksLimit:5}}}}});
+  }else{
+    eChart.data.labels=energyLabels;eChart.data.datasets[0].data=energyData;eChart.update('none');
+  }
+}
+
+function recordObs(){
+  const stable=planets.filter(p=>p.alive&&p.status==='Orbiting').length;
+  const esc=escapedCount,abs=absorbedCount;
+  document.getElementById('rTotal').textContent=totalPlaced;
+  document.getElementById('rStable').textContent=stable;
+  document.getElementById('rEscaped').textContent=esc;
+  document.getElementById('rAbsorbed').textContent=abs;
+  let drift='N/A';
+  if(initEnergy!==null&&energyData.length>0){
+    const curr=energyData[energyData.length-1];
+    drift=((Math.abs(curr-initEnergy)/Math.abs(initEnergy||1))*100).toFixed(1)+'%';
+  }
+  document.getElementById('rDrift').textContent=drift;
+  let maxOrb=0;
+  planets.forEach(pl=>{const orbs=(pl.totalAngle||0)/(2*Math.PI);if(orbs>maxOrb)maxOrb=orbs});
+  document.getElementById('rOrbits').textContent=maxOrb.toFixed(1);
+  document.getElementById('stepRes').style.display='';
+  localStorage.setItem('alexey_exp_02_results',JSON.stringify({total:totalPlaced,stable,escaped:esc,absorbed:abs,drift,orbits:maxOrb.toFixed(1)}));
+  document.getElementById('stepRes').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function lockHyp(){
+  const t=document.getElementById('hypText').value.trim();
+  if(t.length<20){document.getElementById('hypText').style.borderColor='#e24b4a';return}
+  locked=true;
+  const ta=document.getElementById('hypText');
+  ta.disabled=true;ta.style.borderColor='rgba(60,160,60,0.6)';
+  ta.style.boxShadow='0 0 0 2px rgba(60,160,60,0.2)';
+  const ts=document.getElementById('hypTS');
+  ts.style.display='block';ts.textContent='locked \u00b7 '+new Date().toLocaleString();
+  const lb=document.getElementById('lockBtn');lb.textContent='\u2713 Hypothesis locked';lb.disabled=true;
+  document.getElementById('labHint').textContent='Click canvas to place planets, drag to set velocity';
+  localStorage.setItem('alexey_exp_02_hypothesis',t);
+  localStorage.setItem('alexey_exp_02_timestamp',new Date().toISOString());
+}
+
+function saveState(){localStorage.setItem('alexey_exp_02_planets',JSON.stringify({totalPlaced,absorbedCount,escapedCount}))}
+
+async function askCoach(){
+  const interp=document.getElementById('interpText').value.trim();
+  if(interp.length<20){document.getElementById('interpText').style.borderColor='#e24b4a';return}
+  const hyp=document.getElementById('hypText').value;
+  const stable=planets.filter(p=>p.alive&&p.status==='Orbiting').length;
+  const pd=planets.map((p,i)=>{
+    const spd=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+    const cx=CW/2,cy=CH/2,dx=p.x-cx,dy=p.y-cy,dist=Math.sqrt(dx*dx+dy*dy);
+    return`Planet ${i+1}: status=${p.status}, speed=${spd.toFixed(2)}, dist=${dist.toFixed(0)}px, orbits=${((p.totalAngle||0)/(2*Math.PI)).toFixed(1)}`;
+  }).join('\n');
+  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nPlanet data:\n${pd}\nTotal placed: ${totalPlaced}, Stable: ${stable}, Escaped: ${escapedCount}, Absorbed: ${absorbedCount}\nStar mass: ${(starMass/100).toFixed(1)}x\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById('askBtn').disabled=true;
+  convHist=[{role:'user',content:userMsg}];
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has just run a 2D orbital mechanics simulation using Newtonian gravity (F = GMm/r\u00b2) with Euler integration. He placed planets around a central star, set initial velocities, and observed whether orbits were stable, escaped, or spiraled inward. He has data on orbital speeds, distances, and energy conservation. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Never explain the science to him \u2014 make him work it out. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_02_dialogue',JSON.stringify(convHist));
+    document.getElementById('replySec').style.display='block';
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
+  document.getElementById('askBtn').disabled=false;
+}
+
+async function sendReply(){
+  const reply=document.getElementById('replyText').value.trim();if(reply.length<3)return;
+  const prevQ=document.getElementById('aiQ').innerText;
+  const thr=document.getElementById('thread');
+  thr.innerHTML+=`<div class="tcoach"><div class="tcoach-lbl">coach's question</div>${prevQ}</div><div class="talex"><div class="talex-lbl">alexey</div>${reply}</div>`;
+  document.getElementById('replyText').value='';
+  convHist.push({role:'user',content:reply});
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his orbital mechanics experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML=`<span style="font-style:italic">${q}</span>`;
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_02_dialogue',JSON.stringify(convHist));
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue \u2014 try again.</span>'}
+}
+
+new p5(sketch,'');
+
+const LOGBOOK_KEY='alexey_exp_02_logbook';
+function getLogEntries(){try{return JSON.parse(localStorage.getItem(LOGBOOK_KEY))||[];}catch(e){return[];}}
+function saveLogEntries(entries){localStorage.setItem(LOGBOOK_KEY,JSON.stringify(entries));}
+function renderLogbook(){
+  const entries=getLogEntries();const el=document.getElementById('logbookEntries');
+  if(entries.length===0){el.innerHTML='<div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>';return;}
+  el.innerHTML=entries.map((e,i)=>{
+    const typeClass=e.type==='obs'?'obs':e.type==='quest'?'quest':'conc';
+    const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';
+    const date=new Date(e.timestamp);const ts=date.toLocaleDateString()+' '+date.toLocaleTimeString();
+    return `<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag ${typeClass}">${typeLabel}</span><span class="log-entry-ts">${ts}</span><div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div></div><div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${e.context?'<div class="log-entry-ctx">'+e.context+'</div>':''}</div>`;
+  }).join('');
+}
+function addLogEntry(){
+  const text=document.getElementById('logText').value.trim();if(!text)return;
+  const type=document.getElementById('logType').value;const entries=getLogEntries();
+  entries.push({id:Date.now().toString(36),timestamp:new Date().toISOString(),type,text,context:''});
+  saveLogEntries(entries);document.getElementById('logText').value='';renderLogbook();
+}
+function deleteLogEntry(idx){const entries=getLogEntries();entries.splice(idx,1);saveLogEntries(entries);renderLogbook();}
+function exportLogbook(){
+  const entries=getLogEntries();if(entries.length===0)return;
+  let md='# Experiment 02 - Orbital Mechanics — Logbook\n\n';
+  entries.forEach(e=>{const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';const date=new Date(e.timestamp);md+=`## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`+e.text+'\n\n';if(e.context)md+=`> Context: ${e.context}\n\n`;md+='---\n\n';});
+  const blob=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='orbital-mechanics-logbook.md';a.click();
+}
+renderLogbook();
+</script>
+</body>
+</html>

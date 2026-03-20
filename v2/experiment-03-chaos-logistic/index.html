@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment 03 · Logistic Map · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:18px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
+.sv.sm{font-size:15px}
+.brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:230px;position:relative}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.rstat:last-child{border-bottom:none}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
+.interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
+.thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
+.talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.reply-sec{margin-top:12px;display:none}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+/* Experiment-03 specific */
+.hand-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0}
+.hand-cell{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:12px;text-align:center}
+.hand-cell input{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.3);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:16px;text-align:center;padding:8px;border-radius:4px;margin-top:6px}
+.hand-cell input:focus{outline:none;border-color:#3ca03c}
+.hand-cell .hc-lbl{font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace}
+.hand-cell .hc-mark{font-size:16px;margin-top:4px;height:20px}
+.formula-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:14px;text-align:center;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:14px;color:#7dd87d}
+.ctrl-bar{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:14px 0;padding:12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px}
+.ctrl-item{flex:1;min-width:140px}
+.ctrl-item label{display:block;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px}
+.ctrl-item input[type=range]{width:100%;accent-color:#3ca03c}
+.ctrl-val{font-size:13px;color:#7dd87d;font-family:'Space Mono',monospace;font-weight:700}
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+canvas.sim-cvs{width:100%;border:0.5px solid rgba(60,160,60,0.2);border-radius:4px;display:block;background:#060a06}
+canvas#bifCvs{cursor:crosshair}
+.readouts{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px}
+.rdout{text-align:center}
+.rdout .sl{margin-bottom:2px}
+.rdout .rv{font-size:14px}
+.prog-bar{height:3px;background:rgba(60,160,60,0.15);border-radius:2px;margin-top:6px;overflow:hidden}
+.prog-fill{height:100%;background:#3ca03c;width:0%;transition:width .1s}
+.locked-phase{opacity:.35;pointer-events:none}
+.rtable{width:100%;border-collapse:collapse;font-size:11px;font-family:'Space Mono',monospace}
+.rtable th{text-align:left;color:#4a6a4a;padding:6px 8px;border-bottom:0.5px solid rgba(60,160,60,0.2);font-weight:600}
+.rtable td{padding:6px 8px;color:#7a9a7a;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.rtable td:nth-child(2){color:#7dd87d;font-weight:700}
+@media(max-width:680px){.sim-grid{grid-template-columns:1fr}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}.hand-grid{grid-template-columns:1fr}.ctrl-bar{flex-direction:column}}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 03 OF 07 &middot; DYNAMICAL SYSTEMS</div>
+<div class="exp-title">The edge of chaos.<br>The Logistic Map.</div>
+<div class="exp-sub">One equation. One parameter. Completely deterministic. Yet it produces chaos. You'll compute iterations by hand, then explore the bifurcation diagram — one of the most famous images in mathematics — to discover where order breaks down.</div>
+
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> The logistic map is x(n+1) = r &middot; x(n) &middot; (1 - x(n)), where x is a population between 0 and 1, and r is a growth rate between 1 and 4. Before exploring, write what you predict. What will happen as r increases?</div>
+    <textarea id="hypText" placeholder="What do you predict will happen to the population when you increase r? Will the system always settle to a single value? At what point might something change? Will larger r always mean larger population?"></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The chaos lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <!-- Phase A: Hand computation -->
+    <div id="phaseA">
+      <div class="note"><b>Compute by hand first.</b> Given r = 2.5 and x&#8320; = 0.4, calculate the next three values using x(n+1) = r &middot; x(n) &middot; (1 &minus; x(n)). Round to 2 decimal places.</div>
+      <div class="formula-box">x(n+1) = r &middot; x(n) &middot; (1 &minus; x(n))</div>
+      <div class="hand-grid">
+        <div class="hand-cell"><div class="hc-lbl">x&#8321; = 2.5 &times; 0.4 &times; 0.6</div><input id="hc1" type="number" step="0.01" placeholder="?"><div class="hc-mark" id="hm1"></div></div>
+        <div class="hand-cell"><div class="hc-lbl">x&#8322; = 2.5 &times; x&#8321; &times; (1 &minus; x&#8321;)</div><input id="hc2" type="number" step="0.01" placeholder="?"><div class="hc-mark" id="hm2"></div></div>
+        <div class="hand-cell"><div class="hc-lbl">x&#8323; = 2.5 &times; x&#8322; &times; (1 &minus; x&#8322;)</div><input id="hc3" type="number" step="0.01" placeholder="?"><div class="hc-mark" id="hm3"></div></div>
+      </div>
+      <div class="brow">
+        <button id="checkBtn" onclick="checkHand()" disabled>Check answers &rarr;</button>
+      </div>
+    </div>
+    <!-- Phase B: Simulation -->
+    <div id="phaseB" class="locked-phase">
+      <div class="note" style="margin-top:14px"><b>Bifurcation diagram:</b> Each column shows where the population settles for that value of r. Drag the r slider and watch the time series and cobweb diagram update live.</div>
+      <canvas id="bifCvs" class="sim-cvs" width="700" height="350"></canvas>
+      <div class="prog-bar" id="bifProg"><div class="prog-fill" id="bifFill"></div></div>
+      <div style="font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:3px">click and drag on diagram to zoom into a region of r</div>
+      <div class="brow" style="margin-top:6px">
+        <button id="zoomRstBtn" onclick="resetZoom()">Reset zoom</button>
+        <button onclick="resetSim()" class="danger">Reset simulation</button>
+        <label style="font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="sensToggle" onchange="updateTS()" style="accent-color:#3ca03c"> Show sensitivity (r+0.001)</label>
+      </div>
+      <div class="ctrl-bar">
+        <div class="ctrl-item"><label>r value: <span class="ctrl-val" id="rVal">2.500</span></label><input type="range" id="rSlider" min="1" max="4" step="0.001" value="2.5" oninput="onSlider()"></div>
+        <div class="ctrl-item"><label>x&#8320;: <span class="ctrl-val" id="x0Val">0.50</span></label><input type="range" id="x0Slider" min="0.01" max="0.99" step="0.01" value="0.5" oninput="onSlider()"></div>
+        <div class="ctrl-item"><label>Iterations: <span class="ctrl-val" id="itVal">200</span></label><input type="range" id="itSlider" min="50" max="500" step="10" value="200" oninput="onSlider()"></div>
+      </div>
+      <div class="sim-grid">
+        <div><div class="sl">time series &mdash; x(n) vs n</div><div class="chart-wrap"><canvas id="tsChart"></canvas></div></div>
+        <div><div class="sl">cobweb diagram</div><canvas id="cobCvs" class="sim-cvs" width="300" height="230" style="height:230px"></canvas><div class="brow"><button onclick="replayCobweb()">Replay cobweb &rarr;</button></div></div>
+      </div>
+      <div class="readouts">
+        <div class="rdout"><div class="sl">current r</div><div class="rv" id="roR">2.500</div></div>
+        <div class="rdout"><div class="sl">detected period</div><div class="rv" id="roPer">1</div></div>
+        <div class="rdout"><div class="sl">lyapunov exponent</div><div class="rv" id="roLyap">&mdash;</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Results</span>
+    <span class="shint">Key landmarks of the logistic map</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="sl" style="margin-bottom:10px">notable r values you explored</div>
+        <table class="rtable">
+          <tr><th>r value</th><th>behaviour</th><th>period</th></tr>
+          <tr><td>r &lt; 1.0</td><td>extinction &rarr; 0</td><td>0</td></tr>
+          <tr><td>r &asymp; 2.0</td><td>stable fixed point</td><td>1</td></tr>
+          <tr><td>r &asymp; 3.0</td><td>first bifurcation</td><td>2</td></tr>
+          <tr><td>r &asymp; 3.449</td><td>period-4 oscillation</td><td>4</td></tr>
+          <tr><td>r &asymp; 3.57</td><td>onset of chaos</td><td>&infin;</td></tr>
+          <tr><td>r &asymp; 3.83</td><td>period-3 window</td><td>3</td></tr>
+          <tr><td>r = 4.0</td><td>full chaos</td><td>&infin;</td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:12px">key observations</div>
+        <div class="rstat"><span class="rl">Unique r values explored</span><span class="rv" id="rExpN">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Feigenbaum ratio</span><span class="rv">4.669...</span></div>
+        <div class="rstat"><span class="rl">Chaos onset</span><span class="rv">r &asymp; 3.57</span></div>
+        <div class="rstat"><span class="rl">Period-3 window</span><span class="rv">r &asymp; 3.83</span></div>
+        <div class="model-note">The ratio of successive bifurcation intervals approaches 4.669... &mdash; the Feigenbaum constant. This is universal: it appears in every system that transitions to chaos through period-doubling. The logistic map is completely deterministic &mdash; no randomness &mdash; yet produces behaviour indistinguishable from randomness.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">your interpretation</div>
+        <textarea id="interpText" placeholder="What happened as you increased r? When did the system stop settling to one value? What surprised you about the bifurcation diagram? What does it mean that a deterministic equation can produce chaos?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLog">
+  <div class="step-hdr">
+    <span class="snum">logbook</span>
+    <span class="sname">Experiment Logbook</span>
+  </div>
+  <div class="sbody">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+let locked=false,handDone=false,convHist=[];
+let rMin=1,rMax=4,bifData=null,tsInst=null;
+let cobTimer=null,exploredR=new Set();
+const bifCvs=document.getElementById('bifCvs'),bCtx=bifCvs.getContext('2d');
+const cobCvs=document.getElementById('cobCvs'),cCtx=cobCvs.getContext('2d');
+
+// --- Hypothesis ---
+function lockHyp(){
+  const t=document.getElementById('hypText').value.trim();
+  if(t.length<20){document.getElementById('hypText').style.borderColor='#e24b4a';return}
+  locked=true;
+  const ta=document.getElementById('hypText');
+  ta.disabled=true;ta.style.borderColor='rgba(60,160,60,0.6)';
+  ta.style.boxShadow='0 0 0 2px rgba(60,160,60,0.2)';
+  const ts=document.getElementById('hypTS');
+  ts.style.display='block';ts.textContent='locked \u00b7 '+new Date().toLocaleString();
+  const lb=document.getElementById('lockBtn');lb.textContent='\u2713 Hypothesis locked';lb.disabled=true;
+  document.getElementById('labHint').textContent='Compute by hand first, then explore';
+  document.getElementById('checkBtn').disabled=false;
+  localStorage.setItem('alexey_exp_03_hypothesis',t);
+  localStorage.setItem('alexey_exp_03_timestamp',new Date().toISOString());
+}
+
+// --- Hand computation ---
+function checkHand(){
+  const ans=[0.6,0.6,0.6];
+  let allOk=true;
+  for(let i=0;i<3;i++){
+    const v=parseFloat(document.getElementById('hc'+(i+1)).value);
+    const mk=document.getElementById('hm'+(i+1));
+    if(!isNaN(v)&&Math.abs(v-ans[i])<0.015){mk.textContent='\u2705';mk.style.color='#7dd87d'}
+    else{mk.textContent='\u274c';mk.style.color='#e24b4a';allOk=false}
+  }
+  if(allOk){
+    handDone=true;
+    document.getElementById('phaseB').classList.remove('locked-phase');
+    document.getElementById('checkBtn').textContent='\u2713 Correct \u2014 simulation unlocked';
+    document.getElementById('checkBtn').disabled=true;
+    renderBif();onSlider();
+  }
+}
+
+// --- Bifurcation diagram ---
+function renderBif(){
+  const W=bifCvs.width,H=bifCvs.height;
+  bCtx.fillStyle='#060a06';bCtx.fillRect(0,0,W,H);
+  bifData=bCtx.getImageData(0,0,W,H);
+  let col=0;const chunk=20;
+  const x0s=[0.2,0.5,0.8];// multiple seeds for richer plot
+  function step(){
+    const end=Math.min(col+chunk,W);
+    for(;col<end;col++){
+      const r=rMin+(rMax-rMin)*col/W;
+      for(let s=0;s<x0s.length;s++){
+        let x=x0s[s];
+        for(let i=0;i<300;i++){
+          x=r*x*(1-x);
+          if(i>=200){
+            const py=Math.round(H-1-(x*(H-1)));
+            if(py>=0&&py<H){
+              const idx=(py*W+col)*4;
+              bifData.data[idx]=Math.min(255,bifData.data[idx]+12);
+              bifData.data[idx+1]=Math.min(255,bifData.data[idx+1]+40);
+              bifData.data[idx+2]=Math.min(255,bifData.data[idx+2]+12);
+              bifData.data[idx+3]=255;
+            }
+          }
+        }
+      }
+    }
+    bCtx.putImageData(bifData,0,0);
+    document.getElementById('bifFill').style.width=(col/W*100)+'%';
+    if(col<W)requestAnimationFrame(step);
+    else{document.getElementById('bifFill').style.width='100%';drawRLine()}
+  }
+  step();
+}
+
+function drawRLine(){
+  if(!bifData)return;
+  bCtx.putImageData(bifData,0,0);
+  const r=parseFloat(document.getElementById('rSlider').value);
+  const px=Math.round((r-rMin)/(rMax-rMin)*bifCvs.width);
+  bCtx.strokeStyle='rgba(255,255,255,0.5)';bCtx.lineWidth=1;
+  bCtx.beginPath();bCtx.moveTo(px,0);bCtx.lineTo(px,bifCvs.height);bCtx.stroke();
+  // axis labels
+  bCtx.fillStyle='#4a6a4a';bCtx.font='10px "Space Mono",monospace';bCtx.textAlign='left';
+  bCtx.fillText('r='+rMin.toFixed(2),4,bifCvs.height-4);
+  bCtx.textAlign='right';bCtx.fillText('r='+rMax.toFixed(2),bifCvs.width-4,bifCvs.height-4);
+  bCtx.textAlign='left';bCtx.fillText('x=1',4,12);bCtx.fillText('x=0',4,bifCvs.height-14);
+}
+
+// --- Zoom with visual selection ---
+let zoomStart=null,zoomCurrent=null;
+bifCvs.addEventListener('mousedown',e=>{
+  if(!handDone)return;
+  const r=bifCvs.getBoundingClientRect();
+  zoomStart=(e.clientX-r.left)/r.width;zoomCurrent=zoomStart;
+});
+bifCvs.addEventListener('mousemove',e=>{
+  if(!handDone||zoomStart===null)return;
+  const r=bifCvs.getBoundingClientRect();
+  zoomCurrent=(e.clientX-r.left)/r.width;
+  // Draw selection overlay
+  if(bifData){
+    bCtx.putImageData(bifData,0,0);
+    drawRLine();
+    const W=bifCvs.width;
+    const sx=Math.min(zoomStart,zoomCurrent)*W,ex=Math.max(zoomStart,zoomCurrent)*W;
+    bCtx.fillStyle='rgba(60,160,60,0.12)';
+    bCtx.fillRect(sx,0,ex-sx,bifCvs.height);
+    bCtx.strokeStyle='rgba(125,216,125,0.5)';bCtx.lineWidth=1;
+    bCtx.strokeRect(sx,0,ex-sx,bifCvs.height);
+  }
+});
+bifCvs.addEventListener('mouseup',e=>{
+  if(!handDone||zoomStart===null)return;
+  const r=bifCvs.getBoundingClientRect();const zoomEnd=(e.clientX-r.left)/r.width;
+  const s=Math.min(zoomStart,zoomEnd),en=Math.max(zoomStart,zoomEnd);
+  zoomStart=null;zoomCurrent=null;
+  if(en-s<0.02){drawRLine();return}
+  const newMin=rMin+(rMax-rMin)*s,newMax=rMin+(rMax-rMin)*en;
+  rMin=Math.max(0.5,newMin);rMax=Math.min(4.05,newMax);
+  const sl=document.getElementById('rSlider');sl.min=rMin;sl.max=rMax;
+  if(parseFloat(sl.value)<rMin)sl.value=rMin;
+  if(parseFloat(sl.value)>rMax)sl.value=rMax;
+  renderBif();
+});
+bifCvs.addEventListener('mouseleave',()=>{
+  if(zoomStart!==null){zoomStart=null;zoomCurrent=null;if(bifData){bCtx.putImageData(bifData,0,0);drawRLine()}}
+});
+
+function resetZoom(){rMin=1;rMax=4;const sl=document.getElementById('rSlider');sl.min=1;sl.max=4;renderBif();drawRLine()}
+
+// --- Logistic iteration ---
+function iterLogistic(r,x0,n){
+  const xs=[x0];let x=x0;
+  for(let i=0;i<n;i++){x=r*x*(1-x);xs.push(x)}
+  return xs;
+}
+
+function detectPeriod(xs){
+  const tail=xs.slice(-60);if(tail.length<10)return'?';
+  for(let p=1;p<=32;p++){
+    let match=true;
+    for(let i=0;i<Math.min(p*3,tail.length-p);i++){
+      if(Math.abs(tail[tail.length-1-i]-tail[tail.length-1-i-p])>0.001){match=false;break}
+    }
+    if(match)return p;
+  }
+  return'\u221e';
+}
+
+function calcLyap(r,x0,n){
+  let x=x0,sum=0;
+  for(let i=0;i<n;i++){
+    const df=Math.abs(r*(1-2*x));
+    if(df>0)sum+=Math.log(df);
+    x=r*x*(1-x);
+  }
+  return sum/n;
+}
+
+// --- Sliders ---
+function onSlider(){
+  if(!handDone)return;
+  const r=parseFloat(document.getElementById('rSlider').value);
+  const x0=parseFloat(document.getElementById('x0Slider').value);
+  const it=parseInt(document.getElementById('itSlider').value);
+  document.getElementById('rVal').textContent=r.toFixed(3);
+  document.getElementById('x0Val').textContent=x0.toFixed(2);
+  document.getElementById('itVal').textContent=it;
+  drawRLine();updateTS();updateReadouts(r,x0,it);
+  exploredR.add(Math.round(r*100)/100);
+  if(exploredR.size>=3)showResults();
+  replayCobweb();
+}
+
+function updateTS(){
+  const r=parseFloat(document.getElementById('rSlider').value);
+  const x0=parseFloat(document.getElementById('x0Slider').value);
+  const it=parseInt(document.getElementById('itSlider').value);
+  const xs=iterLogistic(r,x0,it);
+  const labels=xs.map((_,i)=>i);
+  const datasets=[{label:'x(n)',data:xs,borderColor:'#3ca03c',backgroundColor:'rgba(60,160,60,0.1)',borderWidth:1.5,pointRadius:0,tension:0}];
+  if(document.getElementById('sensToggle').checked){
+    const xs2=iterLogistic(r+0.001,x0,it);
+    datasets.push({label:'x(n) r+0.001',data:xs2,borderColor:'#f0b429',backgroundColor:'transparent',borderWidth:1,pointRadius:0,tension:0,borderDash:[4,2]});
+  }
+  const cc=document.getElementById('tsChart');
+  if(tsInst)tsInst.destroy();
+  tsInst=new Chart(cc,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:datasets.length>1,labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}},scales:{x:{display:true,grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#4a6a4a',font:{family:'Space Mono',size:8},maxTicksLimit:8},title:{display:true,text:'n',color:'#4a6a4a',font:{family:'Space Mono',size:9}}},y:{min:0,max:1,grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#4a6a4a',font:{family:'Space Mono',size:8}}}}}});
+}
+
+function updateReadouts(r,x0,it){
+  const xs=iterLogistic(r,x0,it);
+  document.getElementById('roR').textContent=r.toFixed(3);
+  document.getElementById('roPer').textContent=detectPeriod(xs);
+  const ly=calcLyap(r,x0,500);
+  document.getElementById('roLyap').textContent=ly.toFixed(3);
+  document.getElementById('roLyap').style.color=ly>0?'#e24b4a':'#7dd87d';
+}
+
+// --- Cobweb ---
+function replayCobweb(){
+  if(cobTimer){clearTimeout(cobTimer);cobTimer=null}
+  const r=parseFloat(document.getElementById('rSlider').value);
+  const x0=parseFloat(document.getElementById('x0Slider').value);
+  const W=cobCvs.width,H=cobCvs.height;
+  cCtx.fillStyle='#060a06';cCtx.fillRect(0,0,W,H);
+  // y=x diagonal
+  cCtx.strokeStyle='rgba(255,255,255,0.15)';cCtx.lineWidth=1;
+  cCtx.beginPath();cCtx.moveTo(0,H);cCtx.lineTo(W,0);cCtx.stroke();
+  // parabola f(x)=r*x*(1-x)
+  cCtx.strokeStyle='#3ca03c';cCtx.lineWidth=1.5;cCtx.beginPath();
+  for(let px=0;px<=W;px++){
+    const xv=px/W,yv=r*xv*(1-xv),py=H-yv*H;
+    px===0?cCtx.moveTo(px,py):cCtx.lineTo(px,py);
+  }
+  cCtx.stroke();
+  // Clip parabola peak label
+  const peak=r/4;
+  cCtx.fillStyle='#4a6a4a';cCtx.font='9px "Space Mono",monospace';
+  cCtx.textAlign='left';cCtx.fillText('0',2,H-2);
+  cCtx.textAlign='right';cCtx.fillText('1',W-2,H-2);
+  cCtx.fillText(peak>1?'1.0':peak.toFixed(2),W-2,12);
+  cCtx.textAlign='left';
+  // Save static background
+  const base=cCtx.getImageData(0,0,W,H);
+  const steps=Math.min(80,parseInt(document.getElementById('itSlider').value));
+  let n=0;
+  function drawStep(){
+    cCtx.putImageData(base,0,0);
+    cCtx.strokeStyle='rgba(125,216,125,0.45)';cCtx.lineWidth=0.8;cCtx.beginPath();
+    let cx=x0;
+    // Start: go from (x0, 0) up to parabola
+    cCtx.moveTo(cx*W,H);
+    for(let i=0;i<n;i++){
+      const nx=r*cx*(1-cx);
+      // Vertical to parabola
+      cCtx.lineTo(cx*W,H-nx*H);
+      // Horizontal to y=x
+      cCtx.lineTo(nx*W,H-nx*H);
+      cx=nx;
+    }
+    cCtx.stroke();
+    // Draw current point
+    if(n>0){
+      cCtx.fillStyle='#7dd87d';cCtx.beginPath();
+      cCtx.arc(cx*W,H-cx*H,3,0,Math.PI*2);cCtx.fill();
+    }
+    if(n<steps){n++;cobTimer=setTimeout(drawStep,60)}
+  }
+  n=0;drawStep();
+}
+
+// --- Results ---
+function showResults(){
+  const el=document.getElementById('stepRes');
+  if(el.style.display==='none'){el.style.display='';el.scrollIntoView({behavior:'smooth',block:'start'})}
+  document.getElementById('rExpN').textContent=exploredR.size;
+  localStorage.setItem('alexey_exp_03_results',JSON.stringify({
+    explored:exploredR.size,
+    rValues:[...exploredR].sort((a,b)=>a-b),
+    timestamp:new Date().toISOString()
+  }));
+}
+
+// --- Reset ---
+function resetSim(){
+  document.getElementById('rSlider').value=2.5;
+  document.getElementById('x0Slider').value=0.5;
+  document.getElementById('itSlider').value=200;
+  document.getElementById('sensToggle').checked=false;
+  resetZoom();onSlider();
+}
+
+// --- AI Coach ---
+async function askCoach(){
+  const interp=document.getElementById('interpText').value.trim();
+  if(interp.length<20){document.getElementById('interpText').style.borderColor='#e24b4a';return}
+  const hyp=document.getElementById('hypText').value;
+  const r=parseFloat(document.getElementById('rSlider').value);
+  const ly=calcLyap(r,parseFloat(document.getElementById('x0Slider').value),500);
+  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nExploration data:\n- Explored ${exploredR.size} unique r values: ${[...exploredR].sort((a,b)=>a-b).join(', ')}\n- Current r=${r.toFixed(3)}, Lyapunov exponent=${ly.toFixed(3)}\n- Detected period at current r: ${document.getElementById('roPer').textContent}\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById('askBtn').disabled=true;
+  convHist=[{role:'user',content:userMsg}];
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has explored the logistic map x(n+1) = r * x(n) * (1 - x(n)). He computed initial iterations by hand, then used a bifurcation diagram to see how the system\'s long-term behavior changes as r increases from 1 to 4. He has observed period-doubling, the onset of chaos, and computed Lyapunov exponents. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Reference his specific data and his own words back to him. Accessible language for a bright 14-year-old. No effusive praise. End every response with a question mark.',messages:convHist})});
+    const d=await res.json();const q=d.content[0].text;
+    aiEl.innerHTML='<span style="font-style:italic">'+q+'</span>';
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_03_dialogue',JSON.stringify(convHist));
+    document.getElementById('replySec').style.display='block';
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
+  document.getElementById('askBtn').disabled=false;
+}
+
+async function sendReply(){
+  const reply=document.getElementById('replyText').value.trim();if(reply.length<3)return;
+  const prevQ=document.getElementById('aiQ').innerText;
+  const thr=document.getElementById('thread');
+  thr.innerHTML+='<div class="tcoach"><div class="tcoach-lbl">coach\'s question</div>'+prevQ+'</div><div class="talex"><div class="talex-lbl">alexey</div>'+reply+'</div>';
+  document.getElementById('replyText').value='';
+  convHist.push({role:'user',content:reply});
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his logistic map chaos experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',messages:convHist})});
+    const d=await res.json();const q=d.content[0].text;
+    aiEl.innerHTML='<span style="font-style:italic">'+q+'</span>';
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_03_dialogue',JSON.stringify(convHist));
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue \u2014 try again.</span>'}
+}
+
+const LOGBOOK_KEY='alexey_exp_03_logbook';
+function getLogEntries(){try{return JSON.parse(localStorage.getItem(LOGBOOK_KEY))||[];}catch(e){return[];}}
+function saveLogEntries(entries){localStorage.setItem(LOGBOOK_KEY,JSON.stringify(entries));}
+function renderLogbook(){
+  const entries=getLogEntries();const el=document.getElementById('logbookEntries');
+  if(entries.length===0){el.innerHTML='<div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>';return;}
+  el.innerHTML=entries.map((e,i)=>{
+    const typeClass=e.type==='obs'?'obs':e.type==='quest'?'quest':'conc';
+    const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';
+    const date=new Date(e.timestamp);const ts=date.toLocaleDateString()+' '+date.toLocaleTimeString();
+    return `<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag ${typeClass}">${typeLabel}</span><span class="log-entry-ts">${ts}</span><div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div></div><div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${e.context?'<div class="log-entry-ctx">'+e.context+'</div>':''}</div>`;
+  }).join('');
+}
+function addLogEntry(){
+  const text=document.getElementById('logText').value.trim();if(!text)return;
+  const type=document.getElementById('logType').value;const entries=getLogEntries();
+  entries.push({id:Date.now().toString(36),timestamp:new Date().toISOString(),type,text,context:''});
+  saveLogEntries(entries);document.getElementById('logText').value='';renderLogbook();
+}
+function deleteLogEntry(idx){const entries=getLogEntries();entries.splice(idx,1);saveLogEntries(entries);renderLogbook();}
+function exportLogbook(){
+  const entries=getLogEntries();if(entries.length===0)return;
+  let md='# Experiment 03 - Logistic Map — Logbook\n\n';
+  entries.forEach(e=>{const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';const date=new Date(e.timestamp);md+=`## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`+e.text+'\n\n';if(e.context)md+=`> Context: ${e.context}\n\n`;md+='---\n\n';});
+  const blob=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chaos-logistic-logbook.md';a.click();
+}
+renderLogbook();
+</script>
+</body>
+</html>

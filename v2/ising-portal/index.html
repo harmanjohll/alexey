@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ising Model Portal · 2D Phase Transition</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:1100px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.portal-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(200,60,60,0.15);color:#dd7d7d;border:0.5px solid rgba(200,60,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.portal-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.portal-sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:750px;margin-bottom:2rem}
+.panel{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.panel-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d;cursor:pointer;user-select:none}
+.panel-hdr .snum{font-size:10px;font-weight:700;background:rgba(200,60,60,0.15);color:#dd7d7d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(200,60,60,0.4)}
+.panel-hdr .sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.panel-hdr .toggle{margin-left:auto;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.panel-body{padding:16px}
+.panel.collapsed .panel-body{display:none}
+.param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.param-group{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:12px}
+.group-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.param-row:last-child{margin-bottom:0}
+.param-lbl{font-size:11px;color:#7a9a7a;font-family:'Space Mono',monospace}
+.param-lbl .unit{color:#4a6a4a;font-size:9px}
+select,input[type=number]{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px;text-align:right}
+select{width:130px;text-align:left}
+input[type=number]{width:100px}
+input:focus,select:focus{outline:none;border-color:#3ca03c}
+input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+button.blue{color:#7da0dd;border-color:rgba(60,80,160,0.5)}
+button.blue:hover:not(:disabled){background:rgba(60,80,160,0.1)}
+.progress-wrap{flex:1;min-width:200px;display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:6px;background:#0d150d;border-radius:3px;border:0.5px solid rgba(60,160,60,0.15);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#a03c3c,#dd7d7d);width:0%;transition:width .3s}
+.progress-text{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;white-space:nowrap}
+.dashboard{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-row.wide{grid-template-columns:2fr 1fr}
+.dash-card{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;padding:14px;overflow:hidden}
+.card-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.chart-wrap{height:280px;position:relative}
+.chart-wrap.tall{height:350px}
+.canvas-wrap{position:relative;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px;overflow:hidden}
+.canvas-wrap canvas{display:block;width:100%}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-item{padding:8px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:4px}
+.stat-label{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.stat-value{font-size:18px;font-weight:700;color:#dd7d7d;font-family:'Space Mono',monospace}
+.stat-value.sm{font-size:13px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #a03c3c;background:rgba(200,60,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#dd7d7d;font-weight:600}
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px}
+.mode-tab{padding:6px 16px;border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6a4a;cursor:pointer;transition:all .15s}
+.mode-tab.active{background:rgba(200,60,60,0.15);color:#dd7d7d;border-color:rgba(200,60,60,0.5)}
+.mode-tab:hover:not(.active){color:#7a9a7a}
+.mode-section{display:none}
+.mode-section.active{display:block}
+.sweep-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.sweep-item{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px}
+.sweep-item label{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.sweep-item input,.sweep-item select{width:100%;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;font-size:11px;padding:4px 8px;border-radius:4px}
+/* ── Investigation Cards ── */
+.inv-panel{margin-bottom:14px}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:#0d150d;border:0.5px solid rgba(200,60,60,0.2);border-left:3px solid rgba(200,60,60,0.5);border-radius:0 6px 6px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:700;color:#dd7d7d;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:11px;color:#7a9a7a;line-height:1.5;margin-bottom:4px}
+.inv-card-q b{color:#dd7d7d;font-weight:600}
+.inv-card-method{font-size:10px;color:#4a6a4a;line-height:1.5;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:#3ca03c}
+.inv-card textarea::placeholder{color:#4a6a4a}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:rgba(60,160,60,0.5)}
+
+/* ── Logbook ── */
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.log-entry{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(60,80,160,0.15);color:#7da0dd;border:0.5px solid rgba(60,80,160,0.3)}
+.log-type-tag.conc{background:rgba(240,180,41,0.15);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;margin-top:4px;padding-top:4px;border-top:0.5px solid rgba(60,160,60,0.1)}
+.log-entry-actions{margin-left:auto;display:flex;gap:4px}
+.log-entry-actions button{font-size:9px;padding:2px 6px;border:none;color:#4a6a4a;cursor:pointer;background:transparent}
+.log-entry-actions button:hover{color:#e24b4a}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.inv-cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="portal-tag">ISING PORTAL &middot; STATISTICAL MECHANICS</div>
+<div class="portal-title">2D Ising Model</div>
+<div class="portal-sub">Metropolis Monte Carlo simulation of a 2D square lattice of spins. Explore the ferromagnetic phase transition at T<sub>c</sub> &asymp; 2.269 J/k<sub>B</sub>. Watch magnetic order emerge and collapse as you change temperature.</div>
+
+<div class="note"><b>Physics:</b> Each site carries a spin &plusmn;1. Nearest-neighbor coupling H = &minus;J &Sigma; s<sub>i</sub>s<sub>j</sub>. At low T, spins align (ferromagnet). At T<sub>c</sub> &asymp; 2.269, thermal fluctuations destroy long-range order. This is the simplest model showing a continuous phase transition with universal critical exponents.</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel inv-panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle" id="invToggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">Where does magnetism disappear?</div>
+        <div class="inv-card-q"><b>Question:</b> At what temperature does the 2D Ising model lose its spontaneous magnetization?</div>
+        <div class="inv-card-method"><b>Method:</b> Sweep T from 1.0 to 4.0 (20 points), L=100, h=0, 500 sweeps/point. <b>Look for:</b> |M| drops sharply near T &asymp; 2.27. Susceptibility &chi; and specific heat C<sub>v</sub> peak at the same temperature.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard1()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs1" placeholder="Your observations: what did you see? Did |M| drop where you expected?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">Does size matter?</div>
+        <div class="inv-card-q"><b>Question:</b> How does the lattice size affect the sharpness of the phase transition?</div>
+        <div class="inv-card-method"><b>Method:</b> Run T-sweeps at L = 20, 50, 100, 200 and overlay the curves. <b>Look for:</b> Larger L &rarr; sharper transition. The Onsager exact solution (infinite L) is shown as a dashed line. All curves should converge toward it.</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard2()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs2" placeholder="Your observations: how does lattice size change the transition? Do larger lattices match the exact solution better?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">Can you magnetize a random system?</div>
+        <div class="inv-card-q"><b>Question:</b> Below T<sub>c</sub>, does the system remember which direction it was magnetized?</div>
+        <div class="inv-card-method"><b>Method:</b> Fix T = 1.5 (well below T<sub>c</sub>). Sweep external field h from +2 to &minus;2 and back. <b>Look for:</b> A hysteresis loop. Remanent magnetization (M &ne; 0 when h = 0). Coercive field (h needed to flip M).</div>
+        <div class="inv-btns">
+          <button onclick="runInvCard3()">Run this investigation &rarr;</button>
+        </div>
+        <textarea id="invObs3" placeholder="Your observations: did you see a loop? What is the remanent magnetization? The coercive field?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the sweep tools to explore your own question. What variable do you want to change, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PARAMETERS -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">ISING</span>
+    <span class="sname">Simulation Parameters</span>
+    <span class="toggle" id="paramToggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Lattice</div>
+        <div class="param-row"><span class="param-lbl">Size N&times;N</span><input type="number" id="pSize" value="100" min="10" max="500" step="10"></div>
+        <div class="param-row"><span class="param-lbl">Initial state</span><select id="pInit"><option value="random">Random</option><option value="up">All up (+1)</option><option value="down">All down (-1)</option></select></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Physics</div>
+        <div class="param-row"><span class="param-lbl">Temperature <span class="unit">(J/k<sub>B</sub>)</span></span><input type="number" id="pTemp" value="2.27" step="0.1" min="0.1" max="10"></div>
+        <div class="param-row"><span class="param-lbl">Coupling J</span><input type="number" id="pJ" value="1.0" step="0.1" min="0.1" max="5"></div>
+        <div class="param-row"><span class="param-lbl">External field h</span><input type="number" id="pH" value="0" step="0.1" min="-2" max="2"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Monte Carlo</div>
+        <div class="param-row"><span class="param-lbl">MC sweeps</span><input type="number" id="pSweeps" value="1000" step="100" min="100" max="50000"></div>
+        <div class="param-row"><span class="param-lbl">Equilibration</span><input type="number" id="pEquil" value="200" step="50" min="0"></div>
+        <div class="param-row"><span class="param-lbl">Sample every</span><input type="number" id="pSample" value="5" step="1" min="1" max="50"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Temperature</div>
+  <div class="mode-tab" onclick="setMode('sweep')">Temperature Sweep</div>
+  <div class="mode-tab" onclick="setMode('hysteresis')">Hysteresis Loop</div>
+  <div class="mode-tab" onclick="setMode('lsweep')">Finite-Size Scaling</div>
+</div>
+
+<!-- SINGLE RUN -->
+<div class="mode-section active" id="modeSingle">
+<div class="controls">
+  <button id="runBtn" onclick="runIsing()">&#9654; Run Simulation</button>
+  <button onclick="resetIsing()" class="danger">&#8634; Reset</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    <span class="progress-text" id="progText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- TEMPERATURE SWEEP -->
+<div class="mode-section" id="modeSweep">
+<div class="note"><b>Investigation:</b> What temperature destroys magnetic order? Sweep T from low to high and watch magnetization, susceptibility, and specific heat. The peaks mark the phase transition.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>T min</label><input type="number" id="swTmin" value="1.0" step="0.1"></div>
+  <div class="sweep-item"><label>T max</label><input type="number" id="swTmax" value="4.0" step="0.1"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="swPts" value="15" min="5" max="30"></div>
+  <div class="sweep-item"><label>Sweeps/point</label><input type="number" id="swSweeps" value="500" step="100" min="100"></div>
+</div>
+<div class="controls">
+  <button onclick="runTempSweep()">&#9654; Run Temperature Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="swProgFill"></div></div>
+    <span class="progress-text" id="swProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- HYSTERESIS -->
+<div class="mode-section" id="modeHysteresis">
+<div class="note"><b>Investigation:</b> Apply an external magnetic field and sweep it from +h to -h and back. At low T, you see a hysteresis loop — the system remembers its history. At high T, the loop vanishes.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>h max</label><input type="number" id="hysHmax" value="2.0" step="0.1"></div>
+  <div class="sweep-item"><label>Points (half)</label><input type="number" id="hysPts" value="20" min="5" max="50"></div>
+  <div class="sweep-item"><label>Temperature</label><input type="number" id="hysTemp" value="1.5" step="0.1"></div>
+  <div class="sweep-item"><label>Sweeps/point</label><input type="number" id="hysSweeps" value="300" step="100"></div>
+</div>
+<div class="controls">
+  <button onclick="runHysteresis()">&#9654; Run Hysteresis</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="hysProgFill"></div></div>
+    <span class="progress-text" id="hysProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- L-SWEEP (FINITE-SIZE SCALING) -->
+<div class="mode-section" id="modeLsweep">
+<div class="note"><b>Investigation:</b> Run T-sweeps at multiple lattice sizes and overlay the results. The phase transition sharpens with increasing L. The Onsager exact solution for the infinite lattice is shown for comparison.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>T min</label><input type="number" id="lswTmin" value="1.5" step="0.1"></div>
+  <div class="sweep-item"><label>T max</label><input type="number" id="lswTmax" value="3.5" step="0.1"></div>
+  <div class="sweep-item"><label>T points</label><input type="number" id="lswTpts" value="20" min="5" max="40"></div>
+  <div class="sweep-item"><label>Sweeps/point</label><input type="number" id="lswSweeps" value="500" step="100" min="100"></div>
+</div>
+<div class="sweep-grid">
+  <div class="sweep-item" style="grid-column:span 4"><label>Lattice sizes L (comma-separated)</label><input type="text" id="lswSizes" value="20, 50, 100, 200" style="text-align:left"></div>
+</div>
+<div class="controls">
+  <button onclick="runLSweep()">&#9654; Run Finite-Size Scaling</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="lswProgFill"></div></div>
+    <span class="progress-text" id="lswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SINGLE RUN DASHBOARD -->
+<div class="dashboard" id="singleDash">
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">Spin Lattice</div>
+      <div class="canvas-wrap"><canvas id="latticeCanvas" width="500" height="500"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Statistics</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Magnetization |M|</div><div class="stat-value" id="stMag">--</div></div>
+        <div class="stat-item"><div class="stat-label">Energy / site</div><div class="stat-value" id="stEnergy">--</div></div>
+        <div class="stat-item"><div class="stat-label">Susceptibility &chi;</div><div class="stat-value sm" id="stChi">--</div></div>
+        <div class="stat-item"><div class="stat-label">Specific Heat C<sub>v</sub></div><div class="stat-value sm" id="stCv">--</div></div>
+        <div class="stat-item"><div class="stat-label">Temperature</div><div class="stat-value sm" id="stTemp">--</div></div>
+        <div class="stat-item"><div class="stat-label">Acceptance Rate</div><div class="stat-value sm" id="stAcc">--</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Magnetization vs MC Sweep</div>
+      <div class="chart-wrap"><canvas id="magChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Energy vs MC Sweep</div>
+      <div class="chart-wrap"><canvas id="enerChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- SWEEP DASHBOARD -->
+<div class="dashboard" id="sweepDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">|Magnetization| vs Temperature</div>
+      <div class="chart-wrap tall"><canvas id="swMagChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Energy / site vs Temperature</div>
+      <div class="chart-wrap tall"><canvas id="swEnerChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Susceptibility &chi; vs Temperature</div>
+      <div class="chart-wrap"><canvas id="swChiChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Specific Heat C<sub>v</sub> vs Temperature</div>
+      <div class="chart-wrap"><canvas id="swCvChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- HYSTERESIS DASHBOARD -->
+<div class="dashboard" id="hysDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Hysteresis Loop: M vs h</div>
+      <div class="chart-wrap tall"><canvas id="hysChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Hysteresis Info</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Coercive Field</div><div class="stat-value sm" id="hysCoer">--</div></div>
+        <div class="stat-item"><div class="stat-label">Remanent M</div><div class="stat-value sm" id="hysRem">--</div></div>
+        <div class="stat-item"><div class="stat-label">Temperature</div><div class="stat-value sm" id="hysT">--</div></div>
+        <div class="stat-item"><div class="stat-label">Loop Area</div><div class="stat-value sm" id="hysArea">--</div></div>
+      </div>
+      <div class="note" style="margin-top:12px"><b>Key insight:</b> Below T<sub>c</sub>, the system has memory — sweeping the field back doesn't return to the same state. The loop area represents energy dissipated per cycle. Above T<sub>c</sub>, the loop collapses.</div>
+    </div>
+  </div>
+</div>
+
+<!-- L-SWEEP DASHBOARD -->
+<div class="dashboard" id="lswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">|Magnetization| vs Temperature (multiple L)</div>
+      <div class="chart-wrap tall"><canvas id="lswMagChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Susceptibility &chi; vs Temperature (multiple L)</div>
+      <div class="chart-wrap tall"><canvas id="lswChiChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Specific Heat C<sub>v</sub> vs Temperature (multiple L)</div>
+      <div class="chart-wrap"><canvas id="lswCvChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Finite-Size Scaling Summary</div>
+      <div class="stat-grid">
+        <div class="stat-item" style="grid-column:span 2"><div class="stat-label">Onsager Exact T<sub>c</sub></div><div class="stat-value">2.269</div></div>
+      </div>
+      <div id="lswSummary" style="margin-top:10px;font-size:11px;color:#7a9a7a;line-height:1.6"></div>
+      <div class="note" style="margin-top:12px"><b>Key insight:</b> As L &rarr; &infin;, the transition becomes a true singularity. For finite L, it is rounded and shifted. The susceptibility peak height grows as L<sup>&gamma;/&nu;</sup> and the peak position approaches T<sub>c</sub> = 2/ln(1+&radic;2).</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ISING MODEL PORTAL — 2D Metropolis Monte Carlo
+   Phase transition, temperature sweep, hysteresis
+   ═══════════════════════════════════════════════════════════════ */
+
+let running = false, cancelled = false;
+let magChartInst = null, enerChartInst = null;
+let swMagChart = null, swEnerChart = null, swChiChart = null, swCvChart = null;
+let hysChartInst = null;
+let lswMagChartInst = null, lswChiChartInst = null, lswCvChartInst = null;
+let currentMode = 'single';
+
+const LOGBOOK_KEY = 'alexey_ising_logbook';
+
+const chartDefaults = {
+  responsive:true, maintainAspectRatio:false, animation:{duration:0},
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(200,60,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},
+  scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}
+};
+
+function setMode(m) {
+  if (running) return;
+  currentMode = m;
+  document.querySelectorAll('.mode-tab').forEach((el,i) => {
+    const modes = ['single','sweep','hysteresis','lsweep'];
+    el.classList.toggle('active', modes[i] === m);
+  });
+  document.querySelectorAll('.mode-section').forEach(el => el.classList.remove('active'));
+  const map = {single:'modeSingle',sweep:'modeSweep',hysteresis:'modeHysteresis',lsweep:'modeLsweep'};
+  document.getElementById(map[m]).classList.add('active');
+  document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('sweepDash').style.display = m === 'sweep' ? '' : 'none';
+  document.getElementById('hysDash').style.display = m === 'hysteresis' ? '' : 'none';
+  document.getElementById('lswDash').style.display = m === 'lsweep' ? '' : 'none';
+}
+
+function togglePanel(id) {
+  const p = document.getElementById(id);
+  p.classList.toggle('collapsed');
+  const t = p.querySelector('.toggle');
+  if (t) t.innerHTML = p.classList.contains('collapsed') ? '&#9654; expand' : '&darr; collapse';
+}
+
+/* ── Ising simulation core ── */
+function createLattice(N, init) {
+  const s = new Int8Array(N * N);
+  if (init === 'up') s.fill(1);
+  else if (init === 'down') s.fill(-1);
+  else for (let i = 0; i < N*N; i++) s[i] = Math.random() < 0.5 ? 1 : -1;
+  return s;
+}
+
+function computeEnergy(s, N, J, h) {
+  let E = 0;
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const idx = i * N + j;
+      const right = i * N + ((j + 1) % N);
+      const down = ((i + 1) % N) * N + j;
+      E -= J * s[idx] * (s[right] + s[down]);
+      E -= h * s[idx];
+    }
+  }
+  return E;
+}
+
+function computeMag(s) {
+  let m = 0;
+  for (let i = 0; i < s.length; i++) m += s[i];
+  return m;
+}
+
+function mcSweep(s, N, J, h, T) {
+  const beta = 1.0 / T;
+  let accepted = 0;
+  for (let k = 0; k < N * N; k++) {
+    const i = Math.floor(Math.random() * N);
+    const j = Math.floor(Math.random() * N);
+    const idx = i * N + j;
+    const up = ((i - 1 + N) % N) * N + j;
+    const dn = ((i + 1) % N) * N + j;
+    const lt = i * N + ((j - 1 + N) % N);
+    const rt = i * N + ((j + 1) % N);
+    const dE = 2 * s[idx] * (J * (s[up] + s[dn] + s[lt] + s[rt]) + h);
+    if (dE <= 0 || Math.random() < Math.exp(-beta * dE)) {
+      s[idx] *= -1;
+      accepted++;
+    }
+  }
+  return accepted / (N * N);
+}
+
+function runSimulation(N, J, h, T, sweeps, equil, sampleEvery, init) {
+  const s = createLattice(N, init);
+  const N2 = N * N;
+  const magHistory = [];
+  const enerHistory = [];
+  let totalAcc = 0;
+  const mSamples = [], eSamples = [];
+
+  for (let sw = 0; sw < sweeps; sw++) {
+    const acc = mcSweep(s, N, J, h, T);
+    totalAcc += acc;
+    if (sw % sampleEvery === 0) {
+      const m = computeMag(s) / N2;
+      const e = computeEnergy(s, N, J, h) / N2;
+      magHistory.push(m);
+      enerHistory.push(e);
+      if (sw >= equil) { mSamples.push(m); eSamples.push(e); }
+    }
+  }
+
+  const avgM = mSamples.reduce((a,b) => a + Math.abs(b), 0) / mSamples.length;
+  const avgE = eSamples.reduce((a,b) => a + b, 0) / eSamples.length;
+  const avgM2 = mSamples.reduce((a,b) => a + b*b, 0) / mSamples.length;
+  const avgE2 = eSamples.reduce((a,b) => a + b*b, 0) / eSamples.length;
+  const chi = N2 * (avgM2 - avgM*avgM) / T;
+  const cv = N2 * (avgE2 - avgE*avgE) / (T * T);
+
+  return {
+    spins: s, magHistory, enerHistory,
+    avgM, avgE, chi, cv,
+    acceptance: totalAcc / sweeps
+  };
+}
+
+/* ── Drawing ── */
+function drawLattice(s, N) {
+  const cvs = document.getElementById('latticeCanvas');
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width, h = cvs.height;
+  const px = w / N;
+  const img = ctx.createImageData(w, h);
+
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const spin = s[i * N + j];
+      const x0 = Math.floor(j * px), y0 = Math.floor(i * px);
+      const x1 = Math.floor((j+1) * px), y1 = Math.floor((i+1) * px);
+      for (let y = y0; y < y1 && y < h; y++) {
+        for (let x = x0; x < x1 && x < w; x++) {
+          const idx = (y * w + x) * 4;
+          if (spin === 1) {
+            img.data[idx] = 60; img.data[idx+1] = 100; img.data[idx+2] = 200; img.data[idx+3] = 255;
+          } else {
+            img.data[idx] = 200; img.data[idx+1] = 60; img.data[idx+2] = 60; img.data[idx+3] = 255;
+          }
+        }
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+function destroyCharts() {
+  [magChartInst, enerChartInst, swMagChart, swEnerChart, swChiChart, swCvChart, hysChartInst].forEach(c => { if(c) c.destroy(); });
+  magChartInst = enerChartInst = swMagChart = swEnerChart = swChiChart = swCvChart = hysChartInst = null;
+}
+
+/* ── Single run ── */
+async function runIsing() {
+  if (running) return;
+  running = true;
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('progText').textContent = 'Running...';
+  document.getElementById('progFill').style.width = '50%';
+
+  const N = +document.getElementById('pSize').value;
+  const J = +document.getElementById('pJ').value;
+  const h = +document.getElementById('pH').value;
+  const T = +document.getElementById('pTemp').value;
+  const sweeps = +document.getElementById('pSweeps').value;
+  const equil = +document.getElementById('pEquil').value;
+  const sample = +document.getElementById('pSample').value;
+  const init = document.getElementById('pInit').value;
+
+  await new Promise(r => setTimeout(r, 10));
+  const result = runSimulation(N, J, h, T, sweeps, equil, sample, init);
+
+  drawLattice(result.spins, N);
+  document.getElementById('stMag').textContent = result.avgM.toFixed(4);
+  document.getElementById('stEnergy').textContent = result.avgE.toFixed(4);
+  document.getElementById('stChi').textContent = result.chi.toFixed(3);
+  document.getElementById('stCv').textContent = result.cv.toFixed(3);
+  document.getElementById('stTemp').textContent = T.toFixed(2);
+  document.getElementById('stAcc').textContent = (result.acceptance * 100).toFixed(1) + '%';
+
+  // Charts
+  if (magChartInst) magChartInst.destroy();
+  if (enerChartInst) enerChartInst.destroy();
+  const labels = result.magHistory.map((_, i) => i * sample);
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'MC sweep', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  const mopts = JSON.parse(JSON.stringify(opts));
+  mopts.scales.y.title = {display:true, text:'M', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  magChartInst = new Chart(document.getElementById('magChart'), {
+    type:'line', data:{labels, datasets:[{data:result.magHistory, borderColor:'#dd7d7d', borderWidth:1, pointRadius:0, fill:false}]}, options:mopts
+  });
+
+  const eopts = JSON.parse(JSON.stringify(opts));
+  eopts.scales.y.title = {display:true, text:'E/site', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  enerChartInst = new Chart(document.getElementById('enerChart'), {
+    type:'line', data:{labels, datasets:[{data:result.enerHistory, borderColor:'#7da0dd', borderWidth:1, pointRadius:0, fill:false}]}, options:eopts
+  });
+
+  document.getElementById('progText').textContent = 'Complete';
+  document.getElementById('progFill').style.width = '100%';
+  document.getElementById('runBtn').disabled = false;
+  running = false;
+}
+
+/* ── Temperature sweep ── */
+async function runTempSweep() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('sweepDash').style.display = '';
+
+  const Tmin = +document.getElementById('swTmin').value;
+  const Tmax = +document.getElementById('swTmax').value;
+  const pts = +document.getElementById('swPts').value;
+  const sweeps = +document.getElementById('swSweeps').value;
+  const N = +document.getElementById('pSize').value;
+  const J = +document.getElementById('pJ').value;
+  const h = +document.getElementById('pH').value;
+  const init = document.getElementById('pInit').value;
+  const equil = Math.floor(sweeps * 0.3);
+
+  const results = [];
+  for (let i = 0; i < pts; i++) {
+    if (cancelled) break;
+    const T = Tmin + (Tmax - Tmin) * i / (pts - 1);
+    document.getElementById('swProgText').textContent = `T=${T.toFixed(2)} (${i+1}/${pts})`;
+    document.getElementById('swProgFill').style.width = ((i+1)/pts*100)+'%';
+    await new Promise(r => setTimeout(r, 5));
+    const r = runSimulation(N, J, h, T, sweeps, equil, 2, init);
+    results.push({T, M:r.avgM, E:r.avgE, chi:r.chi, cv:r.cv});
+  }
+
+  if (!cancelled) {
+    document.getElementById('swProgText').textContent = 'Complete';
+    displayTempSweep(results);
+  }
+  running = false;
+}
+
+function displayTempSweep(results) {
+  [swMagChart, swEnerChart, swChiChart, swCvChart].forEach(c => { if(c) c.destroy(); });
+  const labels = results.map(r => r.T.toFixed(2));
+  const TC = 2.0 / Math.log(1 + Math.sqrt(2)); // exact Tc = 2.269...
+
+  function makeChart(canvasId, data, yLabel, color) {
+    const opts = JSON.parse(JSON.stringify(chartDefaults));
+    opts.scales.x.title = {display:true, text:'Temperature (J/kB)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    opts.scales.y.title = {display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    opts.plugins.annotation = {};
+    return new Chart(document.getElementById(canvasId), {
+      type:'line',
+      data:{labels, datasets:[
+        {data, borderColor:color, backgroundColor:color+'33', borderWidth:2, pointRadius:3, pointBackgroundColor:color, fill:true}
+      ]},
+      options:opts,
+      plugins:[{
+        id:'tcLine',
+        afterDraw(chart) {
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y;
+          // Find pixel for Tc
+          const tcIdx = results.findIndex(r => r.T >= TC);
+          if (tcIdx < 0) return;
+          const frac = (TC - results[Math.max(0,tcIdx-1)].T) / (results[tcIdx].T - results[Math.max(0,tcIdx-1)].T);
+          const px = xScale.getPixelForValue(Math.max(0,tcIdx-1) + frac);
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.strokeStyle = '#7dd87d';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4,4]);
+          ctx.beginPath(); ctx.moveTo(px, yScale.top); ctx.lineTo(px, yScale.bottom); ctx.stroke();
+          ctx.fillStyle = '#7dd87d';
+          ctx.font = '9px "Space Mono"';
+          ctx.textAlign = 'center';
+          ctx.fillText('Tc', px, yScale.top - 4);
+          ctx.restore();
+        }
+      }]
+    });
+  }
+
+  swMagChart = makeChart('swMagChart', results.map(r=>r.M), '|M|', '#dd7d7d');
+  swEnerChart = makeChart('swEnerChart', results.map(r=>r.E), 'E/site', '#7da0dd');
+  swChiChart = makeChart('swChiChart', results.map(r=>r.chi), 'Susceptibility', '#f0b429');
+  swCvChart = makeChart('swCvChart', results.map(r=>r.cv), 'Specific Heat', '#a07ddd');
+}
+
+/* ── Hysteresis ── */
+async function runHysteresis() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('hysDash').style.display = '';
+
+  const hMax = +document.getElementById('hysHmax').value;
+  const pts = +document.getElementById('hysPts').value;
+  const T = +document.getElementById('hysTemp').value;
+  const sweeps = +document.getElementById('hysSweeps').value;
+  const N = +document.getElementById('pSize').value;
+  const J = +document.getElementById('pJ').value;
+  const equil = Math.floor(sweeps * 0.3);
+
+  // Forward: h from +hMax to -hMax, then back
+  const hValues = [];
+  for (let i = 0; i < pts; i++) hValues.push(hMax - 2 * hMax * i / (pts - 1));
+  for (let i = 0; i < pts; i++) hValues.push(-hMax + 2 * hMax * i / (pts - 1));
+
+  const results = [];
+  let s = createLattice(N, 'up');
+  const N2 = N * N;
+
+  for (let i = 0; i < hValues.length; i++) {
+    if (cancelled) break;
+    const h = hValues[i];
+    document.getElementById('hysProgText').textContent = `h=${h.toFixed(2)} (${i+1}/${hValues.length})`;
+    document.getElementById('hysProgFill').style.width = ((i+1)/hValues.length*100)+'%';
+    await new Promise(r => setTimeout(r, 5));
+
+    // Run sweeps with current h
+    let mSum = 0, mCount = 0;
+    for (let sw = 0; sw < sweeps; sw++) {
+      mcSweep(s, N, J, h, T);
+      if (sw >= equil) { mSum += computeMag(s) / N2; mCount++; }
+    }
+    results.push({h, M: mSum / mCount});
+  }
+
+  if (!cancelled) {
+    document.getElementById('hysProgText').textContent = 'Complete';
+    displayHysteresis(results, T);
+  }
+  running = false;
+}
+
+function displayHysteresis(results, T) {
+  if (hysChartInst) hysChartInst.destroy();
+  const half = results.length / 2;
+  const forward = results.slice(0, half);
+  const backward = results.slice(half);
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+  opts.scales.x.title = {display:true, text:'External field h', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Magnetization M', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  hysChartInst = new Chart(document.getElementById('hysChart'), {
+    type:'scatter',
+    data:{datasets:[
+      {label:'Forward (h+ to h-)', data:forward.map(r=>({x:r.h,y:r.M})), borderColor:'#dd7d7d', backgroundColor:'rgba(221,125,125,0.3)', showLine:true, borderWidth:2, pointRadius:3, fill:false},
+      {label:'Backward (h- to h+)', data:backward.map(r=>({x:r.h,y:r.M})), borderColor:'#7da0dd', backgroundColor:'rgba(125,160,221,0.3)', showLine:true, borderWidth:2, pointRadius:3, fill:false}
+    ]},
+    options:opts
+  });
+
+  // Find coercive field (where M crosses 0 on forward sweep)
+  let coercive = 0;
+  for (let i = 1; i < forward.length; i++) {
+    if (forward[i-1].M * forward[i].M < 0) {
+      coercive = Math.abs(forward[i].h);
+      break;
+    }
+  }
+  // Remanent magnetization (M at h=0 on forward)
+  let remanent = 0;
+  for (let i = 0; i < forward.length; i++) {
+    if (Math.abs(forward[i].h) < 0.15) { remanent = Math.abs(forward[i].M); break; }
+  }
+
+  document.getElementById('hysCoer').textContent = coercive.toFixed(3);
+  document.getElementById('hysRem').textContent = remanent.toFixed(3);
+  document.getElementById('hysT').textContent = T.toFixed(2);
+  // Loop area (rough)
+  let area = 0;
+  for (let i = 1; i < forward.length; i++) area += Math.abs(forward[i].M - backward[i].M) * Math.abs(forward[i].h - forward[i-1].h);
+  document.getElementById('hysArea').textContent = area.toFixed(3);
+}
+
+function cancelSweep() { cancelled = true; }
+
+function resetIsing() {
+  destroyCharts();
+  const cvs = document.getElementById('latticeCanvas');
+  cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
+  ['stMag','stEnergy','stChi','stCv','stTemp','stAcc'].forEach(id => document.getElementById(id).textContent = '--');
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progText').textContent = 'Ready';
+}
+
+/* ── Onsager exact magnetization ── */
+const TC_EXACT = 2.0 / Math.log(1 + Math.sqrt(2));
+
+function onsagerM(T, J) {
+  const tc = 2.0 * J / Math.log(1 + Math.sqrt(2));
+  if (T >= tc) return 0;
+  const k = 1.0 / (Math.sinh(2 * J / T) * Math.sinh(2 * J / T));
+  return Math.pow(Math.max(0, 1 - k * k), 1.0 / 8.0);
+}
+
+/* ── L-sweep (Finite-Size Scaling) ── */
+async function runLSweep() {
+  if (running) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('lswDash').style.display = '';
+
+  const Tmin = +document.getElementById('lswTmin').value;
+  const Tmax = +document.getElementById('lswTmax').value;
+  const Tpts = +document.getElementById('lswTpts').value;
+  const sweeps = +document.getElementById('lswSweeps').value;
+  const sizesStr = document.getElementById('lswSizes').value;
+  const sizes = sizesStr.split(',').map(s => parseInt(s.trim())).filter(n => n > 0);
+  const J = +document.getElementById('pJ').value;
+  const h = +document.getElementById('pH').value;
+  const init = document.getElementById('pInit').value;
+  const equil = Math.floor(sweeps * 0.3);
+
+  const allResults = [];
+  const totalRuns = sizes.length * Tpts;
+  let runCount = 0;
+
+  for (const L of sizes) {
+    const sizeResults = [];
+    for (let i = 0; i < Tpts; i++) {
+      if (cancelled) break;
+      const T = Tmin + (Tmax - Tmin) * i / (Tpts - 1);
+      runCount++;
+      document.getElementById('lswProgText').textContent = `L=${L}, T=${T.toFixed(2)} (${runCount}/${totalRuns})`;
+      document.getElementById('lswProgFill').style.width = (runCount/totalRuns*100)+'%';
+      await new Promise(r => setTimeout(r, 5));
+      const r = runSimulation(L, J, h, T, sweeps, equil, 2, init);
+      sizeResults.push({T, M:r.avgM, E:r.avgE, chi:r.chi, cv:r.cv});
+    }
+    if (cancelled) break;
+    allResults.push({L, results: sizeResults});
+  }
+
+  if (!cancelled) {
+    document.getElementById('lswProgText').textContent = 'Complete';
+    displayLSweep(allResults, J);
+  }
+  running = false;
+}
+
+function displayLSweep(allResults, J) {
+  [lswMagChartInst, lswChiChartInst, lswCvChartInst].forEach(c => { if(c) c.destroy(); });
+
+  const colors = ['#dd7d7d','#7da0dd','#f0b429','#a07ddd','#7dd87d','#dd7daa'];
+
+  // Build Onsager exact solution
+  const Tmin = allResults[0].results[0].T;
+  const Tmax = allResults[0].results[allResults[0].results.length-1].T;
+  const onsagerPts = [];
+  for (let i = 0; i <= 50; i++) {
+    const T = Tmin + (Tmax - Tmin) * i / 50;
+    onsagerPts.push({x: T, y: onsagerM(T, J)});
+  }
+
+  function makeLSweepChart(canvasId, metric, yLabel) {
+    const opts = JSON.parse(JSON.stringify(chartDefaults));
+    opts.plugins.legend = {display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}};
+    opts.scales.x.title = {display:true, text:'Temperature (J/kB)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    opts.scales.x.type = 'linear';
+    opts.scales.y.title = {display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+    const datasets = allResults.map((ar, idx) => ({
+      label: `L=${ar.L}`,
+      data: ar.results.map(r => ({x: r.T, y: r[metric]})),
+      borderColor: colors[idx % colors.length],
+      backgroundColor: colors[idx % colors.length] + '33',
+      borderWidth: 2, pointRadius: 2, showLine: true, fill: false
+    }));
+
+    // Add Onsager exact for magnetization
+    if (metric === 'M') {
+      datasets.push({
+        label: 'Onsager exact (L=∞)',
+        data: onsagerPts,
+        borderColor: '#7dd87d',
+        borderWidth: 2, borderDash: [6,3], pointRadius: 0, showLine: true, fill: false
+      });
+    }
+
+    return new Chart(document.getElementById(canvasId), {
+      type: 'scatter', data: {datasets}, options: opts,
+      plugins: [{
+        id:'tcLine',
+        afterDraw(chart) {
+          const xScale = chart.scales.x, yScale = chart.scales.y;
+          const px = xScale.getPixelForValue(TC_EXACT);
+          if (px < xScale.left || px > xScale.right) return;
+          const ctx = chart.ctx;
+          ctx.save(); ctx.strokeStyle = '#7dd87d66'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+          ctx.beginPath(); ctx.moveTo(px, yScale.top); ctx.lineTo(px, yScale.bottom); ctx.stroke();
+          ctx.fillStyle = '#7dd87d'; ctx.font = '9px "Space Mono"'; ctx.textAlign = 'center';
+          ctx.fillText('Tc', px, yScale.top - 4); ctx.restore();
+        }
+      }]
+    });
+  }
+
+  lswMagChartInst = makeLSweepChart('lswMagChart', 'M', '|M|');
+  lswChiChartInst = makeLSweepChart('lswChiChart', 'chi', 'Susceptibility χ');
+  lswCvChartInst = makeLSweepChart('lswCvChart', 'cv', 'Specific Heat Cv');
+
+  // Summary
+  let summary = '<table style="width:100%;font-size:10px;font-family:\'Space Mono\',monospace;color:#7a9a7a">';
+  summary += '<tr><td style="color:#4a6a4a">L</td><td style="color:#4a6a4a">χ peak T</td><td style="color:#4a6a4a">χ peak height</td></tr>';
+  allResults.forEach(ar => {
+    let maxChi = 0, maxChiT = 0;
+    ar.results.forEach(r => { if (r.chi > maxChi) { maxChi = r.chi; maxChiT = r.T; } });
+    summary += `<tr><td style="color:#dd7d7d">${ar.L}</td><td>${maxChiT.toFixed(3)}</td><td>${maxChi.toFixed(1)}</td></tr>`;
+  });
+  summary += '</table>';
+  document.getElementById('lswSummary').innerHTML = summary;
+}
+
+/* ── Investigation card runners ── */
+function runInvCard1() {
+  document.getElementById('swTmin').value = '1.0';
+  document.getElementById('swTmax').value = '4.0';
+  document.getElementById('swPts').value = '20';
+  document.getElementById('swSweeps').value = '500';
+  document.getElementById('pSize').value = '100';
+  setMode('sweep');
+  setTimeout(() => runTempSweep(), 100);
+}
+
+function runInvCard2() {
+  document.getElementById('lswTmin').value = '1.5';
+  document.getElementById('lswTmax').value = '3.5';
+  document.getElementById('lswTpts').value = '20';
+  document.getElementById('lswSweeps').value = '500';
+  document.getElementById('lswSizes').value = '20, 50, 100, 200';
+  setMode('lsweep');
+  setTimeout(() => runLSweep(), 100);
+}
+
+function runInvCard3() {
+  document.getElementById('hysHmax').value = '2.0';
+  document.getElementById('hysPts').value = '20';
+  document.getElementById('hysTemp').value = '1.5';
+  document.getElementById('hysSweeps').value = '300';
+  setMode('hysteresis');
+  setTimeout(() => runHysteresis(), 100);
+}
+
+/* ── Logbook system ── */
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveLogEntries(entries) {
+  localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries));
+}
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `<div class="log-entry">
+      <div class="log-entry-hdr">
+        <span class="log-type-tag ${typeClass}">${typeLabel}</span>
+        <span class="log-entry-ts">${ts}</span>
+        <div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div>
+      </div>
+      <div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      ${e.context ? '<div class="log-entry-ctx">' + e.context + '</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'Where does magnetism disappear?', 2:'Does size matter?', 3:'Can you magnetize a random system?', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({
+    id: Date.now().toString(36),
+    timestamp: new Date().toISOString(),
+    type: 'obs',
+    text,
+    context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')
+  });
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#3ca03c';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  // Expand logbook panel if collapsed
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# Ising Model — Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += `## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`;
+    md += e.text + '\n\n';
+    if (e.context) md += `> Context: ${e.context}\n\n`;
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ising-logbook.md';
+  a.click();
+}
+
+// Initialize logbook on load, collapse by default
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
+</script>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment 06 · Double Pendulum · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:18px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+button.active{background:rgba(60,160,60,0.15);border-color:#3ca03c}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
+.sv.sm{font-size:15px}
+.brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:200px;position:relative}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.rstat:last-child{border-bottom:none}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
+.interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
+.thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
+.talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.reply-sec{margin-top:12px;display:none}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-bottom:14px}
+.ctrl-row{display:flex;align-items:center;gap:8px}
+.ctrl-row label{font-size:10px;color:#7a9a7a;font-family:'Space Mono',monospace;min-width:90px;white-space:nowrap}
+.ctrl-row input[type=range]{flex:1;accent-color:#3ca03c;height:4px}
+.ctrl-row .cv{font-size:11px;color:#7dd87d;font-family:'Space Mono',monospace;min-width:50px;text-align:right}
+.legend-row{display:flex;align-items:center;gap:14px;margin:8px 0;font-size:10px;font-family:'Space Mono',monospace;color:#7a9a7a}
+.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.readouts{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:10px}
+.readout{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:8px 10px;text-align:center}
+.readout .sl{margin-bottom:2px}
+.readout .rv{font-size:14px}
+@media(max-width:680px){.ctrl-grid{grid-template-columns:1fr}.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}.readouts{grid-template-columns:1fr 1fr}}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 06 OF 07 &middot; CLASSICAL MECHANICS &amp; CHAOS</div>
+<div class="exp-title">Two pendulums, two futures.<br>The Double Pendulum.</div>
+<div class="exp-sub">Two double pendulums start almost identically &mdash; one angle differs by a fraction of a degree. Watch them diverge completely. This is chaos: not randomness, but extreme sensitivity to initial conditions. The physics is perfectly deterministic, yet prediction becomes impossible.</div>
+
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> Before running the simulation, write down what you predict. How will two nearly identical double pendulums behave over time? Will they stay together or diverge? How quickly? What role does the starting angle difference play?</div>
+    <textarea id="hypText" placeholder="e.g. I predict that two double pendulums starting 0.1&deg; apart will initially move very similarly but eventually diverge. I think the divergence will happen gradually &mdash; maybe after 10 seconds they'll start to look different. With a larger angle difference like 5&deg;, I think they'll diverge faster..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The pendulum lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <div class="ctrl-grid" id="controls">
+      <div class="ctrl-row"><label>&theta;&#8321; angle</label><input type="range" id="sTheta1" min="10" max="170" value="120" step="1"><span class="cv" id="vTheta1">120&deg;</span></div>
+      <div class="ctrl-row"><label>&Delta; difference</label><input type="range" id="sDiff" min="0.001" max="5" value="0.1" step="0.001"><span class="cv" id="vDiff">0.100&deg;</span></div>
+      <div class="ctrl-row"><label>&theta;&#8322; angle</label><input type="range" id="sTheta2" min="10" max="170" value="120" step="1"><span class="cv" id="vTheta2">120&deg;</span></div>
+      <div class="ctrl-row"><label>Speed</label><input type="range" id="sSpeed" min="0.5" max="3" value="1" step="0.1"><span class="cv" id="vSpeed">1.0&times;</span></div>
+      <div class="ctrl-row"><label>L&#8321; length</label><input type="range" id="sL1" min="0.5" max="2" value="1" step="0.05"><span class="cv" id="vL1">1.00</span></div>
+      <div class="ctrl-row"><label>L&#8322; length</label><input type="range" id="sL2" min="0.5" max="2" value="1" step="0.05"><span class="cv" id="vL2">1.00</span></div>
+      <div class="ctrl-row"><label>m&#8321; mass</label><input type="range" id="sM1" min="0.5" max="3" value="1" step="0.1"><span class="cv" id="vM1">1.0</span></div>
+      <div class="ctrl-row"><label>m&#8322; mass</label><input type="range" id="sM2" min="0.5" max="3" value="1" step="0.1"><span class="cv" id="vM2">1.0</span></div>
+    </div>
+    <div class="brow" style="margin-top:0;margin-bottom:10px">
+      <button onclick="applyPreset('vertical')">Near vertical</button>
+      <button onclick="applyPreset('moderate')" class="active" id="presetMod">Moderate chaos</button>
+      <button onclick="applyPreset('wild')">Wild</button>
+      <button onclick="applyPreset('low')">Low energy</button>
+      <button id="traceBtn" onclick="toggleTrace()" class="active">Trace: ON</button>
+      <button id="viewBtn" onclick="toggleView()">View: Overlay</button>
+      <button id="playBtn" onclick="togglePlay()" disabled>Play &rarr;</button>
+      <button class="danger" onclick="resetSim()">Reset</button>
+    </div>
+    <div class="legend-row">
+      <span><span class="legend-dot" style="background:#3ca03c"></span>Pendulum A (&theta;&#8321;)</span>
+      <span><span class="legend-dot" style="background:#f0b429"></span>Pendulum B (&theta;&#8321; + &Delta;)</span>
+    </div>
+    <div id="canvasContainer" style="border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;overflow:hidden;line-height:0"></div>
+    <div class="readouts">
+      <div class="readout"><div class="sl">Elapsed</div><div class="rv" id="rdTime">0.00s</div></div>
+      <div class="readout"><div class="sl">Divergence</div><div class="rv" id="rdDiv">0.000&deg;</div></div>
+      <div class="readout"><div class="sl">Doubling time</div><div class="rv" id="rdLyap">&mdash;</div></div>
+      <div class="readout"><div class="sl">Energy drift</div><div class="rv" id="rdEnergy">0.00%</div></div>
+    </div>
+    <div style="margin-top:10px">
+      <div class="sl" style="margin-bottom:6px">Divergence over time (&verbar;&theta;&#8321;A &minus; &theta;&#8321;B&verbar;)</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="divChart"></canvas></div>
+    </div>
+    <div class="brow">
+      <button id="recordBtn" onclick="recordObs()" disabled>Record observations &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Results</span>
+    <span class="shint">Observations from the chaotic system</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="sl" style="margin-bottom:12px">simulation summary</div>
+        <div class="rstat"><span class="rl">Starting angle &theta;&#8321;</span><span class="rv" id="rTh1">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Angle difference &Delta;</span><span class="rv" id="rDiff">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Starting angle &theta;&#8322;</span><span class="rv" id="rTh2">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Time to 10&deg; divergence</span><span class="rv" id="rT10">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Estimated doubling time</span><span class="rv" id="rLyap">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Energy drift (A / B)</span><span class="rv" id="rEdrift">&mdash;</span></div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:12px">what does this mean?</div>
+        <div class="model-note" style="margin-top:0">This simulation uses Runge-Kutta 4 integration &mdash; a highly accurate method for solving differential equations. The double pendulum equations come from Lagrangian mechanics. The chaotic behavior is real physics, not a simulation artifact.</div>
+        <div class="model-note">The Lyapunov exponent measures how fast nearby trajectories diverge. A positive Lyapunov exponent is the mathematical signature of chaos &mdash; it means tiny differences grow exponentially. This is why long-term prediction of the double pendulum is impossible, even though the physics is completely deterministic.</div>
+        <div class="model-note">Energy conservation is monitored to verify simulation quality. Small drift (&lt;1%) confirms the RK4 integrator is working accurately.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">your interpretation</div>
+        <textarea id="interpText" placeholder="What did the simulation show? Did the pendulums diverge when you expected? How did changing the angle difference affect the divergence? What does this tell you about prediction and determinism? What are the limitations of this simulation?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLog">
+  <div class="step-hdr">
+    <span class="snum">logbook</span>
+    <span class="sname">Experiment Logbook</span>
+  </div>
+  <div class="sbody">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ── state ── */
+let locked=false,playing=false,showTrace=true,sideView=false,convHist=[];
+let frameCount=0,simTime=0,time10div=null,divChartInst=null;
+let divData={labels:[],values:[]};
+let stateA=[0,0,0,0],stateB=[0,0,0,0];
+let traceA=[],traceB=[],energyA0=null,energyB0=null;
+const g=9.81,dt=0.01,MAXTR=2000;
+let p5inst=null;
+
+/* ── slider wiring ── */
+const sliders={sTheta1:'vTheta1',sDiff:'vDiff',sTheta2:'vTheta2',sSpeed:'vSpeed',sL1:'vL1',sL2:'vL2',sM1:'vM1',sM2:'vM2'};
+function fmtVal(id,v){
+  if(id==='sTheta1'||id==='sTheta2')return v+'°';
+  if(id==='sDiff')return parseFloat(v).toFixed(3)+'°';
+  if(id==='sSpeed')return parseFloat(v).toFixed(1)+'×';
+  if(id==='sL1'||id==='sL2')return parseFloat(v).toFixed(2);
+  return parseFloat(v).toFixed(1);
+}
+Object.keys(sliders).forEach(sid=>{
+  const el=document.getElementById(sid);
+  el.addEventListener('input',()=>{document.getElementById(sliders[sid]).innerHTML=fmtVal(sid,el.value)});
+});
+
+/* ── presets ── */
+function applyPreset(name){
+  document.querySelectorAll('.brow button.active').forEach(b=>{if(b.id!=='traceBtn'&&b.id!=='viewBtn')b.classList.remove('active')});
+  const p={vertical:{t1:175,diff:0.001,t2:170},moderate:{t1:120,diff:0.1,t2:120},wild:{t1:160,diff:1,t2:140},low:{t1:30,diff:0.5,t2:30}};
+  const c=p[name];if(!c)return;
+  document.getElementById('sTheta1').value=c.t1;document.getElementById('vTheta1').innerHTML=c.t1+'°';
+  document.getElementById('sDiff').value=c.diff;document.getElementById('vDiff').innerHTML=parseFloat(c.diff).toFixed(3)+'°';
+  document.getElementById('sTheta2').value=c.t2;document.getElementById('vTheta2').innerHTML=c.t2+'°';
+  if(playing)togglePlay();resetSim();
+}
+
+/* ── physics ── */
+function getParams(){
+  return{
+    L1:parseFloat(document.getElementById('sL1').value)*100,
+    L2:parseFloat(document.getElementById('sL2').value)*100,
+    m1:parseFloat(document.getElementById('sM1').value),
+    m2:parseFloat(document.getElementById('sM2').value)
+  };
+}
+function derivs(s,pr){
+  const[t1,w1,t2,w2]=s;
+  const{L1,L2,m1,m2}=pr;
+  const l1=L1/100,l2=L2/100;
+  const dt12=t1-t2,st=Math.sin(dt12),ct=Math.cos(dt12);
+  const den=2*m1+m2-m2*Math.cos(2*dt12);
+  const dw1=(-(2*m1+m2)*g*Math.sin(t1)-m2*g*Math.sin(t1-2*t2)-2*st*m2*(w2*w2*l2+w1*w1*l1*ct))/(l1*den);
+  const dw2=(2*st*(w1*w1*l1*(m1+m2)+g*(m1+m2)*Math.cos(t1)+w2*w2*l2*m2*ct))/(l2*den);
+  return[w1,dw1,w2,dw2];
+}
+function rk4step(s,pr){
+  const k1=derivs(s,pr);
+  const s2=s.map((v,i)=>v+k1[i]*dt/2);
+  const k2=derivs(s2,pr);
+  const s3=s.map((v,i)=>v+k2[i]*dt/2);
+  const k3=derivs(s3,pr);
+  const s4=s.map((v,i)=>v+k3[i]*dt);
+  const k4=derivs(s4,pr);
+  return s.map((v,i)=>v+(k1[i]+2*k2[i]+2*k3[i]+k4[i])*dt/6);
+}
+function totalEnergy(s,pr){
+  const[t1,w1,t2,w2]=s;
+  const{m1,m2}=pr;const l1=pr.L1/100,l2=pr.L2/100;
+  const v1sq=l1*l1*w1*w1;
+  const v2sq=l1*l1*w1*w1+l2*l2*w2*w2+2*l1*l2*w1*w2*Math.cos(t1-t2);
+  const KE=0.5*m1*v1sq+0.5*m2*v2sq;
+  const PE=-(m1+m2)*g*l1*Math.cos(t1)-m2*g*l2*Math.cos(t2);
+  return KE+PE;
+}
+
+/* ── init state from sliders ── */
+function initState(){
+  const t1=parseFloat(document.getElementById('sTheta1').value)*Math.PI/180;
+  const diff=parseFloat(document.getElementById('sDiff').value)*Math.PI/180;
+  const t2=parseFloat(document.getElementById('sTheta2').value)*Math.PI/180;
+  stateA=[t1,0,t2,0];
+  stateB=[t1+diff,0,t2,0];
+  const pr=getParams();
+  energyA0=totalEnergy(stateA,pr);
+  energyB0=totalEnergy(stateB,pr);
+  traceA=[];traceB=[];simTime=0;frameCount=0;time10div=null;
+  divData={labels:[],values:[]};
+  if(divChartInst){divChartInst.destroy();divChartInst=null}
+  document.getElementById('rdTime').textContent='0.00s';
+  document.getElementById('rdDiv').innerHTML='0.000°';
+  document.getElementById('rdLyap').innerHTML='—';
+  document.getElementById('rdEnergy').textContent='0.00%';
+}
+
+/* ── p5 instance ── */
+function startP5(){
+  if(p5inst)p5inst.remove();
+  initState();
+  p5inst=new p5(function(p){
+    const CW=700,CH=450;
+    p.setup=function(){
+      const c=p.createCanvas(CW,CH);
+      c.style('display','block');
+      c.style('max-width','100%');
+      c.style('height','auto');
+    };
+    p.draw=function(){
+      p.background(13,21,13);
+      if(!playing){drawPendulums(p);return}
+      const speed=parseFloat(document.getElementById('sSpeed').value);
+      const substeps=Math.round(3*speed);
+      const pr=getParams();
+      for(let i=0;i<substeps;i++){
+        stateA=rk4step(stateA,pr);
+        stateB=rk4step(stateB,pr);
+        simTime+=dt;
+      }
+      frameCount+=substeps;
+      /* tip positions */
+      const posA=tipPos(stateA,pr,sideView?CW/4:CW/2,80);
+      const posB=tipPos(stateB,pr,sideView?3*CW/4:CW/2,80);
+      if(showTrace){
+        traceA.push({x:posA.x2,y:posA.y2});
+        traceB.push({x:posB.x2,y:posB.y2});
+        if(traceA.length>MAXTR)traceA.shift();
+        if(traceB.length>MAXTR)traceB.shift();
+      }
+      /* divergence */
+      const div=Math.abs(stateA[0]-stateB[0])*180/Math.PI;
+      if(time10div===null&&div>=10)time10div=simTime;
+      /* update readouts every 5 frames */
+      if(frameCount%5===0){
+        document.getElementById('rdTime').textContent=simTime.toFixed(2)+'s';
+        document.getElementById('rdDiv').innerHTML=div<100?div.toFixed(3)+'°':div.toFixed(1)+'°';
+        const eA=totalEnergy(stateA,pr),eB=totalEnergy(stateB,pr);
+        const driftA=energyA0!==0?Math.abs((eA-energyA0)/Math.abs(energyA0))*100:0;
+        const driftB=energyB0!==0?Math.abs((eB-energyB0)/Math.abs(energyB0))*100:0;
+        document.getElementById('rdEnergy').textContent=Math.max(driftA,driftB).toFixed(2)+'%';
+        /* divergence chart data */
+        divData.labels.push(simTime.toFixed(1));
+        divData.values.push(div);
+        if(divData.labels.length>300){divData.labels.shift();divData.values.shift()}
+        updateDivChart();
+        estimateLyapunov();
+      }
+      if(frameCount>500)document.getElementById('recordBtn').disabled=false;
+      drawPendulums(p);
+    };
+  },'canvasContainer');
+}
+function tipPos(s,pr,pivX,pivY){
+  const x1=pivX+pr.L1*Math.sin(s[0]);
+  const y1=pivY+pr.L1*Math.cos(s[0]);
+  const x2=x1+pr.L2*Math.sin(s[2]);
+  const y2=y1+pr.L2*Math.cos(s[2]);
+  return{x1,y1,x2,y2};
+}
+function drawPendulums(p){
+  const pr=getParams();
+  const CW=p.width,CH=p.height;
+  const pivAx=sideView?CW/4:CW/2,pivBx=sideView?3*CW/4:CW/2,pivY=80;
+  if(sideView){
+    p.stroke(60,160,60,40);p.strokeWeight(0.5);
+    p.line(CW/2,0,CW/2,CH);
+    p.noStroke();p.fill(122,154,122);p.textFont('monospace');p.textSize(10);
+    p.textAlign(p.CENTER);p.text('Pendulum A',CW/4,20);p.text('Pendulum B',3*CW/4,20);
+  }
+  /* traces */
+  if(showTrace){
+    drawTrace(p,traceA,'rgba(60,160,60,');
+    drawTrace(p,traceB,'rgba(240,180,41,');
+  }
+  /* pendulum A */
+  const pA=tipPos(stateA,pr,pivAx,pivY);
+  drawOnePend(p,pivAx,pivY,pA,[60,160,60],[125,216,125],pr.m1,pr.m2);
+  /* pendulum B */
+  const pB=tipPos(stateB,pr,pivBx,pivY);
+  drawOnePend(p,pivBx,pivY,pB,[240,180,41],[255,217,61],pr.m1,pr.m2);
+  /* pivot dot */
+  p.fill(232,240,232);p.noStroke();
+  p.ellipse(pivAx,pivY,6,6);
+  if(sideView)p.ellipse(pivBx,pivY,6,6);
+}
+function drawTrace(p,trace,rgba){
+  p.noFill();p.strokeWeight(1.2);
+  for(let i=1;i<trace.length;i++){
+    const a=Math.floor((i/trace.length)*180);
+    p.stroke(rgba+a/255+')');
+    p.line(trace[i-1].x,trace[i-1].y,trace[i].x,trace[i].y);
+  }
+}
+function drawOnePend(p,px,py,pos,armCol,massCol,m1,m2){
+  p.strokeWeight(3);p.stroke(armCol[0],armCol[1],armCol[2],220);
+  p.line(px,py,pos.x1,pos.y1);
+  p.line(pos.x1,pos.y1,pos.x2,pos.y2);
+  p.noStroke();
+  p.fill(massCol[0],massCol[1],massCol[2]);
+  p.ellipse(pos.x1,pos.y1,8+m1*4,8+m1*4);
+  p.ellipse(pos.x2,pos.y2,8+m2*4,8+m2*4);
+}
+
+/* ── divergence chart ── */
+function updateDivChart(){
+  const el=document.getElementById('divChart');
+  if(!divChartInst){
+    divChartInst=new Chart(el,{type:'line',data:{labels:divData.labels,datasets:[{data:divData.values,borderColor:'#7dd87d',backgroundColor:'rgba(125,216,125,0.1)',borderWidth:1.5,pointRadius:0,fill:true,tension:0.2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:true,grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#4a6a4a',font:{family:'Space Mono',size:8},maxTicksLimit:8}},y:{display:true,grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#4a6a4a',font:{family:'Space Mono',size:8}},title:{display:true,text:'degrees',color:'#4a6a4a',font:{family:'Space Mono',size:9}}}}}});
+  }else{
+    divChartInst.data.labels=divData.labels;
+    divChartInst.data.datasets[0].data=divData.values;
+    divChartInst.update('none');
+  }
+}
+
+/* ── Lyapunov estimate ── */
+function estimateLyapunov(){
+  const vals=divData.values;
+  if(vals.length<20)return;
+  /* find region where divergence is between initial and 30 degrees */
+  let logDivs=[],times=[];
+  const initDiv=parseFloat(document.getElementById('sDiff').value);
+  for(let i=0;i<vals.length;i++){
+    if(vals[i]>initDiv*0.5&&vals[i]<30){
+      const ld=Math.log(vals[i]);
+      if(isFinite(ld)){logDivs.push(ld);times.push(parseFloat(divData.labels[i]));}
+    }
+  }
+  if(logDivs.length<10){document.getElementById('rdLyap').innerHTML='—';return}
+  /* linear regression on log(div) vs time */
+  const n=logDivs.length;
+  let sx=0,sy=0,sxy=0,sxx=0;
+  for(let i=0;i<n;i++){sx+=times[i];sy+=logDivs[i];sxy+=times[i]*logDivs[i];sxx+=times[i]*times[i]}
+  const slope=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+  if(slope>0.01){
+    const doubling=Math.log(2)/slope;
+    document.getElementById('rdLyap').innerHTML='~'+doubling.toFixed(2)+'s';
+  }else{
+    document.getElementById('rdLyap').innerHTML='—';
+  }
+}
+
+/* ── controls ── */
+function toggleTrace(){showTrace=!showTrace;const b=document.getElementById('traceBtn');b.textContent='Trace: '+(showTrace?'ON':'OFF');b.classList.toggle('active',showTrace);if(!showTrace){traceA=[];traceB=[]}}
+function toggleView(){sideView=!sideView;document.getElementById('viewBtn').textContent='View: '+(sideView?'Side by side':'Overlay');traceA=[];traceB=[]}
+function togglePlay(){
+  if(!locked)return;
+  playing=!playing;
+  const b=document.getElementById('playBtn');
+  b.textContent=playing?'Pause ||':'Play →';
+  if(playing&&!p5inst)startP5();
+}
+function resetSim(){
+  playing=false;
+  document.getElementById('playBtn').textContent='Play →';
+  document.getElementById('recordBtn').disabled=true;
+  if(p5inst){p5inst.remove();p5inst=null}
+  initState();
+  document.getElementById('canvasContainer').innerHTML='';
+  startP5();
+}
+
+/* ── lock hypothesis ── */
+function lockHyp(){
+  const t=document.getElementById('hypText').value.trim();
+  if(t.length<20){document.getElementById('hypText').style.borderColor='#e24b4a';return}
+  locked=true;
+  const ta=document.getElementById('hypText');
+  ta.disabled=true;ta.style.borderColor='rgba(60,160,60,0.6)';
+  ta.style.boxShadow='0 0 0 2px rgba(60,160,60,0.2)';
+  const ts=document.getElementById('hypTS');
+  ts.style.display='block';ts.textContent='locked · '+new Date().toLocaleString();
+  const lb=document.getElementById('lockBtn');lb.textContent='✓ Hypothesis locked';lb.disabled=true;
+  document.getElementById('labHint').textContent='Adjust controls and press Play';
+  document.getElementById('playBtn').disabled=false;
+  localStorage.setItem('alexey_exp_06_hypothesis',t);
+  localStorage.setItem('alexey_exp_06_timestamp',new Date().toISOString());
+  startP5();
+}
+
+/* ── record observations ── */
+function recordObs(){
+  const pr=getParams();
+  const div=Math.abs(stateA[0]-stateB[0])*180/Math.PI;
+  const eA=totalEnergy(stateA,pr),eB=totalEnergy(stateB,pr);
+  const driftA=energyA0!==0?Math.abs((eA-energyA0)/Math.abs(energyA0))*100:0;
+  const driftB=energyB0!==0?Math.abs((eB-energyB0)/Math.abs(energyB0))*100:0;
+  const t1v=document.getElementById('sTheta1').value;
+  const diffv=document.getElementById('sDiff').value;
+  const t2v=document.getElementById('sTheta2').value;
+  document.getElementById('rTh1').textContent=t1v+'°';
+  document.getElementById('rDiff').textContent=parseFloat(diffv).toFixed(3)+'°';
+  document.getElementById('rTh2').textContent=t2v+'°';
+  document.getElementById('rT10').textContent=time10div!==null?time10div.toFixed(2)+'s':'not reached';
+  /* Lyapunov from rdLyap */
+  document.getElementById('rLyap').innerHTML=document.getElementById('rdLyap').innerHTML;
+  document.getElementById('rEdrift').textContent=driftA.toFixed(2)+'% / '+driftB.toFixed(2)+'%';
+  document.getElementById('stepRes').style.display='';
+  const results={theta1:t1v,diff:diffv,theta2:t2v,L1:pr.L1/100,L2:pr.L2/100,m1:pr.m1,m2:pr.m2,time10div,elapsedTime:simTime,finalDiv:div,energyDriftA:driftA,energyDriftB:driftB};
+  localStorage.setItem('alexey_exp_06_results',JSON.stringify(results));
+  document.getElementById('stepRes').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── AI Coach ── */
+async function askCoach(){
+  const interp=document.getElementById('interpText').value.trim();
+  if(interp.length<20){document.getElementById('interpText').style.borderColor='#e24b4a';return}
+  const hyp=document.getElementById('hypText').value;
+  const res=localStorage.getItem('alexey_exp_06_results');
+  const rd=res?JSON.parse(res):{};
+  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nSimulation data:\nStarting angle θ₁: ${rd.theta1||'?'}°, Angle difference: ${rd.diff||'?'}°, θ₂: ${rd.theta2||'?'}°\nArm lengths: L₁=${rd.L1||'?'}, L₂=${rd.L2||'?'}\nMasses: m₁=${rd.m1||'?'}, m₂=${rd.m2||'?'}\nTime to 10° divergence: ${rd.time10div!==null&&rd.time10div!==undefined?rd.time10div.toFixed(2)+'s':'not reached'}\nElapsed time: ${rd.elapsedTime?rd.elapsedTime.toFixed(2)+'s':'?'}\nFinal divergence: ${rd.finalDiv?rd.finalDiv.toFixed(1)+'°':'?'}\nEnergy drift: A=${rd.energyDriftA?rd.energyDriftA.toFixed(2):'?'}%, B=${rd.energyDriftB?rd.energyDriftB.toFixed(2):'?'}%\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById('askBtn').disabled=true;
+  convHist=[{role:'user',content:userMsg}];
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH — a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has simulated two double pendulums with nearly identical starting conditions and observed them diverge. He used Runge-Kutta integration to solve the equations of motion, tracked tip traces, measured the rate of divergence between the two pendulums, and estimated the Lyapunov exponent. He explored how different starting angles and arm lengths affect the onset and rate of chaotic behavior. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Never explain the science to him — make him work it out. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML='<span style="font-style:italic">'+q+'</span>';
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_06_dialogue',JSON.stringify(convHist));
+    document.getElementById('replySec').style.display='block';
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
+  document.getElementById('askBtn').disabled=false;
+}
+async function sendReply(){
+  const reply=document.getElementById('replyText').value.trim();if(reply.length<3)return;
+  const prevQ=document.getElementById('aiQ').innerText;
+  const thr=document.getElementById('thread');
+  thr.innerHTML+='<div class="tcoach"><div class="tcoach-lbl">coach\'s question</div>'+prevQ+'</div><div class="talex"><div class="talex-lbl">alexey</div>'+reply+'</div>';
+  document.getElementById('replyText').value='';
+  convHist.push({role:'user',content:reply});
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his double pendulum chaos experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML='<span style="font-style:italic">'+q+'</span>';
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_06_dialogue',JSON.stringify(convHist));
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue — try again.</span>'}
+}
+
+const LOGBOOK_KEY='alexey_exp_06_logbook';
+function getLogEntries(){try{return JSON.parse(localStorage.getItem(LOGBOOK_KEY))||[];}catch(e){return[];}}
+function saveLogEntries(entries){localStorage.setItem(LOGBOOK_KEY,JSON.stringify(entries));}
+function renderLogbook(){
+  const entries=getLogEntries();const el=document.getElementById('logbookEntries');
+  if(entries.length===0){el.innerHTML='<div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>';return;}
+  el.innerHTML=entries.map((e,i)=>{
+    const typeClass=e.type==='obs'?'obs':e.type==='quest'?'quest':'conc';
+    const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';
+    const date=new Date(e.timestamp);const ts=date.toLocaleDateString()+' '+date.toLocaleTimeString();
+    return `<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag ${typeClass}">${typeLabel}</span><span class="log-entry-ts">${ts}</span><div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div></div><div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${e.context?'<div class="log-entry-ctx">'+e.context+'</div>':''}</div>`;
+  }).join('');
+}
+function addLogEntry(){
+  const text=document.getElementById('logText').value.trim();if(!text)return;
+  const type=document.getElementById('logType').value;const entries=getLogEntries();
+  entries.push({id:Date.now().toString(36),timestamp:new Date().toISOString(),type,text,context:''});
+  saveLogEntries(entries);document.getElementById('logText').value='';renderLogbook();
+}
+function deleteLogEntry(idx){const entries=getLogEntries();entries.splice(idx,1);saveLogEntries(entries);renderLogbook();}
+function exportLogbook(){
+  const entries=getLogEntries();if(entries.length===0)return;
+  let md='# Experiment 06 - Double Pendulum — Logbook\n\n';
+  entries.forEach(e=>{const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';const date=new Date(e.timestamp);md+=`## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`+e.text+'\n\n';if(e.context)md+=`> Context: ${e.context}\n\n`;md+='---\n\n';});
+  const blob=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='double-pendulum-logbook.md';a.click();
+}
+renderLogbook();
+</script>
+</body>
+</html>
