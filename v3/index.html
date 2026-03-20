@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alexey Mikhail Johll · Computational Research Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--bg-deep:#edeae3;--surface:#ffffff;--border:#d4cfc5;--border-light:#e8e4dc;--text-primary:#1a1a18;--text-secondary:#6b6560;--text-tertiary:#9a9490;--accent:#2d5a3d;--accent-light:#3d7a52;--accent-subtle:rgba(45,90,61,0.08);--accent-border:rgba(45,90,61,0.2);--danger:#c0392b}
+[data-theme="dark"]{--bg:#0a0a0a;--bg-deep:#060606;--surface:#141414;--border:rgba(61,207,176,0.12);--border-light:rgba(61,207,176,0.06);--text-primary:#e8e8e8;--text-secondary:#8a8a8a;--text-tertiary:#5a5a5a;--accent:#3dcfb0;--accent-light:#6eddc5;--accent-subtle:rgba(61,207,176,0.08);--accent-border:rgba(61,207,176,0.2);--danger:#e24b4a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+
+.hero{text-align:center;padding:4rem 1rem 3rem}
+.hero-name{font-family:'Instrument Serif',serif;font-size:clamp(22px,4vw,36px);font-weight:400;color:var(--text-primary);letter-spacing:2px;margin-bottom:8px}
+.hero-sub{font-family:'JetBrains Mono',monospace;font-size:clamp(13px,2vw,16px);color:var(--text-secondary);margin-bottom:6px}
+.hero-loc{font-size:12px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace}
+
+.section-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.section-label{font-size:10px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;padding-left:2px}
+.section-count{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace}
+.section-line{flex:1;height:1px;background:var(--border-light)}
+
+.grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:3rem}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:2px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:border-color .15s,background .15s}
+.card:hover{border-color:var(--accent-border);background:var(--bg-deep)}
+.card-inner{padding:16px 18px}
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.card-num{font-size:10px;font-weight:500;padding:2px 8px;border-radius:2px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.card-title{font-family:'Instrument Serif',serif;font-size:15px;font-weight:400;color:var(--text-primary);margin-bottom:4px;line-height:1.3}
+.card-desc{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;padding:2px 7px;border:1px solid var(--border-light);border-radius:2px;text-transform:uppercase;letter-spacing:.5px}
+
+.about{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:24px;margin-bottom:2rem}
+.about p{font-size:14px;color:var(--text-secondary);line-height:1.8}
+
+.section-empty{padding:24px;text-align:center;font-size:12px;color:var(--text-tertiary);font-style:italic;background:var(--surface);border:1px solid var(--border-light);border-radius:2px;border-style:dashed}
+
+.theme-toggle{position:fixed;top:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 200ms;z-index:100}
+.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle svg{width:18px;height:18px;color:var(--text-secondary);transition:color 200ms}
+.theme-toggle:hover svg{color:var(--accent)}
+.theme-toggle .icon-sun{display:none}
+[data-theme="dark"] .theme-toggle .icon-moon{display:none}
+[data-theme="dark"] .theme-toggle .icon-sun{display:block}
+
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+<script>(function(){var t=localStorage.getItem('alexey_theme')||'light';document.documentElement.setAttribute('data-theme',t)})()</script>
+</head>
+<body>
+<script>function toggleTheme(){var h=document.documentElement,c=h.getAttribute('data-theme')||'light',n=c==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('alexey_theme',n)}</script>
+<button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-name">ALEXEY MIKHAIL JOHLL</div>
+  <div class="hero-sub">Computational Research Tools</div>
+  <div class="hero-loc">Singapore &middot; v3</div>
+</div>
+
+<!-- SiGe PORTALS -->
+<div class="section-hdr">
+  <span class="section-label">SiGe Surface Science</span>
+  <span class="section-count">2 portals</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid">
+  <a class="card" href="md-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(45,90,61,0.15);color:#3d7a52;border:1px solid rgba(45,90,61,0.4)">MD</span>
+      </div>
+      <div class="card-title">SiGe Surface Energy</div>
+      <div class="card-desc">Tersoff potential molecular dynamics with GCMC species swaps. Automated slab-thickness sweeps extract surface energy and bulk Ge fraction via Boettger regression. 3D visualization, layer-resolved composition, Gibbs surface excess.</div>
+      <div class="card-tags"><span class="tag">molecular dynamics</span><span class="tag">tersoff potential</span><span class="tag">surface energy</span></div>
+    </div>
+  </a>
+  <a class="card" href="kmc-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(90,74,45,0.15);color:#7a6a3d;border:1px solid rgba(90,74,45,0.4)">KMC</span>
+      </div>
+      <div class="card-title">SiGe Thin Film Simulator</div>
+      <div class="card-desc">2D Kinetic Monte Carlo for SiGe thin film etching. Desorption, surface diffusion, and bulk diffusion with Metropolis criterion. Roughness scaling exponents, pit analysis, temperature and composition sweeps.</div>
+      <div class="card-tags"><span class="tag">kinetic monte carlo</span><span class="tag">materials science</span><span class="tag">scaling exponents</span></div>
+    </div>
+  </a>
+</div>
+
+<!-- FUTURE -->
+<div class="section-hdr">
+  <span class="section-label">Coming Next</span>
+  <span class="section-line"></span>
+</div>
+<div class="section-empty">More research tools in development</div>
+<div style="margin-bottom:3rem"></div>
+
+<!-- ABOUT -->
+<div class="section-hdr">
+  <span class="section-label">About v3</span>
+  <span class="section-line"></span>
+</div>
+<div class="about">
+  <p>v3 portals use a multi-file architecture: separate Web Workers for computation, modular chart and data management, and external stylesheets. The physics is ported with high fidelity from FORTRAN reference implementations and validated against v2 single-file prototypes. Each portal runs entirely in the browser with no backend.</p>
+</div>
+
+</div>
+</body>
+</html>
