@@ -433,7 +433,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
 </button>
 <div class="page">
 
-<a href="index.html" class="nav-back">&larr; portfolio home</a>
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
 
 <div class="exp-tag">Alexey Mikhail Johll &middot; Module 01 &middot; Molecular Dynamics</div>
 <h1 class="exp-title">SiGe Surface Dynamics</h1>
@@ -461,7 +461,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
   <div class="step-hdr">
     <span class="snum">step 02</span>
     <span class="sname">The lab</span>
-    <span class="shint" id="labHint">Lock your hypothesis first</span>
+    <span class="shint" id="labHint">Set parameters, configure pipeline, and run</span>
   </div>
   <div class="sbody">
 
@@ -474,30 +474,30 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
           <div class="pg-title">Slab size</div>
           <div class="prow">
             <label>n<sub>x</sub></label>
-            <div class="seg-group" id="segNx" data-param="nx" data-value="2">
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nx',1)">1</button>
-              <button class="seg-btn lab-ctrl on" disabled onclick="MD.ui.setSeg('nx',2)">2</button>
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nx',3)">3</button>
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nx',4)">4</button>
+            <div class="seg-group" id="segNx" data-param="nx" data-value="3">
+              <button class="seg-btn" onclick="MD.ui.setSeg('nx',1)">1</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('nx',2)">2</button>
+              <button class="seg-btn on" onclick="MD.ui.setSeg('nx',3)">3</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('nx',4)">4</button>
             </div>
           </div>
           <div class="prow">
             <label>n<sub>y</sub></label>
-            <div class="seg-group" id="segNy" data-param="ny" data-value="2">
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('ny',1)">1</button>
-              <button class="seg-btn lab-ctrl on" disabled onclick="MD.ui.setSeg('ny',2)">2</button>
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('ny',3)">3</button>
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('ny',4)">4</button>
+            <div class="seg-group" id="segNy" data-param="ny" data-value="3">
+              <button class="seg-btn" onclick="MD.ui.setSeg('ny',1)">1</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('ny',2)">2</button>
+              <button class="seg-btn on" onclick="MD.ui.setSeg('ny',3)">3</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('ny',4)">4</button>
             </div>
           </div>
           <div class="prow">
             <label>n<sub>z</sub></label>
             <div class="seg-group" id="segNz" data-param="nz" data-value="3">
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',2)">2</button>
-              <button class="seg-btn lab-ctrl on" disabled onclick="MD.ui.setSeg('nz',3)">3</button>
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',4)">4</button>
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',5)">5</button>
-              <button class="seg-btn lab-ctrl" disabled onclick="MD.ui.setSeg('nz',6)">6</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('nz',2)">2</button>
+              <button class="seg-btn on" onclick="MD.ui.setSeg('nz',3)">3</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('nz',4)">4</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('nz',5)">5</button>
+              <button class="seg-btn" onclick="MD.ui.setSeg('nz',6)">6</button>
             </div>
           </div>
         </div>
@@ -507,7 +507,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
           <div class="pg-title">Strain</div>
           <div class="prow">
             <label>&epsilon;<sub>x</sub></label>
-            <input type="number" id="inEx" class="num-input lab-ctrl" disabled value="0.0" min="-5" max="5" step="0.5">
+            <input type="number" id="inEx" class="num-input" value="0.0" min="-5" max="5" step="0.5">
             <span class="unit">%</span>
             <button class="sweep-tog" data-sweep="ex" onclick="MD.ui.toggleSweep('ex')">sweep</button>
           </div>
@@ -518,7 +518,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
           </div>
           <div class="prow">
             <label>&epsilon;<sub>y</sub></label>
-            <input type="number" id="inEy" class="num-input lab-ctrl" disabled value="0.0" min="-5" max="5" step="0.5">
+            <input type="number" id="inEy" class="num-input" value="0.0" min="-5" max="5" step="0.5">
             <span class="unit">%</span>
             <button class="sweep-tog" data-sweep="ey" onclick="MD.ui.toggleSweep('ey')">sweep</button>
           </div>
@@ -529,12 +529,12 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
           </div>
         </div>
 
-        <!-- Dynamics — number inputs -->
+        <!-- Dynamics -->
         <div class="pg">
           <div class="pg-title">Dynamics</div>
           <div class="prow">
             <label>T</label>
-            <input type="number" id="inT" class="num-input lab-ctrl" disabled value="300" min="100" max="1200" step="50">
+            <input type="number" id="inT" class="num-input" value="300" min="100" max="1200" step="50">
             <span class="unit">K</span>
             <button class="sweep-tog" data-sweep="T" onclick="MD.ui.toggleSweep('T')">sweep</button>
           </div>
@@ -545,25 +545,33 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
           </div>
           <div class="prow">
             <label>dt</label>
-            <input type="number" id="inDt" class="num-input lab-ctrl" disabled value="2.0" min="0.5" max="5.0" step="0.5">
+            <input type="number" id="inDt" class="num-input" value="0.02" min="0.001" max="1.0" step="0.01">
             <span class="unit">fs</span>
           </div>
           <div class="prow">
-            <label>VV steps</label>
-            <input type="number" id="inVV" class="num-input lab-ctrl" disabled value="200" min="50" max="500" step="10">
+            <label>niter 1</label>
+            <input type="number" id="inNiter1" class="num-input" value="200" min="1" max="100000" step="10">
+          </div>
+          <div class="prow">
+            <label>niter 2</label>
+            <input type="number" id="inNiter2" class="num-input" value="50" min="1" max="10000" step="10">
           </div>
         </div>
 
-        <!-- Monte Carlo — number inputs -->
+        <!-- Monte Carlo -->
         <div class="pg">
           <div class="pg-title">Monte Carlo</div>
           <div class="prow">
-            <label>MC swaps</label>
-            <input type="number" id="inMC" class="num-input lab-ctrl" disabled value="100" min="0" max="500" step="10">
+            <label>niter 3</label>
+            <input type="number" id="inNiter3" class="num-input" value="0" min="0" max="10000" step="10">
+          </div>
+          <div class="prow">
+            <label>niter 4</label>
+            <input type="number" id="inNiter4" class="num-input" value="50" min="0" max="10000" step="10">
           </div>
           <div class="prow">
             <label>&Delta;&mu;</label>
-            <input type="number" id="inDmu" class="num-input lab-ctrl" disabled value="0.00" min="-2" max="2" step="0.05">
+            <input type="number" id="inDmu" class="num-input" value="0.00" min="-2" max="2" step="0.05">
             <span class="unit">eV</span>
             <button class="sweep-tog" data-sweep="dmu" onclick="MD.ui.toggleSweep('dmu')">sweep</button>
           </div>
@@ -590,7 +598,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
 
     <!-- Run controls -->
     <div class="run-controls">
-      <button id="btnRun" class="primary lab-ctrl" disabled onclick="MD.ui.runSimulation()">Run &rarr;</button>
+      <button id="btnRun" class="primary" onclick="MD.ui.runSimulation()">Run &rarr;</button>
       <button id="btnStop" style="display:none" onclick="MD.ui.stopRun()">Stop</button>
       <button onclick="MD.ui.clearResults()">Clear results</button>
       <span class="status" id="runStatus">&nbsp;</span>

@@ -106,9 +106,6 @@ MD.ui = {
 
     document.getElementById('lockBtn').textContent = '\u2713 Hypothesis locked';
     document.getElementById('lockBtn').disabled = true;
-    document.getElementById('labHint').textContent = 'Set parameters, configure pipeline, and run';
-
-    document.querySelectorAll('.lab-ctrl').forEach(function(el) { el.disabled = false; });
   },
 
   // ── Sweep toggles ──
@@ -141,7 +138,7 @@ MD.ui = {
       } else {
         if (togBtn) { togBtn.classList.remove('active'); togBtn.textContent = 'sweep'; }
         if (cfgRow) cfgRow.style.display = 'none';
-        if (inp && MD.ui.locked) { inp.disabled = false; inp.style.opacity = '1'; }
+        if (inp) { inp.disabled = false; inp.style.opacity = '1'; }
       }
     }
   },
@@ -198,8 +195,10 @@ MD.ui = {
       nz: parseInt(document.getElementById('segNz').getAttribute('data-value')),
       T: parseFloat(document.getElementById('inT').value),
       dt: parseFloat(document.getElementById('inDt').value),
-      vv: parseInt(document.getElementById('inVV').value),
-      mc: parseInt(document.getElementById('inMC').value),
+      niter1: parseInt(document.getElementById('inNiter1').value),
+      niter2: parseInt(document.getElementById('inNiter2').value),
+      niter3: parseInt(document.getElementById('inNiter3').value),
+      niter4: parseInt(document.getElementById('inNiter4').value),
       dmu: parseFloat(document.getElementById('inDmu').value),
       ex: parseFloat(document.getElementById('inEx').value),
       ey: parseFloat(document.getElementById('inEy').value)
@@ -220,7 +219,7 @@ MD.ui = {
   // ── Main run logic ──
 
   runSimulation: async function() {
-    if (!MD.ui.locked || MD.ui.running) return;
+    if (MD.ui.running) return;
     MD.ui.running = true;
     MD.ui.stopRequested = false;
 
@@ -337,10 +336,11 @@ MD.ui = {
                 step: 0,
                 params: {
                   dt: p.dt,
-                  nvv: p.vv,
+                  niter1: p.niter1,
+                  niter2: p.niter2,
                   temp: p.T,
-                  mcswap: 0,
-                  mcgc: 0,
+                  niter3: 0,
+                  niter4: 0,
                   dmu: 0
                 }
               });
@@ -352,10 +352,11 @@ MD.ui = {
                 step: 0,
                 params: {
                   dt: p.dt,
-                  nvv: 0,
+                  niter1: 0,
+                  niter2: 0,
                   temp: p.T,
-                  mcswap: p.mc,
-                  mcgc: Math.floor(p.mc / 2),
+                  niter3: p.niter3,
+                  niter4: p.niter4,
                   dmu: p.dmu
                 }
               });
@@ -384,10 +385,11 @@ MD.ui = {
                 step: 1,
                 params: {
                   dt: p.dt,
-                  nvv: 0,
+                  niter1: 0,
+                  niter2: 0,
                   temp: p.T,
-                  mcswap: p.mc,
-                  mcgc: Math.floor(p.mc / 2),
+                  niter3: p.niter3,
+                  niter4: p.niter4,
                   dmu: p.dmu
                 }
               });
