@@ -2,7 +2,7 @@
 // Faithfully implements PRB 39, 5566 (1989)
 // Mirrors pot_ter.f and en_ter.f from the Fortran codebase
 
-const MD = window.MD || {};
+var MD = window.MD || {};
 window.MD = MD;
 
 MD.tersoff = {

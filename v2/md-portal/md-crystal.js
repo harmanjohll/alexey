@@ -3,7 +3,7 @@
 // x-axis: dimer row, y-axis: dimer bond, z: perpendicular to (100) surface
 // 16 atoms per unit cell, dimer reconstruction on top and bottom surfaces
 
-const MD = window.MD || {};
+var MD = window.MD || {};
 window.MD = MD;
 
 MD.crystal = {

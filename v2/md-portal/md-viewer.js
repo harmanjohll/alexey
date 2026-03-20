@@ -1,6 +1,6 @@
 // md-viewer.js — Canvas renderer for crystal slab visualization
 
-const MD = window.MD || {};
+var MD = window.MD || {};
 window.MD = MD;
 
 MD.viewer = {
