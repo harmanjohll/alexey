@@ -6,104 +6,68 @@
 <title>Experiment 01 &middot; xG Model &middot; Alexey Mikhail Johll</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #f7f5f0;
-  --bg-deep: #edeae3;
-  --surface: #ffffff;
-  --border: #d4cfc5;
-  --border-light: #e8e4dc;
-  --text-primary: #1a1a18;
-  --text-secondary: #6b6560;
-  --text-tertiary: #9a9490;
-  --accent: #2d5a3d;
-  --accent-light: #3d7a52;
-  --accent-subtle: rgba(45, 90, 61, 0.08);
-  --accent-border: rgba(45, 90, 61, 0.2);
-  --danger: #e24b4a;
-  --danger-border: rgba(226, 75, 74, 0.4);
-  --danger-bg: rgba(226, 75, 74, 0.08);
-  --warning: #f0b429;
-}
-[data-theme="dark"] {
-  --bg: #0a0a0a;
-  --bg-deep: #060606;
-  --surface: #141414;
-  --border: rgba(61, 207, 176, 0.12);
-  --border-light: rgba(61, 207, 176, 0.06);
-  --text-primary: #e8e8e8;
-  --text-secondary: #8a8a8a;
-  --text-tertiary: #5a5a5a;
-  --accent: #3dcfb0;
-  --accent-light: #6eddc5;
-  --accent-subtle: rgba(61, 207, 176, 0.08);
-  --accent-border: rgba(61, 207, 176, 0.2);
-  --danger: #e24b4a;
-  --danger-border: rgba(226, 75, 74, 0.4);
-  --danger-bg: rgba(226, 75, 74, 0.08);
-  --warning: #f0b429;
-}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text-primary);font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
 .wrap{max-width:920px;margin:0 auto}
-.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:var(--accent-subtle);color:var(--accent-light);border:0.5px solid var(--accent-border);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
-.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:var(--text-primary);margin-bottom:6px;line-height:1.2}
-.exp-sub{font-size:14px;color:var(--text-secondary);line-height:1.7;max-width:620px;margin-bottom:2rem}
-.step{background:var(--surface);border:0.5px solid var(--border);border-radius:8px;margin-bottom:14px;overflow:hidden}
-.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--border-light);background:var(--bg-deep)}
-.snum{font-size:10px;font-weight:700;background:var(--accent-subtle);color:var(--accent-light);padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid var(--accent-border);white-space:nowrap}
-.sname{font-size:13px;font-weight:600;color:var(--text-primary);font-family:'Space Mono',monospace}
-.shint{margin-left:auto;font-size:11px;color:var(--text-tertiary);text-align:right}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
 .sbody{padding:18px}
-.note{font-size:12px;color:var(--text-secondary);line-height:1.65;padding:10px 14px;border-left:2px solid var(--accent);background:var(--accent-subtle);margin-bottom:14px;border-radius:0 4px 4px 0}
-.note b{color:var(--accent-light);font-weight:600}
-textarea{width:100%;background:var(--bg-deep);border:0.5px solid var(--border);color:var(--text-primary);font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
-textarea:focus{outline:none;border-color:var(--accent)}
-textarea::placeholder{color:var(--text-tertiary)}
-textarea:disabled{color:var(--text-secondary);background:var(--bg);font-style:italic;cursor:default}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
 .row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
-.ts-label{font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;display:none}
-button{background:transparent;border:0.5px solid var(--accent-border);color:var(--accent-light);font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
-button:hover:not(:disabled){background:var(--accent-subtle);border-color:var(--accent)}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
 button:disabled{opacity:.35;cursor:not-allowed}
-button.danger{color:var(--danger);border-color:var(--danger-border)}
-button.danger:hover:not(:disabled){background:var(--danger-bg)}
-button.active{background:var(--accent-subtle);border-color:var(--accent);color:var(--text-primary)}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+button.active{background:rgba(60,160,60,0.2);border-color:#3ca03c;color:#e8f0e8}
 .lab-grid{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start}
-canvas#pitch{border:0.5px solid var(--border);border-radius:4px;display:block;cursor:crosshair}
-canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:block}
-.sl{font-size:10px;font-weight:700;color:var(--text-tertiary);font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
-.sv{font-size:26px;font-weight:700;color:var(--text-primary);font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
-.sv.green{color:var(--accent-light)}
+canvas#pitch{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block;cursor:crosshair}
+canvas#heatmapCanvas{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
 .sv.sm{font-size:15px}
-.legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace}
+.legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
 .lgbar{width:80px;height:5px;background:linear-gradient(to right,#4080ff,#ffcc00,#ff2244);border-radius:3px}
-.shot-log{max-height:140px;overflow-y:auto;border:0.5px solid var(--border-light);border-radius:6px;margin-top:10px;background:var(--bg-deep)}
-.sli{display:flex;justify-content:space-between;padding:5px 10px;font-size:10px;font-family:'Space Mono',monospace;color:var(--text-secondary);border-bottom:0.5px solid var(--border-light)}
+.shot-log{max-height:140px;overflow-y:auto;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:10px;background:#0d150d}
+.sli{display:flex;justify-content:space-between;padding:5px 10px;font-size:10px;font-family:'Space Mono',monospace;color:#7a9a7a;border-bottom:0.5px solid rgba(60,160,60,0.1)}
 .sli:last-child{border-bottom:none}
 .brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
-.chart-wrap{background:var(--bg-deep);border:0.5px solid var(--border);border-radius:6px;padding:14px;height:230px;position:relative}
+.chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:230px;position:relative}
 .chart-wrap.tall{height:300px}
-.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid var(--border-light)}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
 .rstat:last-child{border-bottom:none}
-.rl{font-size:11px;color:var(--text-secondary)}
-.rv{font-size:16px;font-weight:700;color:var(--accent-light);font-family:'Space Mono',monospace}
-.model-note{font-size:11px;color:var(--text-tertiary);line-height:1.6;padding:10px 12px;background:var(--bg-deep);border:0.5px solid var(--border-light);border-radius:6px;margin-top:14px}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
 .interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
-.ai-box{background:var(--bg-deep);border:0.5px solid var(--border);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
-.ai-lbl{font-size:10px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
-.ai-q{font-size:13px;color:var(--text-primary);line-height:1.7;font-style:italic;flex:1}
-.ai-ph{font-size:12px;color:var(--text-tertiary);font-style:italic;flex:1}
-.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
 @keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
 .thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
-.tcoach{background:var(--accent-subtle);border:0.5px solid var(--accent-border);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--text-primary);line-height:1.65;font-style:italic}
-.tcoach-lbl{font-size:9px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
-.talex{background:var(--bg-deep);border:0.5px solid var(--border-light);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--text-primary);line-height:1.65}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
 .talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
 .reply-sec{margin-top:12px;display:none}
-.nav-back{display:inline-block;font-size:11px;color:var(--text-tertiary);font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid var(--border);padding:5px 12px;border-radius:4px;transition:all .15s}
-.nav-back:hover{color:var(--accent-light);border-color:var(--accent-border)}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
 
 /* Mode buttons */
 .mode-btns{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
@@ -115,76 +79,67 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
 
 /* Model toggle */
 .model-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.model-toggle span{font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace}
+.model-toggle span{font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
 
 /* League data styles */
 .league-section{display:none}
 .league-toggles{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .league-toggles button{font-size:9px;padding:5px 10px}
-.league-toggles button.sel{background:var(--accent-subtle);border-color:var(--accent);color:var(--text-primary)}
-.league-card{background:var(--bg-deep);border:0.5px solid var(--border-light);border-radius:6px;padding:14px;margin-bottom:12px}
-.league-card h3{font-size:13px;font-family:'Space Mono',monospace;color:var(--accent-light);margin-bottom:10px}
+.league-toggles button.sel{background:rgba(60,160,60,0.25);border-color:#3ca03c;color:#e8f0e8}
+.league-card{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:14px;margin-bottom:12px}
+.league-card h3{font-size:13px;font-family:'Space Mono',monospace;color:#7dd87d;margin-bottom:10px}
 .compare-table{width:100%;border-collapse:collapse;font-size:10px;font-family:'Space Mono',monospace}
-.compare-table th{text-align:left;color:var(--text-tertiary);padding:6px 8px;border-bottom:0.5px solid var(--border);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:9px}
-.compare-table td{padding:6px 8px;color:var(--text-primary);border-bottom:0.5px solid var(--border-light)}
-.compare-table tr:hover td{background:var(--accent-subtle)}
+.compare-table th{text-align:left;color:#4a6a4a;padding:6px 8px;border-bottom:0.5px solid rgba(60,160,60,0.2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:9px}
+.compare-table td{padding:6px 8px;color:#e8f0e8;border-bottom:0.5px solid rgba(60,160,60,0.08)}
+.compare-table tr:hover td{background:rgba(60,160,60,0.04)}
 .team-row{cursor:pointer;transition:background .15s}
-.team-row:hover{background:var(--accent-subtle)!important}
-.team-row td:first-child{color:var(--accent-light)}
-.team-detail{background:var(--bg);border:0.5px solid var(--border);border-radius:6px;padding:14px;margin-bottom:12px;display:none}
-.team-detail h4{font-size:12px;font-family:'Space Mono',monospace;color:var(--accent-light);margin-bottom:8px}
+.team-row:hover{background:rgba(60,160,60,0.08)!important}
+.team-row td:first-child{color:#7dd87d}
+.team-detail{background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;margin-bottom:12px;display:none}
+.team-detail h4{font-size:12px;font-family:'Space Mono',monospace;color:#7dd87d;margin-bottom:8px}
 .team-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .team-stat{text-align:center}
 .team-stat .sv{font-size:18px;margin-bottom:2px}
 
 /* Heatmap section */
 .heatmap-section{display:none}
-.heatmap-legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace}
+.heatmap-legend{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace}
 .heatmap-legend .hbar{width:120px;height:8px;border-radius:4px}
 
 /* League colors */
 .lc-epl{color:#3d195b}.lc-liga{color:#ee8707}.lc-buli{color:#d20515}.lc-seria{color:#024494}.lc-l1{color:#dae025}.lc-champ{color:#ff6b00}
 
 /* Overperformance indicator */
-.overperf{color:var(--accent-light)}.underperf{color:var(--danger)}
+.overperf{color:#7dd87d}.underperf{color:#e24b4a}
 
 /* Logbook */
-.log-entry{border:0.5px solid var(--border-light);border-radius:6px;padding:10px;margin-bottom:6px;background:var(--bg)}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
 .log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
-.log-type-tag.obs{background:var(--accent-subtle);color:var(--accent-light);border:0.5px solid var(--accent-border)}
-.log-type-tag.quest{background:rgba(240,180,41,0.12);color:var(--warning);border:0.5px solid rgba(240,180,41,0.3)}
-.log-type-tag.conc{background:var(--accent-subtle);color:var(--accent-light);border:0.5px solid var(--accent-border)}
-.log-entry-ts{font-size:9px;color:var(--text-tertiary);font-family:'Space Mono',monospace}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
 .log-entry-actions{margin-left:auto}
-.log-entry-actions button{font-size:10px;padding:2px 6px;color:var(--danger);border-color:var(--danger-border)}
-.log-entry-text{font-size:11px;color:var(--text-primary);line-height:1.5}
-.log-entry-ctx{font-size:9px;color:var(--text-tertiary);margin-top:4px;font-style:italic}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
 .logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
 .logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
-.logbook-add select{width:110px;font-size:10px;background:var(--bg-deep);border:0.5px solid var(--border);color:var(--text-primary);font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
-.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:var(--bg);border:0.5px solid var(--border);color:var(--text-primary);font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
-.logbook-add textarea:focus{outline:none;border-color:var(--accent)}
-.logbook-add textarea::placeholder{color:var(--text-tertiary)}
-.logbook-empty{font-size:11px;color:var(--text-tertiary);font-style:italic;padding:20px;text-align:center}
+.logbook-add select{width:110px;font-size:10px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
 
 /* Shot zone comparison */
 .zone-bar{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.zone-label{font-size:9px;color:var(--text-secondary);font-family:'Space Mono',monospace;width:110px;flex-shrink:0}
+.zone-label{font-size:9px;color:#7a9a7a;font-family:'Space Mono',monospace;width:110px;flex-shrink:0}
 .zone-fill{height:14px;border-radius:2px;transition:width .3s}
-.zone-pct{font-size:9px;color:var(--text-tertiary);font-family:'Space Mono',monospace;width:35px;text-align:right}
+.zone-pct{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace;width:35px;text-align:right}
 
 /* Poisson overlay note */
-.poisson-note{font-size:10px;color:var(--text-tertiary);margin-top:6px;font-style:italic}
-
-/* Theme toggle */
-.theme-toggle{position:fixed;top:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 200ms;z-index:100}
-.theme-toggle:hover{border-color:var(--accent)}
-.theme-toggle svg{width:18px;height:18px;color:var(--text-secondary);transition:color 200ms}
-.theme-toggle:hover svg{color:var(--accent)}
-.theme-toggle .icon-sun{display:none}
-[data-theme="dark"] .theme-toggle .icon-moon{display:none}
-[data-theme="dark"] .theme-toggle .icon-sun{display:block}
+.poisson-note{font-size:10px;color:#4a6a4a;margin-top:6px;font-style:italic}
 
 @media(max-width:680px){
   .lab-grid{grid-template-columns:1fr}
@@ -197,13 +152,8 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
 </style>
 </head>
 <body>
-<script>(function(){var t=localStorage.getItem('alexey_theme')||'light';document.documentElement.setAttribute('data-theme',t)})()</script>
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-</button>
 <div class="wrap">
-<a href="index.html" class="nav-back">&larr; portfolio home</a>
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
 <div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 01 OF 07 &middot; COMPUTATIONAL STATISTICS</div>
 <div class="exp-title">Where do goals come from?<br>The xG Model.</div>
 <div class="exp-sub">Professional clubs use Expected Goals (xG) &mdash; a probability assigned to every shot based on where it was taken from. You'll build two models (geometric and logistic regression), place shots on a real pitch, run 500 Monte Carlo simulations, compare against real league data from six European leagues, and discover what the data actually says about scoring.</div>
@@ -274,9 +224,9 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
           <div class="sl">distance</div>
           <div class="sv sm" id="hDist">&mdash;</div>
           <div class="sl" style="margin-top:4px">shots placed &middot; total xG</div>
-          <div class="sv sm" id="totXG" style="color:var(--text-primary)">0 shots &middot; 0.000</div>
+          <div class="sv sm" id="totXG" style="color:#e8f0e8">0 shots &middot; 0.000</div>
           <div class="shot-log" id="shotLog">
-            <div class="sli" style="color:var(--text-tertiary)">no shots placed yet</div>
+            <div class="sli" style="color:#4a6a4a">no shots placed yet</div>
           </div>
           <div class="brow">
             <button id="simBtn" onclick="runMC()" disabled>Run 500 simulations &rarr;</button>
@@ -306,7 +256,7 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
       <div class="league-card" id="overPerfCard" style="display:none">
         <h3>Goals vs xG &mdash; Who Overperforms?</h3>
         <div class="chart-wrap tall"><canvas id="overPerfChart"></canvas></div>
-        <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px">Teams above the diagonal score more than their xG predicts. Teams below underperform.</div>
+        <div style="font-size:10px;color:#4a6a4a;margin-top:6px">Teams above the diagonal score more than their xG predicts. Teams below underperform.</div>
       </div>
 
       <!-- Shot zone analysis -->
@@ -321,7 +271,7 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
         <div class="team-stats-grid" id="teamDetailGrid"></div>
         <div style="margin-top:12px">
           <div class="sl">xG performance</div>
-          <div id="teamPerfNote" style="font-size:12px;color:var(--text-primary);margin-top:4px"></div>
+          <div id="teamPerfNote" style="font-size:12px;color:#e8f0e8;margin-top:4px"></div>
         </div>
       </div>
 
@@ -348,7 +298,7 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
       <canvas id="heatmapCanvas" width="460" height="360"></canvas>
       <div class="heatmap-legend">
         <span>0.00</span>
-        <div class="hbar" style="background:linear-gradient(to right,var(--bg),#1a3a6a,#4080ff,#ffcc00,#ff4444)"></div>
+        <div class="hbar" style="background:linear-gradient(to right,#0a0f0a,#1a3a6a,#4080ff,#ffcc00,#ff4444)"></div>
         <span>0.50+</span>
         <span style="margin-left:12px">xG probability at each point</span>
       </div>
@@ -380,7 +330,7 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
         <div class="rstat"><span class="rl">Model used</span><span class="rv" id="rModel" style="font-size:11px">&mdash;</span></div>
 
         <div class="sl" style="margin-top:14px;margin-bottom:8px">league context</div>
-        <div id="leagueContext" style="font-size:11px;color:var(--text-secondary);line-height:1.6">
+        <div id="leagueContext" style="font-size:11px;color:#7a9a7a;line-height:1.6">
           Run the simulation to see how your shots compare to real league data.
         </div>
 
@@ -457,8 +407,6 @@ canvas#heatmapCanvas{border:0.5px solid var(--border);border-radius:4px;display:
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-function toggleTheme(){var h=document.documentElement,c=h.getAttribute('data-theme')||'light',n=c==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('alexey_theme',n)}
-function tc(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim()}
 
 // ========== LEAGUE DATA ==========
 const LEAGUE_DATA = {
@@ -780,7 +728,7 @@ function updateLog() {
   document.getElementById('totXG').textContent = `${shots.length} shot${shots.length !== 1 ? 's' : ''} \u00b7 ${tot.toFixed(3)}`;
   const log = document.getElementById('shotLog');
   if (shots.length === 0) {
-    log.innerHTML = '<div class="sli" style="color:var(--text-tertiary)">no shots placed yet</div>';
+    log.innerHTML = '<div class="sli" style="color:#4a6a4a">no shots placed yet</div>';
     return;
   }
   const typeLabels = { open: '', header: ' H', freekick: ' FK', penalty: ' PK' };
@@ -1350,7 +1298,7 @@ async function askCoach() {
   
   const userMsg = `Alexey's hypothesis: "${hyp}"\n\nShot data:\n${sd}\nTotal xG: ${tot.toFixed(3)}\nModels used: ${[...new Set(shots.map(s => s.model))].join(', ')}\nShot types: ${[...new Set(shots.map(s => s.type))].join(', ')}${leagueCtx}\n\nAlexey's interpretation: "${interp}"`;
   const aiEl = document.getElementById('aiQ');
-  aiEl.innerHTML = '<span class="pulse"></span><span style="color:var(--text-tertiary);font-size:12px;font-style:italic">Coach is thinking...</span>';
+  aiEl.innerHTML = '<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
   document.getElementById('askBtn').disabled = true;
   convHist = [{ role: 'user', content: userMsg }];
   try {
@@ -1385,7 +1333,7 @@ async function sendReply() {
   document.getElementById('replyText').value = '';
   convHist.push({ role: 'user', content: reply });
   const aiEl = document.getElementById('aiQ');
-  aiEl.innerHTML = '<span class="pulse"></span><span style="color:var(--text-tertiary);font-size:12px;font-style:italic">Coach is thinking...</span>';
+  aiEl.innerHTML = '<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment 05 · Random Walk · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:920px;margin:0 auto}
+.exp-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+.exp-title{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;color:#e8f0e8;margin-bottom:6px;line-height:1.2}
+.exp-sub{font-size:14px;color:#7a9a7a;line-height:1.7;max-width:620px;margin-bottom:2rem}
+.step{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:14px;overflow:hidden}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d}
+.snum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.sname{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.shint{margin-left:auto;font-size:11px;color:#4a6a4a;text-align:right}
+.sbody{padding:18px}
+.note{font-size:12px;color:#7a9a7a;line-height:1.65;padding:10px 14px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:14px;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d;font-weight:600}
+textarea{width:100%;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:6px;transition:border-color .2s;min-height:110px}
+textarea:focus{outline:none;border-color:#3ca03c}
+textarea::placeholder{color:#4a6a4a}
+textarea:disabled{color:#7a9a7a;background:#0f1a0f;font-style:italic;cursor:default}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ts-label{font-size:10px;color:#3ca03c;font-family:'Space Mono',monospace;display:none}
+button{background:transparent;border:0.5px solid rgba(60,160,60,0.5);color:#7dd87d;font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){background:rgba(60,160,60,0.1);border-color:#3ca03c}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:#e24b4a;border-color:rgba(226,75,74,0.4)}
+button.danger:hover:not(:disabled){background:rgba(226,75,74,0.08)}
+button.active{background:rgba(60,160,60,0.2);border-color:#3ca03c;color:#7dd87d}
+.sl{font-size:10px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.8px;margin-bottom:4px;text-transform:uppercase}
+.sv{font-size:26px;font-weight:700;color:#e8f0e8;font-family:'Space Mono',monospace;line-height:1.1;margin-bottom:14px}
+.sv.green{color:#7dd87d}
+.sv.sm{font-size:15px}
+.ctrl-bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 14px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:10px;margin-bottom:10px}
+.ctrl-grp{display:flex;flex-direction:column;gap:3px}
+.ctrl-grp label{font-size:9px;font-weight:700;color:#4a6a4a;font-family:'Space Mono',monospace;letter-spacing:.6px;text-transform:uppercase}
+.ctrl-grp input[type=range]{width:100px;accent-color:#3ca03c}
+.ctrl-grp .cv{font-size:10px;color:#7dd87d;font-family:'Space Mono',monospace}
+.tog-grp{display:flex;gap:0}
+.tog-grp button{border-radius:0;font-size:10px;padding:5px 12px}
+.tog-grp button:first-child{border-radius:4px 0 0 4px}
+.tog-grp button:last-child{border-radius:0 4px 4px 0}
+.stats-bar{display:flex;flex-wrap:wrap;gap:16px;padding:10px 14px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-bottom:10px}
+.stat-item{display:flex;flex-direction:column;gap:1px}
+.stat-item .sl{margin-bottom:0;font-size:9px}
+.stat-item .sv{margin-bottom:0;font-size:14px}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.chart-wrap{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;padding:14px;height:230px;position:relative}
+.rstat{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:0.5px solid rgba(60,160,60,0.1)}
+.rstat:last-child{border-bottom:none}
+.rl{font-size:11px;color:#7a9a7a}
+.rv{font-size:16px;font-weight:700;color:#7dd87d;font-family:'Space Mono',monospace}
+.model-note{font-size:11px;color:#4a6a4a;line-height:1.6;padding:10px 12px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;margin-top:14px}
+.interp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.ai-box{background:#0d150d;border:0.5px solid rgba(60,160,60,0.2);border-left:2px solid #3ca03c;border-radius:0 6px 6px 0;padding:14px;min-height:130px;display:flex;flex-direction:column}
+.ai-lbl{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+.ai-q{font-size:13px;color:#e8f0e8;line-height:1.7;font-style:italic;flex:1}
+.ai-ph{font-size:12px;color:#4a6a4a;font-style:italic;flex:1}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3ca03c;animation:pd 1.2s infinite;margin-right:6px;vertical-align:middle}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.15}}
+.thread{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tcoach{background:rgba(60,160,60,0.06);border:0.5px solid rgba(60,160,60,0.25);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65;font-style:italic}
+.tcoach-lbl{font-size:9px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;margin-bottom:5px;font-style:normal;text-transform:uppercase;letter-spacing:.8px}
+.talex{background:#0d150d;border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px 14px;font-size:12px;color:#e8f0e8;line-height:1.65}
+.talex-lbl{font-size:9px;font-weight:700;color:#4a9aaa;font-family:'Space Mono',monospace;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+.reply-sec{margin-top:12px;display:none}
+.brow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+#simCanvas{border:0.5px solid rgba(60,160,60,0.3);border-radius:4px;display:block;width:100%}
+@media(max-width:680px){.res-grid{grid-template-columns:1fr}.interp-grid{grid-template-columns:1fr}.ctrl-bar{gap:8px}}
+.log-entry{border:0.5px solid rgba(60,160,60,0.15);border-radius:6px;padding:10px;margin-bottom:6px;background:#0a0f0a}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.log-type-tag.obs{background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-type-tag.quest{background:rgba(240,180,41,0.12);color:#f0b429;border:0.5px solid rgba(240,180,41,0.3)}
+.log-type-tag.conc{background:rgba(60,160,60,0.12);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.3)}
+.log-entry-ts{font-size:9px;color:#4a6a4a;font-family:'Space Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:#e24b4a;border-color:rgba(226,75,74,0.3)}
+.log-entry-text{font-size:11px;color:#e8f0e8;line-height:1.5}
+.log-entry-ctx{font-size:9px;color:#4a6a4a;margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px;background:#0d150d;border:0.5px solid rgba(60,160,60,0.25);color:#e8f0e8;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:#0a0f0a;border:0.5px solid rgba(60,160,60,0.2);color:#e8f0e8;font-family:system-ui,sans-serif;font-size:11px;padding:8px;resize:vertical;border-radius:4px}
+.logbook-add textarea:focus{outline:none;border-color:#3ca03c}
+.logbook-add textarea::placeholder{color:#4a6a4a}
+.logbook-empty{font-size:11px;color:#4a6a4a;font-style:italic;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="exp-tag">ALEXEY MIKHAIL JOHLL &middot; EXPERIMENT 05 OF 07 &middot; PROBABILITY &amp; STATISTICAL PHYSICS</div>
+<div class="exp-title">The Drunkard's Walk.<br>Random Walk.</div>
+<div class="exp-sub">After N random steps, how far do you end up from where you started? Simulate hundreds of walkers taking hundreds of steps and discover the surprising square-root law that underlies Brownian motion, stock prices, and diffusion.</div>
+
+<div class="step" id="stepHyp">
+  <div class="step-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Your hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="sbody">
+    <div class="note"><b>Scientific method:</b> Before running any simulation, write down what you predict. If a walker takes N random steps, how far from the origin will they typically end up? What happens if you double the number of steps? How will 1D differ from 2D?</div>
+    <textarea id="hypText" placeholder="e.g. I predict that after N random steps, walkers will end up on average &radic;N steps from their starting point. If you double the number of steps, I think the average distance will double too. In 2D, I think walkers will spread out in a circle..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLab">
+  <div class="step-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">The walk lab</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="sbody">
+    <div id="simCanvas"></div>
+    <div class="ctrl-bar" id="ctrlBar">
+      <div class="ctrl-grp"><label>dimension</label><div class="tog-grp"><button id="btn1D" class="active" onclick="setDim(1)">1D</button><button id="btn2D" onclick="setDim(2)">2D</button></div></div>
+      <div class="ctrl-grp"><label>walkers <span class="cv" id="cvW">100</span></label><input type="range" id="slW" min="10" max="500" value="100" step="10" oninput="document.getElementById('cvW').textContent=this.value"></div>
+      <div class="ctrl-grp"><label>steps <span class="cv" id="cvS">500</span></label><input type="range" id="slS" min="50" max="2000" value="500" step="50" oninput="document.getElementById('cvS').textContent=this.value"></div>
+      <div class="ctrl-grp"><label>step type</label><div class="tog-grp"><button id="btnUni" class="active" onclick="setStepType('uniform')">Uniform</button><button id="btnGau" onclick="setStepType('gaussian')">Gaussian</button></div></div>
+      <div class="ctrl-grp"><label>speed <span class="cv" id="cvSp">5</span>x</label><input type="range" id="slSp" min="1" max="20" value="5" oninput="document.getElementById('cvSp').textContent=this.value"></div>
+      <div class="ctrl-grp"><label>controls</label><div style="display:flex;gap:4px"><button id="btnPlay" onclick="doPlay()" disabled>Play</button><button id="btnPause" onclick="doPause()" disabled>Pause</button><button id="btnStep" onclick="doStep()" disabled>Step</button></div></div>
+      <div class="ctrl-grp"><label>batch</label><div style="display:flex;gap:4px"><button id="btnBatch" onclick="saveBatch()" disabled>Save batch</button><button class="danger" onclick="clearBatches()">Clear</button></div></div>
+      <button class="danger" onclick="resetSim()">Reset</button>
+    </div>
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-item"><span class="sl">step</span><span class="sv sm green" id="stStep">0 / 500</span></div>
+      <div class="stat-item"><span class="sl">rms distance</span><span class="sv sm green" id="stRMS">0.00</span></div>
+      <div class="stat-item"><span class="sl">theoretical &radic;N</span><span class="sv sm" id="stTheo">0.00</span></div>
+      <div class="stat-item"><span class="sl">max distance</span><span class="sv sm" id="stMax">0.00</span></div>
+      <div class="stat-item"><span class="sl">mean distance</span><span class="sv sm" id="stMean">0.00</span></div>
+      <div class="stat-item"><span class="sl">walkers</span><span class="sv sm" id="stCount">100</span></div>
+    </div>
+    <div class="res-grid">
+      <div><div class="sl" style="margin-bottom:6px">rms distance vs step (actual vs &radic;N theory)</div><div class="chart-wrap"><canvas id="rmsChart"></canvas></div></div>
+      <div><div class="sl" style="margin-bottom:6px">final position histogram</div><div class="chart-wrap"><canvas id="histChart"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepRes" style="display:none">
+  <div class="step-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Results</span>
+    <span class="shint">Summary after simulation completes</span>
+  </div>
+  <div class="sbody">
+    <div class="res-grid">
+      <div>
+        <div class="sl" style="margin-bottom:12px">simulation summary</div>
+        <div class="rstat"><span class="rl">Final RMS distance</span><span class="rv" id="rRMS">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Theoretical &radic;N prediction</span><span class="rv" id="rTheo">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Ratio (actual / theory)</span><span class="rv" id="rRatio">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Max distance reached</span><span class="rv" id="rMaxD">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Walkers beyond 2&times;RMS</span><span class="rv" id="rOut">&mdash;</span></div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:12px">the square-root law</div>
+        <div class="rstat"><span class="rl">4&times; the steps gave ___&times; the spread</span><span class="rv" id="rSqrt">&mdash;</span></div>
+        <div class="model-note">This model assumes each step is independent, each direction is equally likely, and all steps have the same size. Real random processes — Brownian motion of pollen grains, stock price fluctuations, diffusion of molecules — follow the same &radic;N law when these conditions roughly hold. Deviations appear when steps are correlated or have heavy-tailed distributions.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepInterp">
+  <div class="step-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="sbody">
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">your interpretation</div>
+        <textarea id="interpText" placeholder="What did the simulation show? Did the RMS distance follow &radic;N as predicted? What happened when you compared 1D vs 2D? What surprised you about how far walkers spread? What are the limitations of this model?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">your reply to coach</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">coach's question</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step" id="stepLog">
+  <div class="step-hdr">
+    <span class="snum">logbook</span>
+    <span class="sname">Experiment Logbook</span>
+  </div>
+  <div class="sbody">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+let locked=false,dim=2,stepType='uniform',walkers=[],curStep=0,totalSteps=500,playing=false,done=false;
+let rmsHist=[],batches=[],rmsChartInst=null,histChartInst=null,convHist=[],highlightIdx=-1;
+const STEP_SIZE=5,batchColors=['#7dd87d','#4a9aaa','#f0b429','#e24b4a'];
+let p5inst=null;
+
+function boxMuller(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function dist2D(w){return Math.sqrt(w.x*w.x+w.y*w.y)}
+function dist1D(w){return Math.abs(w.pos)}
+
+function initWalkers(){
+  const n=parseInt(document.getElementById('slW').value);
+  totalSteps=parseInt(document.getElementById('slS').value);
+  walkers=[];curStep=0;rmsHist=[];done=false;highlightIdx=-1;
+  for(let i=0;i<n;i++){
+    if(dim===2)walkers.push({x:0,y:0,path:[[0,0]]});
+    else walkers.push({pos:0,path:[0]});
+  }
+  updateStats();updateCharts();
+  document.getElementById('stepRes').style.display='none';
+}
+
+function stepWalkers(count){
+  for(let c=0;c<count&&curStep<totalSteps;c++){
+    curStep++;
+    for(let i=0;i<walkers.length;i++){
+      const w=walkers[i];
+      const ss=stepType==='gaussian'?STEP_SIZE*Math.abs(boxMuller()):STEP_SIZE;
+      if(dim===2){
+        const a=Math.random()*Math.PI*2;
+        w.x+=Math.cos(a)*ss;w.y+=Math.sin(a)*ss;
+        if(totalSteps<=500||curStep%Math.ceil(totalSteps/500)===0||curStep===totalSteps)w.path.push([w.x,w.y]);
+      }else{
+        w.pos+=(Math.random()<0.5?-1:1)*ss;
+        if(totalSteps<=500||curStep%Math.ceil(totalSteps/500)===0||curStep===totalSteps)w.path.push(w.pos);
+      }
+    }
+    const rms=calcRMS();rmsHist.push(rms);
+  }
+  updateStats();
+  if(curStep>=totalSteps){done=true;playing=false;document.getElementById('btnPlay').textContent='Play';onComplete();}
+}
+
+function calcRMS(){
+  let sum=0;
+  for(let i=0;i<walkers.length;i++){
+    const d=dim===2?dist2D(walkers[i]):dist1D(walkers[i]);
+    sum+=d*d;
+  }
+  return Math.sqrt(sum/walkers.length);
+}
+
+function calcMean(){
+  let sum=0;
+  for(let i=0;i<walkers.length;i++)sum+=(dim===2?dist2D(walkers[i]):dist1D(walkers[i]));
+  return sum/walkers.length;
+}
+
+function calcMax(){
+  let mx=0;
+  for(let i=0;i<walkers.length;i++){const d=dim===2?dist2D(walkers[i]):dist1D(walkers[i]);if(d>mx)mx=d;}
+  return mx;
+}
+
+function updateStats(){
+  document.getElementById('stStep').textContent=curStep+' / '+totalSteps;
+  const rms=curStep>0?calcRMS():0;
+  const theo=Math.sqrt(curStep)*STEP_SIZE;
+  document.getElementById('stRMS').textContent=rms.toFixed(2);
+  document.getElementById('stTheo').textContent=theo.toFixed(2);
+  document.getElementById('stMax').textContent=(curStep>0?calcMax():0).toFixed(2);
+  document.getElementById('stMean').textContent=(curStep>0?calcMean():0).toFixed(2);
+  document.getElementById('stCount').textContent=walkers.length;
+}
+
+function updateCharts(){
+  const skip=Math.max(1,Math.floor(rmsHist.length/200));
+  const labels=[],actual=[],theory=[];
+  for(let i=0;i<rmsHist.length;i+=skip){
+    const step=i+1;labels.push(step);actual.push(rmsHist[i]);theory.push(Math.sqrt(step)*STEP_SIZE);
+  }
+  if(rmsHist.length>0&&(rmsHist.length-1)%skip!==0){
+    labels.push(rmsHist.length);actual.push(rmsHist[rmsHist.length-1]);theory.push(Math.sqrt(rmsHist.length)*STEP_SIZE);
+  }
+  const datasets=[{label:'Actual RMS',data:actual,borderColor:'#7dd87d',backgroundColor:'rgba(125,216,125,0.1)',borderWidth:1.5,pointRadius:0,fill:true,tension:0.3},
+    {label:'Theoretical sqrt(N)',data:theory,borderColor:'#4a6a4a',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false}];
+  batches.forEach((b,i)=>{datasets.push({label:b.label,data:b.data.filter((_,j)=>j%skip===0||j===b.data.length-1),borderColor:batchColors[i%4],borderWidth:1,pointRadius:0,borderDash:[2,2]})});
+  const cOpts={responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:true,labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12}},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},scales:{x:{display:true,grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9},maxTicksLimit:6,callback:function(v){return labels[v]||''}}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}};
+  if(rmsChartInst){rmsChartInst.data.labels=labels;rmsChartInst.data.datasets=datasets;rmsChartInst.update();}
+  else{rmsChartInst=new Chart(document.getElementById('rmsChart'),{type:'line',data:{labels,datasets},options:cOpts});}
+  // histogram
+  if(curStep>0)updateHist();
+}
+
+function updateHist(){
+  const dists=walkers.map(w=>dim===2?dist2D(w):w.pos);
+  let bins,labels,counts;
+  if(dim===2){
+    const mx=Math.max(...dists.map(Math.abs),1);const nb=20;const bw=mx/nb;
+    bins=new Array(nb).fill(0);labels=[];
+    for(let i=0;i<nb;i++)labels.push((i*bw).toFixed(0));
+    dists.forEach(d=>{const bi=Math.min(nb-1,Math.floor(d/bw));bins[bi]++});
+    counts=bins;
+  }else{
+    const mx=Math.max(...dists.map(Math.abs),1);const nb=21;const bw=2*mx/nb;const lo=-mx;
+    bins=new Array(nb).fill(0);labels=[];
+    for(let i=0;i<nb;i++)labels.push((lo+i*bw+bw/2).toFixed(0));
+    dists.forEach(d=>{const bi=Math.min(nb-1,Math.max(0,Math.floor((d-lo)/bw)));bins[bi]++});
+    counts=bins;
+  }
+  const hOpts={responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:false},tooltip:{backgroundColor:'#111a11',borderColor:'rgba(60,160,60,0.3)',borderWidth:1,titleColor:'#e8f0e8',bodyColor:'#7a9a7a',titleFont:{family:'Space Mono',size:10},bodyFont:{family:'Space Mono',size:10}}},scales:{x:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8},maxTicksLimit:8}},y:{grid:{color:'rgba(60,160,60,0.08)'},ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}}}};
+  const ds=[{data:counts,backgroundColor:'rgba(60,160,60,0.5)',borderWidth:0,borderRadius:2}];
+  if(histChartInst){histChartInst.data.labels=labels;histChartInst.data.datasets=ds;histChartInst.update();}
+  else{histChartInst=new Chart(document.getElementById('histChart'),{type:'bar',data:{labels,datasets:ds},options:hOpts});}
+}
+
+function onComplete(){
+  document.getElementById('btnPlay').disabled=true;document.getElementById('btnPause').disabled=true;document.getElementById('btnStep').disabled=true;
+  document.getElementById('btnBatch').disabled=false;
+  updateCharts();
+  const rms=calcRMS(),theo=Math.sqrt(totalSteps)*STEP_SIZE,mx=calcMax();
+  const beyond=walkers.filter(w=>(dim===2?dist2D(w):dist1D(w))>2*rms).length;
+  document.getElementById('rRMS').textContent=rms.toFixed(2);
+  document.getElementById('rTheo').textContent=theo.toFixed(2);
+  document.getElementById('rRatio').textContent=(rms/theo).toFixed(3);
+  document.getElementById('rMaxD').textContent=mx.toFixed(2);
+  document.getElementById('rOut').textContent=beyond+' / '+walkers.length;
+  // sqrt law: compare RMS at 1/4 steps vs full
+  const q=Math.floor(totalSteps/4);
+  if(q>0&&rmsHist.length>=totalSteps){
+    const rmsQ=rmsHist[q-1],rmsF=rmsHist[totalSteps-1];
+    document.getElementById('rSqrt').textContent=(rmsF/rmsQ).toFixed(2)+'x';
+  }
+  document.getElementById('stepRes').style.display='';
+  localStorage.setItem('alexey_exp_05_results',JSON.stringify({rms,theo,ratio:rms/theo,max:mx,beyond,walkers:walkers.length,steps:totalSteps,dim}));
+  document.getElementById('stepRes').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function setDim(d){dim=d;document.getElementById('btn1D').classList.toggle('active',d===1);document.getElementById('btn2D').classList.toggle('active',d===2);resetSim();}
+function setStepType(t){stepType=t;document.getElementById('btnUni').classList.toggle('active',t==='uniform');document.getElementById('btnGau').classList.toggle('active',t==='gaussian');resetSim();}
+
+function resetSim(){
+  playing=false;done=false;
+  if(p5inst){p5inst.remove();p5inst=null;}
+  if(rmsChartInst){rmsChartInst.destroy();rmsChartInst=null;}
+  if(histChartInst){histChartInst.destroy();histChartInst=null;}
+  initWalkers();createSketch();
+  document.getElementById('btnPlay').disabled=!locked;document.getElementById('btnPlay').textContent='Play';
+  document.getElementById('btnPause').disabled=true;
+  document.getElementById('btnStep').disabled=!locked;
+  document.getElementById('btnBatch').disabled=true;
+  document.getElementById('stepRes').style.display='none';
+}
+
+function doPlay(){
+  if(!locked||done)return;playing=true;
+  document.getElementById('btnPlay').textContent='Playing...';document.getElementById('btnPlay').disabled=true;
+  document.getElementById('btnPause').disabled=false;document.getElementById('btnStep').disabled=true;
+}
+function doPause(){
+  playing=false;document.getElementById('btnPlay').textContent='Play';document.getElementById('btnPlay').disabled=false;
+  document.getElementById('btnPause').disabled=true;document.getElementById('btnStep').disabled=false;
+}
+function doStep(){if(!locked||done)return;stepWalkers(1);updateCharts();}
+
+function saveBatch(){
+  if(batches.length>=4)return;
+  batches.push({label:dim+'D '+walkers.length+'w '+totalSteps+'s',data:[...rmsHist]});
+  updateCharts();
+}
+function clearBatches(){batches=[];updateCharts();}
+
+function distCol(d,mx){
+  const t=Math.min(1,d/Math.max(mx,1));
+  const r=Math.round(60+t*195),g=Math.round(200-t*140),b=Math.round(60+t*60);
+  return[r,g,b];
+}
+
+function createSketch(){
+  p5inst=new p5(function(p){
+    const cw=dim===2?500:Math.min(880,document.getElementById('simCanvas').clientWidth||880);
+    const ch=dim===2?500:250;
+    const cx=cw/2,cy=ch/2;
+    const scale2D=dim===2?0.7:1;
+
+    p.setup=function(){
+      const c=p.createCanvas(cw,ch);c.parent('simCanvas');
+      c.mouseClicked(function(){
+        if(dim===2&&walkers.length>0){
+          const mx=(p.mouseX-cx)/scale2D,my=(p.mouseY-cy)/scale2D;
+          let best=-1,bd=Infinity;
+          walkers.forEach((w,i)=>{const dd=(w.x-mx)*(w.x-mx)+(w.y-my)*(w.y-my);if(dd<bd){bd=dd;best=i;}});
+          highlightIdx=highlightIdx===best?-1:best;
+        }
+      });
+    };
+
+    p.draw=function(){
+      if(playing&&!done){
+        const spd=parseInt(document.getElementById('slSp').value);
+        stepWalkers(spd);
+        if(curStep%10===0||done)updateCharts();
+      }
+      p.background(13,21,13);
+      const mx=Math.max(calcMax(),STEP_SIZE*5);
+
+      if(dim===2){
+        p.push();p.translate(cx,cy);p.scale(scale2D);
+        // crosshair
+        p.stroke(60,160,60,40);p.strokeWeight(0.5);
+        p.line(-cw,0,cw,0);p.line(0,-ch,0,ch);
+        // theoretical circle
+        if(curStep>0){
+          const tr=Math.sqrt(curStep)*STEP_SIZE;
+          p.noFill();p.stroke(60,160,60,60);p.strokeWeight(1);p.drawingContext.setLineDash([4,4]);
+          p.ellipse(0,0,tr*2,tr*2);p.drawingContext.setLineDash([]);
+        }
+        // paths
+        walkers.forEach((w,i)=>{
+          const isHi=i===highlightIdx;
+          if(w.path.length>1){
+            p.noFill();p.strokeWeight(isHi?1.5:0.5);
+            const al=isHi?180:8;
+            p.stroke(isHi?125:60,isHi?216:160,isHi?125:60,al);
+            p.beginShape();w.path.forEach(pt=>p.vertex(pt[0],pt[1]));p.endShape();
+          }
+        });
+        // dots
+        walkers.forEach((w,i)=>{
+          const d=dist2D(w);const c=distCol(d,mx);
+          const sz=i===highlightIdx?6:3;
+          p.noStroke();p.fill(c[0],c[1],c[2],done?200:220);
+          p.ellipse(w.x,w.y,sz,sz);
+        });
+        // origin
+        p.fill(255,255,255,120);p.noStroke();p.ellipse(0,0,4,4);
+        p.pop();
+      }else{
+        // 1D
+        p.push();p.translate(0,cy);
+        p.stroke(60,160,60,40);p.strokeWeight(0.5);p.line(0,0,cw,0);
+        // origin tick
+        p.stroke(255,255,255,80);p.line(cx,-8,cx,8);
+        // envelope
+        if(curStep>0){
+          const env=Math.sqrt(curStep)*STEP_SIZE;
+          const sx=cw/(mx*2.5);
+          p.stroke(60,160,60,60);p.strokeWeight(1);p.drawingContext.setLineDash([4,4]);
+          p.line(cx+env*sx,-ch/2+20,cx+env*sx,ch/2-20);
+          p.line(cx-env*sx,-ch/2+20,cx-env*sx,ch/2-20);
+          p.drawingContext.setLineDash([]);
+        }
+        // walkers as stacked dots
+        const sx=cw/(mx*2.5);
+        const nbins=80;const bw=mx*2.5/nbins;const stacks=new Array(nbins).fill(0);
+        const walkerBins=walkers.map(w=>{
+          const bi=Math.min(nbins-1,Math.max(0,Math.floor((w.pos+mx*1.25)/bw)));
+          const si=stacks[bi];stacks[bi]++;
+          return{bi,si};
+        });
+        walkers.forEach((w,i)=>{
+          const px=cx+w.pos*sx;
+          const {si}=walkerBins[i];
+          const py=-si*3-2;
+          const d=dist1D(w);const c=distCol(d,mx);
+          p.noStroke();p.fill(c[0],c[1],c[2],200);p.ellipse(px,py,3,3);
+        });
+        p.pop();
+      }
+    };
+  },'simCanvas');
+}
+
+function lockHyp(){
+  const t=document.getElementById('hypText').value.trim();
+  if(t.length<20){document.getElementById('hypText').style.borderColor='#e24b4a';return}
+  locked=true;
+  const ta=document.getElementById('hypText');
+  ta.disabled=true;ta.style.borderColor='rgba(60,160,60,0.6)';
+  ta.style.boxShadow='0 0 0 2px rgba(60,160,60,0.2)';
+  const ts=document.getElementById('hypTS');ts.style.display='block';
+  ts.textContent='locked \u00b7 '+new Date().toLocaleString();
+  document.getElementById('lockBtn').textContent='\u2713 Hypothesis locked';document.getElementById('lockBtn').disabled=true;
+  document.getElementById('labHint').textContent='Set parameters and press Play to start';
+  localStorage.setItem('alexey_exp_05_hypothesis',t);
+  localStorage.setItem('alexey_exp_05_timestamp',new Date().toISOString());
+  resetSim();
+}
+
+async function askCoach(){
+  const interp=document.getElementById('interpText').value.trim();
+  if(interp.length<20){document.getElementById('interpText').style.borderColor='#e24b4a';return}
+  const hyp=document.getElementById('hypText').value;
+  const res=localStorage.getItem('alexey_exp_05_results');
+  const rd=res?JSON.parse(res):{};
+  const userMsg=`Alexey's hypothesis: "${hyp}"\n\nSimulation data:\nDimension: ${rd.dim||dim}D\nWalkers: ${rd.walkers||walkers.length}\nSteps: ${rd.steps||totalSteps}\nFinal RMS distance: ${(rd.rms||0).toFixed(2)}\nTheoretical sqrt(N): ${(rd.theo||0).toFixed(2)}\nRatio actual/theory: ${(rd.ratio||0).toFixed(3)}\nMax distance: ${(rd.max||0).toFixed(2)}\nWalkers beyond 2xRMS: ${rd.beyond||0}\n\nAlexey's interpretation: "${interp}"`;
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  document.getElementById('askBtn').disabled=true;
+  convHist=[{role:'user',content:userMsg}];
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH \u2014 a Socratic science mentor for Alexey Mikhail Johll, a 14-year-old in Singapore who is building a computational science portfolio. Alexey has simulated random walks in 1D and 2D with up to 500 simultaneous walkers over hundreds of steps. He observed path traces, measured RMS distance from origin over time, compared it to the theoretical sqrt(N) prediction, and analyzed histograms of final positions across multiple parameter settings. Your rules: Ask EXACTLY ONE question per response. Never give Alexey the answer. Never explain the science to him \u2014 make him work it out. Reference his specific data and his own words back to him. Accessible language for a bright, curious 14-year-old. No effusive praise. No filler. Just one sharp question. End every response with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML='<span style="font-style:italic">'+q+'</span>';
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_05_dialogue',JSON.stringify(convHist));
+    document.getElementById('replySec').style.display='block';
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Coach unavailable. Write your own follow-up question to push your thinking further.</span>'}
+  document.getElementById('askBtn').disabled=false;
+}
+
+async function sendReply(){
+  const reply=document.getElementById('replyText').value.trim();if(reply.length<3)return;
+  const prevQ=document.getElementById('aiQ').innerText;
+  const thr=document.getElementById('thread');
+  thr.innerHTML+='<div class="tcoach"><div class="tcoach-lbl">coach\'s question</div>'+prevQ+'</div><div class="talex"><div class="talex-lbl">alexey</div>'+reply+'</div>';
+  document.getElementById('replyText').value='';
+  convHist.push({role:'user',content:reply});
+  const aiEl=document.getElementById('aiQ');
+  aiEl.innerHTML='<span class="pulse"></span><span style="color:#4a6a4a;font-size:12px;font-style:italic">Coach is thinking...</span>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are COACH in a continuing Socratic dialogue with Alexey, 14, about his random walk experiment. Ask exactly one follow-up question. No preamble. No praise. Reference his answer. End with a question mark.',messages:convHist})});
+    const d=await r.json();const q=d.content[0].text;
+    aiEl.innerHTML='<span style="font-style:italic">'+q+'</span>';
+    convHist.push({role:'assistant',content:q});
+    localStorage.setItem('alexey_exp_05_dialogue',JSON.stringify(convHist));
+  }catch(e){aiEl.innerHTML='<span style="color:#e24b4a;font-size:12px">Connection issue \u2014 try again.</span>'}
+}
+
+// Initial setup - create sketch placeholder
+initWalkers();createSketch();
+
+const LOGBOOK_KEY='alexey_exp_05_logbook';
+function getLogEntries(){try{return JSON.parse(localStorage.getItem(LOGBOOK_KEY))||[];}catch(e){return[];}}
+function saveLogEntries(entries){localStorage.setItem(LOGBOOK_KEY,JSON.stringify(entries));}
+function renderLogbook(){
+  const entries=getLogEntries();const el=document.getElementById('logbookEntries');
+  if(entries.length===0){el.innerHTML='<div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>';return;}
+  el.innerHTML=entries.map((e,i)=>{
+    const typeClass=e.type==='obs'?'obs':e.type==='quest'?'quest':'conc';
+    const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';
+    const date=new Date(e.timestamp);const ts=date.toLocaleDateString()+' '+date.toLocaleTimeString();
+    return `<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag ${typeClass}">${typeLabel}</span><span class="log-entry-ts">${ts}</span><div class="log-entry-actions"><button onclick="deleteLogEntry(${i})">&times;</button></div></div><div class="log-entry-text">${e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>${e.context?'<div class="log-entry-ctx">'+e.context+'</div>':''}</div>`;
+  }).join('');
+}
+function addLogEntry(){
+  const text=document.getElementById('logText').value.trim();if(!text)return;
+  const type=document.getElementById('logType').value;const entries=getLogEntries();
+  entries.push({id:Date.now().toString(36),timestamp:new Date().toISOString(),type,text,context:''});
+  saveLogEntries(entries);document.getElementById('logText').value='';renderLogbook();
+}
+function deleteLogEntry(idx){const entries=getLogEntries();entries.splice(idx,1);saveLogEntries(entries);renderLogbook();}
+function exportLogbook(){
+  const entries=getLogEntries();if(entries.length===0)return;
+  let md='# Experiment 05 - Random Walk — Logbook\n\n';
+  entries.forEach(e=>{const typeLabel=e.type==='obs'?'Observation':e.type==='quest'?'Question':'Conclusion';const date=new Date(e.timestamp);md+=`## ${typeLabel} — ${date.toLocaleDateString()} ${date.toLocaleTimeString()}\n\n`+e.text+'\n\n';if(e.context)md+=`> Context: ${e.context}\n\n`;md+='---\n\n';});
+  const blob=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='random-walk-logbook.md';a.click();
+}
+renderLogbook();
+</script>
+</body>
+</html>

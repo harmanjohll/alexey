@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD Portal · Tersoff Molecular Dynamics · SiGe Surfaces</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--bg-deep:#edeae3;--surface:#ffffff;--border:#d4cfc5;--border-light:#e8e4dc;--text-primary:#1a1a18;--text-secondary:#6b6560;--text-tertiary:#9a9490;--accent:#2d5a3d;--accent-light:#3d7a52;--accent-subtle:rgba(45,90,61,0.08);--accent-border:rgba(45,90,61,0.2);--danger:#c0392b}
+[data-theme="dark"]{--bg:#0a0a0a;--bg-deep:#060606;--surface:#141414;--border:rgba(61,207,176,0.12);--border-light:rgba(61,207,176,0.06);--text-primary:#e8e8e8;--text-secondary:#8a8a8a;--text-tertiary:#5a5a5a;--accent:#3dcfb0;--accent-light:#6eddc5;--accent-subtle:rgba(61,207,176,0.08);--accent-border:rgba(61,207,176,0.2);--danger:#e24b4a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:1100px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:1px solid var(--border-light);padding:5px 12px;border-radius:2px;transition:all .15s}
+.nav-back:hover{color:var(--accent);border-color:var(--accent-border)}
+.portal-tag{display:inline-block;font-size:11px;font-weight:500;background:var(--accent-subtle);color:var(--accent);border:1px solid var(--accent-border);padding:3px 10px;border-radius:2px;margin-bottom:12px;font-family:'JetBrains Mono',monospace}
+.portal-title{font-size:clamp(1.75rem,4vw,2.5rem);font-family:'Instrument Serif',serif;font-weight:400;color:var(--text-primary);margin-bottom:6px;line-height:1.2}
+.portal-sub{font-size:14px;color:var(--text-secondary);line-height:1.8;max-width:750px;margin-bottom:2rem}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:2px;margin-bottom:14px;overflow:hidden}
+.panel-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border-light);background:var(--bg);cursor:pointer;user-select:none}
+.panel-hdr .snum{font-size:10px;font-weight:500;background:var(--accent-subtle);color:var(--accent);padding:2px 8px;border-radius:2px;font-family:'JetBrains Mono',monospace;border:1px solid var(--accent-border)}
+.panel-hdr .sname{font-size:13px;font-weight:500;color:var(--text-primary);font-family:'JetBrains Mono',monospace}
+.panel-hdr .toggle{margin-left:auto;font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace}
+.panel-body{padding:16px}
+.panel.collapsed .panel-body{display:none}
+.param-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.param-group{background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:12px}
+.group-label{font-size:10px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.param-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.param-row:last-child{margin-bottom:0}
+.param-lbl{font-size:11px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace}
+.param-lbl .unit{color:var(--text-tertiary);font-size:9px}
+select,input[type=number]{background:var(--bg);border:1px solid var(--border);color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 8px;border-radius:2px;text-align:right}
+select{width:120px;text-align:left}
+input[type=number]{width:100px}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+button{background:var(--surface);border:1px solid var(--border);color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 16px;border-radius:2px;cursor:pointer;transition:all .15s}
+button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.danger{color:var(--danger);border-color:rgba(192,57,43,0.4)}
+button.danger:hover:not(:disabled){background:rgba(192,57,43,0.08)}
+.progress-wrap{flex:1;min-width:200px;display:flex;align-items:center;gap:8px}
+.progress-bar{flex:1;height:6px;background:var(--bg-deep);border-radius:3px;border:1px solid var(--border-light);overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);width:0%;transition:width .3s}
+.progress-text{font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.dashboard{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-row.wide{grid-template-columns:2fr 1fr}
+.dash-row.triple{grid-template-columns:1fr 1fr 1fr}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:14px;overflow:hidden}
+.card-label{font-size:10px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.chart-wrap{height:250px;position:relative}
+.chart-wrap.tall{height:350px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-item{padding:8px;background:var(--bg);border:1px solid var(--border-light);border-radius:2px}
+.stat-label{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.stat-value{font-size:18px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace}
+.stat-value.sm{font-size:13px}
+.note{font-size:13px;color:var(--text-secondary);line-height:1.7;padding:12px 16px;border-left:2px solid var(--accent);background:var(--accent-subtle);margin-bottom:14px;border-radius:0 2px 2px 0}
+.note b{color:var(--accent);font-weight:500}
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px}
+.mode-tab{padding:6px 16px;border:1px solid var(--border);border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-tertiary);cursor:pointer;transition:all .15s}
+.mode-tab.active{background:var(--accent-subtle);color:var(--accent);border-color:var(--accent-border)}
+.mode-tab:hover:not(.active){color:var(--text-secondary)}
+.mode-section{display:none}
+.mode-section.active{display:block}
+.sweep-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.sweep-item{background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:10px}
+.sweep-item label{font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.sweep-item input{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 8px;border-radius:2px}
+#viewer3d{width:100%;height:400px;background:var(--bg-deep);border:1px solid var(--border);border-radius:2px;cursor:grab}
+#viewer3d:active{cursor:grabbing}
+.render-modes{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.render-modes button{font-size:10px;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--text-secondary);font-family:'JetBrains Mono',monospace;border-radius:2px;cursor:pointer;transition:all .15s}
+.render-modes button:hover{color:var(--accent);border-color:var(--accent-border)}
+.render-modes button.active{background:var(--accent-subtle);color:var(--accent);border-color:var(--accent-border)}
+.color-legend{display:flex;gap:16px;margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace}
+.color-legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.inv-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-card{background:var(--bg);border:1px solid var(--accent-border);border-left:3px solid var(--accent);border-radius:0 2px 2px 0;padding:14px}
+.inv-card-num{font-size:9px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.inv-card-title{font-size:14px;font-weight:500;color:var(--text-primary);font-family:'JetBrains Mono',monospace;margin-bottom:6px;line-height:1.3}
+.inv-card-q{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:4px}
+.inv-card-q b{color:var(--accent);font-weight:500}
+.inv-card-method{font-size:11px;color:var(--text-tertiary);line-height:1.6;margin-bottom:8px}
+.inv-card textarea{width:100%;min-height:60px;background:var(--bg-deep);border:1px solid var(--border);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;font-size:12px;padding:8px;resize:vertical;border-radius:2px;margin-top:8px}
+.inv-card textarea:focus{outline:none;border-color:var(--accent)}
+.inv-card textarea::placeholder{color:var(--text-tertiary)}
+.inv-card .inv-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.inv-card .inv-btns button{font-size:10px;padding:5px 12px}
+.inv-card.custom{border-left-color:var(--text-tertiary)}
+.log-entry{border:1px solid var(--border-light);border-radius:2px;padding:10px;margin-bottom:6px;background:var(--bg)}
+.log-entry-hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-type-tag{font-size:8px;font-weight:500;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:2px;text-transform:uppercase;letter-spacing:.04em}
+.log-type-tag.obs{background:var(--accent-subtle);color:var(--accent);border:1px solid var(--accent-border)}
+.log-type-tag.quest{background:rgba(240,180,41,0.08);color:#b8860b;border:1px solid rgba(240,180,41,0.2)}
+.log-type-tag.conc{background:rgba(45,90,61,0.08);color:var(--accent);border:1px solid var(--accent-border)}
+.log-entry-ts{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace}
+.log-entry-actions{margin-left:auto}
+.log-entry-actions button{font-size:10px;padding:2px 6px;color:var(--danger);border-color:rgba(192,57,43,0.3)}
+.log-entry-text{font-size:12px;color:var(--text-primary);line-height:1.6}
+.log-entry-ctx{font-size:9px;color:var(--text-tertiary);margin-top:4px;font-style:italic}
+.logbook-entries{max-height:400px;overflow-y:auto;margin-bottom:12px}
+.logbook-add{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.logbook-add select{width:110px;font-size:10px}
+.logbook-add textarea{flex:1;min-width:200px;min-height:50px;background:var(--bg);border:1px solid var(--border);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;font-size:12px;padding:8px;resize:vertical;border-radius:2px}
+.logbook-add textarea:focus{outline:none;border-color:var(--accent)}
+.logbook-add textarea::placeholder{color:var(--text-tertiary)}
+.logbook-empty{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:20px;text-align:center}
+.data-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px;margin-bottom:12px}
+.data-table th{background:var(--bg-deep);color:var(--accent);font-size:9px;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;text-align:right;border:1px solid var(--border-light);font-weight:500}
+.data-table th:first-child{text-align:left}
+.data-table td{padding:5px 10px;border:1px solid var(--border-light);color:var(--text-primary);text-align:right;background:var(--bg)}
+.data-table td:first-child{text-align:left;color:var(--text-secondary)}
+.data-table td[contenteditable="true"]{cursor:text;outline:none;transition:background .15s}
+.data-table td[contenteditable="true"]:focus{background:var(--accent-subtle);box-shadow:inset 0 0 0 1px var(--accent-border)}
+.data-table tr:hover td{background:var(--bg-deep)}
+.fit-result{background:var(--bg);border:1px solid var(--accent-border);border-left:3px solid var(--accent);border-radius:0 2px 2px 0;padding:14px;margin-top:12px}
+.fit-result .fit-label{font-size:9px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.fit-result .fit-value{font-size:22px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;line-height:1.2}
+.fit-result .fit-detail{font-size:11px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;margin-top:4px}
+.dl-controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.dl-controls .sweep-item{background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:10px}
+.dl-controls .sweep-item label{font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.dl-controls .sweep-item input{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 8px;border-radius:2px}
+.theme-toggle{position:fixed;top:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 200ms;z-index:100}
+.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle svg{width:18px;height:18px;color:var(--text-secondary);transition:color 200ms}
+.theme-toggle:hover svg{color:var(--accent)}
+.theme-toggle .icon-sun{display:none}
+[data-theme="dark"] .theme-toggle .icon-moon{display:none}
+[data-theme="dark"] .theme-toggle .icon-sun{display:block}
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr 1fr}.inv-cards{grid-template-columns:1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
+</style>
+<script>(function(){var t=localStorage.getItem('alexey_theme')||'light';document.documentElement.setAttribute('data-theme',t)})()</script>
+</head>
+<body>
+<script>function toggleTheme(){var h=document.documentElement,c=h.getAttribute('data-theme')||'light',n=c==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('alexey_theme',n)}</script>
+<button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+<div class="wrap">
+<a href="../index.html" class="nav-back">&larr; portfolio home</a>
+<div class="portal-tag">MD PORTAL &middot; TERSOFF MOLECULAR DYNAMICS</div>
+<div class="portal-title">SiGe Surface Dynamics</div>
+<div class="portal-sub">Molecular dynamics simulation of silicon-germanium surfaces using the Tersoff interatomic potential (PRB 39, 5566, 1989). Build a diamond cubic (100) slab with dimer reconstruction, run velocity Verlet integration, and explore surface segregation through Monte Carlo species swaps. Real-time 3D visualization powered by Three.js.</div>
+
+<div class="note"><b>Physics:</b> The Tersoff potential captures both two-body repulsion and three-body bond-order effects. Each atom's bonding depends on its local coordination environment through an angular function g(&theta;). This allows the potential to distinguish between bulk diamond, surface dimers, and amorphous configurations &mdash; essential for studying surface reconstruction and SiGe intermixing.</div>
+
+<!-- INVESTIGATION CARDS -->
+<div class="panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATE</span>
+    <span class="sname">Investigation Cards</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="inv-cards">
+      <div class="inv-card" id="invCard1">
+        <div class="inv-card-num">CARD 01</div>
+        <div class="inv-card-title">Does Ge segregate to the surface?</div>
+        <div class="inv-card-q"><b>Question:</b> In a 50/50 SiGe alloy, does Ge preferentially occupy surface sites?</div>
+        <div class="inv-card-method"><b>Method:</b> Set &theta;=0.5, run T-sweep at 300, 500, 700, 900 K with MC swaps enabled. Track Ge fraction in the top layer. <b>Look for:</b> Ge enrichment at the surface that increases with temperature.</div>
+        <div class="inv-btns"><button onclick="runInvCard1()">Run this investigation &rarr;</button></div>
+        <textarea id="invObs1" placeholder="Your observations: did Ge prefer the surface? How did temperature affect this?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(1)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard2">
+        <div class="inv-card-num">CARD 02</div>
+        <div class="inv-card-title">How does temperature affect the surface?</div>
+        <div class="inv-card-q"><b>Question:</b> Does the surface become more disordered at higher temperatures?</div>
+        <div class="inv-card-method"><b>Method:</b> Pure Si slab, T-sweep from 300 to 1200 K. Track energy/atom and watch 3D viewer. <b>Look for:</b> Energy increases with T. At high T, surface atoms vibrate more and dimers may break.</div>
+        <div class="inv-btns"><button onclick="runInvCard2()">Run this investigation &rarr;</button></div>
+        <textarea id="invObs2" placeholder="Your observations: what happened to the surface structure at high temperature?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(2)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card" id="invCard3">
+        <div class="inv-card-num">CARD 03</div>
+        <div class="inv-card-title">Composition and surface energy</div>
+        <div class="inv-card-q"><b>Question:</b> How does changing the Ge fraction affect the total energy?</div>
+        <div class="inv-card-method"><b>Method:</b> Sweep initial &theta; from 0 (pure Si) to 1 (pure Ge) at T=500 K. <b>Look for:</b> Energy per atom changes due to different Si-Si, Si-Ge, and Ge-Ge bond strengths. Vegard's law for the lattice constant.</div>
+        <div class="inv-btns"><button onclick="runInvCard3()">Run this investigation &rarr;</button></div>
+        <textarea id="invObs3" placeholder="Your observations: how did energy change with composition? Was it linear?"></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog(3)">Save to logbook</button></div>
+      </div>
+      <div class="inv-card custom" id="invCardCustom">
+        <div class="inv-card-num">DESIGN YOUR OWN</div>
+        <div class="inv-card-title">Your investigation</div>
+        <div class="inv-card-q">Use the simulation controls to explore your own question. What variable do you want to change, and what do you expect to happen?</div>
+        <textarea id="invObsCustom" placeholder="Your question and observations..."></textarea>
+        <div class="inv-btns"><button onclick="saveCardToLog('custom')">Save to logbook</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PARAMETERS -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">MD</span>
+    <span class="sname">Simulation Parameters</span>
+    <span class="toggle" id="paramToggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Slab Geometry</div>
+        <div class="param-row"><span class="param-lbl">Cells x</span><input type="number" id="pNcx" value="3" min="1" max="4" step="1"></div>
+        <div class="param-row"><span class="param-lbl">Cells y</span><input type="number" id="pNcy" value="3" min="1" max="4" step="1"></div>
+        <div class="param-row"><span class="param-lbl">Cells z</span><input type="number" id="pNcz" value="3" min="2" max="6" step="1"></div>
+        <div class="param-row"><span class="param-lbl">Total atoms</span><span class="stat-value sm" id="atomCount" style="font-size:13px">468</span></div>
+        <div class="param-row"><span class="param-lbl">&theta; <span class="unit">(Ge frac)</span></span><input type="number" id="pTheta" value="0.0" min="0" max="1" step="0.1"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Dynamics</div>
+        <div class="param-row"><span class="param-lbl">Temperature <span class="unit">(K)</span></span><input type="number" id="pTemp" value="300" min="50" max="1500" step="50"></div>
+        <div class="param-row"><span class="param-lbl">Timestep <span class="unit">(fs)</span></span><input type="number" id="pDt" value="0.02" min="0.01" max="5.0" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">VV steps/loop</span><input type="number" id="pNvv" value="50" min="10" max="200" step="10"></div>
+        <div class="param-row"><span class="param-lbl">Outer loops</span><input type="number" id="pNloops" value="100" min="10" max="500" step="10"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Monte Carlo</div>
+        <div class="param-row"><span class="param-lbl">MC swaps</span><input type="number" id="pMCswap" value="50" min="0" max="200" step="10"></div>
+        <div class="param-row"><span class="param-lbl">MC species</span><input type="number" id="pMCgc" value="0" min="0" max="200" step="10"></div>
+        <div class="param-row"><span class="param-lbl">&Delta;&mu; <span class="unit">(eV)</span></span><input type="number" id="pDmu" value="0.0" min="-2" max="2" step="0.1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
+  <div class="mode-tab" onclick="setMode('tsweep')">T Sweep</div>
+  <div class="mode-tab" onclick="setMode('csweep')">Composition Sweep</div>
+  <div class="mode-tab" onclick="setMode('datalab')">Data Lab</div>
+</div>
+
+<!-- SINGLE RUN -->
+<div class="mode-section active" id="modeSingle">
+  <div class="controls">
+    <button id="runBtn" onclick="startMD()">&#9654; Run MD</button>
+    <button id="stopBtn" onclick="stopMD()" class="danger" disabled>&#9632; Stop</button>
+    <button onclick="resetMD()" class="danger">&#8634; Reset</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+      <span class="progress-text" id="progText">Ready</span>
+    </div>
+  </div>
+</div>
+
+<!-- T SWEEP -->
+<div class="mode-section" id="modeTsweep">
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">SWEEP</span><span class="sname">Temperature Sweep</span></div>
+    <div class="panel-body">
+      <div class="note"><b>Method:</b> Run equilibration + production at each temperature. Collect energy/atom and composition profile. Compare surface structure across temperatures.</div>
+      <div class="sweep-grid">
+        <div class="sweep-item"><label>T min (K)</label><input type="number" id="tswMin" value="300"></div>
+        <div class="sweep-item"><label>T max (K)</label><input type="number" id="tswMax" value="1200"></div>
+        <div class="sweep-item"><label>Points</label><input type="number" id="tswPts" value="6" min="2" max="12"></div>
+        <div class="sweep-item"><label>Loops/point</label><input type="number" id="tswLoops" value="60" min="20" max="200"></div>
+      </div>
+      <div class="controls">
+        <button onclick="runTSweep()">&#9654; Run T Sweep</button>
+        <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="tswProgFill"></div></div>
+          <span class="progress-text" id="tswProgText">Ready</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSITION SWEEP -->
+<div class="mode-section" id="modeCsweep">
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">SWEEP</span><span class="sname">Composition Sweep</span></div>
+    <div class="panel-body">
+      <div class="note"><b>Method:</b> Vary initial Ge fraction from 0 (pure Si) to 1 (pure Ge). At each composition, equilibrate and measure energy/atom. The lattice constant follows Vegard's law: a(&theta;) = (1-&theta;)a_Si + &theta;a_Ge.</div>
+      <div class="sweep-grid">
+        <div class="sweep-item"><label>&theta; min</label><input type="number" id="cswMin" value="0" step="0.1"></div>
+        <div class="sweep-item"><label>&theta; max</label><input type="number" id="cswMax" value="1" step="0.1"></div>
+        <div class="sweep-item"><label>Points</label><input type="number" id="cswPts" value="6" min="2" max="12"></div>
+        <div class="sweep-item"><label>Loops/point</label><input type="number" id="cswLoops" value="60" min="20" max="200"></div>
+      </div>
+      <div class="controls">
+        <button onclick="runCSweep()">&#9654; Run Composition Sweep</button>
+        <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="cswProgFill"></div></div>
+          <span class="progress-text" id="cswProgText">Ready</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA LAB -->
+<div class="mode-section" id="modeDatalab">
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">LAB</span><span class="sname">Layer Sweep (Surface Energy)</span></div>
+    <div class="panel-body">
+      <div class="note"><b>Method:</b> Run the simulation at different slab thicknesses (cells z). Record energy/atom &times; natom = total energy. Plot total energy vs number of layers (N_layers = 4&times;ncz + 1). Linear regression gives y-intercept = residual energy &asymp; 2&times; surface energy.</div>
+      <div class="dl-controls">
+        <div class="sweep-item"><label>&Delta;&mu; (eV)</label><input type="number" id="dlDmu" value="0.0" step="0.1"></div>
+        <div class="sweep-item"><label>MC species (GC)</label><input type="number" id="dlMCgc" value="0" min="0" max="200" step="10"></div>
+        <div class="sweep-item"><label>ncz min</label><input type="number" id="dlNczMin" value="2" min="2" max="5"></div>
+        <div class="sweep-item"><label>ncz max</label><input type="number" id="dlNczMax" value="6" min="3" max="8"></div>
+      </div>
+      <div class="dl-controls" style="grid-template-columns:1fr 1fr">
+        <div class="sweep-item"><label>Loops/point</label><input type="number" id="dlLoops" value="100" min="20" max="300"></div>
+        <div class="sweep-item"><label>ncx / ncy</label><input type="number" id="dlNcxy" value="3" min="1" max="4"></div>
+      </div>
+      <div class="controls">
+        <button onclick="runLayerSweep()">&#9654; Run Layer Sweep</button>
+        <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="dlProgFill"></div></div>
+          <span class="progress-text" id="dlProgText">Ready</span>
+        </div>
+      </div>
+
+      <!-- Layer sweep data table -->
+      <table class="data-table" id="dlTable">
+        <thead><tr>
+          <th>ncz</th><th>N_layers</th><th>natom</th><th>E/atom (eV)</th><th>E_total (eV)</th>
+        </tr></thead>
+        <tbody id="dlTableBody">
+          <tr><td colspan="5" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run the layer sweep.</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="addLayerRow()">+ Add row</button>
+        <button onclick="recalcLayerFit()">Recalculate fit</button>
+        <button onclick="clearLayerTable()" class="danger">Clear table</button>
+      </div>
+
+      <!-- Fit result -->
+      <div class="fit-result" id="dlFitResult" style="display:none">
+        <div class="fit-label">Surface Energy (from y-intercept / 2)</div>
+        <div class="fit-value" id="dlSurfEVal">&mdash;</div>
+        <div class="fit-detail" id="dlFitDetail">y = mx + b, R&sup2; = &mdash;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-mu surface energy collection -->
+  <div class="panel">
+    <div class="panel-hdr"><span class="snum">COLLECT</span><span class="sname">Multi-&mu; Surface Energy</span></div>
+    <div class="panel-body">
+      <div class="note"><b>Goal:</b> Repeat the layer sweep at different chemical potentials (&Delta;&mu;). Record each surface energy to see how it varies with Ge content.</div>
+      <div class="controls">
+        <button onclick="recordSurfaceEnergy()">Record current &rarr;</button>
+        <button onclick="clearSurfaceEnergyTable()" class="danger">Clear table</button>
+      </div>
+      <table class="data-table" id="dlSurfTable">
+        <thead><tr>
+          <th>&Delta;&mu; (eV)</th><th>Surface Energy (eV)</th><th>Ge Fraction</th>
+        </tr></thead>
+        <tbody id="dlSurfTableBody">
+          <tr><td colspan="3" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run layer sweeps at different &Delta;&mu; and click &ldquo;Record current&rdquo;.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="mainDash">
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">3D Structure</div>
+      <div class="render-modes" id="renderModes">
+        <button class="active" data-style="bs" onclick="setRenderStyle('bs')">Ball &amp; Stick</button>
+        <button data-style="vdw" onclick="setRenderStyle('vdw')">VDW</button>
+        <button data-style="stick" onclick="setRenderStyle('stick')">Stick</button>
+        <button data-style="layer" onclick="setRenderStyle('layer')">Layer Color</button>
+      </div>
+      <div id="viewer3d"></div>
+      <div class="color-legend" id="colorLegend">
+        <span><span class="dot" style="background:#3ca0a0"></span>Silicon</span>
+        <span><span class="dot" style="background:#dd8844"></span>Germanium</span>
+        <span style="color:#3ca03c">&square; cell</span>
+        <span style="color:#ddb84d">&square; slab</span>
+        <span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Live Statistics</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Energy/atom (eV)</div><div class="stat-value sm" id="stEnergy">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Temperature (K)</div><div class="stat-value sm" id="stTemp">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Si atoms</div><div class="stat-value sm" id="stNsi">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Ge atoms</div><div class="stat-value sm" id="stNge">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Step</div><div class="stat-value sm" id="stStep">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">MC accept %</div><div class="stat-value sm" id="stMCacc">&mdash;</div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="card-label">Ge Layer Composition</div>
+        <div class="chart-wrap" style="height:160px"><canvas id="layerChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Energy per atom vs Step</div>
+      <div class="chart-wrap"><canvas id="energyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Temperature vs Step</div>
+      <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- SWEEP DASHBOARDS -->
+<div class="dashboard" id="tswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Energy/atom vs Temperature</div>
+      <div class="chart-wrap tall"><canvas id="tswEnergyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Ge Surface Fraction vs Temperature</div>
+      <div class="chart-wrap tall"><canvas id="tswGeChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard" id="cswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Energy/atom vs Ge Fraction</div>
+      <div class="chart-wrap tall"><canvas id="cswEnergyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Lattice Constant vs Ge Fraction</div>
+      <div class="chart-wrap tall"><canvas id="cswLatChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA LAB DASHBOARD -->
+<div class="dashboard" id="datalabDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Total Energy vs Number of Layers</div>
+      <div class="chart-wrap tall"><canvas id="dlLayerChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Ge Distribution (latest run)</div>
+      <div class="chart-wrap tall"><canvas id="dlGeLayerChart"></canvas></div>
+    </div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Energy vs &Delta;&mu;</div>
+      <div class="chart-wrap tall"><canvas id="dlSurfEnergyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Surface Energy vs Ge Fraction</div>
+      <div class="chart-wrap tall"><canvas id="dlSurfGeChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle" id="logToggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   MD PORTAL — Tersoff Molecular Dynamics for SiGe Surfaces
+   Web Worker + Three.js 3D + Chart.js Dashboard
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Web Worker (inline Blob URL) ── */
+const workerCode = `
+// Tersoff parameters: Si=0, Ge=1
+const PARAMS = {
+  beta: [1.1e-6, 9.0166e-7],
+  nexp: [0.78734, 0.75627],
+  c: [1.0039e5, 1.0643e5],
+  d: [16.217, 15.652],
+  h: [-0.59825, -0.43884],
+  ri: [2.7, 2.8],
+  si: [3.0, 3.1],
+  ai: [1830.8, 1769.0],
+  bi: [471.18, 419.23],
+  li: [2.4799, 2.4451],
+  mi: [1.7322, 1.7047]
+};
+const CHI = [[1.0, 1.00769],[1.00769, 1.0]];
+const OMEGA = 1.0;
+const kB = 8.6166560553e-5; // eV/K
+const PI = Math.PI;
+
+// Precompute cross-species
+const A = [[0,0],[0,0]], B = [[0,0],[0,0]], LAM = [[0,0],[0,0]], MU = [[0,0],[0,0]];
+const R = [[0,0],[0,0]], S = [[0,0],[0,0]];
+for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+  A[i][j] = Math.sqrt(PARAMS.ai[i] * PARAMS.ai[j]);
+  B[i][j] = Math.sqrt(PARAMS.bi[i] * PARAMS.bi[j]);
+  R[i][j] = Math.sqrt(PARAMS.ri[i] * PARAMS.ri[j]);
+  S[i][j] = Math.sqrt(PARAMS.si[i] * PARAMS.si[j]);
+  LAM[i][j] = 0.5 * (PARAMS.li[i] + PARAMS.li[j]);
+  MU[i][j] = 0.5 * (PARAMS.mi[i] + PARAMS.mi[j]);
+}
+const MASS = [28.09, 72.61]; // amu
+const SMAX = Math.max(S[0][0], S[0][1], S[1][0], S[1][1]);
+
+let natom = 0, pos, vel, acc, species, fx, fy, fz;
+let totlx, totly, totlz, energy;
+let mcAccept = 0, mcTotal = 0;
+
+function buildSlab(ncx, ncy, ncz, theta) {
+  // Diamond cubic (100) slab: 16 atoms per unit cell (2 basis * 8 positions)
+  // Lattice constant by Vegard's law
+  const aSi = 5.431, aGe = 5.657;
+  const a0 = (1 - theta) * aSi + theta * aGe;
+  const lattx = a0 * Math.SQRT2; // 100 surface cell: sqrt(2)*a/2 * 2
+  const latty = a0 * Math.SQRT2;
+  const lattz = a0;
+  const disp = 0.745, dispz = 0.1;
+
+  totlx = ncx * lattx;
+  totly = ncy * latty;
+  totlz = (ncz + 2) * lattz; // vacuum gap
+
+  // Basis positions for (100) slab: 16 atoms per unit cell
+  const basis = [
+    // First half of cell
+    [0, 0, 0],
+    [0, 0.25, 0.25],
+    [0, 0.50, 0],
+    [0, 0.75, 0.25],
+    [0.25, 0.25, 0.50],
+    [0.25, 0.75, 0.50],
+    [0.25, 0, 0.75],
+    [0.25, 0.50, 0.75],
+    // Second half
+    [0.50, 0, 0],
+    [0.50, 0.25, 0.25],
+    [0.50, 0.50, 0],
+    [0.50, 0.75, 0.25],
+    [0.75, 0.25, 0.50],
+    [0.75, 0.75, 0.50],
+    [0.75, 0, 0.75],
+    [0.75, 0.50, 0.75]
+  ];
+
+  const atoms = [];
+  for (let ix = 0; ix < ncx; ix++)
+  for (let iy = 0; iy < ncy; iy++)
+  for (let iz = 0; iz < ncz; iz++) {
+    for (let b = 0; b < basis.length; b++) {
+      let x = (ix + basis[b][0]) * lattx;
+      let y = (iy + basis[b][1]) * latty;
+      let z = (iz + basis[b][2]) * lattz + lattz; // offset by 1 cell for vacuum
+
+      // Dimer reconstruction for bottom surface (iz === 0)
+      // FORTRAN ref: atoms 1,3 get +disp in x; atoms 9,11 get -disp in x
+      if (iz === 0 && (b === 0 || b === 2)) {
+        x += disp;
+      }
+      if (iz === 0 && (b === 8 || b === 10)) {
+        x -= disp;
+      }
+
+      const sp = Math.random() < theta ? 1 : 0;
+      atoms.push({x, y, z, sp});
+    }
+  }
+
+  // Top surface dimer atoms (FORTRAN: k=ncellzf, 4 extra atoms per cell)
+  // Top-surface dimers are rotated 90° — displacement in y instead of x
+  for (let ix = 0; ix < ncx; ix++)
+  for (let iy = 0; iy < ncy; iy++) {
+    const zTop = ncz * lattz + lattz; // one layer above top bulk
+    atoms.push({x: ix * lattx,             y: iy * latty + disp,           z: zTop, sp: Math.random() < theta ? 1 : 0});
+    atoms.push({x: (ix + 0.50) * lattx,    y: iy * latty + disp,           z: zTop, sp: Math.random() < theta ? 1 : 0});
+    atoms.push({x: ix * lattx,             y: (iy + 0.50) * latty - disp,  z: zTop, sp: Math.random() < theta ? 1 : 0});
+    atoms.push({x: (ix + 0.50) * lattx,    y: (iy + 0.50) * latty - disp,  z: zTop, sp: Math.random() < theta ? 1 : 0});
+  }
+
+  natom = atoms.length;
+  pos = new Float64Array(natom * 3);
+  vel = new Float64Array(natom * 3);
+  acc = new Float64Array(natom * 3);
+  fx = new Float64Array(natom);
+  fy = new Float64Array(natom);
+  fz = new Float64Array(natom);
+  species = new Uint8Array(natom);
+
+  for (let i = 0; i < natom; i++) {
+    pos[i*3] = atoms[i].x;
+    pos[i*3+1] = atoms[i].y;
+    pos[i*3+2] = atoms[i].z;
+    species[i] = atoms[i].sp;
+    vel[i*3] = vel[i*3+1] = vel[i*3+2] = 0;
+    acc[i*3] = acc[i*3+1] = acc[i*3+2] = 0;
+  }
+
+  return {natom, lattx, latty, lattz, a0};
+}
+
+function cutoffFunc(r, Rij, Sij) {
+  if (r < Rij) return 1.0;
+  if (r >= Sij) return 0.0;
+  const arg = PI * (r - Rij) / (Sij - Rij);
+  return 0.5 + 0.5 * Math.cos(arg);
+}
+
+function dcutoffFunc(r, Rij, Sij) {
+  if (r < Rij || r >= Sij) return 0.0;
+  const arg = PI * (r - Rij) / (Sij - Rij);
+  return -0.5 * PI * Math.sin(arg) / (Sij - Rij);
+}
+
+function computeForces() {
+  energy = 0;
+  for (let i = 0; i < natom; i++) { fx[i] = 0; fy[i] = 0; fz[i] = 0; }
+
+  // Build neighbor lists
+  const neighbors = new Array(natom);
+  const nbrDx = new Array(natom);
+  const nbrDy = new Array(natom);
+  const nbrDz = new Array(natom);
+  const nbrR = new Array(natom);
+  for (let i = 0; i < natom; i++) {
+    neighbors[i] = [];
+    nbrDx[i] = [];
+    nbrDy[i] = [];
+    nbrDz[i] = [];
+    nbrR[i] = [];
+  }
+
+  for (let i = 0; i < natom - 1; i++) {
+    const si = species[i];
+    for (let j = i + 1; j < natom; j++) {
+      const sj = species[j];
+      let dx = pos[j*3] - pos[i*3];
+      let dy = pos[j*3+1] - pos[i*3+1];
+      let dz = pos[j*3+2] - pos[i*3+2];
+      // PBC in x and y
+      if (dx > totlx/2) dx -= totlx; else if (dx < -totlx/2) dx += totlx;
+      if (dy > totly/2) dy -= totly; else if (dy < -totly/2) dy += totly;
+      const r = Math.sqrt(dx*dx + dy*dy + dz*dz);
+
+      const Sij = S[si][sj];
+      if (r < Sij) {
+        neighbors[i].push(j); nbrDx[i].push(dx); nbrDy[i].push(dy); nbrDz[i].push(dz); nbrR[i].push(r);
+        neighbors[j].push(i); nbrDx[j].push(-dx); nbrDy[j].push(-dy); nbrDz[j].push(-dz); nbrR[j].push(r);
+
+        // Repulsive pair energy (counted once per distinct pair)
+        const Rij = R[si][sj];
+        const fc = cutoffFunc(r, Rij, Sij);
+        const fR = A[si][sj] * Math.exp(-LAM[si][sj] * r);
+        energy += fc * fR;
+
+        // Repulsive pair forces
+        const dfR_dr = -LAM[si][sj] * fR;
+        const dfc_dr = dcutoffFunc(r, Rij, Sij);
+        const fpair = -(fc * dfR_dr + dfc_dr * fR) / r;
+        fx[i] += fpair * dx; fy[i] += fpair * dy; fz[i] += fpair * dz;
+        fx[j] -= fpair * dx; fy[j] -= fpair * dy; fz[j] -= fpair * dz;
+      }
+    }
+  }
+
+  // Three-body (bond-order) terms
+  for (let i = 0; i < natom; i++) {
+    const si = species[i];
+    const nn = neighbors[i].length;
+
+    for (let pa = 0; pa < nn; pa++) {
+      const j = neighbors[i][pa];
+      const sj = species[j];
+      const xij = nbrDx[i][pa], yij = nbrDy[i][pa], zij = nbrDz[i][pa];
+      const rij = nbrR[i][pa];
+      const Rij = R[si][sj], Sij = S[si][sj];
+      const fcij = cutoffFunc(rij, Rij, Sij);
+      const fAij = -B[si][sj] * Math.exp(-MU[si][sj] * rij);
+
+      // Compute zeta_ij
+      let zetaij = 0;
+      for (let pb = 0; pb < nn; pb++) {
+        if (pb === pa) continue;
+        const k = neighbors[i][pb];
+        const sk = species[k];
+        const xik = nbrDx[i][pb], yik = nbrDy[i][pb], zik = nbrDz[i][pb];
+        const rik = nbrR[i][pb];
+        const Rik = R[si][sk], Sik = S[si][sk];
+        const fcik = cutoffFunc(rik, Rik, Sik);
+
+        const cosTheta = (xij*xik + yij*yik + zij*zik) / (rij * rik);
+        const denom = PARAMS.d[si]*PARAMS.d[si] + (PARAMS.h[si] - cosTheta)*(PARAMS.h[si] - cosTheta);
+        const g = 1.0 + (PARAMS.c[si]/PARAMS.d[si])*(PARAMS.c[si]/PARAMS.d[si]) - PARAMS.c[si]*PARAMS.c[si]/denom;
+
+        zetaij += fcik * OMEGA * g;
+      }
+
+      // Bond order b_ij
+      const bz = PARAMS.beta[si] * zetaij;
+      const bzn = Math.pow(Math.abs(bz), PARAMS.nexp[si]);
+      const bij = CHI[si][sj] * Math.pow(1.0 + bzn, -0.5 / PARAMS.nexp[si]);
+
+      // Attractive energy: 0.5 * fc * b * fA (factor 1/2 because bond ij counted from both i and j)
+      energy += 0.5 * fcij * bij * fAij;
+
+      // Attractive force on i from j (simplified — central force approximation for stability)
+      const dfA_dr = -MU[si][sj] * fAij;
+      const dfc_dr = dcutoffFunc(rij, Rij, Sij);
+      const fattr = -0.5 * (fcij * bij * dfA_dr + dfc_dr * bij * fAij) / rij;
+      fx[i] += fattr * xij; fy[i] += fattr * yij; fz[i] += fattr * zij;
+    }
+  }
+}
+
+function velocityVerlet(dt) {
+  // Half-step velocity, full-step position
+  for (let i = 0; i < natom; i++) {
+    const m = MASS[species[i]];
+    vel[i*3]   += 0.5 * dt * fx[i] / m;
+    vel[i*3+1] += 0.5 * dt * fy[i] / m;
+    vel[i*3+2] += 0.5 * dt * fz[i] / m;
+    pos[i*3]   += dt * vel[i*3];
+    pos[i*3+1] += dt * vel[i*3+1];
+    pos[i*3+2] += dt * vel[i*3+2];
+    // PBC in x and y
+    if (pos[i*3] < 0) pos[i*3] += totlx; else if (pos[i*3] >= totlx) pos[i*3] -= totlx;
+    if (pos[i*3+1] < 0) pos[i*3+1] += totly; else if (pos[i*3+1] >= totly) pos[i*3+1] -= totly;
+  }
+  // Recompute forces
+  computeForces();
+  // Second half-step velocity
+  for (let i = 0; i < natom; i++) {
+    const m = MASS[species[i]];
+    vel[i*3]   += 0.5 * dt * fx[i] / m;
+    vel[i*3+1] += 0.5 * dt * fy[i] / m;
+    vel[i*3+2] += 0.5 * dt * fz[i] / m;
+  }
+}
+
+function kineticEnergy() {
+  let ke = 0;
+  for (let i = 0; i < natom; i++) {
+    const m = MASS[species[i]];
+    ke += 0.5 * m * (vel[i*3]*vel[i*3] + vel[i*3+1]*vel[i*3+1] + vel[i*3+2]*vel[i*3+2]);
+  }
+  // Convert: KE is in amu*(A/tau)^2 = amu * eV/amu = eV (units work out)
+  return ke;
+}
+
+function temperature() {
+  return 2.0 * kineticEnergy() / (3.0 * natom * kB);
+}
+
+function rescaleVelocities(targetT) {
+  const currentT = temperature();
+  if (currentT < 1e-10) {
+    // Initialize random velocities
+    for (let i = 0; i < natom; i++) {
+      const m = MASS[species[i]];
+      const sigma = Math.sqrt(kB * targetT / m);
+      vel[i*3] = gaussRandom() * sigma;
+      vel[i*3+1] = gaussRandom() * sigma;
+      vel[i*3+2] = gaussRandom() * sigma;
+    }
+    // Remove COM velocity
+    let vx=0,vy=0,vz=0,tm=0;
+    for (let i=0;i<natom;i++){const m=MASS[species[i]];vx+=m*vel[i*3];vy+=m*vel[i*3+1];vz+=m*vel[i*3+2];tm+=m;}
+    vx/=tm;vy/=tm;vz/=tm;
+    for (let i=0;i<natom;i++){vel[i*3]-=vx;vel[i*3+1]-=vy;vel[i*3+2]-=vz;}
+    // Rescale to target
+    const t2 = temperature();
+    if (t2 > 1e-10) {
+      const scale = Math.sqrt(targetT / t2);
+      for (let i=0;i<natom;i++){vel[i*3]*=scale;vel[i*3+1]*=scale;vel[i*3+2]*=scale;}
+    }
+  } else {
+    const scale = Math.sqrt(targetT / currentT);
+    for (let i = 0; i < natom; i++) {
+      vel[i*3] *= scale; vel[i*3+1] *= scale; vel[i*3+2] *= scale;
+    }
+  }
+}
+
+function mcSwap(nSteps, kT) {
+  if (nSteps <= 0 || natom < 2) return;
+  let nSi = 0, nGe = 0;
+  for (let i = 0; i < natom; i++) { if (species[i] === 0) nSi++; else nGe++; }
+  if (nSi === 0 || nGe === 0) return;
+
+  for (let s = 0; s < nSteps; s++) {
+    // Pick random Si and Ge
+    let a = Math.floor(Math.random() * natom);
+    let b = Math.floor(Math.random() * natom);
+    if (species[a] === species[b] || a === b) continue;
+    if (species[a] === 1) { const t = a; a = b; b = t; } // a=Si, b=Ge
+
+    // Compute energy before
+    const eBefore = energy;
+    species[a] = 1; species[b] = 0;
+    computeForces();
+    const eAfter = energy;
+    const dE = eAfter - eBefore;
+
+    mcTotal++;
+    if (dE <= 0 || Math.random() < Math.exp(-dE / kT)) {
+      mcAccept++; // keep swap
+    } else {
+      species[a] = 0; species[b] = 1; // revert
+      computeForces();
+    }
+  }
+}
+
+function mcGrandCanonical(nSteps, kT, dmu) {
+  // Grand canonical species change (niter4 equivalent from Fortran main.f)
+  // Picks a random atom, flips Si<->Ge, accepts via Metropolis with chemical potential
+  if (nSteps <= 0 || natom < 1 || kT < 1e-12) return;
+
+  for (let s = 0; s < nSteps; s++) {
+    const a = Math.floor(Math.random() * natom);
+    if (a < 0 || a >= natom) continue;
+    const s1i = species[a];
+    const s1f = s1i === 0 ? 1 : 0; // flip Si<->Ge
+
+    const eBefore = energy;
+    species[a] = s1f;
+    computeForces();
+    const eAfter = energy;
+    const dE = eAfter - eBefore;
+
+    // dmu = mu_si - mu_ge (positive favors Si retention)
+    // Si->Ge (s1i=0): del_mu = mu_si - mu_ge = dmu
+    // Ge->Si (s1i=1): del_mu = mu_ge - mu_si = -dmu
+    const del_mu = s1i === 0 ? dmu : -dmu;
+
+    mcTotal++;
+    if (dE - del_mu <= 0 || Math.random() < Math.exp(-(dE - del_mu) / kT)) {
+      mcAccept++;
+    } else {
+      species[a] = s1i; // revert
+      computeForces();
+    }
+  }
+}
+
+function layerComposition(nLayers) {
+  if (!nLayers) nLayers = 8;
+  let zmin = Infinity, zmax = -Infinity;
+  for (let i = 0; i < natom; i++) {
+    if (pos[i*3+2] < zmin) zmin = pos[i*3+2];
+    if (pos[i*3+2] > zmax) zmax = pos[i*3+2];
+  }
+  const dz = (zmax - zmin + 0.01) / nLayers;
+  const layers = [];
+  for (let l = 0; l < nLayers; l++) layers.push({si: 0, ge: 0});
+  for (let i = 0; i < natom; i++) {
+    const l = Math.min(nLayers - 1, Math.floor((pos[i*3+2] - zmin) / dz));
+    if (species[i] === 0) layers[l].si++; else layers[l].ge++;
+  }
+  return layers;
+}
+
+let spareG = null;
+function gaussRandom() {
+  if (spareG !== null) { const v = spareG; spareG = null; return v; }
+  let u, v, s;
+  do { u = Math.random()*2-1; v = Math.random()*2-1; s = u*u+v*v; } while (s >= 1 || s === 0);
+  s = Math.sqrt(-2*Math.log(s)/s);
+  spareG = v * s;
+  return u * s;
+}
+
+// Worker message handler
+self.onmessage = function(e) {
+  const msg = e.data;
+  if (msg.type === 'init') {
+    const p = msg.params;
+    const info = buildSlab(p.ncx, p.ncy, p.ncz, p.theta);
+    computeForces();
+    rescaleVelocities(p.temp);
+    mcAccept = 0; mcTotal = 0;
+    self.postMessage({type:'init_done', natom, totlx, totly, totlz, info});
+  }
+  else if (msg.type === 'step') {
+    const p = msg.params;
+    const dt = p.dt * 1.01804956609e-2; // fs to tau (1 fs = 1e-15s / (1.018e-14 s/tau))
+    // Run VV steps
+    for (let s = 0; s < p.nvv; s++) {
+      velocityVerlet(dt);
+    }
+    // Rescale velocities (Berendsen-like thermostat)
+    rescaleVelocities(p.temp);
+    // MC swaps
+    const kT = kB * p.temp;
+    mcSwap(p.mcswap, kT);
+    mcGrandCanonical(p.mcgc, kT, p.dmu);
+
+    const T = temperature();
+    const epa = energy / natom;
+    let nSi = 0, nGe = 0;
+    for (let i = 0; i < natom; i++) { if (species[i] === 0) nSi++; else nGe++; }
+    const layers = layerComposition(6);
+    const mcPct = mcTotal > 0 ? (mcAccept / mcTotal * 100) : 0;
+
+    // Copy positions and species for transfer
+    const posOut = new Float64Array(pos);
+    const spOut = new Uint8Array(species);
+
+    self.postMessage({
+      type: 'update',
+      step: msg.step,
+      energy: epa,
+      temperature: T,
+      nSi, nGe,
+      positions: posOut.buffer,
+      species: spOut.buffer,
+      layers,
+      mcPct,
+      natom
+    }, [posOut.buffer, spOut.buffer]);
+  }
+};
+`;
+
+let worker = null;
+let running = false, cancelled = false, sweepRunning = false;
+let scene, camera, renderer, atomMeshes = [], bondMeshes = [], controls;
+let currentStyle = 'bs', lastAtomData = null;
+let energyChartInst = null, tempChartInst = null, layerChartInst = null;
+let tswEnergyChartInst = null, tswGeChartInst = null;
+let cswEnergyChartInst = null, cswLatChartInst = null;
+let energyHistory = [], tempHistory = [];
+let currentNatom = 0;
+let simBox = null, slabBox = null;
+
+const chartDefaults = {
+  responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+  plugins: {
+    legend: { display: false },
+    tooltip: { backgroundColor:'#111a11', borderColor:'rgba(200,160,40,0.3)', borderWidth:1, titleColor:'#e8f0e8', bodyColor:'#7a9a7a',
+      titleFont:{family:'Space Mono',size:10}, bodyFont:{family:'Space Mono',size:10} }
+  },
+  scales: {
+    x: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}} },
+    y: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}} }
+  }
+};
+
+/* ── Panel toggle ── */
+function togglePanel(id) {
+  const p = document.getElementById(id);
+  p.classList.toggle('collapsed');
+  const t = p.querySelector('.toggle');
+  if (t) t.innerHTML = p.classList.contains('collapsed') ? '&#9654; expand' : '&#9660; collapse';
+}
+
+/* ── Mode tabs ── */
+function setMode(m) {
+  const modes = ['single', 'tsweep', 'csweep', 'datalab'];
+  modes.forEach(md => {
+    const el = document.getElementById('mode' + md.charAt(0).toUpperCase() + md.slice(1));
+    if (el) el.classList.toggle('active', md === m);
+  });
+  document.querySelectorAll('.mode-tab').forEach((tab, i) => tab.classList.toggle('active', modes[i] === m));
+  document.getElementById('tswDash').style.display = m === 'tsweep' ? '' : 'none';
+  document.getElementById('cswDash').style.display = m === 'csweep' ? '' : 'none';
+  document.getElementById('mainDash').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('datalabDash').style.display = m === 'datalab' ? '' : 'none';
+  // Sync Data Lab fields from main params
+  if (m === 'datalab') {
+    document.getElementById('dlDmu').value = document.getElementById('pDmu').value;
+    document.getElementById('dlMCgc').value = document.getElementById('pMCgc').value;
+  }
+}
+
+/* ── Atom count update ── */
+function updateAtomCount() {
+  const ncx = +document.getElementById('pNcx').value;
+  const ncy = +document.getElementById('pNcy').value;
+  const ncz = +document.getElementById('pNcz').value;
+  document.getElementById('atomCount').textContent = ncx * ncy * ncz * 16 + ncx * ncy * 4;
+}
+['pNcx','pNcy','pNcz'].forEach(id => document.getElementById(id).addEventListener('change', updateAtomCount));
+
+/* ── Three.js setup ── */
+function init3D() {
+  const container = document.getElementById('viewer3d');
+  const w = container.clientWidth, h = container.clientHeight || 400;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050805);
+
+  // Orthographic camera — no depth perspective
+  const aspect = w / h;
+  let frustum = 15;
+  camera = new THREE.OrthographicCamera(
+    -frustum * aspect, frustum * aspect, frustum, -frustum, 0.1, 1000
+  );
+  camera.position.set(15, 15, 20);
+  camera.lookAt(0, 0, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0x404040, 1.5);
+  scene.add(ambient);
+  const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+  dir.position.set(10, 10, 10);
+  scene.add(dir);
+  const dir2 = new THREE.DirectionalLight(0xffffff, 0.4);
+  dir2.position.set(-5, -5, 10);
+  scene.add(dir2);
+
+  // Simple orbit controls (no external dependency)
+  let isDragging = false, prevX = 0, prevY = 0;
+  let theta = 0.5, phi = 0.8, radius = 30;
+  const target = new THREE.Vector3(0, 0, 0);
+
+  function updateCamera() {
+    camera.position.x = target.x + radius * Math.sin(phi) * Math.cos(theta);
+    camera.position.y = target.y + radius * Math.cos(phi);
+    camera.position.z = target.z + radius * Math.sin(phi) * Math.sin(theta);
+    camera.lookAt(target);
+    // Update ortho frustum for zoom
+    const a = w / h;
+    camera.left = -frustum * a; camera.right = frustum * a;
+    camera.top = frustum; camera.bottom = -frustum;
+    camera.updateProjectionMatrix();
+  }
+
+  renderer.domElement.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+  renderer.domElement.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    theta += (e.clientX - prevX) * 0.01;
+    phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi + (e.clientY - prevY) * 0.01));
+    prevX = e.clientX; prevY = e.clientY;
+    updateCamera();
+  });
+  window.addEventListener('mouseup', () => isDragging = false);
+  renderer.domElement.addEventListener('wheel', e => {
+    frustum = Math.max(3, Math.min(50, frustum + e.deltaY * 0.03));
+    updateCamera();
+    e.preventDefault();
+  }, {passive: false});
+
+  // Touch support
+  renderer.domElement.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) { isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; }
+  });
+  renderer.domElement.addEventListener('touchmove', e => {
+    if (!isDragging || e.touches.length !== 1) return;
+    theta += (e.touches[0].clientX - prevX) * 0.01;
+    phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi + (e.touches[0].clientY - prevY) * 0.01));
+    prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+    updateCamera();
+    e.preventDefault();
+  });
+  renderer.domElement.addEventListener('touchend', () => isDragging = false);
+
+  updateCamera();
+  animate();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+
+// Shared geometries for each render style (created on first use)
+let geoCache = {};
+function getGeo(key, factory) { if (!geoCache[key]) geoCache[key] = factory(); return geoCache[key]; }
+
+// Bond cylinder helper: position+orient a cylinder between two Vector3 points
+const _bAxis = new THREE.Vector3();
+const _bMid = new THREE.Vector3();
+function orientBond(mesh, p1, p2) {
+  _bMid.addVectors(p1, p2).multiplyScalar(0.5);
+  _bAxis.subVectors(p2, p1);
+  const len = _bAxis.length();
+  mesh.position.copy(_bMid);
+  mesh.scale.set(1, len, 1);
+  if (len > 0.001) {
+    _bAxis.normalize();
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), _bAxis);
+  }
+}
+
+// Style parameters
+const STYLES = {
+  bs:    { atomR: [0.5, 0.55],  bondR: 0.12, showBonds: true,  showAtoms: true  },
+  vdw:   { atomR: [1.17, 1.22], bondR: 0,    showBonds: false, showAtoms: true  },
+  stick: { atomR: [0.15, 0.15], bondR: 0.12, showBonds: true,  showAtoms: true  },
+  layer: { atomR: [0.5, 0.55],  bondR: 0.12, showBonds: true,  showAtoms: true  }
+};
+
+// Layer color palette (rainbow from blue to red, bottom to top)
+function layerColor(t) {
+  // t in [0,1], 0=bottom, 1=top
+  const r = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.75) * 4));
+  const g = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.5) * 4));
+  const b = Math.min(1, Math.max(0, 1.5 - Math.abs(t - 0.25) * 4));
+  return new THREE.Color(r, g, b);
+}
+
+const BOND_CUTOFF = 2.8; // Angstroms — typical Si-Si bond ~ 2.35, cutoff includes slightly stretched bonds
+const siColor = new THREE.Color(0x3ca0a0);
+const geColor = new THREE.Color(0xdd8844);
+
+function setRenderStyle(style) {
+  currentStyle = style;
+  document.querySelectorAll('#renderModes button').forEach(b => {
+    b.classList.toggle('active', b.dataset.style === style);
+  });
+  // Update legend
+  const legend = document.getElementById('colorLegend');
+  if (style === 'layer') {
+    legend.innerHTML = '<span style="background:linear-gradient(to right,#4040ff,#40ff40,#ffff40,#ff4040);width:80px;height:10px;border-radius:3px;display:inline-block"></span><span>bottom &rarr; top layer</span><span style="color:#3ca03c">&square; cell</span><span style="color:#ddb84d">&square; slab</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
+  } else {
+    legend.innerHTML = '<span><span class="dot" style="background:#3ca0a0"></span>Silicon</span><span><span class="dot" style="background:#dd8844"></span>Germanium</span><span style="color:#3ca03c">&square; cell</span><span style="color:#ddb84d">&square; slab</span><span style="margin-left:auto;color:#4a6a4a">Click + drag to rotate, scroll to zoom</span>';
+  }
+  if (lastAtomData) updateAtoms(lastAtomData.pos, lastAtomData.sp, lastAtomData.n, lastAtomData.lx, lastAtomData.ly, lastAtomData.lz);
+}
+
+function updateAtoms(posBuffer, spBuffer, natom, totlx, totly, totlz) {
+  const positions = new Float64Array(posBuffer);
+  const sp = new Uint8Array(spBuffer);
+
+  // Cache for style changes
+  lastAtomData = {pos: posBuffer, sp: spBuffer, n: natom, lx: totlx, ly: totly, lz: totlz};
+
+  const cx = totlx / 2, cy = totly / 2, cz = totlz / 2;
+  const style = STYLES[currentStyle];
+
+  // --- Atoms ---
+  while (atomMeshes.length < natom) {
+    const geo = getGeo('sphere16', () => new THREE.SphereGeometry(1, 16, 10));
+    const mat = new THREE.MeshPhongMaterial({ color: 0x3ca0a0 });
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+    atomMeshes.push(mesh);
+  }
+  while (atomMeshes.length > natom) {
+    const m = atomMeshes.pop();
+    scene.remove(m);
+    m.material.dispose();
+  }
+
+  // Compute z range for layer coloring
+  let zMin = Infinity, zMax = -Infinity;
+  const viewPos = [];
+  for (let i = 0; i < natom; i++) {
+    const vx = positions[i*3] - cx;
+    const vy = positions[i*3+2] - cz;
+    const vz = positions[i*3+1] - cy;
+    viewPos.push(vx, vy, vz);
+    if (vy < zMin) zMin = vy;
+    if (vy > zMax) zMax = vy;
+  }
+  const zRange = Math.max(0.01, zMax - zMin);
+
+  for (let i = 0; i < natom; i++) {
+    const mesh = atomMeshes[i];
+    mesh.position.set(viewPos[i*3], viewPos[i*3+1], viewPos[i*3+2]);
+    const r = style.atomR[sp[i] === 0 ? 0 : 1];
+    mesh.scale.setScalar(r);
+    mesh.visible = style.showAtoms;
+
+    if (currentStyle === 'layer') {
+      const t = (viewPos[i*3+1] - zMin) / zRange;
+      mesh.material.color.copy(layerColor(t));
+    } else {
+      mesh.material.color.copy(sp[i] === 0 ? siColor : geColor);
+    }
+  }
+
+  // --- Bonds ---
+  // Clear old bonds (shared material — dispose once)
+  if (bondMeshes.length > 0) {
+    const oldMat = bondMeshes[0].material;
+    while (bondMeshes.length > 0) { scene.remove(bondMeshes.pop()); }
+    oldMat.dispose();
+  }
+
+  if (style.showBonds && natom > 0) {
+    const bondGeo = getGeo('cyl6', () => new THREE.CylinderGeometry(1, 1, 1, 6));
+    const bondColor = currentStyle === 'layer' ? 0x555555 : 0x668866;
+    const sharedBondMat = new THREE.MeshPhongMaterial({ color: bondColor });
+    const cutSq = BOND_CUTOFF * BOND_CUTOFF;
+
+    // Build bonds using real (unswapped) positions with PBC in x,y
+    for (let i = 0; i < natom; i++) {
+      const ix = positions[i*3], iy = positions[i*3+1], iz = positions[i*3+2];
+      for (let j = i + 1; j < natom; j++) {
+        let dx = positions[j*3] - ix;
+        let dy = positions[j*3+1] - iy;
+        let dz = positions[j*3+2] - iz;
+        // PBC in x and y
+        if (dx > totlx * 0.5) dx -= totlx; else if (dx < -totlx * 0.5) dx += totlx;
+        if (dy > totly * 0.5) dy -= totly; else if (dy < -totly * 0.5) dy += totly;
+        const r2 = dx*dx + dy*dy + dz*dz;
+        if (r2 < cutSq && r2 > 0.1) {
+          const mesh = new THREE.Mesh(bondGeo, sharedBondMat);
+          const p1 = new THREE.Vector3(viewPos[i*3], viewPos[i*3+1], viewPos[i*3+2]);
+          const p2 = new THREE.Vector3(
+            viewPos[i*3] + dx,
+            viewPos[i*3+1] + dz,
+            viewPos[i*3+2] + dy
+          );
+          orientBond(mesh, p1, p2);
+          mesh.scale.x = style.bondR;
+          mesh.scale.z = style.bondR;
+          scene.add(mesh);
+          bondMeshes.push(mesh);
+        }
+      }
+    }
+  }
+
+  // ── Simulation box wireframe (green = full cell, gold = slab region) ──
+  if (simBox) { scene.remove(simBox); simBox.geometry.dispose(); simBox.material.dispose(); simBox = null; }
+  if (slabBox) { scene.remove(slabBox); slabBox.geometry.dispose(); slabBox.material.dispose(); slabBox = null; }
+
+  // Full periodic cell: totlx x totlz (view y) x totly (view z), centered at origin
+  const fullBoxGeo = new THREE.BoxGeometry(totlx, totlz, totly);
+  const fullEdges = new THREE.EdgesGeometry(fullBoxGeo);
+  const fullMat = new THREE.LineBasicMaterial({ color: 0x3ca03c, opacity: 0.35, transparent: true });
+  simBox = new THREE.LineSegments(fullEdges, fullMat);
+  scene.add(simBox);
+  fullBoxGeo.dispose();
+
+  // Slab region box: atoms sit within a subset of z; vacuum is above and below
+  // Use actual atom z-range to define slab extent
+  if (zMax > zMin) {
+    const slabH = zMax - zMin + 1.0; // small padding around atoms
+    const slabCenterY = ((zMin + zMax) / 2); // already in view-y coords (centered)
+    const slabGeo = new THREE.BoxGeometry(totlx, slabH, totly);
+    const slabEdges = new THREE.EdgesGeometry(slabGeo);
+    const slabMat = new THREE.LineBasicMaterial({ color: 0xddb84d, opacity: 0.3, transparent: true });
+    slabBox = new THREE.LineSegments(slabEdges, slabMat);
+    slabBox.position.y = slabCenterY;
+    scene.add(slabBox);
+    slabGeo.dispose();
+  }
+}
+
+/* ── Create worker ── */
+function createWorker() {
+  const blob = new Blob([workerCode], { type: 'application/javascript' });
+  return new Worker(URL.createObjectURL(blob));
+}
+
+/* ── Start MD ── */
+function startMD() {
+  if (running || sweepRunning) return;
+  running = true;
+  cancelled = false;
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+  energyHistory = [];
+  tempHistory = [];
+
+  const params = getParams();
+  worker = createWorker();
+
+  worker.onmessage = function(e) {
+    const msg = e.data;
+    if (msg.type === 'init_done') {
+      currentNatom = msg.natom;
+      runStepLoop(params, 0, params.nloops);
+    } else if (msg.type === 'update') {
+      updateAtoms(msg.positions, msg.species, msg.natom, params.totlx || 20, params.totly || 20, params.totlz || 30);
+      document.getElementById('stEnergy').textContent = msg.energy.toFixed(3);
+      document.getElementById('stTemp').textContent = msg.temperature.toFixed(0);
+      document.getElementById('stNsi').textContent = msg.nSi;
+      document.getElementById('stNge').textContent = msg.nGe;
+      document.getElementById('stStep').textContent = msg.step + 1;
+      document.getElementById('stMCacc').textContent = msg.mcPct.toFixed(1);
+
+      energyHistory.push(msg.energy);
+      tempHistory.push(msg.temperature);
+      updateCharts(msg.layers);
+
+      const pct = ((msg.step + 1) / params.nloops * 100).toFixed(0);
+      document.getElementById('progFill').style.width = pct + '%';
+      document.getElementById('progText').textContent = 'Loop ' + (msg.step + 1) + '/' + params.nloops;
+    }
+  };
+
+  worker.postMessage({type: 'init', params: {
+    ncx: params.ncx, ncy: params.ncy, ncz: params.ncz,
+    theta: params.theta, temp: params.temp
+  }});
+}
+
+function runStepLoop(params, step, total) {
+  if (cancelled || step >= total) {
+    running = false;
+    document.getElementById('runBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('progText').textContent = cancelled ? 'Stopped' : 'Complete';
+    if (worker) { worker.terminate(); worker = null; }
+    return;
+  }
+
+  // Store totlx/totly/totlz from first init
+  const p = getParams();
+  worker.postMessage({type: 'step', step, params: {
+    dt: p.dt, nvv: p.nvv, temp: p.temp, mcswap: p.mcswap, mcgc: p.mcgc, dmu: p.dmu
+  }});
+
+  worker.onmessage = function(e) {
+    const msg = e.data;
+    if (msg.type === 'update') {
+      // Cache dimensions
+      if (!params.totlx) {
+        const ncx = params.ncx, ncy = params.ncy, ncz = params.ncz, theta = params.theta;
+        const a0 = (1-theta)*5.431 + theta*5.657;
+        params.totlx = ncx * a0 * Math.SQRT2;
+        params.totly = ncy * a0 * Math.SQRT2;
+        params.totlz = (ncz + 2) * a0;
+      }
+      updateAtoms(msg.positions, msg.species, msg.natom, params.totlx, params.totly, params.totlz);
+      document.getElementById('stEnergy').textContent = msg.energy.toFixed(3);
+      document.getElementById('stTemp').textContent = msg.temperature.toFixed(0);
+      document.getElementById('stNsi').textContent = msg.nSi;
+      document.getElementById('stNge').textContent = msg.nGe;
+      document.getElementById('stStep').textContent = step + 1;
+      document.getElementById('stMCacc').textContent = msg.mcPct.toFixed(1);
+
+      energyHistory.push(msg.energy);
+      tempHistory.push(msg.temperature);
+      updateCharts(msg.layers);
+
+      const pct = ((step + 1) / total * 100).toFixed(0);
+      document.getElementById('progFill').style.width = pct + '%';
+      document.getElementById('progText').textContent = 'Loop ' + (step + 1) + '/' + total;
+
+      setTimeout(() => runStepLoop(params, step + 1, total), 5);
+    }
+  };
+}
+
+function stopMD() { cancelled = true; }
+
+function resetMD() {
+  stopMD();
+  if (worker) { worker.terminate(); worker = null; }
+  running = false;
+  energyHistory = []; tempHistory = [];
+  document.getElementById('progFill').style.width = '0%';
+  document.getElementById('progText').textContent = 'Ready';
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  ['stEnergy','stTemp','stNsi','stNge','stStep','stMCacc'].forEach(id => document.getElementById(id).textContent = '\u2014');
+  destroyCharts();
+}
+
+function getParams() {
+  return {
+    ncx: +document.getElementById('pNcx').value,
+    ncy: +document.getElementById('pNcy').value,
+    ncz: +document.getElementById('pNcz').value,
+    theta: +document.getElementById('pTheta').value,
+    temp: +document.getElementById('pTemp').value,
+    dt: +document.getElementById('pDt').value,
+    nvv: +document.getElementById('pNvv').value,
+    nloops: +document.getElementById('pNloops').value,
+    mcswap: +document.getElementById('pMCswap').value,
+    mcgc: +document.getElementById('pMCgc').value,
+    dmu: +document.getElementById('pDmu').value
+  };
+}
+
+/* ── Charts ── */
+function destroyCharts() {
+  [energyChartInst, tempChartInst, layerChartInst].forEach(c => { if (c) c.destroy(); });
+  energyChartInst = tempChartInst = layerChartInst = null;
+}
+
+function updateCharts(layers) {
+  // Energy chart
+  if (energyChartInst) {
+    energyChartInst.data.labels.push(energyHistory.length);
+    energyChartInst.data.datasets[0].data.push(energyHistory[energyHistory.length-1]);
+    energyChartInst.update('none');
+  } else {
+    const opts = JSON.parse(JSON.stringify(chartDefaults));
+    opts.scales.x.title = {display:true, text:'Loop', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    opts.scales.y.title = {display:true, text:'eV/atom', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    energyChartInst = new Chart(document.getElementById('energyChart'), {
+      type: 'line',
+      data: { labels: energyHistory.map((_,i)=>i+1), datasets: [{data:[...energyHistory], borderColor:'#ddb84d', borderWidth:1.5, pointRadius:0, fill:false}] },
+      options: opts
+    });
+  }
+
+  // Temp chart
+  if (tempChartInst) {
+    tempChartInst.data.labels.push(tempHistory.length);
+    tempChartInst.data.datasets[0].data.push(tempHistory[tempHistory.length-1]);
+    tempChartInst.update('none');
+  } else {
+    const opts = JSON.parse(JSON.stringify(chartDefaults));
+    opts.scales.x.title = {display:true, text:'Loop', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    opts.scales.y.title = {display:true, text:'K', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+    tempChartInst = new Chart(document.getElementById('tempChart'), {
+      type: 'line',
+      data: { labels: tempHistory.map((_,i)=>i+1), datasets: [{data:[...tempHistory], borderColor:'#e24b4a', borderWidth:1.5, pointRadius:0, fill:false}] },
+      options: opts
+    });
+  }
+
+  // Layer composition chart
+  if (layers && layers.length > 0) {
+    const labels = layers.map((_,i) => 'L'+(i+1));
+    const geFrac = layers.map(l => l.ge / Math.max(1, l.si + l.ge));
+    if (layerChartInst) {
+      layerChartInst.data.datasets[0].data = geFrac;
+      layerChartInst.update('none');
+    } else {
+      const opts = JSON.parse(JSON.stringify(chartDefaults));
+      opts.scales.y.min = 0; opts.scales.y.max = 1;
+      opts.scales.x.title = {display:true, text:'Layer (bottom\u2192top)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+      opts.scales.y.title = {display:true, text:'Ge fraction', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+      layerChartInst = new Chart(document.getElementById('layerChart'), {
+        type: 'bar',
+        data: { labels, datasets: [{data: geFrac, backgroundColor:'rgba(221,136,68,0.6)', borderColor:'#dd8844', borderWidth:1, borderRadius:2}] },
+        options: opts
+      });
+    }
+  }
+}
+
+/* ── T Sweep ── */
+async function runTSweep() {
+  if (running || sweepRunning) return;
+  sweepRunning = true;
+  cancelled = false;
+  const tMin = +document.getElementById('tswMin').value;
+  const tMax = +document.getElementById('tswMax').value;
+  const pts = +document.getElementById('tswPts').value;
+  const loops = +document.getElementById('tswLoops').value;
+  const baseP = getParams();
+  const results = [];
+
+  for (let i = 0; i < pts; i++) {
+    if (cancelled) break;
+    const T = tMin + (tMax - tMin) * i / Math.max(1, pts - 1);
+    document.getElementById('tswProgText').textContent = 'T = ' + T.toFixed(0) + ' K (' + (i+1) + '/' + pts + ')';
+    document.getElementById('tswProgFill').style.width = ((i+1)/pts*100) + '%';
+
+    const result = await runSinglePoint({...baseP, temp: T, nloops: loops});
+    results.push({T, energy: result.energy, geSurface: result.geSurface});
+  }
+
+  sweepRunning = false;
+  if (!cancelled) displayTSweep(results);
+  document.getElementById('tswProgText').textContent = cancelled ? 'Cancelled' : 'Complete';
+}
+
+async function runCSweep() {
+  if (running || sweepRunning) return;
+  sweepRunning = true;
+  cancelled = false;
+  const thetaMin = +document.getElementById('cswMin').value;
+  const thetaMax = +document.getElementById('cswMax').value;
+  const pts = +document.getElementById('cswPts').value;
+  const loops = +document.getElementById('cswLoops').value;
+  const baseP = getParams();
+  const results = [];
+
+  for (let i = 0; i < pts; i++) {
+    if (cancelled) break;
+    const theta = thetaMin + (thetaMax - thetaMin) * i / Math.max(1, pts - 1);
+    document.getElementById('cswProgText').textContent = '\u03b8 = ' + theta.toFixed(2) + ' (' + (i+1) + '/' + pts + ')';
+    document.getElementById('cswProgFill').style.width = ((i+1)/pts*100) + '%';
+
+    const a0 = (1-theta)*5.431 + theta*5.657;
+    const result = await runSinglePoint({...baseP, theta, nloops: loops});
+    results.push({theta, energy: result.energy, a0});
+  }
+
+  sweepRunning = false;
+  if (!cancelled) displayCSweep(results);
+  document.getElementById('cswProgText').textContent = cancelled ? 'Cancelled' : 'Complete';
+}
+
+function runSinglePoint(params) {
+  return new Promise((resolve) => {
+    const w = createWorker();
+    let lastEnergy = 0, lastLayers = [];
+    let lastNatom = 0, lastNSi = 0, lastNGe = 0;
+    let step = 0;
+    const halfLoops = Math.floor(params.nloops / 2); // first half = equilibration
+    const energies = [];
+
+    w.onmessage = function(e) {
+      const msg = e.data;
+      if (msg.type === 'init_done') {
+        lastNatom = msg.natom;
+        step = 0;
+        doStep();
+      } else if (msg.type === 'update') {
+        if (step >= halfLoops) {
+          energies.push(msg.energy);
+        }
+        lastLayers = msg.layers || [];
+        lastNatom = msg.natom || lastNatom;
+        lastNSi = msg.nSi || 0;
+        lastNGe = msg.nGe || 0;
+        step++;
+        if (step < params.nloops && !cancelled) {
+          setTimeout(doStep, 2);
+        } else {
+          w.terminate();
+          const avgE = energies.length > 0 ? energies.reduce((a,b)=>a+b,0)/energies.length : 0;
+          const geSurf = lastLayers.length > 0 ? lastLayers[lastLayers.length-1].ge / Math.max(1, lastLayers[lastLayers.length-1].si + lastLayers[lastLayers.length-1].ge) : 0;
+          resolve({energy: avgE, geSurface: geSurf, natom: lastNatom, layers: lastLayers, nSi: lastNSi, nGe: lastNGe});
+        }
+      }
+    };
+
+    function doStep() {
+      w.postMessage({type: 'step', step, params: {
+        dt: params.dt, nvv: params.nvv, temp: params.temp,
+        mcswap: params.mcswap, mcgc: params.mcgc, dmu: params.dmu
+      }});
+    }
+
+    w.postMessage({type: 'init', params: {
+      ncx: params.ncx, ncy: params.ncy, ncz: params.ncz,
+      theta: params.theta, temp: params.temp
+    }});
+  });
+}
+
+function cancelSweep() { cancelled = true; }
+
+function displayTSweep(results) {
+  if (tswEnergyChartInst) tswEnergyChartInst.destroy();
+  if (tswGeChartInst) tswGeChartInst.destroy();
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.plugins.legend = {display:false};
+
+  const opts1 = JSON.parse(JSON.stringify(opts));
+  opts1.scales.x.title = {display:true, text:'Temperature (K)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts1.scales.y.title = {display:true, text:'Energy/atom (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  tswEnergyChartInst = new Chart(document.getElementById('tswEnergyChart'), {
+    type: 'scatter',
+    data: { datasets: [{data: results.map(r => ({x:r.T, y:r.energy})), backgroundColor:'#ddb84d', pointRadius:5, borderColor:'#a08020', borderWidth:1}] },
+    options: opts1
+  });
+
+  const opts2 = JSON.parse(JSON.stringify(opts));
+  opts2.scales.x.title = {display:true, text:'Temperature (K)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts2.scales.y.title = {display:true, text:'Ge fraction (top layer)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts2.scales.y.min = 0; opts2.scales.y.max = 1;
+
+  tswGeChartInst = new Chart(document.getElementById('tswGeChart'), {
+    type: 'scatter',
+    data: { datasets: [{data: results.map(r => ({x:r.T, y:r.geSurface})), backgroundColor:'#dd8844', pointRadius:5, borderColor:'#a06020', borderWidth:1}] },
+    options: opts2
+  });
+}
+
+function displayCSweep(results) {
+  if (cswEnergyChartInst) cswEnergyChartInst.destroy();
+  if (cswLatChartInst) cswLatChartInst.destroy();
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+
+  const opts1 = JSON.parse(JSON.stringify(opts));
+  opts1.scales.x.title = {display:true, text:'\u03b8 (Ge fraction)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts1.scales.y.title = {display:true, text:'Energy/atom (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  cswEnergyChartInst = new Chart(document.getElementById('cswEnergyChart'), {
+    type: 'scatter',
+    data: { datasets: [{data: results.map(r => ({x:r.theta, y:r.energy})), backgroundColor:'#ddb84d', pointRadius:5, borderColor:'#a08020', borderWidth:1}] },
+    options: opts1
+  });
+
+  const opts2 = JSON.parse(JSON.stringify(opts));
+  opts2.scales.x.title = {display:true, text:'\u03b8 (Ge fraction)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts2.scales.y.title = {display:true, text:'Lattice constant (\u00c5)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  cswLatChartInst = new Chart(document.getElementById('cswLatChart'), {
+    type: 'scatter',
+    data: { datasets: [
+      {data: results.map(r => ({x:r.theta, y:r.a0})), backgroundColor:'#3ca0a0', pointRadius:5, borderColor:'#2a7070', borderWidth:1, label:'Vegard'},
+    ] },
+    options: opts2
+  });
+}
+
+/* ── Investigation Card Runners ── */
+function runInvCard1() {
+  setMode('tsweep');
+  document.getElementById('tswMin').value = 300;
+  document.getElementById('tswMax').value = 900;
+  document.getElementById('tswPts').value = 4;
+  document.getElementById('tswLoops').value = 60;
+  document.getElementById('pTheta').value = 0.5;
+  document.getElementById('pMCswap').value = 50;
+  setTimeout(() => runTSweep(), 100);
+}
+
+function runInvCard2() {
+  setMode('tsweep');
+  document.getElementById('tswMin').value = 300;
+  document.getElementById('tswMax').value = 1200;
+  document.getElementById('tswPts').value = 6;
+  document.getElementById('tswLoops').value = 60;
+  document.getElementById('pTheta').value = 0;
+  document.getElementById('pMCswap').value = 0;
+  setTimeout(() => runTSweep(), 100);
+}
+
+function runInvCard3() {
+  setMode('csweep');
+  document.getElementById('cswMin').value = 0;
+  document.getElementById('cswMax').value = 1;
+  document.getElementById('cswPts').value = 6;
+  document.getElementById('cswLoops').value = 60;
+  document.getElementById('pTemp').value = 500;
+  document.getElementById('pMCswap').value = 0;
+  setTimeout(() => runCSweep(), 100);
+}
+
+/* ── Logbook system ── */
+const LOGBOOK_KEY = 'alexey_md_logbook';
+
+function getLogEntries() {
+  try { return JSON.parse(localStorage.getItem(LOGBOOK_KEY)) || []; }
+  catch(e) { return []; }
+}
+function saveLogEntries(entries) { localStorage.setItem(LOGBOOK_KEY, JSON.stringify(entries)); }
+
+function renderLogbook() {
+  const entries = getLogEntries();
+  const el = document.getElementById('logbookEntries');
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="logbook-empty">No entries yet. Run an investigation and record your observations.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e, i) => {
+    const typeClass = e.type === 'obs' ? 'obs' : e.type === 'quest' ? 'quest' : 'conc';
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    const ts = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return '<div class="log-entry"><div class="log-entry-hdr"><span class="log-type-tag '+typeClass+'">'+typeLabel+'</span><span class="log-entry-ts">'+ts+'</span><div class="log-entry-actions"><button onclick="deleteLogEntry('+i+')">&times;</button></div></div><div class="log-entry-text">'+e.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'+(e.context?'<div class="log-entry-ctx">'+e.context+'</div>':'')+'</div>';
+  }).join('');
+}
+
+function addLogEntry() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('logType').value;
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type, text, context:''});
+  saveLogEntries(entries);
+  document.getElementById('logText').value = '';
+  renderLogbook();
+}
+
+function saveCardToLog(cardNum) {
+  const textarea = document.getElementById(cardNum === 'custom' ? 'invObsCustom' : 'invObs' + cardNum);
+  const text = textarea.value.trim();
+  if (!text) { textarea.style.borderColor = '#e24b4a'; setTimeout(() => textarea.style.borderColor = '', 2000); return; }
+  const titles = {1:'Does Ge segregate to the surface?', 2:'How does temperature affect the surface?', 3:'Composition and surface energy', custom:'Custom investigation'};
+  const entries = getLogEntries();
+  entries.push({id: Date.now().toString(36), timestamp: new Date().toISOString(), type: 'obs', text, context: 'Investigation Card ' + cardNum + ': ' + (titles[cardNum] || '')});
+  saveLogEntries(entries);
+  renderLogbook();
+  textarea.value = '';
+  textarea.style.borderColor = '#ddb84d';
+  setTimeout(() => textarea.style.borderColor = '', 2000);
+  const lp = document.getElementById('logbookPanel');
+  if (lp.classList.contains('collapsed')) togglePanel('logbookPanel');
+}
+
+function deleteLogEntry(idx) {
+  const entries = getLogEntries();
+  entries.splice(idx, 1);
+  saveLogEntries(entries);
+  renderLogbook();
+}
+
+function exportLogbook() {
+  const entries = getLogEntries();
+  if (entries.length === 0) return;
+  let md = '# MD Portal (Tersoff) \u2014 Research Logbook\n\n';
+  entries.forEach(e => {
+    const typeLabel = e.type === 'obs' ? 'Observation' : e.type === 'quest' ? 'Question' : 'Conclusion';
+    const date = new Date(e.timestamp);
+    md += '## ' + typeLabel + ' \u2014 ' + date.toLocaleDateString() + ' ' + date.toLocaleTimeString() + '\n\n' + e.text + '\n\n';
+    if (e.context) md += '> Context: ' + e.context + '\n\n';
+    md += '---\n\n';
+  });
+  const blob = new Blob([md], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'md-tersoff-logbook.md';
+  a.click();
+}
+
+/* ── Data Lab ── */
+let dlLayerChartInst = null, dlGeLayerChartInst = null;
+let dlSurfEnergyChartInst = null, dlSurfGeChartInst = null;
+let layerSweepData = []; // [{ncz, nLayers, natom, epa, etotal, layers}]
+let surfaceEnergyData = []; // [{dmu, surfaceEnergy, geFraction}]
+let lastLayerSweepGeFrac = 0; // Ge fraction from most recent layer sweep
+
+function fitLinear(data) {
+  // data = [{x, y}], returns {slope, intercept, r2}
+  const n = data.length;
+  if (n < 2) return {slope: 0, intercept: 0, r2: 0};
+  let sx = 0, sy = 0, sxx = 0, sxy = 0;
+  for (const p of data) { sx += p.x; sy += p.y; sxx += p.x * p.x; sxy += p.x * p.y; }
+  const denom = n * sxx - sx * sx;
+  if (Math.abs(denom) < 1e-20) return {slope: 0, intercept: sy / n, r2: 0};
+  const slope = (n * sxy - sx * sy) / denom;
+  const intercept = (sy - slope * sx) / n;
+  // R^2
+  const yMean = sy / n;
+  let ssTot = 0, ssRes = 0;
+  for (const p of data) {
+    ssTot += (p.y - yMean) * (p.y - yMean);
+    const yPred = slope * p.x + intercept;
+    ssRes += (p.y - yPred) * (p.y - yPred);
+  }
+  const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+  return {slope, intercept, r2};
+}
+
+async function runLayerSweep() {
+  if (running || sweepRunning) return;
+  sweepRunning = true;
+  cancelled = false;
+
+  const dmu = +document.getElementById('dlDmu').value;
+  const mcgc = +document.getElementById('dlMCgc').value;
+  const nczMin = +document.getElementById('dlNczMin').value;
+  const nczMax = +document.getElementById('dlNczMax').value;
+  const loops = +document.getElementById('dlLoops').value;
+  const ncxy = +document.getElementById('dlNcxy').value;
+
+  // Sync dmu and mcgc to main params for consistency
+  document.getElementById('pDmu').value = dmu;
+  document.getElementById('pMCgc').value = mcgc;
+
+  const baseP = getParams();
+  layerSweepData = [];
+  renderLayerTable();
+
+  const pts = nczMax - nczMin + 1;
+  for (let i = 0; i < pts; i++) {
+    if (cancelled) break;
+    const ncz = nczMin + i;
+    const nLayers = 4 * ncz + 1;
+    const natom = ncxy * ncxy * ncz * 16 + ncxy * ncxy * 4;
+
+    document.getElementById('dlProgText').textContent = 'ncz=' + ncz + ' (' + (i+1) + '/' + pts + ')';
+    document.getElementById('dlProgFill').style.width = ((i+1)/pts*100) + '%';
+
+    const result = await runSinglePoint({...baseP, ncx: ncxy, ncy: ncxy, ncz, nloops: loops, dmu, mcgc});
+    const epa = result.energy;
+    const etotal = epa * result.natom;
+
+    // Compute Ge fraction from layers
+    let totalGe = 0, totalAtoms = 0;
+    if (result.layers && result.layers.length > 0) {
+      for (const l of result.layers) { totalGe += l.ge; totalAtoms += l.si + l.ge; }
+    }
+    const geFrac = totalAtoms > 0 ? totalGe / totalAtoms : 0;
+    lastLayerSweepGeFrac = geFrac;
+
+    layerSweepData.push({ncz, nLayers, natom: result.natom, epa, etotal, layers: result.layers || [], geFrac});
+    renderLayerTable();
+    updateLayerPlot();
+    updateGeLayerPlot(result.layers || []);
+  }
+
+  sweepRunning = false;
+  document.getElementById('dlProgText').textContent = cancelled ? 'Cancelled' : 'Complete';
+  if (!cancelled && layerSweepData.length >= 2) {
+    recalcLayerFit();
+  }
+}
+
+function renderLayerTable() {
+  const tbody = document.getElementById('dlTableBody');
+  if (layerSweepData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run the layer sweep.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = layerSweepData.map((d, i) =>
+    '<tr>' +
+    '<td>' + d.ncz + '</td>' +
+    '<td>' + d.nLayers + '</td>' +
+    '<td contenteditable="true" data-idx="' + i + '" data-field="natom">' + d.natom + '</td>' +
+    '<td contenteditable="true" data-idx="' + i + '" data-field="epa">' + d.epa.toFixed(4) + '</td>' +
+    '<td contenteditable="true" data-idx="' + i + '" data-field="etotal">' + d.etotal.toFixed(2) + '</td>' +
+    '</tr>'
+  ).join('');
+
+  // Add edit listeners
+  tbody.querySelectorAll('td[contenteditable]').forEach(td => {
+    td.addEventListener('blur', function() {
+      const idx = +this.dataset.idx;
+      const field = this.dataset.field;
+      const val = parseFloat(this.textContent);
+      if (!isNaN(val) && layerSweepData[idx]) {
+        layerSweepData[idx][field] = val;
+        // Recompute etotal if epa or natom changed
+        if (field === 'epa') {
+          layerSweepData[idx].etotal = val * layerSweepData[idx].natom;
+        } else if (field === 'natom') {
+          layerSweepData[idx].etotal = layerSweepData[idx].epa * val;
+        }
+      }
+    });
+  });
+}
+
+function addLayerRow() {
+  const lastNcz = layerSweepData.length > 0 ? layerSweepData[layerSweepData.length - 1].ncz + 1 : 2;
+  layerSweepData.push({ncz: lastNcz, nLayers: 4 * lastNcz + 1, natom: 0, epa: 0, etotal: 0, layers: [], geFrac: 0});
+  renderLayerTable();
+}
+
+function clearLayerTable() {
+  layerSweepData = [];
+  renderLayerTable();
+  if (dlLayerChartInst) { dlLayerChartInst.destroy(); dlLayerChartInst = null; }
+  if (dlGeLayerChartInst) { dlGeLayerChartInst.destroy(); dlGeLayerChartInst = null; }
+  document.getElementById('dlFitResult').style.display = 'none';
+}
+
+function recalcLayerFit() {
+  // Re-read table cells in case user edited them
+  const tbody = document.getElementById('dlTableBody');
+  const rows = tbody.querySelectorAll('tr');
+  rows.forEach((row, i) => {
+    if (i >= layerSweepData.length) return;
+    const cells = row.querySelectorAll('td[contenteditable]');
+    cells.forEach(td => {
+      const field = td.dataset.field;
+      const val = parseFloat(td.textContent);
+      if (!isNaN(val)) layerSweepData[i][field] = val;
+    });
+    // Recompute etotal from epa * natom
+    layerSweepData[i].etotal = layerSweepData[i].epa * layerSweepData[i].natom;
+  });
+
+  if (layerSweepData.length < 2) return;
+
+  const data = layerSweepData.map(d => ({x: d.nLayers, y: d.etotal}));
+  const fit = fitLinear(data);
+  const surfE = fit.intercept / 2;
+
+  document.getElementById('dlFitResult').style.display = '';
+  document.getElementById('dlSurfEVal').textContent = surfE.toFixed(4) + ' eV';
+  document.getElementById('dlFitDetail').textContent = 'y = ' + fit.slope.toFixed(4) + ' \u00d7 N + ' + fit.intercept.toFixed(4) + '  |  R\u00b2 = ' + fit.r2.toFixed(6) + '  |  intercept/2 = ' + surfE.toFixed(4) + ' eV';
+
+  updateLayerPlot();
+  renderLayerTable();
+}
+
+function updateLayerPlot() {
+  if (dlLayerChartInst) dlLayerChartInst.destroy();
+  if (layerSweepData.length === 0) return;
+
+  const scatterData = layerSweepData.map(d => ({x: d.nLayers, y: d.etotal}));
+  const datasets = [{
+    type: 'scatter',
+    data: scatterData,
+    backgroundColor: '#ddb84d',
+    pointRadius: 6,
+    borderColor: '#a08020',
+    borderWidth: 1,
+    label: 'Data'
+  }];
+
+  // Add fit line if we have enough points
+  if (layerSweepData.length >= 2) {
+    const fit = fitLinear(scatterData);
+    const xMin = Math.min(...scatterData.map(d => d.x));
+    const xMax = Math.max(...scatterData.map(d => d.x));
+    const margin = (xMax - xMin) * 0.15 || 2;
+    datasets.push({
+      type: 'line',
+      data: [
+        {x: xMin - margin, y: fit.slope * (xMin - margin) + fit.intercept},
+        {x: xMax + margin, y: fit.slope * (xMax + margin) + fit.intercept}
+      ],
+      borderColor: 'rgba(221,136,68,0.6)',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      fill: false,
+      label: 'Linear fit'
+    });
+  }
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.x.title = {display:true, text:'N_layers (4\u00d7ncz + 1)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'E_total (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.plugins.legend = {display: true, labels: {color:'#7a9a7a', font:{family:'Space Mono',size:9}}};
+
+  dlLayerChartInst = new Chart(document.getElementById('dlLayerChart'), {
+    type: 'scatter',
+    data: { datasets },
+    options: opts
+  });
+}
+
+function updateGeLayerPlot(layers) {
+  if (dlGeLayerChartInst) dlGeLayerChartInst.destroy();
+  if (!layers || layers.length === 0) return;
+
+  const labels = layers.map((_, i) => 'L' + (i + 1));
+  const geFrac = layers.map(l => l.ge / Math.max(1, l.si + l.ge));
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.scales.y.min = 0; opts.scales.y.max = 1;
+  opts.scales.x.title = {display:true, text:'Layer (bottom\u2192top)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts.scales.y.title = {display:true, text:'Ge fraction', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  dlGeLayerChartInst = new Chart(document.getElementById('dlGeLayerChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{data: geFrac, backgroundColor:'rgba(221,136,68,0.6)', borderColor:'#dd8844', borderWidth:1, borderRadius:2}] },
+    options: opts
+  });
+}
+
+function recordSurfaceEnergy() {
+  const fitEl = document.getElementById('dlFitResult');
+  if (fitEl.style.display === 'none' || layerSweepData.length < 2) {
+    alert('Run a layer sweep first to compute a surface energy.');
+    return;
+  }
+
+  const data = layerSweepData.map(d => ({x: d.nLayers, y: d.etotal}));
+  const fit = fitLinear(data);
+  const surfE = fit.intercept / 2;
+  const dmu = +document.getElementById('dlDmu').value;
+
+  surfaceEnergyData.push({dmu, surfaceEnergy: surfE, geFraction: lastLayerSweepGeFrac});
+  renderSurfaceEnergyTable();
+  updateSurfaceEnergyPlots();
+}
+
+function renderSurfaceEnergyTable() {
+  const tbody = document.getElementById('dlSurfTableBody');
+  if (surfaceEnergyData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#4a6a4a;font-style:italic">No data yet. Run layer sweeps at different \u0394\u03bc and click \u201cRecord current\u201d.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = surfaceEnergyData.map(d =>
+    '<tr><td>' + d.dmu.toFixed(2) + '</td><td>' + d.surfaceEnergy.toFixed(4) + '</td><td>' + d.geFraction.toFixed(3) + '</td></tr>'
+  ).join('');
+}
+
+function clearSurfaceEnergyTable() {
+  surfaceEnergyData = [];
+  renderSurfaceEnergyTable();
+  if (dlSurfEnergyChartInst) { dlSurfEnergyChartInst.destroy(); dlSurfEnergyChartInst = null; }
+  if (dlSurfGeChartInst) { dlSurfGeChartInst.destroy(); dlSurfGeChartInst = null; }
+}
+
+function updateSurfaceEnergyPlots() {
+  // Surface energy vs dmu
+  if (dlSurfEnergyChartInst) dlSurfEnergyChartInst.destroy();
+  if (dlSurfGeChartInst) dlSurfGeChartInst.destroy();
+
+  if (surfaceEnergyData.length === 0) return;
+
+  const opts = JSON.parse(JSON.stringify(chartDefaults));
+  opts.plugins.legend = {display: false};
+
+  const opts1 = JSON.parse(JSON.stringify(opts));
+  opts1.scales.x.title = {display:true, text:'\u0394\u03bc (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts1.scales.y.title = {display:true, text:'Surface Energy (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  dlSurfEnergyChartInst = new Chart(document.getElementById('dlSurfEnergyChart'), {
+    type: 'scatter',
+    data: { datasets: [{data: surfaceEnergyData.map(d => ({x: d.dmu, y: d.surfaceEnergy})), backgroundColor:'#ddb84d', pointRadius: 6, borderColor:'#a08020', borderWidth:1}] },
+    options: opts1
+  });
+
+  const opts2 = JSON.parse(JSON.stringify(opts));
+  opts2.scales.x.title = {display:true, text:'Ge Fraction', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+  opts2.scales.y.title = {display:true, text:'Surface Energy (eV)', color:'#4a6a4a', font:{family:'Space Mono',size:9}};
+
+  dlSurfGeChartInst = new Chart(document.getElementById('dlSurfGeChart'), {
+    type: 'scatter',
+    data: { datasets: [{data: surfaceEnergyData.map(d => ({x: d.geFraction, y: d.surfaceEnergy})), backgroundColor:'#dd8844', pointRadius: 6, borderColor:'#a06020', borderWidth:1}] },
+    options: opts2
+  });
+}
+
+// Initialize
+updateAtomCount();
+init3D();
+document.getElementById('logbookPanel').classList.add('collapsed');
+renderLogbook();
+</script>
+</body>
+</html>
