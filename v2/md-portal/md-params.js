@@ -2,7 +2,7 @@
 // Reference: PRB 39, 5566 (1989) — Tersoff T3 parameterization
 // Mirrors common1.f90 from the Fortran codebase
 
-const MD = window.MD || {};
+var MD = window.MD || {};
 window.MD = MD;
 
 MD.params = {

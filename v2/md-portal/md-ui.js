@@ -1,6 +1,6 @@
 // md-ui.js — Unified simulation UI: parameter panel, pipeline, sweep, results table + chart
 
-const MD = window.MD || {};
+var MD = window.MD || {};
 window.MD = MD;
 
 MD.ui = {
