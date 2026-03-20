@@ -151,8 +151,8 @@ require(['vs/editor/editor.main'],function(){
 });
 function resetCode(){if(editor){editor.setValue(STARTER);localStorage.removeItem(`arduino_${MOD_ID}_code`)}}
 
-let simRunning=false,simTimeout=null,simStartTime=0,ledState=false,btnDown=false;
-window.btnDown=false;
+var btnDown=false;
+let simRunning=false,simTimeout=null,simStartTime=0,ledState=false;
 
 function runSketch(){
   simRunning=true;simStartTime=Date.now();ledState=false;
@@ -165,7 +165,7 @@ function runSketch(){
 async function simLoop(){
   while(simRunning){
     // Simulate: if button pressed (active-low), LED on
-    ledState=window.btnDown;
+    ledState=btnDown;
     drawSim();
     await new Promise(r=>simTimeout=setTimeout(r,50));
   }
@@ -187,12 +187,12 @@ function drawSim(){
 
   // Button
   const bx=300,by=80;
-  ctx.fillStyle=window.btnDown?'#3ca03c':'#1a2a1a';
-  ctx.strokeStyle=window.btnDown?'#7dd87d':'#4a6a4a';ctx.lineWidth=2;
+  ctx.fillStyle=btnDown?'#3ca03c':'#1a2a1a';
+  ctx.strokeStyle=btnDown?'#7dd87d':'#4a6a4a';ctx.lineWidth=2;
   ctx.beginPath();ctx.roundRect(bx-20,by-20,40,40,6);ctx.fill();ctx.stroke();
-  ctx.beginPath();ctx.arc(bx,by,10,0,Math.PI*2);ctx.fillStyle=window.btnDown?'#7dd87d':'#2a3a2a';ctx.fill();
-  ctx.font="bold 9px 'Space Mono',monospace";ctx.fillStyle=window.btnDown?'#7dd87d':'#4a6a4a';
-  ctx.fillText('BTN',bx-10,by+35);ctx.fillText(window.btnDown?'PRESSED':'OPEN',bx-18,by+47);
+  ctx.beginPath();ctx.arc(bx,by,10,0,Math.PI*2);ctx.fillStyle=btnDown?'#7dd87d':'#2a3a2a';ctx.fill();
+  ctx.font="bold 9px 'Space Mono',monospace";ctx.fillStyle=btnDown?'#7dd87d':'#4a6a4a';
+  ctx.fillText('BTN',bx-10,by+35);ctx.fillText(btnDown?'PRESSED':'OPEN',bx-18,by+47);
 
   // Wire to button
   ctx.strokeStyle='#f0b429';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(200,100);ctx.lineTo(bx-20,by);ctx.stroke();
