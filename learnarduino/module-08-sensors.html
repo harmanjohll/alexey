@@ -205,7 +205,7 @@ function runSketch(){
   simRunning=true;simStartTime=Date.now();
   document.getElementById('serialMon').innerHTML='';
   document.getElementById('runBtn').style.display='none';
-  document.getElementById('stopBtn').style.display='';
+  document.getElementById('stopBtn').style.display='inline-block';
   document.getElementById('simStatus').textContent='Running...';
   document.getElementById('simStatus').style.color='#7dd87d';
   drawSim();
@@ -219,7 +219,7 @@ function runSketch(){
 function stopSketch(){
   simRunning=false;
   if(simInterval){clearInterval(simInterval);simInterval=null;}
-  document.getElementById('runBtn').style.display='';
+  document.getElementById('runBtn').style.display='inline-block';
   document.getElementById('stopBtn').style.display='none';
   document.getElementById('simStatus').textContent='Stopped';
   document.getElementById('simStatus').style.color='#4a6a4a';
