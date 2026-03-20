@@ -309,7 +309,7 @@ canvas#crystalCanvas:active { cursor: grabbing; }
   border-radius: 2px;
   overflow: hidden;
 }
-.seg-btn {
+button.seg-btn {
   padding: 4px 10px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
@@ -323,12 +323,12 @@ canvas#crystalCanvas:active { cursor: grabbing; }
   min-width: 32px;
   text-align: center;
 }
-.seg-btn:last-child { border-right: none; }
-.seg-btn:hover { background: var(--accent-subtle); color: var(--accent); }
-.seg-btn.on { background: var(--accent); color: white; }
-.seg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.seg-btn:disabled:hover { background: transparent; color: var(--text-secondary); }
-.seg-btn:disabled.on { background: var(--accent); color: white; opacity: 0.3; }
+button.seg-btn:last-child { border-right: none; }
+button.seg-btn:hover { background: var(--accent-subtle); color: var(--accent); }
+button.seg-btn.on { background: var(--accent); color: white; border-color: var(--accent); }
+button.seg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+button.seg-btn:disabled:hover { background: transparent; color: var(--text-secondary); }
+button.seg-btn:disabled.on { background: var(--accent); color: white; opacity: 0.3; }
 
 /* Compact number input */
 .num-input {
@@ -427,7 +427,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
 </head>
 <body>
 <script>function toggleTheme(){var h=document.documentElement,c=h.getAttribute('data-theme')||'light',n=c==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('alexey_theme',n)}</script>
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+<button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
   <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
 </button>
@@ -451,7 +451,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
     <textarea id="hypText" placeholder="e.g. I predict that adding germanium will increase surface energy because Ge atoms are larger and create more strain at the surface. I think at higher temperatures the surface will become less stable. Stretching the lattice should increase energy because bonds are being pulled apart..."></textarea>
     <div class="row">
       <span class="ts-label" id="hypTS"></span>
-      <button id="lockBtn" class="primary" onclick="MD.ui.lockHypothesis()">Lock hypothesis and begin &rarr;</button>
+      <button type="button" id="lockBtn" class="primary" onclick="MD.ui.lockHypothesis()">Lock hypothesis and begin &rarr;</button>
     </div>
   </div>
 </div>
@@ -475,29 +475,29 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
           <div class="prow">
             <label>n<sub>x</sub></label>
             <div class="seg-group" id="segNx" data-param="nx" data-value="3">
-              <button class="seg-btn" onclick="MD.ui.setSeg('nx',1)">1</button>
-              <button class="seg-btn" onclick="MD.ui.setSeg('nx',2)">2</button>
-              <button class="seg-btn on" onclick="MD.ui.setSeg('nx',3)">3</button>
-              <button class="seg-btn" onclick="MD.ui.setSeg('nx',4)">4</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('nx',1)">1</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('nx',2)">2</button>
+              <button type="button" class="seg-btn on" onclick="MD.ui.setSeg('nx',3)">3</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('nx',4)">4</button>
             </div>
           </div>
           <div class="prow">
             <label>n<sub>y</sub></label>
             <div class="seg-group" id="segNy" data-param="ny" data-value="3">
-              <button class="seg-btn" onclick="MD.ui.setSeg('ny',1)">1</button>
-              <button class="seg-btn" onclick="MD.ui.setSeg('ny',2)">2</button>
-              <button class="seg-btn on" onclick="MD.ui.setSeg('ny',3)">3</button>
-              <button class="seg-btn" onclick="MD.ui.setSeg('ny',4)">4</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('ny',1)">1</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('ny',2)">2</button>
+              <button type="button" class="seg-btn on" onclick="MD.ui.setSeg('ny',3)">3</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('ny',4)">4</button>
             </div>
           </div>
           <div class="prow">
             <label>n<sub>z</sub></label>
             <div class="seg-group" id="segNz" data-param="nz" data-value="3">
-              <button class="seg-btn" onclick="MD.ui.setSeg('nz',2)">2</button>
-              <button class="seg-btn on" onclick="MD.ui.setSeg('nz',3)">3</button>
-              <button class="seg-btn" onclick="MD.ui.setSeg('nz',4)">4</button>
-              <button class="seg-btn" onclick="MD.ui.setSeg('nz',5)">5</button>
-              <button class="seg-btn" onclick="MD.ui.setSeg('nz',6)">6</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('nz',2)">2</button>
+              <button type="button" class="seg-btn on" onclick="MD.ui.setSeg('nz',3)">3</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('nz',4)">4</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('nz',5)">5</button>
+              <button type="button" class="seg-btn" onclick="MD.ui.setSeg('nz',6)">6</button>
             </div>
           </div>
         </div>
@@ -509,7 +509,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
             <label>&epsilon;<sub>x</sub></label>
             <input type="number" id="inEx" class="num-input" value="0.0" min="-5" max="5" step="0.5">
             <span class="unit">%</span>
-            <button class="sweep-tog" data-sweep="ex" onclick="MD.ui.toggleSweep('ex')">sweep</button>
+            <button type="button" class="sweep-tog" data-sweep="ex" onclick="MD.ui.toggleSweep('ex')">sweep</button>
           </div>
           <div class="sweep-config" id="sweepEx">
             <label>min</label><input type="number" id="swExMin" value="-3" step="0.5">
@@ -520,7 +520,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
             <label>&epsilon;<sub>y</sub></label>
             <input type="number" id="inEy" class="num-input" value="0.0" min="-5" max="5" step="0.5">
             <span class="unit">%</span>
-            <button class="sweep-tog" data-sweep="ey" onclick="MD.ui.toggleSweep('ey')">sweep</button>
+            <button type="button" class="sweep-tog" data-sweep="ey" onclick="MD.ui.toggleSweep('ey')">sweep</button>
           </div>
           <div class="sweep-config" id="sweepEy">
             <label>min</label><input type="number" id="swEyMin" value="-3" step="0.5">
@@ -536,7 +536,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
             <label>T</label>
             <input type="number" id="inT" class="num-input" value="300" min="100" max="1200" step="50">
             <span class="unit">K</span>
-            <button class="sweep-tog" data-sweep="T" onclick="MD.ui.toggleSweep('T')">sweep</button>
+            <button type="button" class="sweep-tog" data-sweep="T" onclick="MD.ui.toggleSweep('T')">sweep</button>
           </div>
           <div class="sweep-config" id="sweepT">
             <label>min</label><input type="number" id="swTMin" value="300" step="50">
@@ -573,7 +573,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
             <label>&Delta;&mu;</label>
             <input type="number" id="inDmu" class="num-input" value="0.00" min="-2" max="2" step="0.05">
             <span class="unit">eV</span>
-            <button class="sweep-tog" data-sweep="dmu" onclick="MD.ui.toggleSweep('dmu')">sweep</button>
+            <button type="button" class="sweep-tog" data-sweep="dmu" onclick="MD.ui.toggleSweep('dmu')">sweep</button>
           </div>
           <div class="sweep-config" id="sweepDmu">
             <label>min</label><input type="number" id="swDmuMin" value="-1.5" step="0.1">
@@ -598,18 +598,18 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
 
     <!-- Run controls -->
     <div class="run-controls">
-      <button id="btnRun" class="primary" onclick="MD.ui.runSimulation()">Run &rarr;</button>
-      <button id="btnStop" style="display:none" onclick="MD.ui.stopRun()">Stop</button>
-      <button onclick="MD.ui.clearResults()">Clear results</button>
+      <button type="button" id="btnRun" class="primary" onclick="MD.ui.runSimulation()">Run &rarr;</button>
+      <button type="button" id="btnStop" style="display:none" onclick="MD.ui.stopRun()">Stop</button>
+      <button type="button" onclick="MD.ui.clearResults()">Clear results</button>
       <span class="status" id="runStatus">&nbsp;</span>
     </div>
 
     <!-- Results area -->
     <div id="resultsArea" style="display:none;margin-top:20px">
       <div class="y-toggles">
-        <button class="sm y-tog active" data-metric="esurf" onclick="MD.ui.setYMetric('esurf')">E_surf</button>
-        <button class="sm y-tog" data-metric="epa" onclick="MD.ui.setYMetric('epa')">E/atom</button>
-        <button class="sm y-tog" data-metric="xge" onclick="MD.ui.setYMetric('xge')">x(Ge)</button>
+        <button type="button" class="sm y-tog active" data-metric="esurf" onclick="MD.ui.setYMetric('esurf')">E_surf</button>
+        <button type="button" class="sm y-tog" data-metric="epa" onclick="MD.ui.setYMetric('epa')">E/atom</button>
+        <button type="button" class="sm y-tog" data-metric="xge" onclick="MD.ui.setYMetric('xge')">x(Ge)</button>
       </div>
       <div class="chart-wrap" style="height:300px">
         <canvas id="mainChart"></canvas>
@@ -633,7 +633,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
         </table>
       </div>
       <div class="btn-row">
-        <button onclick="MD.ui.exportCSV()">Export CSV</button>
+        <button type="button" onclick="MD.ui.exportCSV()">Export CSV</button>
       </div>
     </div>
 
@@ -642,10 +642,10 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div class="dl">Crystal structure</div>
         <div class="color-btns">
-          <button class="sm active" data-mode="species" onclick="MD.ui.setColorMode('species')">Species</button>
-          <button class="sm" data-mode="coordination" onclick="MD.ui.setColorMode('coordination')">Coord #</button>
-          <button class="sm" data-mode="energy" onclick="MD.ui.setColorMode('energy')">Energy</button>
-          <button class="sm" data-mode="layer" onclick="MD.ui.setColorMode('layer')">Layer</button>
+          <button type="button" class="sm active" data-mode="species" onclick="MD.ui.setColorMode('species')">Species</button>
+          <button type="button" class="sm" data-mode="coordination" onclick="MD.ui.setColorMode('coordination')">Coord #</button>
+          <button type="button" class="sm" data-mode="energy" onclick="MD.ui.setColorMode('energy')">Energy</button>
+          <button type="button" class="sm" data-mode="layer" onclick="MD.ui.setColorMode('layer')">Layer</button>
         </div>
       </div>
       <div class="lab-canvas-wrap">
@@ -691,13 +691,13 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
         <div class="dl" style="margin-bottom:8px">Your interpretation</div>
         <textarea id="interpText" placeholder="What did your investigations show? How does Ge composition affect surface energy? Did temperature behave as you predicted? What about strain? Where does Ge prefer to sit — surface or bulk? What are the model's limitations?"></textarea>
         <div class="btn-row">
-          <button id="askBtn" class="primary" onclick="MD.ui.askCoach()">Ask coach &rarr;</button>
+          <button type="button" id="askBtn" class="primary" onclick="MD.ui.askCoach()">Ask coach &rarr;</button>
         </div>
         <div class="thread" id="thread"></div>
         <div class="reply-sec" id="replySec">
           <div class="dl" style="margin:14px 0 6px">Your reply to coach</div>
           <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
-          <div class="btn-row"><button onclick="MD.ui.sendReply()">Send reply &rarr;</button></div>
+          <div class="btn-row"><button type="button" onclick="MD.ui.sendReply()">Send reply &rarr;</button></div>
         </div>
       </div>
       <div>
@@ -721,5 +721,27 @@ table.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrai
 <script src="md-tersoff.js"></script>
 <script src="md-viewer.js"></script>
 <script src="md-ui.js"></script>
+<script>
+// Diagnostics: check all modules loaded
+(function() {
+  var missing = [];
+  if (!window.MD) missing.push('MD namespace');
+  else {
+    if (!MD.params) missing.push('md-params.js');
+    if (!MD.crystal) missing.push('md-crystal.js');
+    if (!MD.tersoff) missing.push('md-tersoff.js');
+    if (!MD.viewer) missing.push('md-viewer.js');
+    if (!MD.ui) missing.push('md-ui.js');
+  }
+  if (missing.length > 0) {
+    var msg = 'LOAD ERROR: Missing modules: ' + missing.join(', ');
+    console.error(msg);
+    document.getElementById('runStatus').textContent = msg;
+    document.getElementById('runStatus').style.color = '#c0392b';
+  } else {
+    console.log('All MD modules loaded OK');
+  }
+})();
+</script>
 </body>
 </html>

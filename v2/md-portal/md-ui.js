@@ -50,9 +50,13 @@ MD.ui = {
       try { MD.ui.convHist = JSON.parse(savedDialogue); } catch (e) { /* ignore */ }
     }
 
-    // Init crystal viewer
-    MD.viewer.init('crystalCanvas');
-    MD.viewer.render();
+    // Init crystal viewer (non-fatal if it fails)
+    try {
+      MD.viewer.init('crystalCanvas');
+      MD.viewer.render();
+    } catch (e) {
+      console.warn('Crystal viewer init failed:', e.message);
+    }
 
     // Bind y-metric toggles
     document.querySelectorAll('.y-tog').forEach(function(btn) {
@@ -279,25 +283,31 @@ MD.ui = {
 
     if (!needsWorker) {
       // STATIC: main-thread Tersoff computation
-      var strainX = p.ex / 100;   // percent to fraction
-      var strainY = p.ey / 100;
-      var latt = MD.params.getLattice100Strained(0, strainX, strainY);
-      var slab = MD.crystal.buildDefaultSlab(p.nx, p.ny, p.nz, 0, latt);
-      var energy = MD.tersoff.computeEnergy(slab);
+      try {
+        var strainX = p.ex / 100;   // percent to fraction
+        var strainY = p.ey / 100;
+        var latt = MD.params.getLattice100Strained(0, strainX, strainY);
+        var slab = MD.crystal.buildDefaultSlab(p.nx, p.ny, p.nz, 0, latt);
+        var energy = MD.tersoff.computeEnergy(slab);
 
-      MD.ui.slab = slab;
-      MD.ui.energy = energy;
-      MD.viewer.render(slab);
-      MD.ui.updateCrystalInfo(slab, energy);
+        MD.ui.slab = slab;
+        MD.ui.energy = energy;
+        try { MD.viewer.render(slab); } catch (ve) { console.warn('Viewer render error:', ve.message); }
+        MD.ui.updateCrystalInfo(slab, energy);
 
-      var stats = MD.crystal.getStats(slab);
-      return Promise.resolve({
-        T: p.T, dmu: p.dmu, ex: p.ex, ey: p.ey,
-        esurf: energy.surfaceEnergy,
-        epa: energy.perAtom,
-        xge: stats.nGe / stats.total,
-        layers: null
-      });
+        var stats = MD.crystal.getStats(slab);
+        return Promise.resolve({
+          T: p.T, dmu: p.dmu, ex: p.ex, ey: p.ey,
+          esurf: energy.surfaceEnergy,
+          epa: energy.perAtom,
+          xge: stats.nGe / stats.total,
+          layers: null
+        });
+      } catch (err) {
+        console.error('Static pipeline error:', err);
+        MD.ui.updateStatus('Error: ' + err.message);
+        return Promise.resolve(null);
+      }
     }
 
     // DYNAMIC: use web worker
