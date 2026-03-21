@@ -16,6 +16,9 @@ var timelineInst = null;
 var overPerfInst = null;
 var shotZoneInst = null;
 var leagueMatchInst = null;
+var sensitivityInst = null;
+var lastMCResult = null;
+var lastSimCount = 500;
 
 // ── Theme ──
 function toggleTheme() {
@@ -84,6 +87,20 @@ function lockHyp() {
   redrawMain();
 }
 
+// ── Situation context ──
+function readSituation() {
+  var el = function(id) { var e = document.getElementById(id); return e ? e.value : null; };
+  return {
+    pressure: el('sitPressure') || 'low',
+    assist: el('sitAssist') || 'solo',
+    counter: document.getElementById('sitCounter') ? document.getElementById('sitCounter').checked : false,
+    oneVone: document.getElementById('sitOneVone') ? document.getElementById('sitOneVone').checked : false,
+    homeAway: el('scnHomeAway') || 'neutral',
+    oppQuality: el('scnOppQuality') || 'average',
+    minute: +(el('scnMinute') || 45)
+  };
+}
+
 // ── Main pitch interaction ──
 function redrawMain() {
   var cvs = document.getElementById('pitch');
@@ -92,9 +109,22 @@ function redrawMain() {
   drawPitch(ctx);
   drawShots(ctx, shots);
   if (hx !== null && locked) {
-    var r = calcXG(hx, hy, currentModel, currentShotType);
+    var sit = readSituation();
+    var r = calcXG(hx, hy, currentModel, currentShotType, sit);
     drawCursorRing(ctx, hx, hy, r.xg);
   }
+}
+
+function addShotAt(x, y) {
+  var sit = readSituation();
+  var r = calcXG(x, y, currentModel, currentShotType, sit);
+  if (r.xg === 0) return;
+  shots.push({ x: x, y: y, xg: r.xg, d: r.d, a: r.a, type: currentShotType, model: currentModel,
+    pressure: sit.pressure, assist: sit.assist, counter: sit.counter, oneVone: sit.oneVone });
+  updateShotLog();
+  redrawMain();
+  document.getElementById('simBtn').disabled = false;
+  localStorage.setItem('football_shots', JSON.stringify(shots));
 }
 
 function initMainPitch() {
@@ -107,7 +137,8 @@ function initMainPitch() {
     var scX = cvs.width / rect.width, scY = cvs.height / rect.height;
     hx = (e.clientX - rect.left) * scX;
     hy = (e.clientY - rect.top) * scY;
-    var r = calcXG(hx, hy, currentModel, currentShotType);
+    var sit = readSituation();
+    var r = calcXG(hx, hy, currentModel, currentShotType, sit);
     document.getElementById('hXG').textContent = r.xg > 0 ? r.xg.toFixed(3) : '—';
     document.getElementById('hXG').style.color = r.xg > 0 ? xgCol(r.xg) : 'var(--accent-light)';
     document.getElementById('hAng').textContent = r.xg > 0 ? r.a.toFixed(1) + '°' : '—';
@@ -129,14 +160,128 @@ function initMainPitch() {
     var rect = cvs.getBoundingClientRect();
     var scX = cvs.width / rect.width, scY = cvs.height / rect.height;
     var x = (e.clientX - rect.left) * scX, y = (e.clientY - rect.top) * scY;
-    var r = calcXG(x, y, currentModel, currentShotType);
-    if (r.xg === 0) return;
-    shots.push({ x: x, y: y, xg: r.xg, d: r.d, a: r.a, type: currentShotType, model: currentModel });
-    updateShotLog();
-    redrawMain();
-    document.getElementById('simBtn').disabled = false;
-    localStorage.setItem('football_shots', JSON.stringify(shots));
+    addShotAt(x, y);
   });
+}
+
+// ── Precision entry ──
+function placePrecisionShot() {
+  if (!locked) return;
+  var dist = parseFloat(document.getElementById('precDist').value);
+  var angle = parseFloat(document.getElementById('precAngle').value);
+  if (isNaN(dist) || isNaN(angle) || dist < 0.5 || dist > 40) return;
+  var radians = angle * Math.PI / 180;
+  var pixelDist = dist * PITCH_SC;
+  var x = GX + pixelDist * Math.sin(radians);
+  var y = GY + pixelDist * Math.cos(radians);
+  if (x < 0 || x > PITCH_W || y < 0 || y > PITCH_H) return;
+  addShotAt(x, y);
+}
+
+// ── Scenario generator ──
+function generateScenario() {
+  if (!locked) return;
+  var scoreDiff = parseInt(document.getElementById('scnScoreDiff').value) || 0;
+  var homeAway = document.getElementById('scnHomeAway').value || 'neutral';
+  var oppQuality = document.getElementById('scnOppQuality').value || 'average';
+  var minute = parseInt(document.getElementById('scnMinute').value) || 45;
+
+  // Determine shot count and distribution based on scenario
+  var numShots, zoneWeights;
+  if (scoreDiff <= -2) {
+    // Chasing the game: more shots, more desperate long-range
+    numShots = 16 + Math.floor(Math.random() * 4);
+    zoneWeights = [0.05, 0.15, 0.20, 0.35, 0.25]; // lots of long range
+  } else if (scoreDiff >= 2) {
+    // Defending lead: fewer shots, mostly counter-attacks
+    numShots = 8 + Math.floor(Math.random() * 4);
+    zoneWeights = [0.12, 0.30, 0.25, 0.20, 0.13]; // better quality
+  } else if (scoreDiff === -1) {
+    // Slightly chasing
+    numShots = 14 + Math.floor(Math.random() * 3);
+    zoneWeights = [0.06, 0.18, 0.22, 0.32, 0.22];
+  } else if (scoreDiff === 1) {
+    // Slightly ahead
+    numShots = 10 + Math.floor(Math.random() * 3);
+    zoneWeights = [0.10, 0.25, 0.25, 0.25, 0.15];
+  } else {
+    // Level game
+    numShots = 12 + Math.floor(Math.random() * 3);
+    zoneWeights = [0.08, 0.22, 0.25, 0.28, 0.17];
+  }
+
+  // Zone distance ranges (metres from goal)
+  var zones = [
+    { minD: 1, maxD: 5, maxAngle: 15 },     // 6-yard box
+    { minD: 5, maxD: 11, maxAngle: 25 },     // 6yd to penalty spot
+    { minD: 8, maxD: 16.5, maxAngle: 50 },   // Penalty area wide
+    { minD: 16.5, maxD: 24, maxAngle: 40 },  // Edge of box
+    { minD: 24, maxD: 35, maxAngle: 30 }     // Long range
+  ];
+
+  // Shot type distributions
+  var shotTypes = ['open', 'open', 'open', 'open', 'open', 'open', 'header', 'header', 'freekick', 'penalty'];
+  if (scoreDiff <= -2) shotTypes = ['open', 'open', 'open', 'header', 'header', 'header', 'freekick', 'freekick', 'open', 'open'];
+
+  // Clear existing and generate
+  shots = [];
+  var sit = {
+    pressure: oppQuality === 'strong' ? 'high' : oppQuality === 'weak' ? 'low' : 'medium',
+    assist: 'solo',
+    counter: scoreDiff >= 1,
+    oneVone: false,
+    homeAway: homeAway,
+    oppQuality: oppQuality,
+    minute: minute
+  };
+
+  for (var i = 0; i < numShots; i++) {
+    // Pick zone based on weights
+    var rand = Math.random(), cumul = 0, zoneIdx = 0;
+    for (var z = 0; z < zoneWeights.length; z++) {
+      cumul += zoneWeights[z];
+      if (rand <= cumul) { zoneIdx = z; break; }
+    }
+    var zone = zones[zoneIdx];
+    var dist = zone.minD + Math.random() * (zone.maxD - zone.minD);
+    var angle = (Math.random() - 0.5) * 2 * zone.maxAngle;
+    var radians = angle * Math.PI / 180;
+    var pixelDist = dist * PITCH_SC;
+    var x = GX + pixelDist * Math.sin(radians);
+    var y = GY + pixelDist * Math.cos(radians);
+    if (x < 10 || x > PITCH_W - 10 || y < GY || y > PITCH_H - 8) continue;
+
+    var type = shotTypes[Math.floor(Math.random() * shotTypes.length)];
+    // Vary assist type
+    var assists = ['solo', 'throughball', 'cross', 'cutback', 'solo'];
+    var shotSit = { pressure: sit.pressure, assist: assists[Math.floor(Math.random() * assists.length)],
+      counter: scoreDiff >= 1 && Math.random() < 0.3, oneVone: zoneIdx <= 1 && Math.random() < 0.2,
+      homeAway: homeAway, oppQuality: oppQuality, minute: minute };
+
+    var r = calcXG(x, y, currentModel, type, shotSit);
+    if (r.xg > 0) {
+      shots.push({ x: x, y: y, xg: r.xg, d: r.d, a: r.a, type: type, model: currentModel,
+        pressure: shotSit.pressure, assist: shotSit.assist, counter: shotSit.counter, oneVone: shotSit.oneVone });
+    }
+  }
+
+  updateShotLog();
+  redrawMain();
+  document.getElementById('simBtn').disabled = shots.length === 0;
+  localStorage.setItem('football_shots', JSON.stringify(shots));
+}
+
+// ── Sensitivity analysis ──
+function runSensitivity() {
+  if (!lastMCResult || shots.length === 0) return;
+  var factor = parseFloat(document.getElementById('sensSlider').value);
+  document.getElementById('sensValue').textContent = factor.toFixed(1) + '×';
+  var shifted = runSensitivityMC(shots, factor, lastSimCount);
+  if (!sensitivityInst) sensitivityInst = initSensitivityChart('sensChart');
+  updateSensitivityChart(sensitivityInst, lastMCResult.counts, shifted.counts, lastSimCount, factor);
+  document.getElementById('sensResults').style.display = '';
+  document.getElementById('sensAvg').textContent = shifted.avg.toFixed(2);
+  document.getElementById('sensP0').textContent = (shifted.p0 * 100).toFixed(1) + '%';
 }
 
 function updateShotLog() {
@@ -169,17 +314,21 @@ function clearShots() {
 // ── Monte Carlo simulation ──
 function runMC() {
   if (shots.length === 0) return;
-  var result = runMonteCarlo(shots, 500);
+  var simEl = document.getElementById('simCount');
+  var N = simEl ? parseInt(simEl.value) : 500;
+  lastSimCount = N;
+  var result = runMonteCarlo(shots, N);
+  lastMCResult = result;
 
   // Poisson overlay
   var poissonData = [];
   for (var k = 0; k < result.counts.length; k++) {
-    poissonData.push(Math.round(poissonPMF(k, result.totalXG) * 500));
+    poissonData.push(Math.round(poissonPMF(k, result.totalXG) * N));
   }
 
   // Init or reuse chart
   if (!mcChartInst) mcChartInst = initMCChart('mcChart');
-  updateMCChart(mcChartInst, result.counts, poissonData, 500);
+  updateMCChart(mcChartInst, result.counts, poissonData, N);
 
   // Timeline
   var timeline = buildShotTimeline(shots);

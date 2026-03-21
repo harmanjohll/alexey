@@ -215,6 +215,23 @@ canvas.pitch-canvas{border:1px solid var(--border);border-radius:2px;display:blo
 .mode-section{display:none}
 .mode-section.active{display:block}
 
+/* === Situation Controls === */
+.situation-controls{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.sit-group{display:flex;align-items:center;gap:4px}
+.sit-lbl{font-size:9px;font-weight:500;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.sit-group input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px}
+
+/* === Precision Entry === */
+.precision-entry{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.precision-entry input[type=number]{width:70px;background:var(--bg-deep);border:1px solid var(--border);color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 8px;border-radius:2px}
+.precision-entry input[type=number]:focus{outline:none;border-color:var(--accent)}
+
+/* === Simulation Explain === */
+.sim-explain{font-size:10px;color:var(--text-tertiary);line-height:1.5;margin:8px 0 4px;font-style:italic}
+
+/* === Scenario Panel === */
+.scenario-panel{margin-top:14px;padding:14px;background:var(--bg-deep);border:1px solid var(--border-light);border-radius:2px}
+
 /* === League colors === */
 .lc-epl{color:#8b5cf6}.lc-liga{color:#f59e0b}.lc-buli{color:#ef4444}.lc-seria{color:#3b82f6}.lc-l1{color:#a3e635}.lc-champ{color:#f97316}
 

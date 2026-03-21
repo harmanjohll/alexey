@@ -123,12 +123,43 @@ function shotTypeModifier(baseXG, dist, type) {
 }
 
 /**
- * Calculate xG using the specified model and shot type.
+ * Apply situation modifiers to xG value.
+ * situation: { pressure, assist, counter, oneVone, homeAway, oppQuality, minute }
  */
-function calcXG(x, y, model, shotType) {
+function applySituationModifiers(xg, situation) {
+  if (!situation || xg <= 0) return xg;
+  var m = 1.0;
+  // Defensive pressure
+  if (situation.pressure === 'medium') m *= 0.85;
+  else if (situation.pressure === 'high') m *= 0.65;
+  // Assist type
+  if (situation.assist === 'throughball') m *= 1.15;
+  else if (situation.assist === 'cross') m *= 0.90;
+  else if (situation.assist === 'cutback') m *= 1.20;
+  // Counter-attack
+  if (situation.counter) m *= 1.12;
+  // 1v1 with keeper
+  if (situation.oneVone) m *= 1.35;
+  // Home/away
+  if (situation.homeAway === 'home') m *= 1.05;
+  // Opposition quality
+  if (situation.oppQuality === 'weak') m *= 1.10;
+  else if (situation.oppQuality === 'strong') m *= 0.85;
+  // Late-game fatigue (minute 75+ slightly increases xG)
+  if (situation.minute && situation.minute > 75) m *= 1.0 + (situation.minute - 75) * 0.003;
+  return Math.min(0.96, Math.max(0.001, xg * m));
+}
+
+/**
+ * Calculate xG using the specified model, shot type, and situation.
+ */
+function calcXG(x, y, model, shotType, situation) {
   var result = model === 'logistic' ? calcLogisticXG(x, y) : calcGeometricXG(x, y);
   if (result.xg > 0 && shotType && shotType !== 'open') {
     result.xg = shotTypeModifier(result.xg, result.d, shotType);
+  }
+  if (result.xg > 0 && situation) {
+    result.xg = applySituationModifiers(result.xg, situation);
   }
   return result;
 }

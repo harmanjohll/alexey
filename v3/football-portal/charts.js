@@ -402,6 +402,55 @@ function updateLeagueMatchChart(chart, teamADist, teamBDist) {
 }
 
 /**
+ * Initialize a sensitivity comparison chart (original vs shifted distributions).
+ */
+function initSensitivityChart(canvasId) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return null;
+  var d = chartDefaults();
+  var chart = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: [], datasets: [] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { color: d.legendColor, font: { family: d.fontFamily, size: 9 }, boxWidth: 12 } },
+        tooltip: { backgroundColor: d.tooltipBg, borderColor: d.tooltipBorder, borderWidth: 1, titleColor: d.tooltipTitle, bodyColor: d.tooltipBody, titleFont: { family: d.fontFamily, size: 10 }, bodyFont: { family: d.fontFamily, size: 10 } }
+      },
+      scales: {
+        x: { grid: { color: d.gridColor }, ticks: { color: d.tickColor, font: { family: d.fontFamily, size: 9 } } },
+        y: { grid: { color: d.gridColor }, ticks: { color: d.tickColor, font: { family: d.fontFamily, size: 9 } } }
+      }
+    }
+  });
+  _charts[canvasId] = chart;
+  return chart;
+}
+
+/**
+ * Update the sensitivity chart with original vs shifted distributions.
+ */
+function updateSensitivityChart(chart, originalCounts, shiftedCounts, N, factor) {
+  if (!chart) return;
+  var maxLen = Math.max(originalCounts.length, shiftedCounts.length);
+  var labels = [], origData = [], shiftData = [];
+  for (var i = 0; i < maxLen; i++) {
+    labels.push(i === 1 ? '1 goal' : i + ' goals');
+    origData.push(i < originalCounts.length ? originalCounts[i] : 0);
+    shiftData.push(i < shiftedCounts.length ? shiftedCounts[i] : 0);
+  }
+  chart.data.labels = labels;
+  chart.data.datasets = [
+    { label: 'Original (1.0×)', data: origData, backgroundColor: 'rgba(60,160,60,0.6)', borderWidth: 0, borderRadius: 2 },
+    { label: factor.toFixed(1) + '× xG', data: shiftData, backgroundColor: 'rgba(240,180,41,0.5)', borderColor: '#f0b429', borderWidth: 1, borderRadius: 2 }
+  ];
+  chart.options.plugins.tooltip.callbacks = {
+    label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + ' (' + (ctx.raw / N * 100).toFixed(1) + '%)'; }
+  };
+  chart.update();
+}
+
+/**
  * Destroy all tracked chart instances and clear registry.
  */
 function destroyAllCharts() {

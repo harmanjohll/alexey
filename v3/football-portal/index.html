@@ -74,6 +74,36 @@
         <button data-type="freekick" onclick="setShotType('freekick')">Free Kick</button>
         <button data-type="penalty" onclick="setShotType('penalty')">Penalty</button>
       </div>
+
+      <!-- Situation modifiers -->
+      <div class="situation-controls">
+        <div class="sit-group">
+          <label class="sit-lbl">Pressure</label>
+          <select id="sitPressure"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+        </div>
+        <div class="sit-group">
+          <label class="sit-lbl">Assist</label>
+          <select id="sitAssist"><option value="solo">Solo run</option><option value="throughball">Through ball</option><option value="cross">Cross</option><option value="cutback">Cut-back</option><option value="setpiece">Set piece</option></select>
+        </div>
+        <div class="sit-group">
+          <label class="sit-lbl">Counter</label>
+          <input type="checkbox" id="sitCounter">
+        </div>
+        <div class="sit-group">
+          <label class="sit-lbl">1v1</label>
+          <input type="checkbox" id="sitOneVone">
+        </div>
+      </div>
+
+      <!-- Precision entry -->
+      <div class="precision-entry">
+        <span class="sit-lbl">DISTANCE (m)</span>
+        <input type="number" id="precDist" value="12" min="0.5" max="40" step="0.5" style="width:70px">
+        <span class="sit-lbl">ANGLE (°)</span>
+        <input type="number" id="precAngle" value="0" min="-90" max="90" step="1" style="width:60px">
+        <button onclick="placePrecisionShot()">Place shot →</button>
+      </div>
+
       <div class="lab-grid">
         <div>
           <canvas id="pitch" class="pitch-canvas" width="460" height="360"></canvas>
@@ -81,7 +111,7 @@
             <span>low xG</span>
             <div class="lgbar"></div>
             <span>high xG</span>
-            <span style="margin-left:8px">— click pitch to place shots</span>
+            <span style="margin-left:8px">— click pitch or use precision entry</span>
           </div>
         </div>
         <div>
@@ -96,11 +126,39 @@
           <div class="shot-log" id="shotLog">
             <div class="sli" style="color:var(--text-tertiary)">no shots placed yet</div>
           </div>
+          <div class="sim-explain">Each simulation plays your exact shots as one match. Every shot independently scores or misses based on its xG probability. Running N simulations shows the range of possible outcomes.</div>
           <div class="brow">
-            <button id="simBtn" onclick="runMC()" disabled>Run 500 simulations →</button>
+            <select id="simCount" style="width:80px"><option value="100">100</option><option value="500" selected>500</option><option value="1000">1000</option><option value="5000">5000</option></select>
+            <button id="simBtn" onclick="runMC()" disabled>Run simulations →</button>
             <button class="danger" onclick="clearShots()">Clear shots</button>
           </div>
         </div>
+      </div>
+
+      <!-- Match scenario generator -->
+      <div class="scenario-panel">
+        <div class="sl" style="margin-bottom:8px">MATCH SCENARIO GENERATOR</div>
+        <div class="note"><b>Generate realistic shots:</b> Set match conditions below and generate a realistic set of shots matching that scenario. Useful for comparing how different game situations affect expected scoring.</div>
+        <div class="situation-controls">
+          <div class="sit-group">
+            <label class="sit-lbl">Minute</label>
+            <input type="range" id="scnMinute" min="1" max="95" value="45" oninput="document.getElementById('scnMinVal').textContent=this.value" style="width:80px">
+            <span id="scnMinVal" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:24px">45</span>
+          </div>
+          <div class="sit-group">
+            <label class="sit-lbl">Score</label>
+            <select id="scnScoreDiff"><option value="-3">Losing by 3</option><option value="-2">Losing by 2</option><option value="-1">Losing by 1</option><option value="0" selected>Level</option><option value="1">Winning by 1</option><option value="2">Winning by 2</option><option value="3">Winning by 3</option></select>
+          </div>
+          <div class="sit-group">
+            <label class="sit-lbl">Venue</label>
+            <select id="scnHomeAway"><option value="home">Home</option><option value="neutral" selected>Neutral</option><option value="away">Away</option></select>
+          </div>
+          <div class="sit-group">
+            <label class="sit-lbl">Opposition</label>
+            <select id="scnOppQuality"><option value="weak">Weak</option><option value="average" selected>Average</option><option value="strong">Strong</option></select>
+          </div>
+        </div>
+        <div class="brow"><button onclick="generateScenario()">Generate realistic shot pattern →</button></div>
       </div>
     </div>
 
@@ -233,7 +291,7 @@
         <div class="rstat"><span class="rl">Maximum goals in one run</span><span class="rv" id="rMax">—</span></div>
         <div class="rstat"><span class="rl">Probability of 0 goals</span><span class="rv" id="rP0">—</span></div>
         <div class="rstat"><span class="rl">Probability of 2+ goals</span><span class="rv" id="rP2">—</span></div>
-        <div class="model-note">This model uses geometry and logistic regression — distance, shot angle, and shot type. Real professional xG models also include: foot vs head, assisted vs solo, game state, and pressure from defenders.</div>
+        <div class="model-note">This model uses geometry, logistic regression, shot type, and situation modifiers (pressure, assist type, counter-attack, 1v1). Real professional xG models use even more features from tracking data.</div>
       </div>
     </div>
 
@@ -241,6 +299,27 @@
       <div class="sl" style="margin-bottom:8px">CUMULATIVE xG TIMELINE</div>
       <div class="timeline-wrap"><canvas id="timelineChart"></canvas></div>
       <div class="poisson-note">Each step up represents a shot. Steeper steps = higher xG shots. The final height is your total xG.</div>
+    </div>
+
+    <!-- Sensitivity analysis -->
+    <div style="margin-top:18px">
+      <div class="sl" style="margin-bottom:8px">SENSITIVITY ANALYSIS</div>
+      <div class="note"><b>What if every shot's xG was different?</b> Drag the slider to scale all xG values up or down. This shows how sensitive the outcome distribution is to shot quality — a key question for coaches.</div>
+      <div class="precision-entry" style="margin-bottom:10px">
+        <span class="sit-lbl">xG MULTIPLIER</span>
+        <input type="range" id="sensSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="runSensitivity()" style="width:150px">
+        <span id="sensValue" style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:40px">1.0×</span>
+      </div>
+      <div id="sensResults" style="display:none">
+        <div class="res-grid">
+          <div class="chart-wrap tall"><canvas id="sensChart"></canvas></div>
+          <div>
+            <div class="rstat"><span class="rl">Shifted avg goals</span><span class="rv" id="sensAvg">—</span></div>
+            <div class="rstat"><span class="rl">Shifted P(0 goals)</span><span class="rv" id="sensP0">—</span></div>
+            <div class="poisson-note">Green bars = your original simulation. Yellow bars = what happens with the shifted xG. Compare how the distribution changes.</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="leagueContext" style="margin-top:18px"></div>

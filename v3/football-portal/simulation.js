@@ -111,6 +111,18 @@ function simulateLeague(teamAShots, teamBShots, numMatches) {
 }
 
 /**
+ * Run sensitivity Monte Carlo — same as runMonteCarlo but scales all xG by a factor.
+ * Useful for "what if shots were X% better/worse?" analysis.
+ */
+function runSensitivityMC(shots, factor, numSims) {
+  var scaled = [];
+  for (var i = 0; i < shots.length; i++) {
+    scaled.push({ xg: Math.min(0.96, Math.max(0.001, shots[i].xg * factor)) });
+  }
+  return runMonteCarlo(scaled, numSims);
+}
+
+/**
  * Build cumulative xG timeline data from a list of shots.
  * Returns array of { shotIndex, cumulativeXG } for step-chart plotting.
  */
