@@ -4,10 +4,10 @@
 var currentMode = 'single';
 
 var PRESETS = {
-  default: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:100,niter2:20000,lattx:500,lattz:2000,zstop:1800,zlo:1500,seed:-381791011},
-  highGe: {theta:0.5,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:100,niter2:20000,lattx:500,lattz:2000,zstop:1800,zlo:1500,seed:-381791011},
-  highTemp: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:800,niter1:100,niter2:20000,lattx:500,lattz:2000,zstop:1800,zlo:1500,seed:-381791011},
-  noDesorp: {theta:0.2,pdes:0.0,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:100,niter2:20000,lattx:500,lattz:2000,zstop:1800,zlo:1500,seed:-381791011}
+  default: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:10000,niter2:100,lattx:512,lattz:2048,zstop:1843,zlo:1536,seed:-381791011},
+  highGe: {theta:0.5,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:10000,niter2:100,lattx:512,lattz:2048,zstop:1843,zlo:1536,seed:-381791011},
+  highTemp: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:800,niter1:10000,niter2:100,lattx:512,lattz:2048,zstop:1843,zlo:1536,seed:-381791011},
+  noDesorp: {theta:0.2,pdes:0.0,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:10000,niter2:100,lattx:512,lattz:2048,zstop:1843,zlo:1536,seed:-381791011}
 };
 
 function toggleTheme() {
@@ -63,8 +63,14 @@ function loadPreset(name, btn) {
 }
 
 function setInputsEnabled(en) {
-  var inputs = document.querySelectorAll('#paramPanel input');
+  var inputs = document.querySelectorAll('#paramPanel input, #paramPanel select');
   for (var i = 0; i < inputs.length; i++) inputs[i].disabled = !en;
+}
+
+function autoAdjustZstopZlo() {
+  var lattz = +document.getElementById('pLattz').value;
+  document.getElementById('pZstop').value = Math.round(lattz * 0.9);
+  document.getElementById('pZlo').value = Math.round(lattz * 0.75);
 }
 
 function setMode(m) {
