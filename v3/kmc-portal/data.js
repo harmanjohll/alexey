@@ -388,6 +388,166 @@ function deleteLogEntry(idx) {
   renderLogbook();
 }
 
+/* ── Auto-suggest pit parameters ── */
+function autoSuggestPitParams() {
+  if (!lastFullHt || lastFullHt.length === 0) { alert('Run a simulation first'); return; }
+  var n = lastFullHt.length;
+
+  // Compute quartiles for IQR method
+  var sorted = Array.prototype.slice.call(lastFullHt).sort(function(a, b) { return a - b; });
+  var q1 = sorted[Math.floor(n * 0.25)];
+  var q3 = sorted[Math.floor(n * 0.75)];
+  var iqr = q3 - q1;
+
+  // Compute mean and sigma
+  var sum = 0;
+  for (var i = 0; i < n; i++) sum += lastFullHt[i];
+  var mean = sum / n;
+  var m2 = 0;
+  for (var i = 0; i < n; i++) { var d = lastFullHt[i] - mean; m2 += d * d; }
+  var sigma = Math.sqrt(m2 / n);
+
+  // k from IQR: lower fence = Q1 - 1.5*IQR, then k = (mean - lowerFence)/sigma
+  var k = 1.5;
+  if (sigma > 0) {
+    var lowerFence = q1 - 1.5 * iqr;
+    k = (mean - lowerFence) / sigma;
+    k = Math.max(1.0, Math.min(3.0, k));
+  }
+
+  // minWidth from correlation length xi
+  var minW = 3;
+  if (window._lastAlphaResult && window._lastAlphaResult.xi) {
+    minW = Math.max(3, Math.floor(window._lastAlphaResult.xi / 2));
+  }
+
+  // Apply to inputs
+  var methodEl = document.getElementById('pitMethod');
+  if (methodEl) methodEl.value = 'sigma';
+  var kEl = document.getElementById('pitThreshold');
+  if (kEl) kEl.value = k.toFixed(1);
+  var mwEl = document.getElementById('pitMinWidth');
+  if (mwEl) mwEl.value = minW;
+
+  updatePitAnalysis();
+}
+
+/* ── Export data snapshot (JSON) ── */
+function exportSnapshot() {
+  var params = readParams();
+  var iter = document.getElementById('stIter').textContent;
+
+  // Gather stats
+  var stats = {
+    rms: document.getElementById('stRms').textContent,
+    stdev: document.getElementById('stStd').textContent,
+    skewness: document.getElementById('stSkew').textContent,
+    kurtosis: document.getElementById('stKurt').textContent,
+    aveht: document.getElementById('stAveht').textContent,
+    etchDepth: document.getElementById('stEtchDepth').textContent,
+    etchRate: document.getElementById('stEtchRate').textContent,
+    selectivity: document.getElementById('stSelectivity').textContent,
+    heightRange: document.getElementById('stRange').textContent,
+    surfaceWidth: document.getElementById('stWidth').textContent
+  };
+
+  // Scaling exponents
+  var scaling = {
+    beta: document.getElementById('betaDisp').textContent,
+    alphaCorr: document.getElementById('alphaCorr').textContent,
+    xi: document.getElementById('xiCorrStat').textContent,
+    gInfOverSqrt2: document.getElementById('gInfRms').textContent,
+    rmsDirect: document.getElementById('rmsDirectCorr').textContent,
+    alphaScaling: document.getElementById('scaleAlpha').textContent,
+    zScaling: document.getElementById('scaleZ').textContent,
+    universalityClass: document.getElementById('scaleClass').textContent
+  };
+
+  // Pit analysis
+  var pitStats = {
+    count: document.getElementById('pitCount').textContent,
+    avgWidth: document.getElementById('pitAvgW').textContent,
+    maxWidth: document.getElementById('pitMaxW').textContent,
+    avgDepth: document.getElementById('pitAvgD').textContent,
+    maxDepth: document.getElementById('pitMaxD').textContent,
+    coverage: document.getElementById('pitCoverage').textContent,
+    cutoff: document.getElementById('pitCutoff').textContent
+  };
+
+  // Time series
+  var timeSeries = {
+    roughness: roughnessData.map(function(d) { return { iter: d.x, rms: d.y }; }),
+    etchDepth: etchDepthData.map(function(d) { return { iter: d.x, depth: d.y }; }),
+    rmsHistory: rmsHistory,
+    skewHistory: skewHistory,
+    kurtHistory: kurtHistory
+  };
+
+  // G(r) data
+  var correlation = null;
+  if (window._lastCorr) {
+    correlation = { r: window._lastCorr.r, g: window._lastCorr.g };
+    if (window._lastAlphaResult) {
+      correlation.alpha = window._lastAlphaResult.alpha;
+      correlation.xi = window._lastAlphaResult.xi;
+      correlation.gInf = window._lastAlphaResult.gInf;
+    }
+  }
+
+  var snapshot = {
+    exported: new Date().toISOString(),
+    iteration: iter,
+    parameters: params,
+    stats: stats,
+    scaling: scaling,
+    pitAnalysis: pitStats,
+    timeSeries: timeSeries,
+    correlation: correlation
+  };
+
+  var blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kmc-snapshot-iter' + iter + '.json';
+  a.click();
+}
+
+/* ── Copy results table (markdown) to clipboard ── */
+function copyResultsTable() {
+  var iter = document.getElementById('stIter').textContent;
+  var lines = [
+    '| Metric | Value |',
+    '|--------|-------|',
+    '| Iteration | ' + iter + ' |',
+    '| RMS Roughness | ' + document.getElementById('stRms').textContent + ' |',
+    '| Std Dev | ' + document.getElementById('stStd').textContent + ' |',
+    '| Skewness | ' + document.getElementById('stSkew').textContent + ' |',
+    '| Kurtosis (excess) | ' + document.getElementById('stKurt').textContent + ' |',
+    '| Etch Depth | ' + document.getElementById('stEtchDepth').textContent + ' |',
+    '| Etch Rate | ' + document.getElementById('stEtchRate').textContent + ' |',
+    '| Ge/Si Selectivity | ' + document.getElementById('stSelectivity').textContent + ' |',
+    '| β (growth) | ' + document.getElementById('betaDisp').textContent + ' |',
+    '| α (G(r)) | ' + document.getElementById('alphaCorr').textContent + ' |',
+    '| ξ (corr length) | ' + document.getElementById('xiCorrStat').textContent + ' |',
+    '| G(∞)/√2 | ' + document.getElementById('gInfRms').textContent + ' |',
+    '| Pit Count | ' + document.getElementById('pitCount').textContent + ' |',
+    '| Avg Pit Width | ' + document.getElementById('pitAvgW').textContent + ' |',
+    '| Avg Pit Depth | ' + document.getElementById('pitAvgD').textContent + ' |',
+    '| Pit Coverage | ' + document.getElementById('pitCoverage').textContent + ' |'
+  ];
+  var md = lines.join('\n');
+  navigator.clipboard.writeText(md).then(function() {
+    alert('Results table copied to clipboard');
+  }, function() {
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = md; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Results table copied to clipboard');
+  });
+}
+
 function exportLogbook() {
   var entries = getLogEntries();
   if (entries.length === 0) return;

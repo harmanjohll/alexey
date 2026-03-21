@@ -161,6 +161,9 @@
         <div class="stat-item"><div class="stat-label">Kurtosis (excess)</div><div class="stat-value" id="stKurt">&mdash;</div></div>
         <div class="stat-item"><div class="stat-label">Height Range</div><div class="stat-value sm" id="stRange">&mdash;</div></div>
         <div class="stat-item"><div class="stat-label">Surface Width</div><div class="stat-value sm" id="stWidth">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Etch Depth</div><div class="stat-value sm" id="stEtchDepth">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Etch Rate</div><div class="stat-value sm" id="stEtchRate">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Ge/Si Selectivity</div><div class="stat-value sm" id="stSelectivity">&mdash;</div></div>
       </div>
     </div>
     <div class="dash-card">
@@ -192,8 +195,8 @@
       <div class="chart-wrap"><canvas id="roughnessChart"></canvas></div>
     </div>
     <div class="dash-card">
-      <div class="card-label">Average Height vs Iteration</div>
-      <div class="chart-wrap"><canvas id="heightChart"></canvas></div>
+      <div class="card-label">Etch Depth &amp; Rate vs Iteration</div>
+      <div class="chart-wrap"><canvas id="etchChart"></canvas></div>
     </div>
   </div>
 
@@ -221,6 +224,34 @@
     </div>
   </div>
 
+  <!-- Row 4.5: Height-Height Correlation G(r) -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Height-Height Correlation G(r)</span>
+        <span class="beta-display" style="color:#7da0dd;background:rgba(125,160,221,0.08);border-color:rgba(125,160,221,0.3)">&alpha; = <span id="alphaCorr">&mdash;</span></span>
+        <span style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace">&xi; = <span id="xiCorrStat">&mdash;</span></span>
+      </div>
+      <div class="chart-wrap"><canvas id="corrChart"></canvas></div>
+      <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:6px;line-height:1.6">
+        G(r) = &radic;&langle;[h(x+r) &minus; h(x)]&sup2;&rangle; &middot; Slope gives &alpha; (roughness exponent) &middot; Saturation at &xi; (correlation length)
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Correlation Summary</div>
+      <div class="stat-grid four">
+        <div class="stat-item"><div class="stat-label">&alpha; (roughness)</div><div class="stat-value sm" id="alphaCorr2" style="color:#7da0dd">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">&xi; (corr length)</div><div class="stat-value sm" id="xiCorr2">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">G(&infin;)/&radic;2</div><div class="stat-value sm" id="gInfRms">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">RMS (direct)</div><div class="stat-value sm" id="rmsDirectCorr">&mdash;</div></div>
+      </div>
+      <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:8px;line-height:1.6">
+        G(&infin;)/&radic;2 should converge to the direct RMS roughness (self-consistency check).<br>
+        &alpha; from G(r) gives the roughness exponent from a <b>single run</b> &mdash; no multiple system sizes needed.
+      </div>
+    </div>
+  </div>
+
   <!-- Row 5: Pit Analysis -->
   <div class="dash-row">
     <div class="dash-card">
@@ -238,6 +269,8 @@
         <span style="font-size:9px;color:var(--text-tertiary)">gap merge:</span>
         <input type="number" id="pitGapMerge" value="2" min="0" max="20" step="1" style="width:36px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
         <button class="sm" onclick="updatePitAnalysis()">Refresh</button>
+        <button class="sm" onclick="autoSuggestPitParams()" style="color:#f0b429;border-color:rgba(240,180,41,0.4)">Auto-suggest</button>
+        <span id="roughnessStabilized" style="font-size:9px;font-family:'JetBrains Mono',monospace;margin-left:4px"></span>
       </div>
       <div class="stat-grid four" id="pitStats">
         <div class="stat-item"><div class="stat-label">Pit Count</div><div class="stat-value sm" id="pitCount">&mdash;</div></div>
@@ -381,6 +414,8 @@
       <div style="display:flex;flex-direction:column;gap:4px">
         <button onclick="addLogEntry()">Save to logbook</button>
         <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+        <button onclick="exportSnapshot()" style="font-size:9px;padding:4px 10px;color:#4a9aaa;border-color:rgba(74,154,170,0.4)">Export data (JSON)</button>
+        <button onclick="copyResultsTable()" style="font-size:9px;padding:4px 10px;color:#7da0dd;border-color:rgba(125,160,221,0.4)">Copy results table</button>
       </div>
     </div>
   </div>
