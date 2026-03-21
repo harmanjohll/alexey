@@ -50,12 +50,12 @@
       <div class="param-group">
         <div class="group-label">Simulation</div>
         <div class="param-row"><span class="param-lbl">Temp <span class="unit">K</span></span><input type="number" id="pTemp" value="500" step="50" min="100" max="2000"></div>
-        <div class="param-row"><span class="param-lbl">niter1 <span class="unit">outer</span></span><input type="number" id="pNiter1" value="100" step="10" min="1" max="10000"></div>
-        <div class="param-row"><span class="param-lbl">niter2 <span class="unit">&times;lattx</span></span><input type="number" id="pNiter2" value="20000" step="1000" min="1000"></div>
-        <div class="param-row"><span class="param-lbl">lattx</span><input type="number" id="pLattx" value="500" step="100" min="50" max="2000"></div>
-        <div class="param-row"><span class="param-lbl">lattz</span><input type="number" id="pLattz" value="2000" step="500" min="500" max="10000"></div>
-        <div class="param-row"><span class="param-lbl">zstop</span><input type="number" id="pZstop" value="1800" step="100"></div>
-        <div class="param-row"><span class="param-lbl">zlo</span><input type="number" id="pZlo" value="1500" step="100"></div>
+        <div class="param-row"><span class="param-lbl">niter1 <span class="unit">outer</span></span><input type="number" id="pNiter1" value="10000" step="100" min="1" max="100000"></div>
+        <div class="param-row"><span class="param-lbl">niter2 <span class="unit">&times;lattx</span></span><input type="number" id="pNiter2" value="100" step="10" min="10"></div>
+        <div class="param-row"><span class="param-lbl">lattx</span><select id="pLattx"><option value="32">32</option><option value="64">64</option><option value="128">128</option><option value="256">256</option><option value="512" selected>512</option><option value="1024">1024</option><option value="2048">2048</option></select></div>
+        <div class="param-row"><span class="param-lbl">lattz</span><select id="pLattz" onchange="autoAdjustZstopZlo()"><option value="1024">1024</option><option value="2048" selected>2048</option><option value="4096">4096</option></select></div>
+        <div class="param-row"><span class="param-lbl">zstop</span><input type="number" id="pZstop" value="1843" step="100"></div>
+        <div class="param-row"><span class="param-lbl">zlo</span><input type="number" id="pZlo" value="1536" step="100"></div>
         <div class="param-row"><span class="param-lbl">seed</span><input type="number" id="pSeed" value="-381791011" step="1"></div>
       </div>
     </div>
@@ -184,9 +184,9 @@
     <div class="dash-card">
       <div class="card-hdr">
         <span class="card-label">RMS Roughness (log-log)</span>
-        <button class="sm active" id="logLinBtn" onclick="setLogMode('linear')">log&#8321;&#8320; linear</button>
-        <button class="sm" id="logScaleBtn" onclick="setLogMode('logscale')">log-scale axes</button>
-        <span class="beta-display" id="betaDisp">&beta; = &mdash;</span>
+        <button class="sm" id="logLinBtn" onclick="setLogMode('linear')">log&#8321;&#8320; linear</button>
+        <button class="sm active" id="logScaleBtn" onclick="setLogMode('logscale')">log-scale axes</button>
+        <span class="beta-display" id="betaDisp" data-tip="Growth exponent: slope of log(RMS) vs log(iteration) in the growth regime. Random=0.5, EW=0.25, KPZ=0.333.">&beta; = &mdash;</span>
         <span style="font-size:9px;color:var(--text-tertiary);margin-left:8px">fit range:</span>
         <input type="number" id="fitMin" value="10" min="1" style="width:50px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
         <span style="font-size:9px;color:var(--text-tertiary)">to</span>
@@ -229,8 +229,8 @@
     <div class="dash-card">
       <div class="card-hdr">
         <span class="card-label">Height-Height Correlation G(r)</span>
-        <span class="beta-display" style="color:#7da0dd;background:rgba(125,160,221,0.08);border-color:rgba(125,160,221,0.3)">&alpha; = <span id="alphaCorr">&mdash;</span></span>
-        <span style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace">&xi; = <span id="xiCorrStat">&mdash;</span></span>
+        <span class="beta-display" style="color:#7da0dd;background:rgba(125,160,221,0.08);border-color:rgba(125,160,221,0.3)" data-tip="Roughness exponent from G(r) slope. Measures how rough the surface is at different length scales. EW &amp; KPZ (1+1D) = 0.5.">&alpha; = <span id="alphaCorr">&mdash;</span></span>
+        <span style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace" data-tip="Correlation length: the distance beyond which surface heights become uncorrelated. Larger &xi; = longer-range surface features.">&xi; = <span id="xiCorrStat">&mdash;</span></span>
       </div>
       <div class="chart-wrap"><canvas id="corrChart"></canvas></div>
       <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:6px;line-height:1.6">
@@ -240,10 +240,10 @@
     <div class="dash-card">
       <div class="card-label">Correlation Summary</div>
       <div class="stat-grid four">
-        <div class="stat-item"><div class="stat-label">&alpha; (roughness)</div><div class="stat-value sm" id="alphaCorr2" style="color:#7da0dd">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">&xi; (corr length)</div><div class="stat-value sm" id="xiCorr2">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">G(&infin;)/&radic;2</div><div class="stat-value sm" id="gInfRms">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">RMS (direct)</div><div class="stat-value sm" id="rmsDirectCorr">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Roughness exponent from G(r) log-log slope. Gives &alpha; from a single run without needing multiple system sizes.">&alpha; (roughness)</div><div class="stat-value sm" id="alphaCorr2" style="color:#7da0dd">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Correlation length: the length scale at which G(r) saturates. Surface features are correlated within this distance.">&xi; (corr length)</div><div class="stat-value sm" id="xiCorr2">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Self-consistency check: G(&infin;)/&radic;2 should equal the direct RMS roughness. If they match, the correlation function is reliable.">G(&infin;)/&radic;2</div><div class="stat-value sm" id="gInfRms">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="RMS roughness computed directly from the height array. Compare with G(&infin;)/&radic;2 above &mdash; they should agree.">RMS (direct)</div><div class="stat-value sm" id="rmsDirectCorr">&mdash;</div></div>
       </div>
       <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:8px;line-height:1.6">
         G(&infin;)/&radic;2 should converge to the direct RMS roughness (self-consistency check).<br>
@@ -273,14 +273,14 @@
         <span id="roughnessStabilized" style="font-size:9px;font-family:'JetBrains Mono',monospace;margin-left:4px"></span>
       </div>
       <div class="stat-grid four" id="pitStats">
-        <div class="stat-item"><div class="stat-label">Pit Count</div><div class="stat-value sm" id="pitCount">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">Avg Pit Width</div><div class="stat-value sm" id="pitAvgW">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">Max Pit Width</div><div class="stat-value sm" id="pitMaxW">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">Avg Pit Depth</div><div class="stat-value sm" id="pitAvgD">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">Max Pit Depth</div><div class="stat-value sm" id="pitMaxD">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">Pit Coverage</div><div class="stat-value sm" id="pitCoverage">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">Cutoff Height</div><div class="stat-value sm" id="pitCutoff">&mdash;</div></div>
-        <div class="stat-item"><div class="stat-label">Mean Height</div><div class="stat-value sm" id="pitMeanH">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Number of contiguous surface depressions below the cutoff height. Each pit is a connected region of sites below the threshold.">Pit Count</div><div class="stat-value sm" id="pitCount">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Mean horizontal extent of each pit in lattice sites. Wider pits suggest coalescence or correlated etching.">Avg Pit Width</div><div class="stat-value sm" id="pitAvgW">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Widest single pit observed on the surface, in lattice sites.">Max Pit Width</div><div class="stat-value sm" id="pitMaxW">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Mean vertical depth from the average surface height down to the pit bottom. Deeper pits = more aggressive local etching.">Avg Pit Depth</div><div class="stat-value sm" id="pitAvgD">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Deepest single pit observed, measured from mean surface height to the lowest point.">Max Pit Depth</div><div class="stat-value sm" id="pitMaxD">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Fraction of the surface occupied by pits: (total pit sites / lattx) &times; 100%. High coverage suggests uniform pitting; low = isolated pits.">Pit Coverage</div><div class="stat-value sm" id="pitCoverage">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Height threshold below which surface is classified as a pit. For &sigma;-method: cutoff = mean &minus; k&times;&sigma;. Sites below this line are pit material.">Cutoff Height</div><div class="stat-value sm" id="pitCutoff">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Average surface height across all lattice sites. This is the baseline from which pit depth is measured.">Mean Height</div><div class="stat-value sm" id="pitMeanH">&mdash;</div></div>
       </div>
     </div>
     <div class="dash-card">

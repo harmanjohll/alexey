@@ -9,7 +9,7 @@ var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
 
 var roughnessData = [], etchDepthData = [], etchRateData = [];
 var rmsHistory = [], skewHistory = [], kurtHistory = [];
-var logMode = 'linear';
+var logMode = 'logscale';
 var initialAveHt = null;
 
 var chartDefaults = {
