@@ -1,14 +1,16 @@
 /* charts.js — Chart.js plot management for KMC portal */
 
-var roughnessChart = null, heightChart = null, surfaceChart = null, concChart = null;
+var roughnessChart = null, etchChart = null, surfaceChart = null, concChart = null;
 var statsChart = null, histChart = null;
 var pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = null;
+var corrChart = null;
 var tswRoughChart = null, tswSkewChart = null, tswKurtChart = null;
 var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
 
-var roughnessData = [], heightData = [];
+var roughnessData = [], etchDepthData = [], etchRateData = [];
 var rmsHistory = [], skewHistory = [], kurtHistory = [];
 var logMode = 'linear';
+var initialAveHt = null;
 
 var chartDefaults = {
   responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
@@ -48,7 +50,25 @@ function initCharts() {
   roughnessChart.data.datasets.push({ label:'\u03B2_rand=0.5', data:[], borderColor:'rgba(226,75,74,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
 
-  heightChart = mkChart('heightChart', 'Avg Height', 'iteration', 'avg height', '#4a9aaa', '');
+  // Etch depth & rate (dual y-axis)
+  var eOpts = JSON.parse(JSON.stringify(chartDefaults));
+  eOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+  etchChart = new Chart(document.getElementById('etchChart'), {
+    type:'line',
+    data:{ labels:[], datasets:[
+      { label:'Etch Depth', data:[], borderColor:'#4a9aaa', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y' },
+      { label:'Etch Rate', data:[], borderColor:'#f0b429', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false, yAxisID:'y2' }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, animation:{duration:0},
+      plugins: eOpts.plugins,
+      scales: {
+        x: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'iteration',color:'#4a6a4a',font:{family:'JetBrains Mono',size:9}} },
+        y: { position:'left', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'etch depth (layers)',color:'#4a9aaa',font:{family:'JetBrains Mono',size:9}} },
+        y2: { position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'rate (layers/iter)',color:'#f0b429',font:{family:'JetBrains Mono',size:9}} }
+      }
+    }
+  });
+
   surfaceChart = mkChart('surfaceChart', 'ht(x)', 'x', 'height', '#7dd87d', '');
   concChart = mkChart('concChart', 'Ge fraction', 'depth (z)', 'Ge/(Si+Ge)', '#FF7043', '');
 
@@ -110,11 +130,12 @@ function initCharts() {
   });
 
   initScalingCharts();
+  initCorrChart();
 }
 
 function destroyCharts() {
-  [roughnessChart, heightChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitSurfaceChart, alphaChart, zChart].forEach(function(c) { if(c) c.destroy(); });
-  roughnessChart = heightChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitSurfaceChart = alphaChart = zChart = null;
+  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitSurfaceChart, alphaChart, zChart, corrChart].forEach(function(c) { if(c) c.destroy(); });
+  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitSurfaceChart = alphaChart = zChart = corrChart = null;
 }
 
 function destroySweepCharts() {
@@ -221,10 +242,21 @@ function updateCharts(d) {
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
 
-  // Height
-  heightData.push({ x: d.iter, y: d.aveht });
-  heightChart.data.datasets[0].data = heightData;
-  heightChart.update();
+  // Etch depth & rate
+  if (initialAveHt === null) initialAveHt = d.aveht;
+  var depth = initialAveHt - d.aveht; // negative = etched deeper, but we want positive convention
+  if (depth < 0) depth = -depth; // always show as positive etch depth
+  etchDepthData.push({ x: d.iter, y: depth });
+  var rate = 0;
+  if (etchDepthData.length >= 2) {
+    var prev = etchDepthData[etchDepthData.length - 2];
+    var di = d.iter - prev.x;
+    if (di > 0) rate = (depth - prev.y) / di;
+  }
+  etchRateData.push({ x: d.iter, y: rate });
+  etchChart.data.datasets[0].data = etchDepthData;
+  etchChart.data.datasets[1].data = etchRateData;
+  etchChart.update();
 
   // Stats evolution
   rmsHistory.push(d.rmsht);
@@ -315,6 +347,122 @@ function setLogMode(mode) {
   addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
+}
+
+/* ── Height-Height Correlation G(r) ── */
+function computeCorrelation(ht) {
+  var N = ht.length;
+  var maxR = Math.min(Math.floor(N / 2), 250);
+  var rArr = new Array(maxR), gArr = new Array(maxR);
+  for (var r = 1; r <= maxR; r++) {
+    var sum = 0;
+    for (var x = 0; x < N; x++) {
+      var x2 = (x + r) % N;
+      var d = ht[x2] - ht[x];
+      sum += d * d;
+    }
+    rArr[r - 1] = r;
+    gArr[r - 1] = Math.sqrt(sum / N);
+  }
+  return { r: rArr, g: gArr };
+}
+
+function fitAlpha(corrData) {
+  if (!corrData || corrData.g.length < 5) return null;
+  var satVal = corrData.g[corrData.g.length - 1];
+  var xiIdx = corrData.g.length - 1;
+  for (var i = 0; i < corrData.g.length; i++) {
+    if (corrData.g[i] >= 0.9 * satVal) { xiIdx = i; break; }
+  }
+  var xi = corrData.r[xiIdx];
+  var fitEnd = Math.max(5, Math.floor(xiIdx * 0.8));
+  if (fitEnd > corrData.r.length) fitEnd = corrData.r.length;
+  var logPts = [];
+  for (var i = 0; i < fitEnd; i++) {
+    if (corrData.g[i] > 0) logPts.push({ x: Math.log10(corrData.r[i]), y: Math.log10(corrData.g[i]) });
+  }
+  var fit = fitLogLogSlope(logPts);
+  if (!fit) return null;
+  return { alpha: fit.slope, intercept: fit.intercept, xi: xi, gInf: satVal };
+}
+
+function initCorrChart() {
+  if (corrChart) corrChart.destroy();
+  var cOpts = JSON.parse(JSON.stringify(chartDefaults));
+  cOpts.scales.x.title = { display:true, text:'log\u2081\u2080(r)', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  cOpts.scales.y.title = { display:true, text:'log\u2081\u2080(G(r))', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  cOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+  corrChart = new Chart(document.getElementById('corrChart'), {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'G(r)', data:[], borderColor:'#7da0dd', backgroundColor:'rgba(125,160,221,0.4)', borderWidth:1, pointRadius:2, showLine:true, tension:0, fill:false },
+      { label:'\u03B1 fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, showLine:true, fill:false }
+    ]},
+    options: cOpts
+  });
+}
+
+function updateCorrelation() {
+  if (!lastFullHt || lastFullHt.length < 20 || !corrChart) return;
+  var corr = computeCorrelation(lastFullHt);
+  var logCorr = [];
+  for (var i = 0; i < corr.r.length; i++) {
+    if (corr.g[i] > 0) logCorr.push({ x: Math.log10(corr.r[i]), y: Math.log10(corr.g[i]) });
+  }
+  corrChart.data.datasets[0].data = logCorr;
+
+  var result = fitAlpha(corr);
+  if (result && logCorr.length > 0) {
+    var xMin = logCorr[0].x;
+    var xMax = Math.log10(Math.max(2, result.xi * 0.8));
+    corrChart.data.datasets[1].data = [
+      { x: xMin, y: result.intercept + result.alpha * xMin },
+      { x: xMax, y: result.intercept + result.alpha * xMax }
+    ];
+    document.getElementById('alphaCorr').textContent = result.alpha.toFixed(4);
+    document.getElementById('xiCorrStat').textContent = result.xi;
+    document.getElementById('gInfRms').textContent = (result.gInf / Math.sqrt(2)).toFixed(4);
+    // Also update summary card duplicates
+    var ac2 = document.getElementById('alphaCorr2');
+    if (ac2) ac2.textContent = result.alpha.toFixed(4);
+    var xc2 = document.getElementById('xiCorr2');
+    if (xc2) xc2.textContent = result.xi;
+    if (rmsHistory.length > 0) {
+      document.getElementById('rmsDirectCorr').textContent = rmsHistory[rmsHistory.length - 1].toFixed(4);
+    }
+    // Store for auto-suggest and export
+    window._lastCorr = corr;
+    window._lastAlphaResult = result;
+  } else {
+    corrChart.data.datasets[1].data = [];
+  }
+  corrChart.update();
+
+  // Update stabilization indicator
+  updateStabilizationIndicator();
+}
+
+function updateStabilizationIndicator() {
+  var el = document.getElementById('roughnessStabilized');
+  if (!el) return;
+  if (rmsHistory.length < 10) { el.innerHTML = ''; return; }
+  var stable = isRoughnessStabilized();
+  el.innerHTML = stable
+    ? '<span style="color:#3ca03c">\u25CF stabilized</span>'
+    : '<span style="color:#f0b429">\u25CF transient</span>';
+}
+
+function isRoughnessStabilized() {
+  if (rmsHistory.length < 10) return false;
+  var last10 = rmsHistory.slice(-10);
+  var sum = 0;
+  for (var i = 0; i < 10; i++) sum += last10[i];
+  var mean = sum / 10;
+  if (mean === 0) return false;
+  var v = 0;
+  for (var i = 0; i < 10; i++) { var d = last10[i] - mean; v += d * d; }
+  var cv = Math.sqrt(v / 10) / mean;
+  return cv < 0.05;
 }
 
 /* Scaling exponent charts */

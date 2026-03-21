@@ -89,7 +89,8 @@ function startSim() {
   var params = readParams();
   if (params.lattx < 10 || params.lattz < 100) { alert('Lattice too small'); return; }
   running = true; pausedState = false;
-  roughnessData = []; heightData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
+  roughnessData = []; etchDepthData = []; etchRateData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
+  initialAveHt = null;
   destroyCharts(); initCharts();
   document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'JetBrains Mono\',monospace;padding:20px">Running...</div>';
   setInputsEnabled(false);
@@ -123,9 +124,27 @@ function startSim() {
 
       updateCharts(d);
       renderLattice(d.sliceData, d.sliceH, params.lattx);
+
+      // Etch stats
+      var depth = etchDepthData.length > 0 ? etchDepthData[etchDepthData.length - 1].y : 0;
+      var rate = etchRateData.length > 0 ? etchRateData[etchRateData.length - 1].y : 0;
+      document.getElementById('stEtchDepth').textContent = depth.toFixed(2);
+      document.getElementById('stEtchRate').textContent = rate.toFixed(4);
+      // Ge/Si selectivity
+      var ngedes = d.events.ngedes || 0;
+      var nsides = d.events.nsides || 0;
+      if (nsides > 0) {
+        document.getElementById('stSelectivity').textContent = (ngedes / nsides).toFixed(2);
+      } else {
+        document.getElementById('stSelectivity').textContent = ngedes > 0 ? '\u221E' : '\u2014';
+      }
+
       if (d.htRaw) {
         renderHeightMap(d.htRaw, params.lattx);
-        if (lastFullHt) updatePitAnalysis();
+        if (lastFullHt) {
+          updatePitAnalysis();
+          updateCorrelation();
+        }
       }
 
       if (d.isSnapshot) {
@@ -167,7 +186,9 @@ function resumeSim() {
 function resetSim() {
   if (worker) { worker.postMessage({ type: 'cancel' }); worker.terminate(); worker = null; }
   running = false; pausedState = false;
-  roughnessData = []; heightData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
+  roughnessData = []; etchDepthData = []; etchRateData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
+  initialAveHt = null;
+  window._lastCorr = null; window._lastAlphaResult = null;
   lastSliceData = null; lastSliceH = 0; lastFullHt = null;
   destroyCharts(); initCharts();
   document.getElementById('runBtn').disabled = false;
@@ -177,8 +198,10 @@ function resetSim() {
   document.getElementById('progFill').style.width = '0%';
   document.getElementById('progText').textContent = 'Ready';
   document.getElementById('betaDisp').textContent = '\u03B2 = \u2014';
-  ['stIter','stAveht','stRms','stStd','stSkew','stKurt','stRange','stWidth','pitCount','pitAvgW','pitMaxW','pitAvgD','pitMaxD','pitCoverage','pitCutoff','pitMeanH'].forEach(function(id) { document.getElementById(id).textContent = '\u2014'; });
+  ['stIter','stAveht','stRms','stStd','stSkew','stKurt','stRange','stWidth','stEtchDepth','stEtchRate','stSelectivity','pitCount','pitAvgW','pitMaxW','pitAvgD','pitMaxD','pitCoverage','pitCutoff','pitMeanH'].forEach(function(id) { document.getElementById(id).textContent = '\u2014'; });
   ['evDes','evGeD','evSiD','evSdf','evBdf'].forEach(function(id) { document.getElementById(id).textContent = '0'; });
+  ['alphaCorr','xiCorrStat','gInfRms','rmsDirectCorr','alphaCorr2','xiCorr2'].forEach(function(id) { var el = document.getElementById(id); if (el) el.textContent = '\u2014'; });
+  var stabEl = document.getElementById('roughnessStabilized'); if (stabEl) stabEl.innerHTML = '';
   setInputsEnabled(true);
   document.getElementById('latticeCanvas').getContext('2d').clearRect(0, 0, 500, 150);
   document.getElementById('hmapCanvas').getContext('2d').clearRect(0, 0, 500, 40);
