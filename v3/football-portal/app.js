@@ -1,7 +1,6 @@
 /* app.js — Football Portal orchestration, state, event handlers, AI coach, logbook */
 
 // ── State ──
-var currentMode = 'shots';
 var currentModel = 'geometric';
 var currentShotType = 'open';
 var shots = [];
@@ -27,25 +26,6 @@ function toggleTheme() {
   var next = current === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', next);
   localStorage.setItem('football_theme', next);
-}
-
-// ── Mode switching ──
-function setMode(mode) {
-  currentMode = mode;
-  var sections = document.querySelectorAll('.mode-section');
-  for (var i = 0; i < sections.length; i++) {
-    sections[i].classList.toggle('active', sections[i].id === 'mode-' + mode);
-  }
-  var tabs = document.querySelectorAll('.mode-tabs button');
-  for (var j = 0; j < tabs.length; j++) {
-    tabs[j].classList.toggle('active', tabs[j].getAttribute('data-mode') === mode);
-  }
-  // Draw heatmaps on first visit
-  if (mode === 'heatmap') drawHeatmaps();
-  // Init league UI on first visit
-  if (mode === 'league' && selectedLeagues.size === 0) {
-    toggleLeague('Premier League');
-  }
 }
 
 // ── Model & shot type ──
@@ -724,7 +704,7 @@ function addLogEntry() {
   var text = document.getElementById('logText').value.trim();
   if (!text) return;
   var entries = getLogEntries();
-  var ctx = currentMode + ' mode';
+  var ctx = 'xG investigation';
   if (shots.length > 0) {
     var tot = 0;
     for (var i = 0; i < shots.length; i++) tot += shots[i].xg;
@@ -782,5 +762,5 @@ document.addEventListener('DOMContentLoaded', function() {
   initBuildLeague();
   redrawMain();
   renderLogbook();
-  setMode('shots');
+  drawHeatmaps();
 });

@@ -56,6 +56,9 @@ body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system
 .note{font-size:12px;color:var(--text-secondary);line-height:1.65;padding:10px 14px;border-left:2px solid var(--accent);background:var(--accent-subtle);margin-bottom:14px;border-radius:0 2px 2px 0}
 .note b{color:var(--accent-light);font-weight:500}
 
+/* === Section Intros === */
+.section-intro{font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;max-width:750px}
+
 /* === Form Elements === */
 textarea{width:100%;background:var(--bg-deep);border:1px solid var(--border);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;font-size:13px;line-height:1.65;padding:12px;resize:vertical;border-radius:2px;transition:border-color .2s;min-height:110px}
 textarea:focus{outline:none;border-color:var(--accent)}
@@ -211,9 +214,8 @@ canvas.pitch-canvas{border:1px solid var(--border);border-radius:2px;display:blo
 [data-tip]::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--text-primary);pointer-events:none;opacity:0;transition:opacity .15s;z-index:100}
 [data-tip]:hover::before{opacity:1}
 
-/* === Mode sections === */
-.mode-section{display:none}
-.mode-section.active{display:block}
+/* === Mode sections (legacy, kept for compatibility) === */
+.mode-section{display:block}
 
 /* === Situation Controls === */
 .situation-controls{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}

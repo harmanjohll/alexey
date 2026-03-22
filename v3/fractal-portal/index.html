@@ -22,49 +22,42 @@
 <h1 class="portal-title">How Do Fractals Grow?</h1>
 <p class="portal-sub">Grow fractal aggregates through diffusion-limited aggregation (DLA). Measure fractal dimension, sweep sticking probability, compare seed geometries, and explore Koch snowflake geometry with ruler measurement and Monte Carlo area estimation.</p>
 
-<!-- ═══════ INVESTIGATION CARDS ═══════ -->
+<!-- ═══════ RESEARCH AGENDA ═══════ -->
 <div class="panel" id="panelInv">
   <div class="panel-hdr" onclick="togglePanel('panelInv')">
-    <span class="snum">INVESTIGATIONS</span>
+    <span class="snum">AGENDA</span>
     <span class="sname">Research Questions</span>
     <span class="toggle">&darr; collapse</span>
   </div>
   <div class="panel-body">
-    <div class="inv-cards">
-      <div class="inv-card">
-        <div class="inv-card-num">INVESTIGATION 01</div>
-        <div class="inv-card-title">What is the fractal dimension of DLA?</div>
-        <div class="inv-card-q">Grow 10,000 particles with sticking probability 1.0 and a point seed. <b>Measure D via M(r) regression.</b></div>
-        <div class="inv-card-method">Method: M(r) = particles within radius r. Plot log M vs log r. Slope = fractal dimension D.</div>
-        <div class="inv-btns"><button onclick="runInvestigation(1)">Run this investigation &rarr;</button></div>
+    <div class="inv-list">
+      <div class="inv-item" onclick="runInvestigation(1)">
+        <span class="inv-num">01</span>
+        <span class="inv-q">What is the fractal dimension of DLA?</span>
+        <span class="inv-method">Grow 10k particles, measure D via M(r) regression</span>
+        <span class="inv-go">&rarr;</span>
       </div>
-      <div class="inv-card">
-        <div class="inv-card-num">INVESTIGATION 02</div>
-        <div class="inv-card-title">Does stickiness change the fractal?</div>
-        <div class="inv-card-q">Sweep sticking probability from 0.05 to 1.0. <b>How does D change?</b></div>
-        <div class="inv-card-method">Method: Run 8 aggregates at different sticking probabilities. Plot D vs p_stick.</div>
-        <div class="inv-btns"><button onclick="runInvestigation(2)">Run this investigation &rarr;</button></div>
+      <div class="inv-item" onclick="runInvestigation(2)">
+        <span class="inv-num">02</span>
+        <span class="inv-q">Does stickiness change the fractal?</span>
+        <span class="inv-method">Sweep p_stick 0.05&ndash;1.0, plot D vs sticking</span>
+        <span class="inv-go">&rarr;</span>
       </div>
-      <div class="inv-card">
-        <div class="inv-card-num">INVESTIGATION 03</div>
-        <div class="inv-card-title">How does the seed shape matter?</div>
-        <div class="inv-card-q">Compare point, line, and circle seeds with identical parameters. <b>Does seed geometry affect D?</b></div>
-        <div class="inv-card-method">Method: Grow 3 aggregates, measure D for each. Compare bar chart.</div>
-        <div class="inv-btns"><button onclick="runInvestigation(3)">Run this investigation &rarr;</button></div>
+      <div class="inv-item" onclick="runInvestigation(3)">
+        <span class="inv-num">03</span>
+        <span class="inv-q">How does the seed shape matter?</span>
+        <span class="inv-method">Compare point, line, circle seeds &mdash; same D?</span>
+        <span class="inv-go">&rarr;</span>
       </div>
-      <div class="inv-card">
-        <div class="inv-card-num">INVESTIGATION 04</div>
-        <div class="inv-card-title">Koch vs DLA: same dimension?</div>
-        <div class="inv-card-q">Koch snowflake D &asymp; 1.26, DLA D &asymp; 1.71. <b>Why are they different?</b></div>
-        <div class="inv-card-method">Method: Measure Koch D via ruler method, compare with DLA M(r) dimension.</div>
-        <div class="inv-btns"><button onclick="runInvestigation(4)">Run this investigation &rarr;</button></div>
+      <div class="inv-item" onclick="runInvestigation(4)">
+        <span class="inv-num">04</span>
+        <span class="inv-q">Koch vs DLA: same dimension?</span>
+        <span class="inv-method">Koch D&asymp;1.26, DLA D&asymp;1.71 &mdash; why different?</span>
+        <span class="inv-go">&rarr;</span>
       </div>
-      <div class="inv-card custom">
-        <div class="inv-card-num">INVESTIGATION 05</div>
-        <div class="inv-card-title">Design your own</div>
-        <div class="inv-card-q">What question do <b>you</b> want to investigate?</div>
-        <textarea id="customInv" placeholder="Write your own research question..."></textarea>
-      </div>
+    </div>
+    <div class="inv-custom">
+      <textarea id="customInv" placeholder="Write your own research question here..."></textarea>
     </div>
   </div>
 </div>
