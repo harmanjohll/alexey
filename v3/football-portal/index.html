@@ -20,303 +20,240 @@
 
 <div class="wrap">
 
-<a href="../index.html" class="nav-back">← portal home</a>
+<a href="../index.html" class="nav-back">&larr; portal home</a>
 
-<div class="portal-tag">FOOTBALL PORTAL · xG MODEL</div>
+<div class="portal-tag">FOOTBALL PORTAL &middot; COMPUTATIONAL STATISTICS</div>
 <div class="portal-title">Where Do Goals Come From?</div>
-<div class="portal-sub">Professional clubs use Expected Goals (xG) — a probability assigned to every shot based on where it was taken from. Build a geometric and logistic model, place shots on a real pitch, run Monte Carlo simulations, explore real league data, and discover what the numbers actually say about scoring.</div>
+<div class="portal-sub">A computational investigation into Expected Goals (xG) &mdash; the probability model that professional clubs use to evaluate every shot. You will build two mathematical models, test them with Monte Carlo simulation, validate against real league data, and investigate what the numbers say about scoring that intuition alone cannot reveal.</div>
 
-<!-- Step 01 — Hypothesis -->
+<!-- ═══════════════════════════════════════════════════════
+     STEP 01 · HYPOTHESIS
+     ═══════════════════════════════════════════════════════ -->
 <div class="panel" id="stepHyp">
   <div class="panel-hdr">
     <span class="snum">step 01</span>
-    <span class="sname">Your hypothesis</span>
+    <span class="sname">Hypothesis</span>
     <span class="shint">Write your prediction before running anything</span>
   </div>
   <div class="panel-body">
-    <div class="note"><b>Scientific method:</b> Before placing any shots, write down what you predict. Where do you think goals come from? What effect does angle vs distance have? Will geometric and logistic models agree? Be specific — you'll compare this against what the model shows.</div>
+    <div class="note"><b>Scientific method:</b> Before placing any shots, write down what you predict. Where do you think goals come from? What effect does angle vs distance have? Will geometric and logistic models agree? Be specific &mdash; you'll compare this against what the model shows.</div>
     <textarea id="hypText" placeholder="e.g. I predict that shots taken centrally and close to goal will have the highest xG because the angle to the goal is widest from there. I think the geometric and logistic models will disagree most at long range. Past 20 metres the probability drops sharply..."></textarea>
     <div class="row">
       <span class="ts-label" id="hypTS"></span>
-      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin →</button>
+      <button id="lockBtn" onclick="lockHyp()">Lock hypothesis and begin &rarr;</button>
     </div>
   </div>
 </div>
 
-<!-- Step 02 — The Lab -->
-<div class="panel" id="stepLab">
+<!-- ═══════════════════════════════════════════════════════
+     STEP 02 · METHOD — Understanding the xG Model
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepMethod">
   <div class="panel-hdr">
     <span class="snum">step 02</span>
-    <span class="sname">The pitch lab</span>
+    <span class="sname">Method &mdash; Understanding xG</span>
+    <span class="shint">How do we assign probability to a shot?</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">xG assigns a probability (0 to 1) to every shot based on where and how it was taken. Two models, two approaches to the same question &mdash; compare them.</p>
+
+    <div class="note"><b>Geometric model:</b> Calculates the angle subtended at the goal posts from the shot position, then applies exponential distance decay. Pure geometry &mdash; wider angle and shorter distance both increase xG.<br><br><b>Logistic regression model:</b> Uses coefficients fitted to thousands of real shots. The equation weights angle, distance, and their interaction differently based on what actually happened in real matches.</div>
+
+    <div class="sl" style="margin:14px 0 8px">MODEL COMPARISON &mdash; xG HEATMAPS</div>
+    <div class="heatmap-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">GEOMETRIC MODEL</div>
+        <canvas id="heatmapGeo" class="pitch-canvas" width="460" height="360"></canvas>
+        <div class="heatmap-legend">
+          <span>0.00</span>
+          <div class="hbar" style="background:linear-gradient(to right, #0a1e0a, #193c6a, #40c8ff, #ffdc00, #ff2200)"></div>
+          <span>0.50+</span>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">LOGISTIC REGRESSION MODEL</div>
+        <canvas id="heatmapLog" class="pitch-canvas" width="460" height="360"></canvas>
+        <div class="heatmap-legend">
+          <span>0.00</span>
+          <div class="hbar" style="background:linear-gradient(to right, #0a1e0a, #193c6a, #40c8ff, #ffdc00, #ff2200)"></div>
+          <span>0.50+</span>
+        </div>
+      </div>
+    </div>
+    <div class="poisson-note" style="margin-top:8px">Look for where the models agree (central, close range) and where they diverge (wide angles, long range). The differences reveal what each model values.</div>
+
+    <div class="sl" style="margin:18px 0 8px">WHAT MODIFIES xG BEYOND POSITION?</div>
+    <div class="note">
+      <b>Shot type:</b> Open play (baseline), headers (&times;0.6 &mdash; harder to direct), free kicks (&times;0.5 &mdash; wall and distance), penalties (fixed 0.76).<br><br>
+      <b>Situation:</b> Defensive pressure (low/medium/high), assist type (through ball +15%, cut-back +20%, cross &minus;10%), counter-attacks (+10%), 1v1 with keeper (+30%).<br><br>
+      These modifiers capture what geometry alone misses: the context of the shot.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 03 · DATA COLLECTION — Your Experiment
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepLab">
+  <div class="panel-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Data collection &mdash; Your experiment</span>
     <span class="shint" id="labHint">Lock your hypothesis first</span>
   </div>
   <div class="panel-body">
+    <p class="section-intro">Place shots on the pitch to build your dataset. Each shot gets an xG value based on your chosen model and situation. You can place shots manually, enter precise coordinates, or generate a realistic match scenario.</p>
 
-    <!-- Mode tabs -->
-    <div class="mode-tabs">
-      <button class="active" data-mode="shots" onclick="setMode('shots')">Your Shots</button>
-      <button data-mode="league" onclick="setMode('league')">League Data</button>
-      <button data-mode="heatmap" onclick="setMode('heatmap')">xG Heatmap</button>
-      <button data-mode="buildleague" onclick="setMode('buildleague')">Build Your Own League</button>
+    <div class="model-toggle">
+      <span>MODEL</span>
+      <button class="active" data-model="geometric" onclick="setModel('geometric')">Geometric</button>
+      <button data-model="logistic" onclick="setModel('logistic')">Logistic</button>
+    </div>
+    <div class="shot-type-sel">
+      <span style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;line-height:2.5">SHOT TYPE</span>
+      <button class="active" data-type="open" onclick="setShotType('open')">Open Play</button>
+      <button data-type="header" onclick="setShotType('header')">Header</button>
+      <button data-type="freekick" onclick="setShotType('freekick')">Free Kick</button>
+      <button data-type="penalty" onclick="setShotType('penalty')">Penalty</button>
     </div>
 
-    <!-- MODE: Your Shots -->
-    <div class="mode-section active" id="mode-shots">
-      <div class="model-toggle">
-        <span>MODEL</span>
-        <button class="active" data-model="geometric" onclick="setModel('geometric')">Geometric</button>
-        <button data-model="logistic" onclick="setModel('logistic')">Logistic</button>
+    <!-- Situation modifiers -->
+    <div class="situation-controls">
+      <div class="sit-group">
+        <label class="sit-lbl">Pressure</label>
+        <select id="sitPressure"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
       </div>
-      <div class="shot-type-sel">
-        <span style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;line-height:2.5">SHOT TYPE</span>
-        <button class="active" data-type="open" onclick="setShotType('open')">Open Play</button>
-        <button data-type="header" onclick="setShotType('header')">Header</button>
-        <button data-type="freekick" onclick="setShotType('freekick')">Free Kick</button>
-        <button data-type="penalty" onclick="setShotType('penalty')">Penalty</button>
+      <div class="sit-group">
+        <label class="sit-lbl">Assist</label>
+        <select id="sitAssist"><option value="solo">Solo run</option><option value="throughball">Through ball</option><option value="cross">Cross</option><option value="cutback">Cut-back</option><option value="setpiece">Set piece</option></select>
       </div>
+      <div class="sit-group">
+        <label class="sit-lbl">Counter</label>
+        <input type="checkbox" id="sitCounter">
+      </div>
+      <div class="sit-group">
+        <label class="sit-lbl">1v1</label>
+        <input type="checkbox" id="sitOneVone">
+      </div>
+    </div>
 
-      <!-- Situation modifiers -->
+    <!-- Precision entry -->
+    <div class="precision-entry">
+      <span class="sit-lbl">DISTANCE (m)</span>
+      <input type="number" id="precDist" value="12" min="0.5" max="40" step="0.5" style="width:70px">
+      <span class="sit-lbl">ANGLE (&deg;)</span>
+      <input type="number" id="precAngle" value="0" min="-90" max="90" step="1" style="width:60px">
+      <button onclick="placePrecisionShot()">Place shot &rarr;</button>
+    </div>
+
+    <div class="lab-grid">
+      <div>
+        <canvas id="pitch" class="pitch-canvas" width="460" height="360"></canvas>
+        <div class="legend">
+          <span>low xG</span>
+          <div class="lgbar"></div>
+          <span>high xG</span>
+          <span style="margin-left:8px">&mdash; click pitch or use precision entry</span>
+        </div>
+      </div>
+      <div>
+        <div class="sl">xG at cursor</div>
+        <div class="sv green" id="hXG">&mdash;</div>
+        <div class="sl">angle to goal</div>
+        <div class="sv sm" id="hAng">&mdash;</div>
+        <div class="sl">distance</div>
+        <div class="sv sm" id="hDist">&mdash;</div>
+        <div class="sl" style="margin-top:4px">shots placed &middot; total xG</div>
+        <div class="sv sm" id="totXG" style="color:var(--text-primary)">0 shots &middot; 0.000</div>
+        <div class="shot-log" id="shotLog">
+          <div class="sli" style="color:var(--text-tertiary)">no shots placed yet</div>
+        </div>
+        <div class="brow">
+          <select id="simCount" style="width:80px"><option value="100">100</option><option value="500" selected>500</option><option value="1000">1000</option><option value="5000">5000</option></select>
+          <button id="simBtn" onclick="runMC()" disabled>Run simulations &rarr;</button>
+          <button class="danger" onclick="clearShots()">Clear shots</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Match scenario generator -->
+    <div class="scenario-panel">
+      <div class="sl" style="margin-bottom:8px">MATCH SCENARIO GENERATOR</div>
+      <div class="note"><b>Generate realistic shots:</b> Set match conditions and generate a realistic shot pattern. Compare how different game situations affect expected scoring &mdash; does a team chasing a goal take the same shots as one defending a lead?</div>
       <div class="situation-controls">
         <div class="sit-group">
-          <label class="sit-lbl">Pressure</label>
-          <select id="sitPressure"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+          <label class="sit-lbl">Minute</label>
+          <input type="range" id="scnMinute" min="1" max="95" value="45" oninput="document.getElementById('scnMinVal').textContent=this.value" style="width:80px">
+          <span id="scnMinVal" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:24px">45</span>
         </div>
         <div class="sit-group">
-          <label class="sit-lbl">Assist</label>
-          <select id="sitAssist"><option value="solo">Solo run</option><option value="throughball">Through ball</option><option value="cross">Cross</option><option value="cutback">Cut-back</option><option value="setpiece">Set piece</option></select>
+          <label class="sit-lbl">Score</label>
+          <select id="scnScoreDiff"><option value="-3">Losing by 3</option><option value="-2">Losing by 2</option><option value="-1">Losing by 1</option><option value="0" selected>Level</option><option value="1">Winning by 1</option><option value="2">Winning by 2</option><option value="3">Winning by 3</option></select>
         </div>
         <div class="sit-group">
-          <label class="sit-lbl">Counter</label>
-          <input type="checkbox" id="sitCounter">
+          <label class="sit-lbl">Venue</label>
+          <select id="scnHomeAway"><option value="home">Home</option><option value="neutral" selected>Neutral</option><option value="away">Away</option></select>
         </div>
         <div class="sit-group">
-          <label class="sit-lbl">1v1</label>
-          <input type="checkbox" id="sitOneVone">
+          <label class="sit-lbl">Opposition</label>
+          <select id="scnOppQuality"><option value="weak">Weak</option><option value="average" selected>Average</option><option value="strong">Strong</option></select>
         </div>
       </div>
-
-      <!-- Precision entry -->
-      <div class="precision-entry">
-        <span class="sit-lbl">DISTANCE (m)</span>
-        <input type="number" id="precDist" value="12" min="0.5" max="40" step="0.5" style="width:70px">
-        <span class="sit-lbl">ANGLE (°)</span>
-        <input type="number" id="precAngle" value="0" min="-90" max="90" step="1" style="width:60px">
-        <button onclick="placePrecisionShot()">Place shot →</button>
-      </div>
-
-      <div class="lab-grid">
-        <div>
-          <canvas id="pitch" class="pitch-canvas" width="460" height="360"></canvas>
-          <div class="legend">
-            <span>low xG</span>
-            <div class="lgbar"></div>
-            <span>high xG</span>
-            <span style="margin-left:8px">— click pitch or use precision entry</span>
-          </div>
-        </div>
-        <div>
-          <div class="sl">xG at cursor</div>
-          <div class="sv green" id="hXG">—</div>
-          <div class="sl">angle to goal</div>
-          <div class="sv sm" id="hAng">—</div>
-          <div class="sl">distance</div>
-          <div class="sv sm" id="hDist">—</div>
-          <div class="sl" style="margin-top:4px">shots placed · total xG</div>
-          <div class="sv sm" id="totXG" style="color:var(--text-primary)">0 shots · 0.000</div>
-          <div class="shot-log" id="shotLog">
-            <div class="sli" style="color:var(--text-tertiary)">no shots placed yet</div>
-          </div>
-          <div class="sim-explain">Each simulation plays your exact shots as one match. Every shot independently scores or misses based on its xG probability. Running N simulations shows the range of possible outcomes.</div>
-          <div class="brow">
-            <select id="simCount" style="width:80px"><option value="100">100</option><option value="500" selected>500</option><option value="1000">1000</option><option value="5000">5000</option></select>
-            <button id="simBtn" onclick="runMC()" disabled>Run simulations →</button>
-            <button class="danger" onclick="clearShots()">Clear shots</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Match scenario generator -->
-      <div class="scenario-panel">
-        <div class="sl" style="margin-bottom:8px">MATCH SCENARIO GENERATOR</div>
-        <div class="note"><b>Generate realistic shots:</b> Set match conditions below and generate a realistic set of shots matching that scenario. Useful for comparing how different game situations affect expected scoring.</div>
-        <div class="situation-controls">
-          <div class="sit-group">
-            <label class="sit-lbl">Minute</label>
-            <input type="range" id="scnMinute" min="1" max="95" value="45" oninput="document.getElementById('scnMinVal').textContent=this.value" style="width:80px">
-            <span id="scnMinVal" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:24px">45</span>
-          </div>
-          <div class="sit-group">
-            <label class="sit-lbl">Score</label>
-            <select id="scnScoreDiff"><option value="-3">Losing by 3</option><option value="-2">Losing by 2</option><option value="-1">Losing by 1</option><option value="0" selected>Level</option><option value="1">Winning by 1</option><option value="2">Winning by 2</option><option value="3">Winning by 3</option></select>
-          </div>
-          <div class="sit-group">
-            <label class="sit-lbl">Venue</label>
-            <select id="scnHomeAway"><option value="home">Home</option><option value="neutral" selected>Neutral</option><option value="away">Away</option></select>
-          </div>
-          <div class="sit-group">
-            <label class="sit-lbl">Opposition</label>
-            <select id="scnOppQuality"><option value="weak">Weak</option><option value="average" selected>Average</option><option value="strong">Strong</option></select>
-          </div>
-        </div>
-        <div class="brow"><button onclick="generateScenario()">Generate realistic shot pattern →</button></div>
-      </div>
+      <div class="brow"><button onclick="generateScenario()">Generate realistic shot pattern &rarr;</button></div>
     </div>
-
-    <!-- MODE: League Data -->
-    <div class="mode-section" id="mode-league">
-      <div class="sl" style="margin-bottom:8px">SELECT LEAGUES TO COMPARE</div>
-      <div class="league-toggles">
-        <button data-league="Premier League" onclick="toggleLeague('Premier League')" style="color:#8b5cf6;border-color:rgba(139,92,246,0.4)">EPL</button>
-        <button data-league="La Liga" onclick="toggleLeague('La Liga')" style="color:#f59e0b;border-color:rgba(245,158,11,0.4)">La Liga</button>
-        <button data-league="Bundesliga" onclick="toggleLeague('Bundesliga')" style="color:#ef4444;border-color:rgba(239,68,68,0.4)">Bundesliga</button>
-        <button data-league="Serie A" onclick="toggleLeague('Serie A')" style="color:#3b82f6;border-color:rgba(59,130,246,0.4)">Serie A</button>
-        <button data-league="Ligue 1" onclick="toggleLeague('Ligue 1')" style="color:#a3e635;border-color:rgba(163,230,53,0.4)">Ligue 1</button>
-        <button data-league="Championship" onclick="toggleLeague('Championship')" style="color:#f97316;border-color:rgba(249,115,22,0.4)">Championship</button>
-      </div>
-
-      <div id="leagueCompare"><div class="logbook-empty">Select a league above</div></div>
-
-      <div class="res-grid" style="margin-top:14px">
-        <div>
-          <div class="sl" style="margin-bottom:8px">xG vs ACTUAL GOALS (OVERPERFORMANCE)</div>
-          <div class="chart-wrap tall"><canvas id="overPerfChart"></canvas></div>
-          <div class="poisson-note">Teams above the diagonal score more goals than their xG predicts — this is "overperformance". Below = underperformance.</div>
-        </div>
-        <div>
-          <div class="sl" style="margin-bottom:8px">SHOT DISTRIBUTION BY ZONE</div>
-          <div class="chart-wrap tall"><canvas id="shotZoneChart"></canvas></div>
-          <div class="poisson-note">Where do teams take their shots from? Higher % in close zones typically means better chance creation.</div>
-        </div>
-      </div>
-
-      <div id="teamsTable" style="margin-top:14px"></div>
-      <div id="teamDetail" class="team-detail"></div>
-    </div>
-
-    <!-- MODE: xG Heatmap -->
-    <div class="mode-section" id="mode-heatmap">
-      <div class="note"><b>Model comparison:</b> The geometric model uses the angle subtended at the goal posts and exponential distance decay. The logistic model uses regression coefficients fitted to real shot data. Compare where they agree — and where they differ.</div>
-      <div class="heatmap-grid">
-        <div>
-          <div class="sl" style="margin-bottom:8px">GEOMETRIC MODEL</div>
-          <canvas id="heatmapGeo" class="pitch-canvas" width="460" height="360"></canvas>
-          <div class="heatmap-legend">
-            <span>0.00</span>
-            <div class="hbar" style="background:linear-gradient(to right, #0a1e0a, #193c6a, #40c8ff, #ffdc00, #ff2200)"></div>
-            <span>0.50+</span>
-          </div>
-        </div>
-        <div>
-          <div class="sl" style="margin-bottom:8px">LOGISTIC REGRESSION MODEL</div>
-          <canvas id="heatmapLog" class="pitch-canvas" width="460" height="360"></canvas>
-          <div class="heatmap-legend">
-            <span>0.00</span>
-            <div class="hbar" style="background:linear-gradient(to right, #0a1e0a, #193c6a, #40c8ff, #ffdc00, #ff2200)"></div>
-            <span>0.50+</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODE: Build Your Own League -->
-    <div class="mode-section" id="mode-buildleague">
-      <div class="note"><b>Build Your Own League:</b> Place shots for two different teams, then simulate 1,000 matches between them. Who wins more often? Does the team with higher total xG always dominate?</div>
-      <div class="league-builder">
-        <div class="team-panel team-a">
-          <h4>Team A</h4>
-          <canvas id="pitchA" class="pitch-canvas" width="460" height="360"></canvas>
-          <div class="sv sm" id="taXG" style="margin-top:8px;color:var(--accent-light)">—</div>
-          <div class="sv sm" id="taTot" style="color:var(--text-secondary);font-size:11px">0 shots · 0.000 xG</div>
-          <div class="shot-log" id="taLog"><div class="sli" style="color:var(--text-tertiary)">no shots yet</div></div>
-          <div class="brow"><button class="danger" onclick="clearTeamShots('A')">Clear Team A</button></div>
-        </div>
-        <div class="team-panel team-b">
-          <h4>Team B</h4>
-          <canvas id="pitchB" class="pitch-canvas" width="460" height="360"></canvas>
-          <div class="sv sm" id="tbXG" style="margin-top:8px;color:#4a9aaa">—</div>
-          <div class="sv sm" id="tbTot" style="color:var(--text-secondary);font-size:11px">0 shots · 0.000 xG</div>
-          <div class="shot-log" id="tbLog"><div class="sli" style="color:var(--text-tertiary)">no shots yet</div></div>
-          <div class="brow"><button class="danger" onclick="clearTeamShots('B')">Clear Team B</button></div>
-        </div>
-      </div>
-      <div class="brow" style="margin-top:14px;justify-content:center">
-        <button id="leagueSimBtn" onclick="runLeagueSim()" disabled>Simulate 1,000 matches →</button>
-      </div>
-      <div id="leagueResults" class="league-results" style="display:none">
-        <div class="sl" style="margin-bottom:10px">MATCH RESULTS (1,000 SIMULATIONS)</div>
-        <div id="leagueBar" class="league-results-bar"></div>
-        <div class="league-results-grid">
-          <div class="league-result-stat">
-            <div class="sl">Team A wins</div>
-            <div class="sv green" id="lrAWins">—</div>
-            <div class="sl">Avg goals</div>
-            <div class="sv sm" id="lrAAvg">—</div>
-          </div>
-          <div class="league-result-stat">
-            <div class="sl">Draws</div>
-            <div class="sv" id="lrDraws">—</div>
-          </div>
-          <div class="league-result-stat">
-            <div class="sl">Team B wins</div>
-            <div class="sv team-b-accent" id="lrBWins">—</div>
-            <div class="sl">Avg goals</div>
-            <div class="sv sm" id="lrBAvg">—</div>
-          </div>
-        </div>
-        <div class="chart-wrap tall"><canvas id="leagueMatchChart"></canvas></div>
-      </div>
-    </div>
-
   </div>
 </div>
 
-<!-- Step 03 — Results -->
+<!-- ═══════════════════════════════════════════════════════
+     STEP 04 · ANALYSIS — What the Data Shows
+     ═══════════════════════════════════════════════════════ -->
 <div class="panel" id="stepRes" style="display:none">
   <div class="panel-hdr">
-    <span class="snum">step 03</span>
-    <span class="sname">Monte Carlo results</span>
-    <span class="shint">500 simulated matches with your exact shots</span>
+    <span class="snum">step 04</span>
+    <span class="sname">Analysis &mdash; What the data shows</span>
+    <span class="shint">Monte Carlo simulation results</span>
   </div>
   <div class="panel-body">
+    <p class="section-intro">Each simulation plays your exact shots as one match &mdash; every shot independently scores or misses based on its xG probability. Running hundreds of simulations reveals the full distribution of possible outcomes, not just the average.</p>
+
     <div class="res-grid">
       <div>
-        <div class="sl" style="margin-bottom:10px">GOALS PER SIMULATED MATCH (500 RUNS)</div>
+        <div class="sl" style="margin-bottom:10px">GOALS PER SIMULATED MATCH</div>
         <div class="chart-wrap tall"><canvas id="mcChart"></canvas></div>
-        <div class="poisson-note">Yellow dashed line = Poisson distribution — what pure probability theory predicts. Bars = your actual Monte Carlo results. They should be close.</div>
+        <div class="poisson-note">Yellow dashed line = Poisson distribution &mdash; what pure probability theory predicts. Bars = your Monte Carlo results. They should be close.</div>
       </div>
       <div>
         <div class="sl" style="margin-bottom:12px">SIMULATION SUMMARY</div>
-        <div class="rstat"><span class="rl">Expected xG (sum of shots)</span><span class="rv" id="rXG">—</span></div>
-        <div class="rstat"><span class="rl">Average goals per simulation</span><span class="rv" id="rAvg">—</span></div>
-        <div class="rstat"><span class="rl">Maximum goals in one run</span><span class="rv" id="rMax">—</span></div>
-        <div class="rstat"><span class="rl">Probability of 0 goals</span><span class="rv" id="rP0">—</span></div>
-        <div class="rstat"><span class="rl">Probability of 2+ goals</span><span class="rv" id="rP2">—</span></div>
-        <div class="model-note">This model uses geometry, logistic regression, shot type, and situation modifiers (pressure, assist type, counter-attack, 1v1). Real professional xG models use even more features from tracking data.</div>
+        <div class="rstat"><span class="rl">Expected xG (sum of shots)</span><span class="rv" id="rXG">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Average goals per simulation</span><span class="rv" id="rAvg">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Maximum goals in one run</span><span class="rv" id="rMax">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Probability of 0 goals</span><span class="rv" id="rP0">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Probability of 2+ goals</span><span class="rv" id="rP2">&mdash;</span></div>
+        <div class="model-note">This model uses geometry, logistic regression, shot type, and situation modifiers. Real professional xG models use even more features from tracking data.</div>
       </div>
     </div>
 
     <div style="margin-top:18px">
       <div class="sl" style="margin-bottom:8px">CUMULATIVE xG TIMELINE</div>
       <div class="timeline-wrap"><canvas id="timelineChart"></canvas></div>
-      <div class="poisson-note">Each step up represents a shot. Steeper steps = higher xG shots. The final height is your total xG.</div>
+      <div class="poisson-note">Each step represents a shot. Steeper steps = higher xG. The final height is your total xG.</div>
     </div>
 
     <!-- Sensitivity analysis -->
     <div style="margin-top:18px">
       <div class="sl" style="margin-bottom:8px">SENSITIVITY ANALYSIS</div>
-      <div class="note"><b>What if every shot's xG was different?</b> Drag the slider to scale all xG values up or down. This shows how sensitive the outcome distribution is to shot quality — a key question for coaches.</div>
+      <div class="note"><b>What if every shot's xG was different?</b> Drag the slider to scale all xG values up or down. This shows how sensitive the outcome distribution is to shot quality &mdash; a key question for coaches evaluating finishing ability vs chance creation.</div>
       <div class="precision-entry" style="margin-bottom:10px">
         <span class="sit-lbl">xG MULTIPLIER</span>
         <input type="range" id="sensSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="runSensitivity()" style="width:150px">
-        <span id="sensValue" style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:40px">1.0×</span>
+        <span id="sensValue" style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:40px">1.0&times;</span>
       </div>
       <div id="sensResults" style="display:none">
         <div class="res-grid">
           <div class="chart-wrap tall"><canvas id="sensChart"></canvas></div>
           <div>
-            <div class="rstat"><span class="rl">Shifted avg goals</span><span class="rv" id="sensAvg">—</span></div>
-            <div class="rstat"><span class="rl">Shifted P(0 goals)</span><span class="rv" id="sensP0">—</span></div>
-            <div class="poisson-note">Green bars = your original simulation. Yellow bars = what happens with the shifted xG. Compare how the distribution changes.</div>
+            <div class="rstat"><span class="rl">Shifted avg goals</span><span class="rv" id="sensAvg">&mdash;</span></div>
+            <div class="rstat"><span class="rl">Shifted P(0 goals)</span><span class="rv" id="sensP0">&mdash;</span></div>
+            <div class="poisson-note">Green bars = your original simulation. Yellow bars = shifted xG. Compare how the distribution changes.</div>
           </div>
         </div>
       </div>
@@ -326,26 +263,131 @@
   </div>
 </div>
 
-<!-- Step 04 — Findings / AI Coach -->
-<div class="panel" id="stepInterp">
+<!-- ═══════════════════════════════════════════════════════
+     STEP 05 · CONTEXT — How Does This Compare to Real Football?
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepContext">
   <div class="panel-hdr">
-    <span class="snum">step 04</span>
-    <span class="sname">Your findings</span>
-    <span class="shint">Interpret the results — what do they actually mean?</span>
+    <span class="snum">step 05</span>
+    <span class="sname">Context &mdash; Real league data</span>
+    <span class="shint">How do your results compare to actual football?</span>
   </div>
   <div class="panel-body">
+    <p class="section-intro">A model is only useful if it reflects reality. Compare your xG findings against data from six real leagues. Do teams consistently over- or under-perform their xG? Where do different leagues take their shots from? What separates the best teams from the rest?</p>
+
+    <div class="sl" style="margin-bottom:8px">SELECT LEAGUES TO COMPARE</div>
+    <div class="league-toggles">
+      <button data-league="Premier League" onclick="toggleLeague('Premier League')" style="color:#8b5cf6;border-color:rgba(139,92,246,0.4)">EPL</button>
+      <button data-league="La Liga" onclick="toggleLeague('La Liga')" style="color:#f59e0b;border-color:rgba(245,158,11,0.4)">La Liga</button>
+      <button data-league="Bundesliga" onclick="toggleLeague('Bundesliga')" style="color:#ef4444;border-color:rgba(239,68,68,0.4)">Bundesliga</button>
+      <button data-league="Serie A" onclick="toggleLeague('Serie A')" style="color:#3b82f6;border-color:rgba(59,130,246,0.4)">Serie A</button>
+      <button data-league="Ligue 1" onclick="toggleLeague('Ligue 1')" style="color:#a3e635;border-color:rgba(163,230,53,0.4)">Ligue 1</button>
+      <button data-league="Championship" onclick="toggleLeague('Championship')" style="color:#f97316;border-color:rgba(249,115,22,0.4)">Championship</button>
+    </div>
+
+    <div id="leagueCompare"><div class="logbook-empty">Select a league above to see comparison data</div></div>
+
+    <div class="res-grid" style="margin-top:14px">
+      <div>
+        <div class="sl" style="margin-bottom:8px">xG vs ACTUAL GOALS (OVERPERFORMANCE)</div>
+        <div class="chart-wrap tall"><canvas id="overPerfChart"></canvas></div>
+        <div class="poisson-note">Teams above the diagonal score more goals than their xG predicts &mdash; "overperformance". Below the line = underperformance. Is this skill, luck, or something the model doesn't capture?</div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">SHOT DISTRIBUTION BY ZONE</div>
+        <div class="chart-wrap tall"><canvas id="shotZoneChart"></canvas></div>
+        <div class="poisson-note">Where do teams take their shots from? Higher % in close zones typically means better chance creation &mdash; but some teams win by volume from distance.</div>
+      </div>
+    </div>
+
+    <div id="teamsTable" style="margin-top:14px"></div>
+    <div id="teamDetail" class="team-detail"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 06 · EXTENSION — Build Your Own League
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepExtension">
+  <div class="panel-hdr">
+    <span class="snum">step 06</span>
+    <span class="sname">Extension &mdash; Build your own league</span>
+    <span class="shint">Test what you've learned with a controlled experiment</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">Design two teams with different shot profiles and simulate 1,000 matches between them. Does the team with higher total xG always win? Can a team with fewer but better shots beat a team that shoots more often? This is where your understanding of xG becomes a tool for prediction.</p>
+
+    <div class="league-builder">
+      <div class="team-panel team-a">
+        <h4>Team A</h4>
+        <canvas id="pitchA" class="pitch-canvas" width="460" height="360"></canvas>
+        <div class="sv sm" id="taXG" style="margin-top:8px;color:var(--accent-light)">&mdash;</div>
+        <div class="sv sm" id="taTot" style="color:var(--text-secondary);font-size:11px">0 shots &middot; 0.000 xG</div>
+        <div class="shot-log" id="taLog"><div class="sli" style="color:var(--text-tertiary)">no shots yet</div></div>
+        <div class="brow"><button class="danger" onclick="clearTeamShots('A')">Clear Team A</button></div>
+      </div>
+      <div class="team-panel team-b">
+        <h4>Team B</h4>
+        <canvas id="pitchB" class="pitch-canvas" width="460" height="360"></canvas>
+        <div class="sv sm" id="tbXG" style="margin-top:8px;color:#4a9aaa">&mdash;</div>
+        <div class="sv sm" id="tbTot" style="color:var(--text-secondary);font-size:11px">0 shots &middot; 0.000 xG</div>
+        <div class="shot-log" id="tbLog"><div class="sli" style="color:var(--text-tertiary)">no shots yet</div></div>
+        <div class="brow"><button class="danger" onclick="clearTeamShots('B')">Clear Team B</button></div>
+      </div>
+    </div>
+    <div class="brow" style="margin-top:14px;justify-content:center">
+      <button id="leagueSimBtn" onclick="runLeagueSim()" disabled>Simulate 1,000 matches &rarr;</button>
+    </div>
+    <div id="leagueResults" class="league-results" style="display:none">
+      <div class="sl" style="margin-bottom:10px">MATCH RESULTS (1,000 SIMULATIONS)</div>
+      <div id="leagueBar" class="league-results-bar"></div>
+      <div class="league-results-grid">
+        <div class="league-result-stat">
+          <div class="sl">Team A wins</div>
+          <div class="sv green" id="lrAWins">&mdash;</div>
+          <div class="sl">Avg goals</div>
+          <div class="sv sm" id="lrAAvg">&mdash;</div>
+        </div>
+        <div class="league-result-stat">
+          <div class="sl">Draws</div>
+          <div class="sv" id="lrDraws">&mdash;</div>
+        </div>
+        <div class="league-result-stat">
+          <div class="sl">Team B wins</div>
+          <div class="sv team-b-accent" id="lrBWins">&mdash;</div>
+          <div class="sl">Avg goals</div>
+          <div class="sv sm" id="lrBAvg">&mdash;</div>
+        </div>
+      </div>
+      <div class="chart-wrap tall"><canvas id="leagueMatchChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 07 · DISCUSSION — Your Findings + AI Coach
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepInterp">
+  <div class="panel-hdr">
+    <span class="snum">step 07</span>
+    <span class="sname">Discussion &mdash; Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">Return to your hypothesis. What did the data show? Where were you right, and where were you wrong? What would you investigate next? Your coach will challenge your thinking with one precise question.</p>
+
     <div class="interp-grid">
       <div>
         <div class="sl" style="margin-bottom:8px">YOUR INTERPRETATION</div>
-        <textarea id="interpText" placeholder="What did the simulation show? Did it match your hypothesis? What surprised you? How did the geometric vs logistic models compare? What are the limitations of these models — what do they NOT capture?"></textarea>
+        <textarea id="interpText" placeholder="What did the simulation show? Did it match your hypothesis? What surprised you? How did the geometric vs logistic models compare? What patterns did you see in the league data? What are the limitations of these models — what do they NOT capture?"></textarea>
         <div class="brow">
-          <button id="askBtn" onclick="askCoach()">Ask coach →</button>
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
         </div>
         <div class="thread" id="thread"></div>
         <div class="reply-sec" id="replySec">
           <div class="sl" style="margin:12px 0 6px">YOUR REPLY TO COACH</div>
           <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
-          <div class="brow"><button onclick="sendReply()">Send reply →</button></div>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
         </div>
       </div>
       <div>
@@ -353,7 +395,7 @@
         <div class="ai-box">
           <div class="ai-lbl">Alexey's Coach</div>
           <div class="ai-q" id="aiQ">
-            <span class="ai-ph">Write your interpretation and click "Ask coach" — your coach will challenge your thinking with one precise question.</span>
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
           </div>
         </div>
       </div>
@@ -361,7 +403,9 @@
   </div>
 </div>
 
-<!-- Logbook -->
+<!-- ═══════════════════════════════════════════════════════
+     LOGBOOK
+     ═══════════════════════════════════════════════════════ -->
 <div class="panel">
   <div class="panel-hdr">
     <span class="snum">logbook</span>
