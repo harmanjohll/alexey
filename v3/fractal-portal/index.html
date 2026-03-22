@@ -30,6 +30,7 @@
     <span class="toggle">&darr; collapse</span>
   </div>
   <div class="panel-body">
+    <div class="note"><b>How to use this:</b> Each investigation pre-configures the simulation and runs it for you. Start with #01, observe, record in the logbook, then move to #02. By the end you'll have measured fractal dimension in four different ways.</div>
     <div class="inv-list">
       <div class="inv-item" onclick="runInvestigation(1)">
         <span class="inv-num">01</span>
@@ -53,6 +54,18 @@
         <span class="inv-num">04</span>
         <span class="inv-q">Koch vs DLA: same dimension?</span>
         <span class="inv-method">Koch D&asymp;1.26, DLA D&asymp;1.71 &mdash; why different?</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="runInvestigation(5)">
+        <span class="inv-num">05</span>
+        <span class="inv-q">Does particle count change D?</span>
+        <span class="inv-method">Grow with 1k, 5k, 10k particles &mdash; compare dimension</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="runInvestigation(6)">
+        <span class="inv-num">06</span>
+        <span class="inv-q">Why is Koch dimension exactly log4/log3?</span>
+        <span class="inv-method">Iteration 5, 6 ruler sizes &mdash; slope gives D = 1.26</span>
         <span class="inv-go">&rarr;</span>
       </div>
     </div>

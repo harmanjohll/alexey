@@ -362,6 +362,22 @@ function runInvestigation(num) {
         measureKochRuler(i);
       }
       break;
+    case 5: // Does particle count change D?
+      document.getElementById('pStick').value = 1.0;
+      document.getElementById('pSeed').value = 'point';
+      document.getElementById('pMaxP').value = 1000;
+      setMode('grow');
+      runGrow();
+      break;
+    case 6: // Why is Koch dimension exactly log4/log3?
+      setMode('koch');
+      document.getElementById('kochIter').value = 5;
+      document.getElementById('kochType').value = 'snowflake';
+      updateKoch();
+      for (var j = 0; j < 6; j++) {
+        measureKochRuler(j);
+      }
+      break;
   }
 }
 

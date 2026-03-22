@@ -92,6 +92,58 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
+     RESEARCH AGENDA
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepAgenda">
+  <div class="panel-hdr">
+    <span class="snum">AGENDA</span>
+    <span class="sname">Research Questions</span>
+    <span class="shint">Guided investigations to try</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>How to use this:</b> Each question below suggests a specific experiment. Work through them in order &mdash; or skip to whichever interests you most. For each one, run the experiment, observe, and record what you find in the logbook at the bottom.</div>
+    <div class="inv-list">
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">01</span>
+        <span class="inv-q">Which matters more &mdash; distance or angle?</span>
+        <span class="inv-method">Place 5 shots at 15m varying angle (0&deg;&ndash;60&deg;), then 5 at 0&deg; varying distance (5&ndash;30m)</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepMethod').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">02</span>
+        <span class="inv-q">Where do the two models disagree?</span>
+        <span class="inv-method">Compare the heatmaps in Step 02 &mdash; look at wide angles and long range</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">03</span>
+        <span class="inv-q">Can 5 great shots outscore 15 average ones?</span>
+        <span class="inv-method">Place 5 inside 6-yard box, run sim. Clear, place 15 from 25m+, run sim. Compare.</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">04</span>
+        <span class="inv-q">How much does pressure reduce scoring?</span>
+        <span class="inv-method">Same 5 shots with low pressure, then high pressure &mdash; compare xG values</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepContext').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">05</span>
+        <span class="inv-q">Do all leagues shoot from the same places?</span>
+        <span class="inv-method">Select EPL + La Liga + Bundesliga in Step 05. Compare shot zone distributions.</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">06</span>
+        <span class="inv-q">Does a losing team take worse shots?</span>
+        <span class="inv-method">Scenario generator: &ldquo;Level&rdquo; vs &ldquo;Losing by 2&rdquo; &mdash; compare xG per shot</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
      STEP 03 · DATA COLLECTION — Your Experiment
      ═══════════════════════════════════════════════════════ -->
 <div class="panel" id="stepLab">

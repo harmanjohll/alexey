@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f7f5f0;--bg-deep:#edeae3;--surface:#ffffff;--border:#d4cfc5;--border-light:#e8e4dc;--text-primary:#1a1a18;--text-secondary:#6b6560;--text-tertiary:#9a9490;--accent:#2d5a3d;--accent-light:#3d7a52;--accent-subtle:rgba(45,90,61,0.08);--accent-border:rgba(45,90,61,0.2);--danger:#c0392b}
-[data-theme="dark"]{--bg:#0a0a0a;--bg-deep:#060606;--surface:#141414;--border:rgba(61,207,176,0.12);--border-light:rgba(61,207,176,0.06);--text-primary:#e8e8e8;--text-secondary:#8a8a8a;--text-tertiary:#5a5a5a;--accent:#3dcfb0;--accent-light:#6eddc5;--accent-subtle:rgba(61,207,176,0.08);--accent-border:rgba(61,207,176,0.2);--danger:#e24b4a}
+[data-theme="dark"]{--bg:#111111;--bg-deep:#0c0c0c;--surface:#1a1a1a;--border:rgba(61,207,176,0.12);--border-light:rgba(61,207,176,0.06);--text-primary:#e8e8e8;--text-secondary:#999;--text-tertiary:#666;--accent:#3dcfb0;--accent-light:#6eddc5;--accent-subtle:rgba(61,207,176,0.08);--accent-border:rgba(61,207,176,0.2);--danger:#e24b4a}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
 .wrap{max-width:920px;margin:0 auto}
@@ -30,12 +30,12 @@ body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system
 .card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .card-num{font-size:10px;font-weight:500;padding:2px 8px;border-radius:2px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
 .card-title{font-family:'Instrument Serif',serif;font-size:15px;font-weight:400;color:var(--text-primary);margin-bottom:4px;line-height:1.3}
-.card-desc{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px}
+.card-desc{font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px}
 .card-tags{display:flex;gap:6px;flex-wrap:wrap}
 .tag{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;padding:2px 7px;border:1px solid var(--border-light);border-radius:2px;text-transform:uppercase;letter-spacing:.5px}
 
 .about{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:24px;margin-bottom:2rem}
-.about p{font-size:14px;color:var(--text-secondary);line-height:1.8}
+.about p{font-size:15px;color:var(--text-secondary);line-height:1.8}
 
 .section-empty{padding:24px;text-align:center;font-size:12px;color:var(--text-tertiary);font-style:italic;background:var(--surface);border:1px solid var(--border-light);border-radius:2px;border-style:dashed}
 
@@ -128,7 +128,55 @@ body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system
     </div>
   </a>
 </div>
-<div style="margin-bottom:3rem"></div>
+<!-- PROBABILITY & DYNAMICS -->
+<div class="section-hdr">
+  <span class="section-label">Probability &amp; Dynamics</span>
+  <span class="section-count">1 portal</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid">
+  <a class="card" href="random-walk-portal/index.html">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(74,90,159,0.15);color:#5d6db8;border:1px solid rgba(74,90,159,0.4)">RW</span>
+      </div>
+      <div class="card-title">The Drunkard's Walk</div>
+      <div class="card-desc">Simulate random walks in 1D and 2D. Measure how distance from origin scales with step count, compare uniform and Gaussian step distributions, and test whether the &radic;N law holds across different conditions.</div>
+      <div class="card-tags"><span class="tag">random walk</span><span class="tag">probability</span><span class="tag">&radic;N law</span><span class="tag">diffusion</span></div>
+    </div>
+  </a>
+</div>
+
+<!-- COMING SOON -->
+<div class="section-hdr">
+  <span class="section-label">Coming Soon</span>
+  <span class="section-count">2 ideas</span>
+  <span class="section-line"></span>
+</div>
+<div class="grid">
+  <div class="card" style="border-style:dashed;cursor:default;opacity:0.7">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(180,120,60,0.15);color:#b4783c;border:1px solid rgba(180,120,60,0.3)">WAVE</span>
+        <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text-tertiary);margin-left:auto">coming soon</span>
+      </div>
+      <div class="card-title">Can You Hear the Shape of a Drum?</div>
+      <div class="card-desc">Wave equation eigenvalues on 2D membranes. Different shapes produce different frequency spectra — can you identify a shape just from its sound?</div>
+      <div class="card-tags"><span class="tag">wave equation</span><span class="tag">eigenvalues</span><span class="tag">acoustics</span></div>
+    </div>
+  </div>
+  <div class="card" style="border-style:dashed;cursor:default;opacity:0.7">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num" style="background:rgba(160,60,80,0.15);color:#a03c50;border:1px solid rgba(160,60,80,0.3)">ABM</span>
+        <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text-tertiary);margin-left:auto">coming soon</span>
+      </div>
+      <div class="card-title">The Wisdom of Crowds</div>
+      <div class="card-desc">Agent-based simulation of independent estimators vs herding behaviour. When do groups get smarter — and when do they get dumber?</div>
+      <div class="card-tags"><span class="tag">agent-based</span><span class="tag">emergence</span><span class="tag">social dynamics</span></div>
+    </div>
+  </div>
+</div>
 
 <!-- ABOUT -->
 <div class="section-hdr">
