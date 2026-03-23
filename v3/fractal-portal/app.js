@@ -59,6 +59,26 @@ function readParams() {
 /* ══════════════════════════════════════════════
    MODE 1: GROW AGGREGATE
    ══════════════════════════════════════════════ */
+var watchMode = false;
+var watchEngine = null;
+var watchAnimId = null;
+
+function toggleWatchMode() {
+  watchMode = !watchMode;
+  var btn = document.getElementById('btnWatch');
+  if (btn) {
+    btn.classList.toggle('active', watchMode);
+    btn.textContent = watchMode ? 'Watch mode: ON' : 'Watch mode: OFF';
+  }
+  var note = document.getElementById('watchNote');
+  if (note) note.style.display = watchMode ? '' : 'none';
+  // Auto-set small particle count for watch mode
+  if (watchMode) {
+    var mp = document.getElementById('pMaxP');
+    if (mp && +mp.value > 500) mp.value = 200;
+  }
+}
+
 async function runGrow() {
   if (running) return;
   running = true; cancelled = false;
@@ -66,6 +86,7 @@ async function runGrow() {
 
   document.getElementById('btnGrow').disabled = true;
   document.getElementById('btnStop').disabled = false;
+  if (document.getElementById('btnWatch')) document.getElementById('btnWatch').disabled = true;
   document.getElementById('growProgText').textContent = '0 / ' + p.maxParticles + ' particles';
   document.getElementById('growProgFill').style.width = '0%';
 
@@ -74,30 +95,79 @@ async function runGrow() {
 
   if (!massChartInst) massChartInst = initMassChart('massChart');
 
-  currentDLA = growDLA(p.gridSize, p.maxParticles, p.stickProb, p.seedType, p.launchMul, p.killMul);
+  if (watchMode) {
+    // Watch mode: show individual particle walks
+    watchEngine = growDLAWatch(p.gridSize, p.maxParticles, p.stickProb, p.seedType, p.launchMul, p.killMul);
+    currentDLA = watchEngine.dla;
+    var stepsPerFrame = 20; // walker steps per animation frame
+    var particlesStuck = 0;
+    var particlesKilled = 0;
 
-  var batchSize = 50;
-  var done = false;
-  while (!done && !cancelled) {
-    for (var i = 0; i < batchSize; i++) {
-      if (!currentDLA.step()) { done = true; break; }
-    }
-    var count = currentDLA.getCount();
-    document.getElementById('growProgText').textContent = count + ' / ' + p.maxParticles + ' particles';
-    document.getElementById('growProgFill').style.width = (count / p.maxParticles * 100) + '%';
-    document.getElementById('stCount').textContent = count;
-    document.getElementById('stRadius').textContent = currentDLA.getMaxR().toFixed(1);
-    document.getElementById('stStick').textContent = p.stickProb.toFixed(2);
+    function watchFrame() {
+      if (cancelled || watchEngine.isDone()) {
+        finishGrow(p, canvas);
+        return;
+      }
+      // Advance walker by several steps per frame
+      var result = watchEngine.stepWalker(stepsPerFrame);
 
-    if (count % 200 === 0 || done) {
-      drawDLAAggregate(canvas, currentDLA);
-      var dim = computeFractalDim(currentDLA.particles, currentDLA.cx, currentDLA.cy);
-      document.getElementById('stFracD').textContent = dim.D.toFixed(3);
-      updateMassChart(massChartInst, dim.data, dim.D);
+      if (result === 'stuck') {
+        particlesStuck++;
+        particlesKilled = 0;
+        var count = currentDLA.getCount();
+        document.getElementById('growProgText').textContent = count + ' / ' + p.maxParticles + ' particles — watching';
+        document.getElementById('growProgFill').style.width = (count / p.maxParticles * 100) + '%';
+        document.getElementById('stCount').textContent = count;
+        document.getElementById('stRadius').textContent = currentDLA.getMaxR().toFixed(1);
+        document.getElementById('stStick').textContent = p.stickProb.toFixed(2);
+        if (count % 50 === 0) {
+          var dim = computeFractalDim(currentDLA.particles, currentDLA.cx, currentDLA.cy);
+          document.getElementById('stFracD').textContent = dim.D.toFixed(3);
+          updateMassChart(massChartInst, dim.data, dim.D);
+        }
+      } else if (result === 'killed') {
+        particlesKilled++;
+      } else if (result === 'done') {
+        finishGrow(p, canvas);
+        return;
+      }
+
+      // Redraw with walker visible
+      drawDLAAggregate(canvas, currentDLA, watchEngine.getWalker());
+      watchAnimId = requestAnimationFrame(watchFrame);
     }
-    await new Promise(function(r) { setTimeout(r, 1); });
+    watchAnimId = requestAnimationFrame(watchFrame);
+  } else {
+    // Fast mode: original batch processing
+    currentDLA = growDLA(p.gridSize, p.maxParticles, p.stickProb, p.seedType, p.launchMul, p.killMul);
+
+    var batchSize = 50;
+    var done = false;
+    while (!done && !cancelled) {
+      for (var i = 0; i < batchSize; i++) {
+        if (!currentDLA.step()) { done = true; break; }
+      }
+      var count = currentDLA.getCount();
+      document.getElementById('growProgText').textContent = count + ' / ' + p.maxParticles + ' particles';
+      document.getElementById('growProgFill').style.width = (count / p.maxParticles * 100) + '%';
+      document.getElementById('stCount').textContent = count;
+      document.getElementById('stRadius').textContent = currentDLA.getMaxR().toFixed(1);
+      document.getElementById('stStick').textContent = p.stickProb.toFixed(2);
+
+      if (count % 200 === 0 || done) {
+        drawDLAAggregate(canvas, currentDLA);
+        var dim = computeFractalDim(currentDLA.particles, currentDLA.cx, currentDLA.cy);
+        document.getElementById('stFracD').textContent = dim.D.toFixed(3);
+        updateMassChart(massChartInst, dim.data, dim.D);
+      }
+      await new Promise(function(r) { setTimeout(r, 1); });
+    }
+
+    finishGrow(p, canvas);
   }
+}
 
+function finishGrow(p, canvas) {
   drawDLAAggregate(canvas, currentDLA);
   var finalDim = computeFractalDim(currentDLA.particles, currentDLA.cx, currentDLA.cy);
   document.getElementById('stFracD').textContent = finalDim.D.toFixed(3);
@@ -107,10 +177,15 @@ async function runGrow() {
   document.getElementById('growProgFill').style.width = '100%';
   document.getElementById('btnGrow').disabled = false;
   document.getElementById('btnStop').disabled = true;
+  if (document.getElementById('btnWatch')) document.getElementById('btnWatch').disabled = false;
   running = false;
+  watchEngine = null;
 }
 
-function stopGrow() { cancelled = true; }
+function stopGrow() {
+  cancelled = true;
+  if (watchAnimId) { cancelAnimationFrame(watchAnimId); watchAnimId = null; }
+}
 
 /* ══════════════════════════════════════════════
    MODE 2: STICKING SWEEP

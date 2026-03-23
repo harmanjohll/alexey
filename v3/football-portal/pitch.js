@@ -172,16 +172,23 @@ function calcXGWithModel(x, y, model) {
 }
 
 /**
- * Map xG value to a colour on a blue-yellow-red gradient.
+ * Map xG value to a colour on a blue-violet → magenta → gold gradient.
  */
 function xgCol(xg) {
   var t = Math.min(1, xg / 0.7);
-  if (t < 0.5) {
-    var s = t * 2;
-    return 'rgb(' + Math.round(64 + s * 191) + ',' + Math.round(128 + s * 92) + ',' + Math.round(255 - s * 255) + ')';
+  if (t < 0.4) {
+    // Blue-violet to bright violet
+    var s = t / 0.4;
+    return 'rgb(' + Math.round(74 + s * 106) + ',' + Math.round(90 + s * 30) + ',' + Math.round(159 + s * 80) + ')';
   }
-  var s2 = (t - 0.5) * 2;
-  return 'rgb(255,' + Math.round(220 - s2 * 220) + ',0)';
+  if (t < 0.7) {
+    // Bright violet to magenta-pink
+    var s2 = (t - 0.4) / 0.3;
+    return 'rgb(' + Math.round(180 + s2 * 75) + ',' + Math.round(120 - s2 * 10) + ',' + Math.round(239 - s2 * 39) + ')';
+  }
+  // Magenta to hot orange-gold
+  var s3 = (t - 0.7) / 0.3;
+  return 'rgb(255,' + Math.round(110 + s3 * 110) + ',' + Math.round(200 - s3 * 170) + ')';
 }
 
 /**
@@ -246,32 +253,37 @@ function drawHeatmap(canvas, model) {
     ctx.fillRect(i * (W / 7), 0, Math.ceil(W / 7) + 1, H);
   }
 
-  // Draw heatmap overlay
+  // Draw heatmap overlay (blue-violet → magenta → gold gradient)
   for (var y = GY + 1; y < H - 8; y += step) {
     for (var x = 10; x < W - 10; x += step) {
       var result = calcXGWithModel(x, y, model);
       if (result.xg > 0) {
         var intensity = Math.min(1, result.xg / 0.5);
         var r, g, b;
-        if (intensity < 0.25) {
-          r = Math.round(10 + intensity * 4 * 90);
-          g = Math.round(15 + intensity * 4 * 40);
-          b = Math.round(10 + intensity * 4 * 96);
-        } else if (intensity < 0.5) {
-          var t = (intensity - 0.25) * 4;
-          r = Math.round(100 - t * 36);
-          g = Math.round(55 + t * 73);
-          b = Math.round(106 + t * 149);
-        } else if (intensity < 0.75) {
-          var t2 = (intensity - 0.5) * 4;
-          r = Math.round(64 + t2 * 191);
-          g = Math.round(128 + t2 * 76);
-          b = Math.round(255 - t2 * 255);
+        if (intensity < 0.3) {
+          // Deep blue-violet
+          var s = intensity / 0.3;
+          r = Math.round(20 + s * 54);
+          g = Math.round(15 + s * 75);
+          b = Math.round(40 + s * 119);
+        } else if (intensity < 0.55) {
+          // Blue-violet → bright violet
+          var s2 = (intensity - 0.3) / 0.25;
+          r = Math.round(74 + s2 * 106);
+          g = Math.round(90 + s2 * 30);
+          b = Math.round(159 + s2 * 80);
+        } else if (intensity < 0.8) {
+          // Bright violet → magenta-pink
+          var s3 = (intensity - 0.55) / 0.25;
+          r = Math.round(180 + s3 * 75);
+          g = Math.round(120 - s3 * 10);
+          b = Math.round(239 - s3 * 39);
         } else {
-          var t3 = (intensity - 0.75) * 4;
+          // Magenta → hot gold
+          var s4 = (intensity - 0.8) / 0.2;
           r = 255;
-          g = Math.round(204 - t3 * 136);
-          b = Math.round(0 + t3 * 68);
+          g = Math.round(110 + s4 * 110);
+          b = Math.round(200 - s4 * 170);
         }
         ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',0.7)';
         ctx.fillRect(x, y, step, step);
