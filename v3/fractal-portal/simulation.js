@@ -76,6 +76,138 @@ function growDLA(gridSize, maxParticles, stickProb, seedType, launchMul, killMul
   };
 }
 
+/* ── DLA Watch Mode: step-by-step walker visibility ── */
+function growDLAWatch(gridSize, maxParticles, stickProb, seedType, launchMul, killMul) {
+  var grid = new Uint16Array(gridSize * gridSize);
+  var cx = Math.floor(gridSize / 2), cy = Math.floor(gridSize / 2);
+  var particles = [];
+  var count = 0;
+  var maxR = 5;
+  var DX = [-1, 0, 1, 0], DY = [0, -1, 0, 1];
+
+  // Plant seed (same logic as growDLA)
+  if (seedType === 'point') {
+    grid[cy * gridSize + cx] = 1;
+    particles.push({x: cx, y: cy, order: 0});
+  } else if (seedType === 'line') {
+    for (var lx = 0; lx < gridSize; lx++) {
+      grid[(gridSize - 1) * gridSize + lx] = 1;
+      particles.push({x: lx, y: gridSize - 1, order: 0});
+    }
+    maxR = gridSize / 2;
+  } else if (seedType === 'circle') {
+    var r = 20;
+    for (var a = 0; a < 360; a += 2) {
+      var px = cx + Math.round(r * Math.cos(a * Math.PI / 180));
+      var py = cy + Math.round(r * Math.sin(a * Math.PI / 180));
+      if (px >= 0 && px < gridSize && py >= 0 && py < gridSize) {
+        grid[py * gridSize + px] = 1;
+        particles.push({x: px, y: py, order: 0});
+      }
+    }
+    maxR = 25;
+  }
+
+  var walker = null;
+  var walkerActive = false;
+  var particlesDone = false;
+
+  function hasNeighbor(x, y) {
+    for (var d = 0; d < 4; d++) {
+      var nx = x + DX[d], ny = y + DY[d];
+      if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny * gridSize + nx] > 0) return true;
+    }
+    return false;
+  }
+
+  function launchWalker() {
+    if (count >= maxParticles) { particlesDone = true; return false; }
+    var launchR = Math.max(maxR * launchMul, 30);
+    if (launchR >= gridSize / 2 - 5) { particlesDone = true; return false; }
+    var angle = Math.random() * 2 * Math.PI;
+    walker = {
+      x: Math.round(cx + launchR * Math.cos(angle)),
+      y: Math.round(cy + launchR * Math.sin(angle)),
+      killR: launchR * killMul,
+      steps: 0
+    };
+    walkerActive = true;
+    return true;
+  }
+
+  // Advance the current walker by N random steps; returns 'walking', 'stuck', 'killed', or 'done'
+  function stepWalker(n) {
+    if (particlesDone) return 'done';
+    if (!walkerActive) {
+      if (!launchWalker()) return 'done';
+    }
+    for (var i = 0; i < n; i++) {
+      var dir = Math.floor(Math.random() * 4);
+      walker.x += DX[dir]; walker.y += DY[dir];
+      walker.steps++;
+      var dist = Math.sqrt((walker.x - cx) * (walker.x - cx) + (walker.y - cy) * (walker.y - cy));
+      if (dist > walker.killR || walker.x < 0 || walker.x >= gridSize || walker.y < 0 || walker.y >= gridSize) {
+        walkerActive = false;
+        walker = null;
+        return 'killed';
+      }
+      if (hasNeighbor(walker.x, walker.y)) {
+        if (Math.random() < stickProb) {
+          count++;
+          grid[walker.y * gridSize + walker.x] = count + 1;
+          particles.push({x: walker.x, y: walker.y, order: count});
+          var rr = Math.sqrt((walker.x - cx) * (walker.x - cx) + (walker.y - cy) * (walker.y - cy));
+          if (rr > maxR) maxR = rr;
+          walkerActive = false;
+          walker = null;
+          return 'stuck';
+        }
+      }
+    }
+    return 'walking';
+  }
+
+  // DLA-compatible interface so render/charts work
+  var dlaInterface = {
+    grid: grid, particles: particles, gridSize: gridSize, cx: cx, cy: cy, maxR: maxR,
+    getCount: function() { return count; },
+    getMaxR: function() { return maxR; },
+    step: function() {
+      // Fast mode: run one full particle walk to completion (same as original)
+      if (count >= maxParticles) return false;
+      var launchR = Math.max(maxR * launchMul, 30);
+      var killR2 = launchR * killMul;
+      if (launchR >= gridSize / 2 - 5) return false;
+      var angle = Math.random() * 2 * Math.PI;
+      var x = Math.round(cx + launchR * Math.cos(angle));
+      var y = Math.round(cy + launchR * Math.sin(angle));
+      for (var s = 0; s < 100000; s++) {
+        var d = Math.floor(Math.random() * 4);
+        x += DX[d]; y += DY[d];
+        var dd = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+        if (dd > killR2 || x < 0 || x >= gridSize || y < 0 || y >= gridSize) return true;
+        if (hasNeighbor(x, y) && Math.random() < stickProb) {
+          count++;
+          grid[y * gridSize + x] = count + 1;
+          particles.push({x: x, y: y, order: count});
+          var rr = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+          if (rr > maxR) maxR = rr;
+          dlaInterface.maxR = maxR;
+          return true;
+        }
+      }
+      return true;
+    }
+  };
+
+  return {
+    dla: dlaInterface,
+    getWalker: function() { return walker; },
+    stepWalker: stepWalker,
+    isDone: function() { return particlesDone; }
+  };
+}
+
 /* ── Fractal Dimension (M(r) method) ── */
 function computeFractalDim(particles, cx, cy) {
   if (particles.length < 10) return {D: 0, data: []};

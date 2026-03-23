@@ -136,6 +136,7 @@
 <!-- ═══════ MODE 1: GROW AGGREGATE ═══════ -->
 <div class="mode-section active" id="mode-grow">
   <div class="controls">
+    <button id="btnWatch" onclick="toggleWatchMode()" title="Watch individual particles walk randomly and stick to the aggregate">Watch mode: OFF</button>
     <button id="btnGrow" onclick="runGrow()">Grow aggregate &rarr;</button>
     <button id="btnStop" onclick="stopGrow()" disabled class="danger">Stop</button>
     <div class="progress-wrap">
@@ -143,6 +144,7 @@
       <span class="progress-text" id="growProgText">Ready</span>
     </div>
   </div>
+  <div class="note" id="watchNote" style="display:none;margin-bottom:10px"><b>Watch mode:</b> You'll see each particle (yellow dot) doing a random walk until it bumps into the aggregate and sticks. This is slow — use small particle counts (100–500) to see the process clearly. The fractal tree-like structure forms because outer branches <em>shield</em> the interior from new walkers.</div>
 
   <div class="dashboard">
     <div class="dash-row wide">

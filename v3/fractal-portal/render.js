@@ -1,7 +1,17 @@
 /* render.js — Fractal Portal: Canvas rendering for DLA and Koch */
 
+/* ── DLA Color Gradient (blue-violet → magenta, matching random walk portal) ── */
+function dlaCol(t) {
+  // t in [0,1]: 0 = earliest particle, 1 = latest
+  // blue-violet (74, 90, 159) → magenta-pink (255, 138, 239)
+  var r = Math.round(74 + t * 181);
+  var g = Math.round(90 + t * 48);
+  var b = Math.round(159 + t * 80);
+  return [r, g, b];
+}
+
 /* ── DLA Rendering ── */
-function drawDLAAggregate(canvas, dla) {
+function drawDLAAggregate(canvas, dla, walker) {
   var ctx = canvas.getContext('2d');
   var w = canvas.width, h = canvas.height;
   var img = ctx.createImageData(w, h);
@@ -17,22 +27,35 @@ function drawDLAAggregate(canvas, dla) {
   for (var p = 0; p < dla.particles.length; p++) {
     var pt = dla.particles[p];
     var t = maxOrder > 0 ? pt.order / maxOrder : 0;
-    // Color by arrival: dark teal -> bright cyan -> white
-    var r = Math.round(15 + t * 200);
-    var g = Math.round(60 + t * 170);
-    var b = Math.round(80 + t * 176);
+    var col = dlaCol(t);
     var x0 = Math.floor(pt.x * scale), y0 = Math.floor(pt.y * scale);
     var x1 = Math.max(x0 + 1, Math.floor((pt.x + 1) * scale));
     var y1 = Math.max(y0 + 1, Math.floor((pt.y + 1) * scale));
     for (var y = y0; y < y1 && y < h; y++) {
       for (var x = x0; x < x1 && x < w; x++) {
         var idx = (y * w + x) * 4;
-        img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b;
+        img.data[idx] = col[0]; img.data[idx + 1] = col[1]; img.data[idx + 2] = col[2];
       }
     }
   }
 
   ctx.putImageData(img, 0, 0);
+
+  // Draw active walker particle (watch mode)
+  if (walker && walker.x >= 0 && walker.x < gs && walker.y >= 0 && walker.y < gs) {
+    var wx = walker.x * scale + scale / 2;
+    var wy = walker.y * scale + scale / 2;
+    // Bright glowing dot for the walking particle
+    ctx.beginPath();
+    ctx.arc(wx, wy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 220, 100, 0.9)';
+    ctx.fill();
+    // Outer glow
+    ctx.beginPath();
+    ctx.arc(wx, wy, 8, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 220, 100, 0.2)';
+    ctx.fill();
+  }
 }
 
 /* ── Koch Rendering ── */
@@ -43,8 +66,8 @@ function drawKoch(canvas, fractalResult) {
   ctx.fillRect(0, 0, w, h);
 
   if (fractalResult.type === 'sierpinski' && fractalResult.triangles) {
-    ctx.strokeStyle = 'rgba(61, 207, 192, 0.8)';
-    ctx.fillStyle = 'rgba(61, 207, 192, 0.06)';
+    ctx.strokeStyle = 'rgba(123, 138, 239, 0.8)';
+    ctx.fillStyle = 'rgba(123, 138, 239, 0.06)';
     ctx.lineWidth = 0.8;
     for (var t = 0; t < fractalResult.triangles.length; t++) {
       var tri = fractalResult.triangles[t];
@@ -58,8 +81,8 @@ function drawKoch(canvas, fractalResult) {
     }
   } else if (fractalResult.points && fractalResult.points.length > 1) {
     var pts = fractalResult.points;
-    ctx.strokeStyle = 'rgba(61, 207, 192, 0.9)';
-    ctx.fillStyle = 'rgba(61, 207, 192, 0.05)';
+    ctx.strokeStyle = 'rgba(123, 138, 239, 0.9)';
+    ctx.fillStyle = 'rgba(123, 138, 239, 0.05)';
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(pts[0][0], pts[0][1]);
@@ -97,7 +120,7 @@ function drawRulerOverlay(canvas, steps) {
 
 function drawMonteCarloPoints(canvas, insidePts, outsidePts) {
   var ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgba(61, 207, 192, 0.4)';
+  ctx.fillStyle = 'rgba(123, 138, 239, 0.4)';
   for (var i = 0; i < insidePts.length; i++) {
     ctx.fillRect(insidePts[i][0], insidePts[i][1], 1.5, 1.5);
   }
