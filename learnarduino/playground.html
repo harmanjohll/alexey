@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playground · ArduinoLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f0a;color:#e8f0e8;font-family:system-ui,sans-serif;line-height:1.65}
+.wrap{max-width:1000px;margin:0 auto;padding:1.5rem 1rem}
+.nav-back{display:inline-block;font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-bottom:1.5rem;border:0.5px solid rgba(60,160,60,0.2);padding:5px 12px;border-radius:4px;transition:all .15s}
+.nav-back:hover{color:#7dd87d;border-color:rgba(60,160,60,0.5)}
+.hero-tag{display:inline-block;font-size:11px;font-weight:500;background:rgba(60,160,60,0.15);color:#7dd87d;border:0.5px solid rgba(60,160,60,0.4);padding:3px 10px;border-radius:4px;margin-bottom:12px;font-family:'Space Mono',monospace}
+h1{font-size:26px;font-family:'Space Mono',monospace;font-weight:700;margin-bottom:6px;line-height:1.2}
+.sub{font-size:13px;color:#7a9a7a;line-height:1.7;max-width:700px;margin-bottom:2rem}
+.note{font-size:11px;color:#7a9a7a;line-height:1.65;padding:8px 12px;border-left:2px solid #3ca03c;background:rgba(60,160,60,0.06);margin-bottom:2rem;border-radius:0 4px 4px 0}
+.note b{color:#7dd87d}
+
+/* Project cards */
+.project{background:#111a11;border:0.5px solid rgba(60,160,60,0.2);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.project-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:0.5px solid rgba(60,160,60,0.15);background:#0d150d;cursor:pointer;user-select:none}
+.project-hdr:hover{background:#111a11}
+.pnum{font-size:10px;font-weight:700;background:rgba(60,160,60,0.15);color:#7dd87d;padding:2px 8px;border-radius:4px;font-family:'Space Mono',monospace;border:0.5px solid rgba(60,160,60,0.4);white-space:nowrap}
+.ptitle{font-size:13px;font-weight:600;color:#e8f0e8;font-family:'Space Mono',monospace}
+.ptags{margin-left:auto;display:flex;gap:4px}
+.ptag{font-size:9px;font-family:'Space Mono',monospace;color:#4a6a4a;background:rgba(60,160,60,0.08);border:0.5px solid rgba(60,160,60,0.15);padding:1px 6px;border-radius:3px}
+.arrow{color:#4a6a4a;font-size:12px;transition:transform .2s;font-family:'Space Mono',monospace}
+.arrow.open{transform:rotate(90deg)}
+.project-body{display:none;padding:14px}
+.project-body.open{display:block}
+.pdesc{font-size:12px;color:#7a9a7a;margin-bottom:12px;line-height:1.6}
+.pdesc code{font-family:'Space Mono',monospace;font-size:11px;background:#0d150d;padding:1px 5px;border-radius:3px;color:#7dd87d;border:0.5px solid rgba(60,160,60,0.2)}
+.sim-frame{width:100%;height:420px;border:0.5px solid rgba(60,160,60,0.2);border-radius:6px;background:#080c08}
+.ext-link{display:inline-block;font-size:10px;color:#4a6a4a;font-family:'Space Mono',monospace;text-decoration:none;margin-top:8px;border:0.5px solid rgba(60,160,60,0.15);padding:3px 10px;border-radius:4px;transition:all .15s}
+.ext-link:hover{color:#7dd87d;border-color:rgba(60,160,60,0.4)}
+
+/* Section dividers */
+.section-label{font-size:10px;font-weight:700;color:#3ca03c;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin:2rem 0 1rem;padding-bottom:6px;border-bottom:0.5px solid rgba(60,160,60,0.15)}
+
+.footer{margin-top:3rem;padding-top:1.5rem;border-top:0.5px solid rgba(60,160,60,0.15)}
+.footer p{font-size:11px;color:#4a6a4a;font-family:'Space Mono',monospace}
+
+@media(max-width:600px){.sim-frame{height:350px}.ptags{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="index.html" class="nav-back">&larr; module list</a>
+<div class="hero-tag">ARDUINOLAB &middot; PLAYGROUND</div>
+<h1>Arduino Playground</h1>
+<div class="sub">Real Arduino simulations powered by <a href="https://wokwi.com" target="_blank" rel="noopener" style="color:#7dd87d;text-decoration:none">Wokwi</a>. These run actual compiled C++ code with realistic components &mdash; click the play button in any project to start experimenting. Modify the code, rewire the circuit, break things, fix things.</div>
+
+<div class="note"><b>How to use:</b> Click a project to expand it. Press the green play button inside the simulator to run the code. You can edit the code and rewire components directly &mdash; changes are temporary and reset when you reload.</div>
+
+<div class="section-label">Beginner &mdash; Your First Circuits</div>
+
+<div class="project" id="p1">
+  <div class="project-hdr" onclick="toggle('p1')">
+    <span class="pnum">01</span>
+    <span class="ptitle">Blink &mdash; Hello World of Arduino</span>
+    <span class="ptags"><span class="ptag">LED</span><span class="ptag">digitalWrite</span></span>
+    <span class="arrow" id="p1-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p1-body">
+    <div class="pdesc">The classic first sketch. Pin 13 toggles HIGH and LOW with <code>delay()</code>. Try changing the delay values &mdash; can you make it blink at 2Hz? 5Hz? What happens at 1ms delay?</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/344891652101374548?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/344891652101374548" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="project" id="p2">
+  <div class="project-hdr" onclick="toggle('p2')">
+    <span class="pnum">02</span>
+    <span class="ptitle">Button + LED &mdash; Digital Input</span>
+    <span class="ptags"><span class="ptag">button</span><span class="ptag">digitalRead</span></span>
+    <span class="arrow" id="p2-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p2-body">
+    <div class="pdesc">Press the button to toggle the LED. Notice the use of <code>digitalRead()</code> and <code>INPUT_PULLUP</code>. Try adding a second LED that does the opposite &mdash; on when the button is released.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/374288282512777217?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/374288282512777217" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="project" id="p3">
+  <div class="project-hdr" onclick="toggle('p3')">
+    <span class="pnum">03</span>
+    <span class="ptitle">Potentiometer &mdash; Analog Input</span>
+    <span class="ptags"><span class="ptag">analogRead</span><span class="ptag">serial</span></span>
+    <span class="arrow" id="p3-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p3-body">
+    <div class="pdesc">Turn the potentiometer knob and watch the serial plotter graph the 0&ndash;1023 values in real time. This is <code>analogRead()</code> in action &mdash; the Arduino's 10-bit ADC converting voltage to a number.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/298685457758159369?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/298685457758159369" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="section-label">Intermediate &mdash; PWM, Serial &amp; Libraries</div>
+
+<div class="project" id="p4">
+  <div class="project-hdr" onclick="toggle('p4')">
+    <span class="pnum">04</span>
+    <span class="ptitle">LED Fade &mdash; PWM Output</span>
+    <span class="ptags"><span class="ptag">PWM</span><span class="ptag">analogWrite</span></span>
+    <span class="arrow" id="p4-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p4-body">
+    <div class="pdesc">Watch the LED smoothly fade up and down using <code>analogWrite()</code>. This is PWM &mdash; the pin switches on and off thousands of times per second. Try changing the fade speed or adding more LEDs on pins 3, 5, 6, 10, or 11.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/375145537046817793?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/375145537046817793" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="project" id="p5">
+  <div class="project-hdr" onclick="toggle('p5')">
+    <span class="pnum">05</span>
+    <span class="ptitle">Analog In, Analog Out &mdash; Serial Monitor</span>
+    <span class="ptags"><span class="ptag">serial</span><span class="ptag">map()</span></span>
+    <span class="arrow" id="p5-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p5-body">
+    <div class="pdesc">Read a potentiometer, map its 0&ndash;1023 range to 0&ndash;255 for PWM, and control LED brightness. All values are printed to the serial monitor. This combines analog input, PWM output, and <code>Serial.println()</code>.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/374643833533882369?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/374643833533882369" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="project" id="p6">
+  <div class="project-hdr" onclick="toggle('p6')">
+    <span class="pnum">06</span>
+    <span class="ptitle">Servo Sweep &mdash; Motor Control</span>
+    <span class="ptags"><span class="ptag">servo</span><span class="ptag">library</span></span>
+    <span class="arrow" id="p6-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p6-body">
+    <div class="pdesc">The classic sweep: the servo arm rotates from 0&deg; to 180&deg; and back. Try changing the step size and delay &mdash; what happens with <code>delay(5)</code> vs <code>delay(50)</code>? Can you make it stop at 90&deg;?</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/344891730528567891?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/344891730528567891" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="project" id="p7">
+  <div class="project-hdr" onclick="toggle('p7')">
+    <span class="pnum">07</span>
+    <span class="ptitle">LCD Display &mdash; I2C Text Output</span>
+    <span class="ptags"><span class="ptag">LCD</span><span class="ptag">I2C</span></span>
+    <span class="arrow" id="p7-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p7-body">
+    <div class="pdesc">A 16&times;2 LCD showing text via I2C. Only 2 data wires needed (SDA + SCL). Try using <code>lcd.setCursor(col, row)</code> to position text and <code>lcd.print()</code> to display numbers or sensor readings.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/385160860919417857?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/385160860919417857" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="section-label">Advanced &mdash; Sensors &amp; Systems</div>
+
+<div class="project" id="p8">
+  <div class="project-hdr" onclick="toggle('p8')">
+    <span class="pnum">08</span>
+    <span class="ptitle">Ultrasonic Distance + Servo</span>
+    <span class="ptags"><span class="ptag">HC-SR04</span><span class="ptag">servo</span></span>
+    <span class="arrow" id="p8-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p8-body">
+    <div class="pdesc">The ultrasonic sensor measures distance; when an object is close, the servo reacts. This combines <code>pulseIn()</code> for timing sound echoes with servo control &mdash; the building blocks of a radar or parking sensor.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/379158288634476545?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/379158288634476545" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="project" id="p9">
+  <div class="project-hdr" onclick="toggle('p9')">
+    <span class="pnum">09</span>
+    <span class="ptitle">Traffic Light &mdash; State Machine</span>
+    <span class="ptags"><span class="ptag">state machine</span><span class="ptag">LCD</span></span>
+    <span class="arrow" id="p9-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p9-body">
+    <div class="pdesc">A traffic light that cycles RED &rarr; GREEN &rarr; YELLOW with an LCD displaying the current state. This is a real state machine in action. Try adding a pedestrian button that interrupts the cycle.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/374412664109615105?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/374412664109615105" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="project" id="p10">
+  <div class="project-hdr" onclick="toggle('p10')">
+    <span class="pnum">10</span>
+    <span class="ptitle">Smart Room &mdash; Sensor + Servo + LCD</span>
+    <span class="ptags"><span class="ptag">capstone</span><span class="ptag">multi-component</span></span>
+    <span class="arrow" id="p10-arrow">&#9654;</span>
+  </div>
+  <div class="project-body" id="p10-body">
+    <div class="pdesc">A combined project: ultrasonic sensor detects presence, servo opens a door, LCD displays status. This is what a real embedded system looks like &mdash; multiple components working together through code.</div>
+    <iframe class="sim-frame" src="https://wokwi.com/projects/404834165507221505?embed=1" loading="lazy" allowfullscreen></iframe>
+    <a class="ext-link" href="https://wokwi.com/projects/404834165507221505" target="_blank" rel="noopener">Open in Wokwi &rarr;</a>
+  </div>
+</div>
+
+<div class="footer">
+  <p>All simulations powered by <a href="https://wokwi.com" target="_blank" rel="noopener" style="color:#7dd87d;text-decoration:none">Wokwi</a> &mdash; free, open, runs real compiled Arduino C++ in your browser.</p>
+  <p style="margin-top:4px">Edit the code, rewire the circuit, experiment freely. Nothing breaks permanently.</p>
+</div>
+</div>
+
+<script>
+function toggle(id) {
+  const body = document.getElementById(id + '-body');
+  const arrow = document.getElementById(id + '-arrow');
+  const isOpen = body.classList.contains('open');
+  // Close all others
+  document.querySelectorAll('.project-body.open').forEach(el => {
+    el.classList.remove('open');
+  });
+  document.querySelectorAll('.arrow.open').forEach(el => {
+    el.classList.remove('open');
+  });
+  if (!isOpen) {
+    body.classList.add('open');
+    arrow.classList.add('open');
+  }
+}
+</script>
+</body>
+</html>
