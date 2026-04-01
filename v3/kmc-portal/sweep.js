@@ -1,24 +1,157 @@
-/* sweep.js — Sweep orchestrators for KMC portal (temperature and composition sweeps) */
+/* sweep.js — Enhanced sweep orchestrators with comprehensive metric collection */
 
-var worker = null;
-var running = false;
-var pausedState = false;
 var sweepCancelled = false;
+var lastSweepResults = null; // Store results for export
 
-function runWorkerForParams(params) {
+/* ── Speed Presets ── */
+var SPEED_PRESETS = {
+  quick:    { lattx: 256,  niter1: 3000 },
+  standard: { lattx: 512,  niter1: 5000 },
+  thorough: { lattx: 1024, niter1: 10000 }
+};
+var currentSpeed = 'standard';
+
+function setSpeed(level) {
+  currentSpeed = level;
+  var btns = document.querySelectorAll('.speed-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', btns[i].getAttribute('data-speed') === level);
+  }
+  var info = document.getElementById('speedInfo');
+  if (info) {
+    var p = SPEED_PRESETS[level];
+    info.textContent = 'lattx=' + p.lattx + ', ' + p.niter1 + ' iterations per point';
+  }
+}
+
+/* ── Rich Worker Runner ──
+   Runs a full simulation and collects:
+   - Roughness trajectory (for beta fitting)
+   - Final height array (for pit analysis + correlation)
+   - Final stats (RMS, skew, kurt, events)
+   - Lattice snapshot (canvas image)
+*/
+function runWorkerRich(params) {
   return new Promise(function(resolve) {
     var w = new Worker('worker-kmc.js');
+    var roughTraj = []; // {x: iter, y: rms}
     var lastData = null;
+    var lastHtRaw = null;
+    var lastSlice = null;
+    var lastSliceH = 0;
+    var initialAve = null;
+
     w.onmessage = function(e) {
       var d = e.data;
       if (d.type === 'iteration') {
-        lastData = { rmsht: d.rmsht, aveht: d.aveht, stdev: d.stdev, skewness: d.skewness, kurtosis: d.kurtosis, iter: d.iter };
+        // Track roughness trajectory for beta fit
+        if (d.rmsht > 0) roughTraj.push({ x: d.iter, y: d.rmsht });
+        if (initialAve === null) initialAve = d.aveht;
+
+        lastData = {
+          rmsht: d.rmsht, aveht: d.aveht, stdev: d.stdev,
+          skewness: d.skewness, kurtosis: d.kurtosis, iter: d.iter,
+          events: d.events
+        };
+
+        // Capture height array and slice (transferable buffers become detached, so copy)
+        if (d.htRaw) {
+          lastHtRaw = new Int32Array(d.htRaw);
+        }
+        if (d.sliceData) {
+          lastSlice = new Uint8Array(d.sliceData);
+          lastSliceH = d.sliceH;
+        }
       } else if (d.type === 'done') {
         w.terminate();
-        resolve(lastData);
+
+        if (!lastData) { resolve(null); return; }
+
+        // Compute beta from roughness trajectory
+        var beta = null;
+        if (roughTraj.length >= 10) {
+          var fit = fitPowerLaw(roughTraj, 1, Infinity);
+          if (fit) beta = fit.beta;
+        }
+
+        // Compute pit analysis from final height array
+        var pitResult = { pits: [] };
+        if (lastHtRaw && lastHtRaw.length > 0) {
+          var htArray = Array.from(lastHtRaw);
+          pitResult = analyzePits(htArray, { method: 'sigma', k: 1.0, minWidth: 3, gapMerge: 2 });
+        }
+
+        // Compute correlation alpha and xi
+        var alpha = null, xi = null;
+        if (lastHtRaw && lastHtRaw.length >= 20) {
+          var corr = computeCorrelation(Array.from(lastHtRaw));
+          var alphaResult = fitAlpha(corr);
+          if (alphaResult) {
+            alpha = alphaResult.alpha;
+            xi = alphaResult.xi;
+          }
+        }
+
+        // Etch depth and selectivity
+        var etchDepth = initialAve !== null ? Math.abs(initialAve - lastData.aveht) : 0;
+        var selectivity = null;
+        if (lastData.events) {
+          var ngedes = lastData.events.ngedes || 0;
+          var nsides = lastData.events.nsides || 0;
+          selectivity = nsides > 0 ? ngedes / nsides : (ngedes > 0 ? Infinity : null);
+        }
+
+        // Pit stats
+        var pits = pitResult.pits;
+        var pitCount = pits.length;
+        var avgPitWidth = 0, maxPitWidth = 0, avgPitDepth = 0, pitCoverage = 0;
+        if (pitCount > 0) {
+          var totalW = 0, totalD = 0;
+          for (var i = 0; i < pits.length; i++) {
+            totalW += pits[i].width;
+            totalD += pits[i].depth;
+            if (pits[i].width > maxPitWidth) maxPitWidth = pits[i].width;
+          }
+          avgPitWidth = totalW / pitCount;
+          avgPitDepth = totalD / pitCount;
+          if (lastHtRaw) pitCoverage = totalW / lastHtRaw.length;
+        }
+
+        // Render lattice snapshot to offscreen canvas
+        var snapshot = null;
+        if (lastSlice && lastSliceH > 0) {
+          try {
+            var snapCanvas = document.createElement('canvas');
+            snapCanvas.width = params.lattx;
+            snapCanvas.height = lastSliceH;
+            renderLattice(lastSlice.buffer, lastSliceH, params.lattx, snapCanvas);
+            snapshot = snapCanvas.toDataURL('image/png');
+          } catch (err) { /* snapshot capture failed, non-critical */ }
+        }
+
+        resolve({
+          rmsht: lastData.rmsht,
+          skewness: lastData.skewness,
+          kurtosis: lastData.kurtosis,
+          aveht: lastData.aveht,
+          iter: lastData.iter,
+          beta: beta,
+          pitCount: pitCount,
+          avgPitWidth: avgPitWidth,
+          maxPitWidth: maxPitWidth,
+          avgPitDepth: avgPitDepth,
+          pitCoverage: pitCoverage,
+          pitDensity: lastHtRaw ? pitCount / lastHtRaw.length : 0,
+          alpha: alpha,
+          xi: xi,
+          etchDepth: etchDepth,
+          selectivity: selectivity,
+          snapshot: snapshot
+        });
       }
     };
-    w.onerror = function() { w.terminate(); resolve(lastData); };
+
+    w.onerror = function() { w.terminate(); resolve(null); };
     w.postMessage({ type: 'start', params: params });
   });
 }
@@ -27,134 +160,289 @@ function cancelSweep() {
   sweepCancelled = true;
 }
 
-/* ── Temperature Sweep ── */
-async function runTempSweep() {
+/* ── Generic Sweep Runner ──
+   sweepConfig: { paramName, values[], label, prefix, xLabel }
+*/
+async function runGenericSweep(sweepConfig) {
   if (running) return;
   running = true;
   sweepCancelled = false;
-  var tMin = +document.getElementById('tswTmin').value;
-  var tMax = +document.getElementById('tswTmax').value;
-  var pts = +document.getElementById('tswPts').value;
-  var niter = +document.getElementById('tswNiter').value;
+
+  var paramName = sweepConfig.paramName;
+  var values = sweepConfig.values;
+  var prefix = sweepConfig.prefix;
+  var xLabel = sweepConfig.xLabel;
+
   var baseParams = readParams();
+  // Apply speed preset
+  var speed = SPEED_PRESETS[currentSpeed];
+  baseParams.lattx = speed.lattx;
+  baseParams.lattz = 2048;
+  baseParams.niter2 = 100;
+  baseParams.psi = 0;
+  baseParams.pge = 1.0;
+  autoAdjustZstopZlo();
 
-  if (tswRoughChart) tswRoughChart.destroy();
-  if (tswSkewChart) tswSkewChart.destroy();
-  if (tswKurtChart) tswKurtChart.destroy();
-  tswRoughChart = mkSweepChart('tswRoughChart', 'Temperature (K)', 'RMS Roughness', '#7dd87d');
-  tswSkewChart = mkSweepChart('tswSkewChart', 'Temperature (K)', 'Skewness', '#f0b429');
-  tswKurtChart = mkSweepChart('tswKurtChart', 'Temperature (K)', 'Kurtosis (excess)', '#e24b4a');
+  // Init/reset charts
+  initRichSweepCharts(prefix, xLabel);
 
-  document.getElementById('tswDash').style.display = '';
-  document.getElementById('tswRunBtn').disabled = true;
-  document.getElementById('tswSummary').innerHTML = '';
+  var dashEl = document.getElementById(prefix + 'Dash');
+  if (dashEl) dashEl.style.display = '';
+  var runBtn = document.getElementById(prefix + 'RunBtn');
+  if (runBtn) runBtn.disabled = true;
+  var summaryEl = document.getElementById(prefix + 'Summary');
+  if (summaryEl) summaryEl.innerHTML = '';
+  var tableBody = document.getElementById(prefix + 'TableBody');
+  if (tableBody) tableBody.innerHTML = '';
+  var gallery = document.getElementById(prefix + 'Gallery');
+  if (gallery) gallery.innerHTML = '';
 
   var results = [];
-  for (var i = 0; i < pts; i++) {
+  for (var i = 0; i < values.length; i++) {
     if (sweepCancelled) break;
-    var t = pts === 1 ? tMin : tMin + (tMax - tMin) * i / (pts - 1);
-    var pct = ((i / pts) * 100).toFixed(0);
-    document.getElementById('tswProgFill').style.width = pct + '%';
-    document.getElementById('tswProgText').textContent = 'T=' + t.toFixed(0) + 'K (' + (i+1) + '/' + pts + ')';
+    var val = values[i];
+    var pct = ((i / values.length) * 100).toFixed(0);
+    var progFill = document.getElementById(prefix + 'ProgFill');
+    var progText = document.getElementById(prefix + 'ProgText');
+    if (progFill) progFill.style.width = pct + '%';
+    if (progText) progText.textContent = sweepConfig.label(val) + ' (' + (i + 1) + '/' + values.length + ')';
 
     var p = {};
     for (var k in baseParams) p[k] = baseParams[k];
-    p.temp = t;
-    p.niter1 = niter;
-    var data = await runWorkerForParams(p);
+    p[paramName] = val;
+    p.niter1 = speed.niter1;
+
+    var data = await runWorkerRich(p);
     if (data) {
-      data.t = t;
+      data._paramVal = val;
       results.push(data);
-      tswRoughChart.data.datasets[0].data = results.map(function(r) { return { x: r.t, y: r.rmsht }; });
-      tswRoughChart.update();
-      tswSkewChart.data.datasets[0].data = results.map(function(r) { return { x: r.t, y: r.skewness }; });
-      tswSkewChart.update();
-      tswKurtChart.data.datasets[0].data = results.map(function(r) { return { x: r.t, y: r.kurtosis }; });
-      tswKurtChart.update();
+      updateRichSweepCharts(prefix, results, paramName);
+      updateRichSweepTable(prefix, results, sweepConfig);
+
+      // Add snapshot to gallery
+      if (data.snapshot && gallery) {
+        var thumb = document.createElement('div');
+        thumb.className = 'snap-thumb';
+        thumb.innerHTML = '<img src="' + data.snapshot + '" alt="' + sweepConfig.label(val) + '">'
+          + '<div class="snap-label">' + sweepConfig.label(val) + '</div>'
+          + '<div class="snap-stats">\u03B2=' + (data.beta !== null ? data.beta.toFixed(3) : '\u2014')
+          + ' pits=' + data.pitCount + '</div>';
+        thumb.querySelector('img').onclick = (function(src, lbl) {
+          return function() { downloadImage(src, 'kmc-' + prefix + '-' + lbl + '.png'); };
+        })(data.snapshot, sweepConfig.label(val).replace(/[^a-zA-Z0-9]/g, '_'));
+        gallery.appendChild(thumb);
+      }
     }
   }
 
-  if (results.length > 0) {
-    var minR = results[0], maxR = results[0];
-    for (var i = 1; i < results.length; i++) {
-      if (results[i].rmsht < minR.rmsht) minR = results[i];
-      if (results[i].rmsht > maxR.rmsht) maxR = results[i];
-    }
-    document.getElementById('tswSummary').innerHTML =
-      '<div>Points: ' + results.length + '</div>' +
-      '<div>Min roughness: ' + minR.rmsht.toFixed(4) + ' at T=' + minR.t.toFixed(0) + 'K</div>' +
-      '<div>Max roughness: ' + maxR.rmsht.toFixed(4) + ' at T=' + maxR.t.toFixed(0) + 'K</div>' +
-      '<div>Range: ' + (maxR.rmsht - minR.rmsht).toFixed(4) + '</div>';
+  // Summary
+  if (results.length > 0 && summaryEl) {
+    summaryEl.innerHTML = buildSweepSummary(results, sweepConfig);
   }
 
-  document.getElementById('tswProgFill').style.width = '100%';
-  document.getElementById('tswProgText').textContent = sweepCancelled ? 'Cancelled' : 'Complete';
-  document.getElementById('tswRunBtn').disabled = false;
+  lastSweepResults = { config: sweepConfig, results: results };
+
+  if (progFill) progFill.style.width = '100%';
+  if (progText) progText.textContent = sweepCancelled ? 'Cancelled' : 'Complete (' + results.length + ' points)';
+  if (runBtn) runBtn.disabled = false;
   running = false;
 }
 
-/* ── Composition (theta) Sweep ── */
+/* ── Sweep Summary Builder ── */
+function buildSweepSummary(results, config) {
+  var minR = results[0], maxR = results[0];
+  var maxPits = results[0], minBeta = results[0], maxBeta = results[0];
+  for (var i = 1; i < results.length; i++) {
+    var r = results[i];
+    if (r.rmsht < minR.rmsht) minR = r;
+    if (r.rmsht > maxR.rmsht) maxR = r;
+    if (r.pitCount > maxPits.pitCount) maxPits = r;
+    if (r.beta !== null && (minBeta.beta === null || r.beta < minBeta.beta)) minBeta = r;
+    if (r.beta !== null && (maxBeta.beta === null || r.beta > maxBeta.beta)) maxBeta = r;
+  }
+  var html = '<div class="sweep-summary-grid">';
+  html += '<div><span class="sl">SMOOTHEST</span><div class="sv sm">' + config.label(minR._paramVal) + '</div><div style="font-size:11px;color:var(--text-secondary)">RMS = ' + minR.rmsht.toFixed(4) + '</div></div>';
+  html += '<div><span class="sl">ROUGHEST</span><div class="sv sm">' + config.label(maxR._paramVal) + '</div><div style="font-size:11px;color:var(--text-secondary)">RMS = ' + maxR.rmsht.toFixed(4) + '</div></div>';
+  html += '<div><span class="sl">MOST PITS</span><div class="sv sm">' + config.label(maxPits._paramVal) + '</div><div style="font-size:11px;color:var(--text-secondary)">' + maxPits.pitCount + ' pits, ' + (maxPits.pitCoverage * 100).toFixed(1) + '% coverage</div></div>';
+  if (maxBeta.beta !== null) {
+    html += '<div><span class="sl">\u03B2 RANGE</span><div class="sv sm">' + (minBeta.beta !== null ? minBeta.beta.toFixed(3) : '\u2014') + ' \u2013 ' + maxBeta.beta.toFixed(3) + '</div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ── Results Table Builder ── */
+function updateRichSweepTable(prefix, results, config) {
+  var body = document.getElementById(prefix + 'TableBody');
+  if (!body) return;
+  var html = '';
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    html += '<tr>';
+    html += '<td class="num">' + config.label(r._paramVal) + '</td>';
+    html += '<td class="num">' + r.rmsht.toFixed(4) + '</td>';
+    html += '<td class="num">' + (r.beta !== null ? r.beta.toFixed(3) : '\u2014') + '</td>';
+    html += '<td class="num">' + r.pitCount + '</td>';
+    html += '<td class="num">' + r.avgPitWidth.toFixed(1) + '</td>';
+    html += '<td class="num">' + (r.pitCoverage * 100).toFixed(1) + '%</td>';
+    html += '<td class="num">' + (r.alpha !== null ? r.alpha.toFixed(3) : '\u2014') + '</td>';
+    html += '<td class="num">' + (r.xi !== null ? r.xi : '\u2014') + '</td>';
+    html += '<td class="num">' + r.etchDepth.toFixed(2) + '</td>';
+    html += '<td class="num">' + (r.selectivity !== null && r.selectivity !== Infinity ? r.selectivity.toFixed(1) : '\u221E') + '</td>';
+    html += '</tr>';
+  }
+  body.innerHTML = html;
+}
+
+/* ── Image Download Helper ── */
+function downloadImage(dataUrl, filename) {
+  var a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  a.click();
+}
+
+function downloadChart(chartId, filename) {
+  var chart = null;
+  // Find chart by canvas ID (check all known chart variables)
+  var canvasEl = document.getElementById(chartId);
+  if (canvasEl) {
+    var chartInst = Chart.getChart(canvasEl);
+    if (chartInst) {
+      downloadImage(chartInst.toBase64Image(), filename || chartId + '.png');
+    }
+  }
+}
+
+/* ── Export Sweep Results as CSV ── */
+function exportSweepCSV() {
+  if (!lastSweepResults || !lastSweepResults.results.length) return;
+  var config = lastSweepResults.config;
+  var results = lastSweepResults.results;
+  var headers = [config.paramName, 'RMS', 'beta', 'skewness', 'kurtosis', 'pitCount', 'avgPitWidth', 'maxPitWidth', 'avgPitDepth', 'pitCoverage', 'pitDensity', 'alpha', 'xi', 'etchDepth', 'selectivity'];
+  var lines = [headers.join(',')];
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    lines.push([
+      r._paramVal, r.rmsht.toFixed(6), r.beta !== null ? r.beta.toFixed(4) : '',
+      r.skewness.toFixed(4), r.kurtosis.toFixed(4), r.pitCount,
+      r.avgPitWidth.toFixed(2), r.maxPitWidth, r.avgPitDepth.toFixed(3),
+      (r.pitCoverage * 100).toFixed(2), r.pitDensity.toFixed(6),
+      r.alpha !== null ? r.alpha.toFixed(4) : '', r.xi !== null ? r.xi : '',
+      r.etchDepth.toFixed(3), r.selectivity !== null && r.selectivity !== Infinity ? r.selectivity.toFixed(2) : 'Inf'
+    ].join(','));
+  }
+  var blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kmc-sweep-' + config.paramName + '.csv';
+  a.click();
+}
+
+/* ══════════════════════════════════════════════
+   INVESTIGATION PROTOCOLS
+   ══════════════════════════════════════════════ */
+
+var invHypotheses = {};
+
+function lockInvHypothesis(invNum) {
+  var ta = document.getElementById('invHyp' + invNum);
+  if (!ta) return;
+  var text = ta.value.trim();
+  if (text.length < 20) { ta.style.borderColor = 'var(--danger)'; return; }
+  ta.disabled = true;
+  ta.style.borderColor = 'var(--accent-border)';
+  ta.style.boxShadow = '0 0 0 2px var(--accent-subtle)';
+  var ts = document.getElementById('invTs' + invNum);
+  if (ts) { ts.style.display = 'block'; ts.textContent = 'locked \u00B7 ' + new Date().toLocaleString(); }
+  var lockBtn = document.getElementById('invLockBtn' + invNum);
+  if (lockBtn) { lockBtn.textContent = '\u2713 Locked'; lockBtn.disabled = true; }
+  var runBtn = document.getElementById('invRunBtn' + invNum);
+  if (runBtn) runBtn.disabled = false;
+  invHypotheses[invNum] = text;
+  localStorage.setItem('alexey_kmc_inv' + invNum + '_hypothesis', text);
+  localStorage.setItem('alexey_kmc_inv' + invNum + '_timestamp', new Date().toISOString());
+}
+
+function linspace(min, max, n) {
+  var arr = [];
+  for (var i = 0; i < n; i++) {
+    arr.push(n === 1 ? min : min + (max - min) * i / (n - 1));
+  }
+  return arr;
+}
+
+function runInvestigation(invNum) {
+  switch (invNum) {
+    case 1: // Temperature sweep
+      setMode('tsweep');
+      runGenericSweep({
+        paramName: 'temp',
+        values: linspace(300, 1000, 8),
+        label: function(v) { return 'T=' + v.toFixed(0) + 'K'; },
+        prefix: 'tsw',
+        xLabel: 'Temperature (K)'
+      });
+      break;
+    case 2: // Composition sweep
+      setMode('csweep');
+      runGenericSweep({
+        paramName: 'theta',
+        values: linspace(0.05, 0.6, 8),
+        label: function(v) { return '\u03B8=' + v.toFixed(2); },
+        prefix: 'csw',
+        xLabel: '\u03B8 (Ge fraction)'
+      });
+      break;
+    case 3: // Desorption sweep
+      setMode('dsweep');
+      runGenericSweep({
+        paramName: 'pdes',
+        values: linspace(0.01, 0.5, 8),
+        label: function(v) { return 'P=' + v.toFixed(2); },
+        prefix: 'dsw',
+        xLabel: 'P_des (desorption probability)'
+      });
+      break;
+  }
+}
+
+/* ── Legacy sweep wrappers (keep existing tab buttons working) ── */
+async function runTempSweep() {
+  var tMin = +document.getElementById('tswTmin').value;
+  var tMax = +document.getElementById('tswTmax').value;
+  var pts = +document.getElementById('tswPts').value;
+  runGenericSweep({
+    paramName: 'temp',
+    values: linspace(tMin, tMax, pts),
+    label: function(v) { return 'T=' + v.toFixed(0) + 'K'; },
+    prefix: 'tsw',
+    xLabel: 'Temperature (K)'
+  });
+}
+
 async function runCompSweep() {
-  if (running) return;
-  running = true;
-  sweepCancelled = false;
   var thMin = +document.getElementById('cswThetaMin').value;
   var thMax = +document.getElementById('cswThetaMax').value;
   var pts = +document.getElementById('cswPts').value;
-  var niter = +document.getElementById('cswNiter').value;
-  var baseParams = readParams();
+  runGenericSweep({
+    paramName: 'theta',
+    values: linspace(thMin, thMax, pts),
+    label: function(v) { return '\u03B8=' + v.toFixed(2); },
+    prefix: 'csw',
+    xLabel: '\u03B8 (Ge fraction)'
+  });
+}
 
-  if (cswRoughChart) cswRoughChart.destroy();
-  if (cswSkewChart) cswSkewChart.destroy();
-  if (cswKurtChart) cswKurtChart.destroy();
-  cswRoughChart = mkSweepChart('cswRoughChart', '\u03B8 (Ge fraction)', 'RMS Roughness', '#7dd87d');
-  cswSkewChart = mkSweepChart('cswSkewChart', '\u03B8 (Ge fraction)', 'Skewness', '#f0b429');
-  cswKurtChart = mkSweepChart('cswKurtChart', '\u03B8 (Ge fraction)', 'Kurtosis (excess)', '#e24b4a');
-
-  document.getElementById('cswDash').style.display = '';
-  document.getElementById('cswRunBtn').disabled = true;
-  document.getElementById('cswSummary').innerHTML = '';
-
-  var results = [];
-  for (var i = 0; i < pts; i++) {
-    if (sweepCancelled) break;
-    var th = pts === 1 ? thMin : thMin + (thMax - thMin) * i / (pts - 1);
-    var pct = ((i / pts) * 100).toFixed(0);
-    document.getElementById('cswProgFill').style.width = pct + '%';
-    document.getElementById('cswProgText').textContent = '\u03B8=' + th.toFixed(2) + ' (' + (i+1) + '/' + pts + ')';
-
-    var p = {};
-    for (var k in baseParams) p[k] = baseParams[k];
-    p.theta = th;
-    p.niter1 = niter;
-    var data = await runWorkerForParams(p);
-    if (data) {
-      data.theta = th;
-      results.push(data);
-      cswRoughChart.data.datasets[0].data = results.map(function(r) { return { x: r.theta, y: r.rmsht }; });
-      cswRoughChart.update();
-      cswSkewChart.data.datasets[0].data = results.map(function(r) { return { x: r.theta, y: r.skewness }; });
-      cswSkewChart.update();
-      cswKurtChart.data.datasets[0].data = results.map(function(r) { return { x: r.theta, y: r.kurtosis }; });
-      cswKurtChart.update();
-    }
-  }
-
-  if (results.length > 0) {
-    var minR = results[0], maxR = results[0];
-    for (var i = 1; i < results.length; i++) {
-      if (results[i].rmsht < minR.rmsht) minR = results[i];
-      if (results[i].rmsht > maxR.rmsht) maxR = results[i];
-    }
-    document.getElementById('cswSummary').innerHTML =
-      '<div>Points: ' + results.length + '</div>' +
-      '<div>Min roughness: ' + minR.rmsht.toFixed(4) + ' at \u03B8=' + minR.theta.toFixed(2) + '</div>' +
-      '<div>Max roughness: ' + maxR.rmsht.toFixed(4) + ' at \u03B8=' + maxR.theta.toFixed(2) + '</div>' +
-      '<div>Range: ' + (maxR.rmsht - minR.rmsht).toFixed(4) + '</div>';
-  }
-
-  document.getElementById('cswProgFill').style.width = '100%';
-  document.getElementById('cswProgText').textContent = sweepCancelled ? 'Cancelled' : 'Complete';
-  document.getElementById('cswRunBtn').disabled = false;
-  running = false;
+async function runDesorpSweep() {
+  var dMin = +document.getElementById('dswPdesMin').value;
+  var dMax = +document.getElementById('dswPdesMax').value;
+  var pts = +document.getElementById('dswPts').value;
+  runGenericSweep({
+    paramName: 'pdes',
+    values: linspace(dMin, dMax, pts),
+    label: function(v) { return 'P=' + v.toFixed(2); },
+    prefix: 'dsw',
+    xLabel: 'P_des (desorption probability)'
+  });
 }

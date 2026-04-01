@@ -492,3 +492,83 @@ function initScalingCharts() {
     options: zOpts
   });
 }
+
+/* ══════════════════════════════════════════════
+   RICH SWEEP CHARTS (Investigation Protocol)
+   ══════════════════════════════════════════════ */
+var richSweepCharts = {};
+
+function initRichSweepCharts(prefix, xLabel) {
+  // Destroy existing
+  var keys = ['Beta', 'Pits', 'PitWidth', 'Alpha', 'Xi', 'Etch'];
+  for (var i = 0; i < keys.length; i++) {
+    var k = prefix + keys[i];
+    if (richSweepCharts[k]) { richSweepCharts[k].destroy(); richSweepCharts[k] = null; }
+  }
+
+  var metrics = [
+    { suffix: 'Beta',     yLabel: '\u03B2 (growth exponent)', color: '#7dd87d' },
+    { suffix: 'Pits',     yLabel: 'Pit count',                color: '#e24b4a' },
+    { suffix: 'PitWidth', yLabel: 'Avg pit width (sites)',     color: '#f0b429' },
+    { suffix: 'Alpha',    yLabel: '\u03B1 (roughness exponent)', color: '#7da0dd' },
+    { suffix: 'Xi',       yLabel: '\u03BE (correlation length)', color: '#4a9aaa' },
+    { suffix: 'Etch',     yLabel: 'Etch depth (layers)',       color: '#cfb03d' }
+  ];
+
+  for (var i = 0; i < metrics.length; i++) {
+    var m = metrics[i];
+    var canvasId = prefix + m.suffix + 'Chart';
+    var el = document.getElementById(canvasId);
+    if (!el) continue;
+    richSweepCharts[prefix + m.suffix] = mkSweepChart(canvasId, xLabel, m.yLabel, m.color);
+  }
+
+  // Also init the basic RMS/skew/kurt charts
+  var basicIds = [
+    { id: prefix + 'RoughChart', label: 'RMS Roughness', color: '#7dd87d' },
+    { id: prefix + 'SkewChart',  label: 'Skewness',      color: '#f0b429' },
+    { id: prefix + 'KurtChart',  label: 'Kurtosis (excess)', color: '#e24b4a' }
+  ];
+  for (var j = 0; j < basicIds.length; j++) {
+    var b = basicIds[j];
+    var el2 = document.getElementById(b.id);
+    if (!el2) continue;
+    var key = prefix + b.id.replace(prefix, '');
+    if (richSweepCharts[key]) richSweepCharts[key].destroy();
+    richSweepCharts[key] = mkSweepChart(b.id, xLabel, b.label, b.color);
+  }
+}
+
+function updateRichSweepCharts(prefix, results, paramName) {
+  function mapField(field) {
+    return results.filter(function(r) { return r[field] !== null && r[field] !== undefined; })
+      .map(function(r) { return { x: r._paramVal, y: r[field] }; });
+  }
+
+  var charts = {
+    'Beta':     'beta',
+    'Pits':     'pitCount',
+    'PitWidth': 'avgPitWidth',
+    'Alpha':    'alpha',
+    'Xi':       'xi',
+    'Etch':     'etchDepth'
+  };
+
+  for (var suffix in charts) {
+    var ch = richSweepCharts[prefix + suffix];
+    if (ch) {
+      ch.data.datasets[0].data = mapField(charts[suffix]);
+      ch.update();
+    }
+  }
+
+  // Basic charts
+  var basicMap = { 'RoughChart': 'rmsht', 'SkewChart': 'skewness', 'KurtChart': 'kurtosis' };
+  for (var bid in basicMap) {
+    var ch2 = richSweepCharts[prefix + bid];
+    if (ch2) {
+      ch2.data.datasets[0].data = mapField(basicMap[bid]);
+      ch2.update();
+    }
+  }
+}

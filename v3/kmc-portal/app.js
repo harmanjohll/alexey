@@ -77,17 +77,18 @@ function setMode(m) {
   if (running) return;
   currentMode = m;
   var tabs = document.querySelectorAll('.mode-tab');
-  var modes = ['single', 'tsweep', 'csweep'];
+  var modes = ['single', 'tsweep', 'csweep', 'dsweep'];
   for (var i = 0; i < tabs.length; i++) {
     tabs[i].classList.toggle('active', modes[i] === m);
   }
   var sections = document.querySelectorAll('.mode-section');
   for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
-  var map = {single:'modeSingle', tsweep:'modeTsweep', csweep:'modeCsweep'};
+  var map = {single:'modeSingle', tsweep:'modeTsweep', csweep:'modeCsweep', dsweep:'modeDsweep'};
   document.getElementById(map[m]).classList.add('active');
   document.getElementById('singleDash').style.display = m === 'single' ? '' : 'none';
   document.getElementById('tswDash').style.display = m === 'tsweep' ? '' : 'none';
   document.getElementById('cswDash').style.display = m === 'csweep' ? '' : 'none';
+  document.getElementById('dswDash').style.display = m === 'dsweep' ? '' : 'none';
 }
 
 function startSim() {

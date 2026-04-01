@@ -7,16 +7,23 @@ var lastHtRaw = null;
 var lastFullHt = null;
 var viewMode = 'cross';
 
-function renderLattice(sliceBuffer, sliceH, lattx) {
+function renderLattice(sliceBuffer, sliceH, lattx, targetCanvas) {
   lastSliceData = new Uint8Array(sliceBuffer.slice(0));
   lastSliceH = sliceH;
   lastLattx = lattx;
-  var zoom = +document.getElementById('zoomSlider').value;
-  var cvs = document.getElementById('latticeCanvas');
-  cvs.width = lattx;
-  cvs.height = sliceH;
-  cvs.style.width = (lattx * zoom) + 'px';
-  cvs.style.height = (sliceH * zoom) + 'px';
+  var cvs;
+  if (targetCanvas) {
+    cvs = targetCanvas;
+    cvs.width = lattx;
+    cvs.height = sliceH;
+  } else {
+    var zoom = +document.getElementById('zoomSlider').value;
+    cvs = document.getElementById('latticeCanvas');
+    cvs.width = lattx;
+    cvs.height = sliceH;
+    cvs.style.width = (lattx * zoom) + 'px';
+    cvs.style.height = (sliceH * zoom) + 'px';
+  }
   var ctx = cvs.getContext('2d');
   var img = ctx.createImageData(lattx, sliceH);
   var slice = new Uint8Array(sliceBuffer);
