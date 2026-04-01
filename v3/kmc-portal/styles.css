@@ -146,5 +146,39 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,0.08)}
 [data-tip]::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--text-primary);pointer-events:none;opacity:0;transition:opacity .15s;z-index:100}
 [data-tip]:hover::before{opacity:1}
 
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.stat-grid.four{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}}
+/* Investigation Protocol */
+.inv-list{display:flex;flex-direction:column;gap:12px}
+.inv-card{background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:14px;transition:border-color .15s}
+.inv-card-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.inv-num{font-size:18px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;line-height:1}
+.inv-q{font-size:14px;font-weight:500;color:var(--text-primary);line-height:1.5;font-family:'Instrument Serif',serif;font-style:italic}
+.inv-method{font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;line-height:1.6;margin-bottom:10px}
+.inv-hyp{width:100%;min-height:70px;background:var(--bg-deep);border:1px solid var(--border);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;font-size:12px;line-height:1.65;padding:10px;resize:vertical;border-radius:2px;transition:border-color .2s}
+.inv-hyp:focus{outline:none;border-color:var(--accent)}
+.inv-hyp::placeholder{color:var(--text-tertiary)}
+.inv-hyp:disabled{color:var(--text-secondary);background:var(--bg);font-style:italic;cursor:default}
+.inv-actions{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.inv-actions .ts-label{font-size:10px;color:var(--accent);font-family:'JetBrains Mono',monospace;display:none}
+
+/* Speed preset buttons */
+.speed-btn{font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:2px;background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.speed-btn:hover{border-color:var(--accent);color:var(--accent)}
+.speed-btn.active{background:var(--accent-subtle);color:var(--accent);border-color:var(--accent-border)}
+
+/* Snapshot gallery for sweep dashboards */
+.snap-gallery{display:flex;gap:10px;overflow-x:auto;padding:6px 0;min-height:80px;align-items:flex-start}
+.snap-gallery:empty::after{content:'Snapshots will appear here as the sweep runs';font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;padding:20px}
+.snap-thumb{flex:0 0 auto;background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:6px;text-align:center;min-width:120px}
+.snap-thumb img{display:block;width:120px;height:60px;image-rendering:pixelated;border-radius:2px;cursor:pointer;transition:opacity .15s}
+.snap-thumb img:hover{opacity:.8}
+.snap-thumb .snap-label{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:4px}
+.snap-thumb .snap-stats{font-size:9px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;margin-top:2px}
+
+/* Sweep summary grid */
+.sweep-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sweep-summary-grid .sl{font-size:10px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.sweep-summary-grid .sv{font-size:18px;font-weight:500;color:var(--text-primary);font-family:'JetBrains Mono',monospace}
+.sweep-summary-grid .sv.sm{font-size:14px}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.stat-grid.four{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.sweep-summary-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.sweep-summary-grid{grid-template-columns:1fr}}
