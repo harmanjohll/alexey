@@ -56,7 +56,7 @@ function init3D(containerId) {
   renderer.domElement.addEventListener('mousemove', function(e) {
     if (!isDragging) return;
     theta += (e.clientX - prevX) * 0.01;
-    phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi + (e.clientY - prevY) * 0.01));
+    phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi + (e.clientY - prevY) * 0.01));
     prevX = e.clientX; prevY = e.clientY;
     updateCamera();
   });
@@ -74,12 +74,24 @@ function init3D(containerId) {
   renderer.domElement.addEventListener('touchmove', function(e) {
     if (!isDragging || e.touches.length !== 1) return;
     theta += (e.touches[0].clientX - prevX) * 0.01;
-    phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi + (e.touches[0].clientY - prevY) * 0.01));
+    phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi + (e.touches[0].clientY - prevY) * 0.01));
     prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
     updateCamera();
     e.preventDefault();
   });
   renderer.domElement.addEventListener('touchend', function() { isDragging = false; });
+
+  // Preset views
+  window.setPresetView = function(view) {
+    switch(view) {
+      case 'top':    theta = 0; phi = 0.01; break;
+      case 'bottom': theta = 0; phi = Math.PI - 0.01; break;
+      case 'front':  theta = 0; phi = Math.PI / 2; break;
+      case 'side':   theta = Math.PI / 2; phi = Math.PI / 2; break;
+      case 'iso':    theta = 0.5; phi = 0.8; break;
+    }
+    updateCamera();
+  };
 
   updateCamera();
   animate();

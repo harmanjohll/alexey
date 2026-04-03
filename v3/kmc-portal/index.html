@@ -16,6 +16,101 @@
 <div class="portal-title">SiGe Thin Film Simulator</div>
 <div class="portal-sub">Faithful browser implementation of a 2D Kinetic Monte Carlo simulation for Silicon-Germanium thin film etching. Replicates the FORTRAN90 physics: desorption, surface diffusion, and bulk diffusion with Metropolis energy criterion on a full-scale lattice. Computation runs in a Web Worker.</div>
 
+<!-- LEARNING GUIDE -->
+<div class="panel" id="guidePanel">
+  <div class="panel-hdr" onclick="togglePanel('guidePanel')">
+    <span class="snum">GUIDE</span>
+    <span class="sname">Understanding the Numbers</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="note" style="border-left-color:var(--accent-light)"><b>The big picture:</b> You are simulating what happens when a Silicon-Germanium surface gets etched &mdash; atoms are stripped away, leaving behind a landscape of bumps and pits. The numbers below help you describe <em>what that landscape looks like</em> and <em>how it got that way</em>.</div>
+
+    <div style="font-size:13px;line-height:1.85;color:var(--text-secondary);margin-bottom:18px">
+
+    <details open style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">RMS Roughness &mdash; &ldquo;How bumpy is the surface?&rdquo;</summary>
+      <p style="margin:6px 0">Imagine running your hand across the surface. RMS roughness is a single number that captures how uneven it feels. Mathematically, it&rsquo;s the <b>standard deviation of surface heights</b> &mdash; how far, on average, each point is from the mean height.</p>
+      <p style="margin:6px 0"><b>Small RMS</b> = nearly flat, like a polished table. <b>Large RMS</b> = very bumpy, like a gravel road.</p>
+      <p style="margin:6px 0;color:var(--text-tertiary);font-size:12px">Formula: RMS = &radic;(&langle;[h(x) &minus; &langle;h&rangle;]&sup2;&rangle;) &mdash; the square root of the average squared deviation from the mean height.</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">&beta; (Beta) &mdash; &ldquo;How fast does roughness grow?&rdquo;</summary>
+      <p style="margin:6px 0">As etching progresses (more iterations), the surface generally gets rougher. Beta tells you <b>how fast</b>. It&rsquo;s the slope when you plot log(RMS) vs log(iteration) &mdash; a power law: RMS &prop; t<sup>&beta;</sup>.</p>
+      <p style="margin:6px 0"><b>What the values mean:</b></p>
+      <ul style="margin:4px 0 8px 18px">
+        <li><b>&beta; &asymp; 0.25</b> &mdash; Slow, smooth roughening (Edwards-Wilkinson class)</li>
+        <li><b>&beta; &asymp; 0.33</b> &mdash; Moderate roughening (KPZ class)</li>
+        <li><b>&beta; &asymp; 0.5</b> &mdash; Fast, random roughening (like randomly dropping sand)</li>
+      </ul>
+      <p style="margin:6px 0"><b>How to read the chart:</b> Look at the RMS roughness plot (log-log). If the data points form a straight line, the slope of that line is &beta;. The fit range sliders let you choose which portion to fit &mdash; focus on the region where the line looks straightest.</p>
+      <p style="margin:6px 0"><b>What to log:</b> Record &beta; along with the temperature, &theta;, and P_des you used. Does &beta; change when you change these?</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">&alpha; (Alpha) &amp; &xi; (Xi) &mdash; &ldquo;How does roughness vary across distance?&rdquo;</summary>
+      <p style="margin:6px 0"><b>&alpha; (roughness exponent):</b> Imagine comparing two points close together vs far apart on the surface. Alpha tells you how the height difference grows with separation distance. It comes from the G(r) chart &mdash; the <b>height-height correlation function</b>.</p>
+      <p style="margin:6px 0"><b>&xi; (correlation length):</b> The distance beyond which surface heights are essentially unrelated to each other. Think of it as the &ldquo;typical feature size&rdquo; &mdash; if &xi; = 50, then bumps and pits tend to be about 50 lattice sites wide.</p>
+      <p style="margin:6px 0">On the G(r) chart: the <b>slope at small r</b> gives &alpha;, and the point where the curve <b>flattens out</b> gives &xi;.</p>
+      <p style="margin:6px 0;color:var(--text-tertiary);font-size:12px">G(r) = &radic;&langle;[h(x+r) &minus; h(x)]&sup2;&rangle; &mdash; the RMS height difference between two points separated by distance r.</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">Skewness &amp; Kurtosis &mdash; &ldquo;What shape is the height distribution?&rdquo;</summary>
+      <p style="margin:6px 0"><b>Skewness</b> tells you if the surface is <b>lopsided</b>. Negative skewness means deep pits are present (the surface has a long tail on the low side). Positive means tall peaks.</p>
+      <p style="margin:6px 0"><b>Kurtosis</b> tells you about <b>extreme features</b>. High kurtosis (&gt; 0) means there are unusually deep pits or tall peaks compared to a normal bell curve. Zero means the surface heights look like a normal distribution.</p>
+      <p style="margin:6px 0"><b>Together:</b> Negative skewness + high kurtosis = a surface with scattered deep pits (common in SiGe etching). This is a real signature of preferential Ge etching.</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">Pit Analysis &mdash; &ldquo;Where are the holes, and how big are they?&rdquo;</summary>
+      <p style="margin:6px 0">The pit analysis section identifies <b>depressions</b> in the surface &mdash; regions where the height is significantly below average. It reports how many pits there are, how wide they are, how deep they go, and what fraction of the surface they cover.</p>
+      <p style="margin:6px 0"><b>Why pits matter:</b> In SiGe etching, germanium atoms are preferentially removed (P_Ge=1, P_Si=0). This creates pits where Ge clusters were. The number, size, and depth of pits tells you about the original Ge distribution and the etching dynamics.</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">Etch Depth &amp; Selectivity &mdash; &ldquo;How much material was removed?&rdquo;</summary>
+      <p style="margin:6px 0"><b>Etch depth:</b> How far down the average surface has moved since the start. More etching = deeper.</p>
+      <p style="margin:6px 0"><b>Selectivity (Ge/Si):</b> How many germanium atoms were removed for every silicon atom removed. High selectivity means the etchant strongly prefers Ge, which is what creates pits at Ge-rich sites.</p>
+    </details>
+
+    </div>
+
+    <div style="background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:14px;margin-bottom:14px">
+      <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:10px;font-family:'JetBrains Mono',monospace">Suggested Single-Run Experiments</div>
+      <div style="font-size:13px;line-height:1.85;color:var(--text-secondary)">
+        <p style="margin-bottom:8px">Start with the <b>FORTRAN Default</b> preset and run a full simulation. Watch the lattice evolve and the charts update. Then try changing <b>one parameter at a time</b>:</p>
+        <ol style="margin:0 0 0 18px">
+          <li style="margin-bottom:6px"><b>Temperature:</b> Run at 300K, 500K, 800K, 1000K. Record &beta;, pit count, RMS roughness. Does higher temperature make the surface smoother or rougher? Why?</li>
+          <li style="margin-bottom:6px"><b>Ge fraction (&theta;):</b> Try 0.05, 0.2, 0.5. With more germanium, do you get more pits? Bigger pits? Does the skewness change?</li>
+          <li style="margin-bottom:6px"><b>Desorption probability (P_des):</b> Try 0.01, 0.1, 0.3, 0.5. Higher P_des means atoms leave the surface more easily. What happens to etch depth and roughness?</li>
+          <li style="margin-bottom:6px"><b>Lattice size (lattx):</b> Try 128, 512, 1024 with the same conditions. Does &beta; change? This tests whether your result depends on system size or is a true physical property.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div style="background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:14px">
+      <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:10px;font-family:'JetBrains Mono',monospace">What To Record in Your Logbook</div>
+      <div style="font-size:13px;line-height:1.85;color:var(--text-secondary)">
+        After each run, open the logbook and note:
+        <ol style="margin:6px 0 0 18px">
+          <li>Parameters you used (T, &theta;, P_des, lattx, niter1)</li>
+          <li>Final &beta; value and the fit range you used</li>
+          <li>Final RMS roughness</li>
+          <li>Pit count, average pit width, and pit coverage</li>
+          <li>&alpha; and &xi; from the correlation chart</li>
+          <li>Skewness and kurtosis &mdash; are they positive or negative? What does that tell you?</li>
+          <li>What the lattice cross-section looks like &mdash; is it smooth, pitted, or very rough?</li>
+          <li>Anything that surprised you or contradicted your prediction</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- INVESTIGATION PROTOCOL -->
 <div class="panel" id="invPanel">
   <div class="panel-hdr" onclick="togglePanel('invPanel')">

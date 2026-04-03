@@ -71,6 +71,64 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
+     GUIDE — Understanding the Numbers
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepGuide">
+  <div class="panel-hdr">
+    <span class="snum">GUIDE</span>
+    <span class="sname">Understanding the Numbers</span>
+    <span class="shint">What the statistics mean and what to look for</span>
+  </div>
+  <div class="panel-body">
+    <div style="font-size:13px;line-height:1.85;color:var(--text-secondary)">
+
+    <details open style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">RMS Distance &mdash; &ldquo;How far did they spread?&rdquo;</summary>
+      <p style="margin:6px 0">After N steps, each walker ends up somewhere. Some are close to the origin, some are far. The <b>RMS (root-mean-square) distance</b> is a single number that captures the typical spread. It&rsquo;s calculated by squaring every walker&rsquo;s distance, averaging, then taking the square root.</p>
+      <p style="margin:6px 0">Why not just use the average distance? RMS gives more weight to walkers that ventured far, and it&rsquo;s the natural quantity that the &radic;N law predicts.</p>
+    </details>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">The &radic;N Law &mdash; The Key Discovery</summary>
+      <p style="margin:6px 0">After N random steps of size s, the RMS distance from the origin is approximately <b>s &times; &radic;N</b>. This means:</p>
+      <ul style="margin:4px 0 8px 18px">
+        <li>100 steps &rarr; spread of about 10 &times; step size</li>
+        <li>400 steps (4&times; more) &rarr; spread of about 20 (only 2&times; more, since &radic;4 = 2)</li>
+        <li>10,000 steps &rarr; spread of about 100 (not 10,000!)</li>
+      </ul>
+      <p style="margin:6px 0">The <b>ratio (actual / theory)</b> in the analysis section tests this. If it&rsquo;s close to 1.0, the law holds. The <b>&radic;N law test</b> checks it differently: it divides RMS at full steps by RMS at quarter steps &mdash; should be &asymp; 2.0.</p>
+    </details>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">The RMS Chart &mdash; How To Read It</summary>
+      <p style="margin:6px 0">The <b>solid line</b> is the actual RMS distance at each step. The <b>dashed line</b> is the theoretical &radic;N prediction. If they overlap, the theory is confirmed. Watch how the actual line fluctuates around the theoretical one &mdash; this is randomness in action.</p>
+      <p style="margin:6px 0">With more walkers, the actual line gets smoother (closer to theory). With fewer walkers, it&rsquo;s noisier. This is the power of large samples.</p>
+    </details>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">The Histogram &mdash; Where Do Walkers End Up?</summary>
+      <p style="margin:6px 0">In <b>1D</b>, the histogram shows final positions along the number line. It should look like a <b>bell curve</b> centred at zero &mdash; most walkers stay near the origin, few wander very far.</p>
+      <p style="margin:6px 0">In <b>2D</b>, it shows the distribution of <b>distances</b> from the origin (always positive). The peak is not at zero because in 2D, there are more directions to wander away than back.</p>
+    </details>
+
+    </div>
+
+    <div style="background:var(--bg-deep);border:1px solid var(--border-light);border-radius:2px;padding:14px;margin-top:6px">
+      <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:8px;font-family:'JetBrains Mono',monospace">What To Record After Each Run</div>
+      <div style="font-size:12px;line-height:1.75;color:var(--text-secondary)">
+        1. <b>Settings:</b> Dimension (1D/2D), walkers, steps, step type (uniform/Gaussian)<br>
+        2. <b>Final RMS distance</b> and <b>theoretical &radic;N</b> value<br>
+        3. <b>Ratio</b> (actual / theory) &mdash; how close to 1.0?<br>
+        4. <b>&radic;N law test</b> &mdash; how close to 2.0?<br>
+        5. How the histogram looks &mdash; bell-shaped? Skewed? Wide or narrow?<br>
+        6. Whether the RMS chart hugs the theoretical line or wiggles a lot<br>
+        7. Use <b>Save batch</b> to overlay multiple runs, then describe the comparison
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
      RESEARCH AGENDA
      ═══════════════════════════════════════════════════════ -->
 <div class="panel" id="stepAgenda">

@@ -22,6 +22,39 @@
 <h1 class="portal-title">How Do Fractals Grow?</h1>
 <p class="portal-sub">Grow fractal aggregates through diffusion-limited aggregation (DLA). Measure fractal dimension, sweep sticking probability, compare seed geometries, and explore Koch snowflake geometry with ruler measurement and Monte Carlo area estimation.</p>
 
+<!-- WHAT IS THIS? -->
+<div class="panel" id="panelGuide">
+  <div class="panel-hdr" onclick="togglePanel('panelGuide')">
+    <span class="snum">GUIDE</span>
+    <span class="sname">What Is Fractal Dimension?</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="note" style="border-left-color:var(--accent-light)">
+      <b>The big idea:</b> A line is 1-dimensional. A filled square is 2-dimensional. But some shapes &mdash; like coastlines, tree branches, and the patterns you'll grow here &mdash; are <em>in between</em>. Their dimension is a fraction, like 1.71. That fraction is called the <b>fractal dimension D</b>, and it measures how much the shape fills space.
+    </div>
+
+    <div style="font-size:13px;line-height:1.8;color:var(--text-secondary);margin-bottom:14px">
+      <p style="margin-bottom:10px"><b>How we measure D:</b> Imagine drawing circles of increasing radius r around the centre of a fractal. Count the particles M inside each circle. If M grows as r<sup>D</sup>, then D is the fractal dimension. On a log-log plot (the M(r) chart), this means the <b>slope of the line = D</b>.</p>
+      <p style="margin-bottom:10px"><b>D &asymp; 1.0</b> &rarr; almost a straight line (very thin, branchy structure)<br>
+      <b>D &asymp; 1.5</b> &rarr; moderately space-filling (bushy but with gaps)<br>
+      <b>D &asymp; 2.0</b> &rarr; nearly fills the plane (very dense, almost solid)</p>
+      <p style="margin-bottom:10px"><b>DLA (Diffusion-Limited Aggregation):</b> Particles are released one by one far from the centre. Each one walks randomly until it bumps into the growing cluster and sticks. The result is a branchy, tree-like structure with D &asymp; 1.71 &mdash; it fills space more than a line but less than a solid disk.</p>
+      <p><b>Koch snowflake:</b> A mathematical fractal built by replacing each line segment with a zigzag pattern, over and over. Its dimension is exactly log(4)/log(3) &asymp; 1.26, which you can verify with the ruler measurement tool.</p>
+    </div>
+
+    <div style="font-size:13px;line-height:1.8;color:var(--text-secondary)">
+      <b>Quick guide to the four tabs:</b>
+      <ul style="margin:6px 0 0 18px">
+        <li><b>Grow Aggregate</b> &mdash; Grow a DLA fractal and measure its dimension D from the M(r) chart. Use "Watch mode" to see particles walking in real time.</li>
+        <li><b>Sticking Sweep</b> &mdash; Test whether stickiness affects D. Lower stickiness lets particles penetrate deeper before sticking, changing the shape.</li>
+        <li><b>Seed Comparison</b> &mdash; Does the starting shape (point, line, circle) change D? Run all three and compare.</li>
+        <li><b>Koch Snowflake</b> &mdash; A mathematical fractal. Slide the iteration slider to see it grow. Use the ruler measurement to derive D from the coastline paradox. Run Monte Carlo to estimate its area.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════ RESEARCH AGENDA ═══════ -->
 <div class="panel" id="panelInv">
   <div class="panel-hdr" onclick="togglePanel('panelInv')">
@@ -182,6 +215,29 @@
       <div class="dash-card">
         <div class="note">
           <b>How to read this chart:</b> Each point is the number of particles M within radius r from the centre. On a log-log plot, the slope equals the fractal dimension D. For DLA, expect D &asymp; 1.71.
+        </div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">What To Record</div>
+        <div class="note" style="margin-bottom:0">
+          <b>After each run, log these in your logbook:</b><br>
+          1. How many particles you grew<br>
+          2. The fractal dimension D shown in Statistics<br>
+          3. What the aggregate looks like (branchy? dense? symmetrical?)<br>
+          4. Sticking probability used<br>
+          5. Anything that surprised you
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Experiments To Try</div>
+        <div style="font-size:12px;line-height:1.7;color:var(--text-secondary)">
+          <b>Vary one thing at a time:</b><br>
+          &bull; <b>Particle count:</b> Grow 500, 2000, 10000. Does D change or stabilise?<br>
+          &bull; <b>Sticking probability:</b> Try 1.0, 0.5, 0.1, 0.05. What happens to the branches?<br>
+          &bull; <b>Grid size:</b> Try 200 vs 600. Does the shape look different?<br>
+          &bull; <b>Watch mode:</b> Turn it on with 200 particles. Where do walkers tend to stick &mdash; tips or interior?
         </div>
       </div>
     </div>
