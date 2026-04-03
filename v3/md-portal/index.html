@@ -97,6 +97,11 @@
         <button data-style="vdw" onclick="setRenderStyle('vdw')">VDW</button>
         <button data-style="stick" onclick="setRenderStyle('stick')">Stick</button>
         <button data-style="layer" onclick="setRenderStyle('layer')">Layer Color</button>
+        <span style="margin-left:auto;font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace">VIEW:</span>
+        <button class="sm" onclick="setPresetView('top')">Top</button>
+        <button class="sm" onclick="setPresetView('front')">Front</button>
+        <button class="sm" onclick="setPresetView('side')">Side</button>
+        <button class="sm" onclick="setPresetView('iso')">Iso</button>
       </div>
       <div id="viewer3d"></div>
       <div class="color-legend" id="colorLegend">
