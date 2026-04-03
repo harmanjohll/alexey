@@ -2,6 +2,7 @@
    Loads LAST (after lattice-render.js, charts.js, data.js, sweep.js) */
 
 var currentMode = 'single';
+var running = false, pausedState = false, worker = null;
 
 var PRESETS = {
   default: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:10000,niter2:100,lattx:512,lattz:2048,zstop:1843,zlo:1536,seed:-381791011},

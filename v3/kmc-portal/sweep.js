@@ -178,10 +178,11 @@ async function runGenericSweep(sweepConfig) {
   var speed = SPEED_PRESETS[currentSpeed];
   baseParams.lattx = speed.lattx;
   baseParams.lattz = 2048;
+  baseParams.zstop = Math.round(2048 * 0.9);
+  baseParams.zlo = Math.round(2048 * 0.75);
   baseParams.niter2 = 100;
   baseParams.psi = 0;
   baseParams.pge = 1.0;
-  autoAdjustZstopZlo();
 
   // Init/reset charts
   initRichSweepCharts(prefix, xLabel);
