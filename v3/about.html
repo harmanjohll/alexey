@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--bg-deep:#edeae3;--surface:#ffffff;--border:#d4cfc5;--border-light:#e8e4dc;--text-primary:#1a1a18;--text-secondary:#6b6560;--text-tertiary:#9a9490;--accent:#2d5a3d;--accent-light:#3d7a52;--accent-subtle:rgba(45,90,61,0.08);--accent-border:rgba(45,90,61,0.2)}
+[data-theme="dark"]{--bg:#111111;--bg-deep:#0c0c0c;--surface:#1a1a1a;--border:rgba(61,207,176,0.12);--border-light:rgba(61,207,176,0.06);--text-primary:#e8e8e8;--text-secondary:#999;--text-tertiary:#666;--accent:#3dcfb0;--accent-light:#6eddc5;--accent-subtle:rgba(61,207,176,0.08);--accent-border:rgba(61,207,176,0.2)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;padding:2rem 1rem;line-height:1.65}
+.wrap{max-width:740px;margin:0 auto}
+.nav-back{display:inline-block;font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;text-decoration:none;margin-bottom:2rem;border:1px solid var(--border-light);padding:5px 12px;border-radius:2px;transition:all .15s}
+.nav-back:hover{color:var(--accent);border-color:var(--accent-border)}
+h1{font-family:'Instrument Serif',serif;font-size:clamp(24px,4vw,34px);font-weight:400;margin-bottom:6px}
+.sub{font-size:13px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-bottom:2.5rem}
+.section{margin-bottom:2.5rem}
+.section h2{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border-light)}
+.section p{font-size:15px;color:var(--text-secondary);line-height:1.85;margin-bottom:12px}
+.section p b{color:var(--text-primary);font-weight:500}
+.skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.skill{background:var(--surface);border:1px solid var(--border-light);border-radius:2px;padding:14px}
+.skill-label{font-size:10px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.skill-items{font-size:13px;color:var(--text-secondary);line-height:1.75}
+.method-step{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.method-num{font-size:22px;font-weight:300;color:var(--accent);font-family:'JetBrains Mono',monospace;line-height:1;min-width:28px}
+.method-text{font-size:14px;color:var(--text-secondary);line-height:1.7}
+.method-text b{color:var(--text-primary);font-weight:500}
+.quote{background:var(--surface);border-left:3px solid var(--accent);padding:18px 20px;border-radius:0 2px 2px 0;margin:20px 0;font-size:16px;line-height:1.8;color:var(--text-primary);font-family:'Instrument Serif',serif;font-style:italic}
+.hw-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hw-card{background:var(--surface);border:1px solid var(--border-light);border-radius:2px;padding:14px}
+.hw-title{font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:4px}
+.hw-desc{font-size:12px;color:var(--text-secondary);line-height:1.7}
+.hw-tag{display:inline-block;font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;padding:2px 6px;border:1px solid var(--border-light);border-radius:2px;margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+.theme-toggle{position:fixed;top:1.5rem;right:1.5rem;width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 200ms;z-index:100}
+.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle svg{width:18px;height:18px;color:var(--text-secondary)}
+.theme-toggle .icon-sun{display:none}
+[data-theme="dark"] .theme-toggle .icon-moon{display:none}
+[data-theme="dark"] .theme-toggle .icon-sun{display:block}
+@media(max-width:560px){.skill-grid,.hw-grid{grid-template-columns:1fr}}
+</style>
+<script>(function(){var t=localStorage.getItem('alexey_theme')||'light';document.documentElement.setAttribute('data-theme',t)})()</script>
+</head>
+<body>
+<script>function toggleTheme(){var h=document.documentElement,c=h.getAttribute('data-theme')||'light',n=c==='light'?'dark':'light';h.setAttribute('data-theme',n);localStorage.setItem('alexey_theme',n)}</script>
+<button type="button" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+
+<div class="wrap">
+<a href="index.html" class="nav-back">&larr; portfolio home</a>
+
+<h1>Alexey Mikhail Johll</h1>
+<div class="sub">Singapore &middot; Age 14 &middot; 2025&ndash;2026</div>
+
+<div class="section">
+  <h2>Research Statement</h2>
+  <p>I want to understand how complex behaviour emerges from simple rules. A football match produces thousands of shots across a season, but a geometric model with just two variables &mdash; distance and angle &mdash; can predict scoring probability. A surface made of silicon and germanium atoms follows basic energy rules, yet produces intricate pit patterns when etched. A random walker takes completely unpredictable steps, but after enough of them, a precise mathematical law appears.</p>
+  <p>My approach is always the same: <b>start with a question, build a model, run the computation, and see if the prediction matches reality.</b> The code is a tool. The thinking is the product.</p>
+</div>
+
+<div class="quote">Every experiment in this portfolio begins with a hypothesis I wrote before seeing any results. The simulations amplify my thinking &mdash; they do not replace it.</div>
+
+<div class="section">
+  <h2>My Method</h2>
+  <div class="method-step"><span class="method-num">1</span><div class="method-text"><b>Ask a question.</b> What controls surface roughness? Does stickiness change fractal dimension? How far does a random walker get?</div></div>
+  <div class="method-step"><span class="method-num">2</span><div class="method-text"><b>Write a prediction.</b> Before running anything, I write down what I expect to happen and why. This is locked with a timestamp &mdash; I cannot change it after the fact.</div></div>
+  <div class="method-step"><span class="method-num">3</span><div class="method-text"><b>Build and run.</b> I use computational models that implement real physics: Kinetic Monte Carlo, Tersoff potentials, diffusion-limited aggregation, Monte Carlo sampling.</div></div>
+  <div class="method-step"><span class="method-num">4</span><div class="method-text"><b>Interpret the results.</b> I compare what happened against what I predicted. Where was I right? Where was I wrong? What did I miss?</div></div>
+  <div class="method-step"><span class="method-num">5</span><div class="method-text"><b>Go deeper.</b> An AI coach asks me one Socratic question at a time &mdash; never gives me the answer. I have to reason my way through.</div></div>
+</div>
+
+<div class="section">
+  <h2>Domains I Explore</h2>
+  <div class="skill-grid">
+    <div class="skill">
+      <div class="skill-label">Materials Science</div>
+      <div class="skill-items">SiGe thin film etching, surface energy, molecular dynamics, Kinetic Monte Carlo, Metropolis criterion, scaling exponents (&beta;, &alpha;, &xi;)</div>
+    </div>
+    <div class="skill">
+      <div class="skill-label">Probability &amp; Statistics</div>
+      <div class="skill-items">Monte Carlo simulation, random walks, the &radic;N law, RMS, skewness, kurtosis, power-law fitting, log-log regression</div>
+    </div>
+    <div class="skill">
+      <div class="skill-label">Fractal Geometry</div>
+      <div class="skill-items">Diffusion-limited aggregation, fractal dimension, Koch snowflakes, coastline paradox, ruler measurement, M(r) analysis</div>
+    </div>
+    <div class="skill">
+      <div class="skill-label">Data Science &amp; Sport</div>
+      <div class="skill-items">Expected Goals (xG) modelling, geometric &amp; logistic regression, sensitivity analysis, real league data analysis across 6 European leagues</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Computational Tools I Use</h2>
+  <div class="skill-grid">
+    <div class="skill">
+      <div class="skill-label">Software</div>
+      <div class="skill-items">JavaScript (browser), Web Workers for parallel computation, Chart.js, Three.js, p5.js, HTML Canvas, localStorage for data persistence</div>
+    </div>
+    <div class="skill">
+      <div class="skill-label">Hardware</div>
+      <div class="skill-items">Arduino microcontrollers, sensors and actuators, physical computing projects, electronics prototyping</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Hardware Projects</h2>
+  <p>Alongside my computational work, I build physical projects with Arduino microcontrollers. These projects connect the digital simulations in my portfolio to the real, physical world.</p>
+  <div class="hw-grid">
+    <div class="hw-card">
+      <div class="hw-title">Environmental Sensor Station</div>
+      <div class="hw-desc">Arduino-based weather station logging temperature, humidity, and air quality. Data logged to SD card for analysis &mdash; connecting real-world data collection to computational modelling.</div>
+      <div class="hw-tag">Arduino</div> <div class="hw-tag">sensors</div> <div class="hw-tag">data logging</div>
+    </div>
+    <div class="hw-card">
+      <div class="hw-title">Servo-Controlled Systems</div>
+      <div class="hw-desc">Programmable servo mechanisms demonstrating feedback loops and control theory. Understanding how physical systems respond to inputs &mdash; the same principles behind the simulations.</div>
+      <div class="hw-tag">Arduino</div> <div class="hw-tag">servos</div> <div class="hw-tag">control</div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:var(--text-tertiary);margin-top:10px;font-style:italic">Hardware project details will be updated as builds are completed and documented.</p>
+</div>
+
+<div class="section">
+  <h2>What Drives Me</h2>
+  <p>I play football competitively, which is where my first computational question came from: <em>Can you predict where goals will come from using just geometry?</em> That question led to the xG model, which led to Monte Carlo simulation, which led to random walks, which led to materials science. Each answer opens a new question.</p>
+  <p>I am not interested in memorising formulas. I want to <b>build things that work</b> and <b>understand why they work.</b> Every portal in this portfolio is a tool I built to answer a question I actually cared about.</p>
+</div>
+
+</div>
+</body>
+</html>
