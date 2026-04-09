@@ -16,6 +16,10 @@ body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system
 .hero-name{font-family:'Instrument Serif',serif;font-size:clamp(22px,4vw,36px);font-weight:400;color:var(--text-primary);letter-spacing:2px;margin-bottom:8px}
 .hero-sub{font-family:'JetBrains Mono',monospace;font-size:clamp(13px,2vw,16px);color:var(--text-secondary);margin-bottom:6px}
 .hero-loc{font-size:12px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace}
+.hero-nav{margin-top:18px;display:flex;align-items:center;justify-content:center;gap:10px}
+.hero-link{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--accent);text-decoration:none;border:1px solid var(--accent-border);padding:5px 14px;border-radius:2px;transition:all .15s}
+.hero-link:hover{background:var(--accent-subtle);border-color:var(--accent)}
+.hero-dot{color:var(--text-tertiary);font-size:10px}
 
 .section-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
 .section-label{font-size:10px;font-weight:500;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;padding-left:2px}
@@ -58,8 +62,13 @@ body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system
 
 <div class="hero">
   <div class="hero-name">ALEXEY MIKHAIL JOHLL</div>
-  <div class="hero-sub">Computational Research Tools</div>
-  <div class="hero-loc">Singapore &middot; v3</div>
+  <div class="hero-sub">Computational Science Portfolio</div>
+  <div class="hero-loc">Singapore &middot; Age 14 &middot; 2025&ndash;2026</div>
+  <div class="hero-nav">
+    <a href="about.html" class="hero-link">About me</a>
+    <span class="hero-dot">&middot;</span>
+    <a href="journal.html" class="hero-link">Research journal</a>
+  </div>
 </div>
 
 <!-- SiGe PORTALS -->
@@ -180,11 +189,13 @@ body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system
 
 <!-- ABOUT -->
 <div class="section-hdr">
-  <span class="section-label">About v3</span>
+  <span class="section-label">About This Portfolio</span>
   <span class="section-line"></span>
 </div>
 <div class="about">
-  <p>v3 portals use a multi-file architecture: separate Web Workers for computation, modular chart and data management, and external stylesheets. The physics is ported with high fidelity from FORTRAN reference implementations and validated against v2 single-file prototypes. Each portal runs entirely in the browser with no backend.</p>
+  <p>Every portal begins with a question I wrote myself. The computation amplifies my thinking &mdash; it does not replace it. Each hypothesis is timestamped and locked before the simulation runs. Each interpretation is my own. The AI coach asks questions &mdash; it never gives answers.</p>
+  <p style="margin-top:10px"><a href="about.html" style="color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;text-decoration:none">Read more about my research method &rarr;</a></p>
+  <p style="margin-top:6px"><a href="journal.html" style="color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;text-decoration:none">View my research journal &rarr;</a></p>
 </div>
 
 </div>

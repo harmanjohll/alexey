@@ -1,5 +1,5 @@
 /* worker-kmc.js — 2D KMC simulation engine (Web Worker)
-   Faithful port of FORTRAN 2d.f: desorption, surface diffusion, bulk diffusion
+   2D KMC simulation: desorption, surface diffusion, bulk diffusion
    with Metropolis energy criterion on a 2D SiGe lattice */
 
 var ZTOP = 20, ZBUFF = 20;

@@ -143,7 +143,7 @@
       <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
         <span class="inv-num">01</span>
         <span class="inv-q">Does distance really grow as &radic;N?</span>
-        <span class="inv-method">100 walkers: 100, 400, 1600 steps. Does RMS double each time?</span>
+        <span class="inv-method">100 walkers: 100, 400, 1600, 6400 steps. Does RMS double each time?</span>
         <span class="inv-go">&rarr;</span>
       </div>
       <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
@@ -167,7 +167,7 @@
       <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
         <span class="inv-num">05</span>
         <span class="inv-q">How far can a single walker go?</span>
-        <span class="inv-method">1 walker, 2000 steps, run 5 times. How much does the endpoint vary?</span>
+        <span class="inv-method">1 walker, 5000 steps, run 5 times. How much does the endpoint vary?</span>
         <span class="inv-go">&rarr;</span>
       </div>
     </div>
@@ -191,7 +191,7 @@
     <div class="ctrl-bar">
       <div class="ctrl-grp"><label>dimension</label><div class="tog-grp"><button id="btn1D" onclick="setDim(1)">1D</button><button id="btn2D" class="active" onclick="setDim(2)">2D</button></div></div>
       <div class="ctrl-grp"><label>walkers <span class="cv" id="cvW">100</span></label><input type="range" id="slW" min="10" max="500" value="100" step="10" oninput="document.getElementById('cvW').textContent=this.value"></div>
-      <div class="ctrl-grp"><label>steps <span class="cv" id="cvS">500</span></label><input type="range" id="slS" min="50" max="2000" value="500" step="50" oninput="document.getElementById('cvS').textContent=this.value"></div>
+      <div class="ctrl-grp"><label>steps <span class="cv" id="cvS">500</span></label><input type="range" id="slS" min="50" max="10000" value="500" step="50" oninput="document.getElementById('cvS').textContent=this.value"></div>
       <div class="ctrl-grp"><label>step type</label><div class="tog-grp"><button id="btnUni" class="active" onclick="setStepType('uniform')">Uniform</button><button id="btnGau" onclick="setStepType('gaussian')">Gaussian</button></div></div>
       <div class="ctrl-grp"><label>speed <span class="cv" id="cvSp">5</span>x</label><input type="range" id="slSp" min="1" max="20" value="5" oninput="document.getElementById('cvSp').textContent=this.value"></div>
       <div class="ctrl-grp"><label>controls</label><div style="display:flex;gap:4px"><button id="btnPlay" onclick="doPlay()" disabled>Play</button><button id="btnPause" onclick="doPause()" disabled>Pause</button><button id="btnStep" onclick="doStep()" disabled>Step</button></div></div>

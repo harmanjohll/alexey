@@ -155,6 +155,8 @@ function startSim() {
         }
       }
 
+      updateFindings(d, params);
+
       if (d.isSnapshot) {
         addSnapshotFromCanvas(document.getElementById('latticeCanvas'), d);
       }
@@ -210,10 +212,91 @@ function resetSim() {
   ['evDes','evGeD','evSiD','evSdf','evBdf'].forEach(function(id) { document.getElementById(id).textContent = '0'; });
   ['alphaCorr','xiCorrStat','gInfRms','rmsDirectCorr','alphaCorr2','xiCorr2'].forEach(function(id) { var el = document.getElementById(id); if (el) el.textContent = '\u2014'; });
   var stabEl = document.getElementById('roughnessStabilized'); if (stabEl) stabEl.innerHTML = '';
+  var findCard = document.getElementById('findingsCard'); if (findCard) findCard.style.display = 'none';
   setInputsEnabled(true);
   document.getElementById('latticeCanvas').getContext('2d').clearRect(0, 0, 500, 150);
   document.getElementById('hmapCanvas').getContext('2d').clearRect(0, 0, 500, 40);
   document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'JetBrains Mono\',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>';
+}
+
+/* ── Key Findings auto-summary ── */
+function updateFindings(d, params) {
+  var card = document.getElementById('findingsCard');
+  if (!card) return;
+  card.style.display = '';
+
+  // Parameters
+  document.getElementById('findParams').textContent =
+    'T=' + params.temp + 'K, \u03B8=' + params.theta + ', P_des=' + params.pdes + ', ' + params.lattx + '\u00D7' + params.lattz + ', ' + params.niter1 + ' iter';
+
+  // Beta
+  var fitMinVal = +document.getElementById('fitMin').value || 1;
+  var fitMaxVal = +document.getElementById('fitMax').value || Infinity;
+  var fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
+  var betaEl = document.getElementById('findBeta');
+  if (fit) {
+    var bv = fit.beta;
+    betaEl.textContent = '\u03B2 = ' + bv.toFixed(4) + ' (fit ' + fitMinVal + '\u2013' + (isFinite(fitMaxVal) ? fitMaxVal : 'end') + ')';
+    // Universality class match
+    var classes = [{name:'Random',b:0.5},{name:'KPZ',b:0.333},{name:'EW',b:0.25}];
+    var best = classes[0], bestD = Math.abs(bv - classes[0].b);
+    for (var i = 1; i < classes.length; i++) {
+      var dd = Math.abs(bv - classes[i].b);
+      if (dd < bestD) { best = classes[i]; bestD = dd; }
+    }
+    var classEl = document.getElementById('findClass');
+    classEl.textContent = best.name + ' (\u03B2=' + best.b + ', \u0394=' + bestD.toFixed(3) + ')';
+    classEl.className = 'finding-value ' + (bestD < 0.03 ? 'match-good' : bestD < 0.08 ? 'match-close' : 'match-far');
+  } else {
+    betaEl.textContent = '\u2014';
+    document.getElementById('findClass').textContent = '\u2014';
+    document.getElementById('findClass').className = 'finding-value';
+  }
+
+  // Surface character from skewness/kurtosis
+  var surfEl = document.getElementById('findSurface');
+  if (d.skewness !== undefined) {
+    var sk = d.skewness, ku = d.kurtosis;
+    var desc = '';
+    if (sk < -0.5) desc = 'Deep pits (skew=' + sk.toFixed(2) + ')';
+    else if (sk > 0.5) desc = 'Tall peaks (skew=' + sk.toFixed(2) + ')';
+    else desc = 'Nearly symmetric (skew=' + sk.toFixed(2) + ')';
+    if (ku > 1) desc += ', extreme features (kurt=' + ku.toFixed(2) + ')';
+    else if (ku < -0.5) desc += ', flat distribution';
+    surfEl.textContent = desc;
+  }
+
+  // Correlation
+  var corrEl = document.getElementById('findCorr');
+  var alphaResult = window._lastAlphaResult;
+  if (alphaResult) {
+    corrEl.textContent = '\u03B1 = ' + alphaResult.alpha.toFixed(3) + ', \u03BE = ' + alphaResult.xi + ' sites';
+  }
+
+  // Pits
+  var pitEl = document.getElementById('findPits');
+  var pc = document.getElementById('pitCount');
+  var pw = document.getElementById('pitAvgW');
+  var pcov = document.getElementById('pitCoverage');
+  if (pc && pc.textContent !== '\u2014') {
+    pitEl.textContent = pc.textContent + ' pits, avg width ' + pw.textContent + ', ' + pcov.textContent + ' coverage';
+  }
+}
+
+function captureFindings() {
+  var rows = document.querySelectorAll('#findingsContent .finding-row');
+  var lines = [];
+  for (var i = 0; i < rows.length; i++) {
+    var label = rows[i].querySelector('.finding-label').textContent;
+    var value = rows[i].querySelector('.finding-value').textContent;
+    lines.push(label + ': ' + value);
+  }
+  var text = 'KMC SIMULATION — KEY FINDINGS\n' + new Date().toLocaleString() + '\n\n' + lines.join('\n');
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector('#findingsCard .sm');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy as text'; }, 1500);
+  });
 }
 
 /* Initialize on DOM ready */

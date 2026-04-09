@@ -9,7 +9,6 @@ var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
 
 var roughnessData = [], etchDepthData = [], etchRateData = [];
 var rmsHistory = [], skewHistory = [], kurtHistory = [];
-var logMode = 'logscale';
 var initialAveHt = null;
 
 var chartDefaults = {
@@ -38,11 +37,7 @@ function mkChart(id, label, xLabel, yLabel, color, scaleType) {
 }
 
 function initCharts() {
-  if (logMode === 'linear') {
-    roughnessChart = mkChart('roughnessChart', 'log\u2081\u2080(RMS)', 'log\u2081\u2080(iteration)', 'log\u2081\u2080(RMS roughness)', '#7dd87d', '');
-  } else {
-    roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
-  }
+  roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
   // Add fit + universality reference lines
   roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'\u03B2_KPZ=0.333', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
@@ -81,18 +76,21 @@ function initCharts() {
     type:'line',
     data:{ labels:[], datasets:[
       { label:'RMS', data:[], borderColor:'#7dd87d', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y' },
-      { label:'Skewness', data:[], borderColor:'#f0b429', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y2' },
-      { label:'Kurtosis', data:[], borderColor:'#e24b4a', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y2' }
+      { label:'Skewness', data:[], borderColor:'#f0b429', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y2', hidden:true },
+      { label:'Kurtosis', data:[], borderColor:'#e24b4a', borderWidth:1.5, pointRadius:0, fill:false, yAxisID:'y2', hidden:true }
     ]},
     options: { responsive:true, maintainAspectRatio:false, animation:{duration:0},
       plugins: sOpts.plugins,
       scales: {
         x: sOpts.scales.x,
         y: { position:'left', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'RMS',color:'#7dd87d',font:{family:'JetBrains Mono',size:9}} },
-        y2: { position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'skew / kurt',color:'#f0b429',font:{family:'JetBrains Mono',size:9}} }
+        y2: { position:'right', display:false, grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'skew / kurt',color:'#f0b429',font:{family:'JetBrains Mono',size:9}} }
       }
     }
   });
+  // Sync with toggle state
+  var skCb = document.getElementById('showSkewKurt');
+  if (skCb && skCb.checked) { statsChart.data.datasets[1].hidden = false; statsChart.data.datasets[2].hidden = false; statsChart.options.scales.y2.display = true; }
 
   // Height distribution histogram
   var hOpts = JSON.parse(JSON.stringify(chartDefaults));
@@ -199,18 +197,11 @@ function addUniversalityLines(fit, logData, rawData, fitMinVal, fitMaxVal) {
   for (var k = 0; k < 3; k++) {
     var b = refBetas[k];
     var refIntercept = midY - b * midX;
-    if (logMode === 'linear') {
-      roughnessChart.data.datasets[2 + k].data = [
-        { x: xMin, y: refIntercept + b * xMin },
-        { x: xMax, y: refIntercept + b * xMax }
-      ];
-    } else {
-      var rXmin = rawData[0].x, rXmax = rawData[rawData.length - 1].x;
-      roughnessChart.data.datasets[2 + k].data = [
-        { x: rXmin, y: Math.pow(10, refIntercept + b * Math.log10(rXmin)) },
-        { x: rXmax, y: Math.pow(10, refIntercept + b * Math.log10(rXmax)) }
-      ];
-    }
+    var rXmin = rawData[0].x, rXmax = rawData[rawData.length - 1].x;
+    roughnessChart.data.datasets[2 + k].data = [
+      { x: rXmin, y: Math.pow(10, refIntercept + b * Math.log10(rXmin)) },
+      { x: rXmax, y: Math.pow(10, refIntercept + b * Math.log10(rXmax)) }
+    ];
   }
 }
 
@@ -220,25 +211,14 @@ function updateCharts(d) {
   var fitMinVal = +document.getElementById('fitMin').value || 1;
   var fitMaxVal = +document.getElementById('fitMax').value || Infinity;
   var fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
-  if (logMode === 'linear') {
-    var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
-    roughnessChart.data.datasets[0].data = logData;
-    if (fit && logData.length > 0) {
-      var fMinLog = Math.log10(Math.max(1, fitMinVal));
-      var fMaxLog = Math.log10(isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x);
-      roughnessChart.data.datasets[1].data = [{x:fMinLog,y:fit.intercept+fit.beta*fMinLog},{x:fMaxLog,y:fit.intercept+fit.beta*fMaxLog}];
-    }
-    addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
-  } else {
-    roughnessChart.data.datasets[0].data = roughnessData;
-    if (fit && roughnessData.length > 0) {
-      var fMin = Math.max(1, fitMinVal);
-      var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
-    }
-    var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
-    addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
+  roughnessChart.data.datasets[0].data = roughnessData;
+  if (fit && roughnessData.length > 0) {
+    var fMin = Math.max(1, fitMinVal);
+    var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
+    roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
   }
+  var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
+  addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
 
@@ -291,62 +271,32 @@ function refitBeta() {
   var fitMaxVal = +document.getElementById('fitMax').value || Infinity;
   var fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
   var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
-  if (logMode === 'linear') {
-    if (fit && logData.length > 0) {
-      var fMinLog = Math.log10(Math.max(1, fitMinVal));
-      var fMaxLog = Math.log10(isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x);
-      roughnessChart.data.datasets[1].data = [{x:fMinLog,y:fit.intercept+fit.beta*fMinLog},{x:fMaxLog,y:fit.intercept+fit.beta*fMaxLog}];
-    } else { roughnessChart.data.datasets[1].data = []; }
-  } else {
-    if (fit && roughnessData.length > 0) {
-      var fMin = Math.max(1, fitMinVal);
-      var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
-    } else { roughnessChart.data.datasets[1].data = []; }
-  }
+  if (fit && roughnessData.length > 0) {
+    var fMin = Math.max(1, fitMinVal);
+    var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
+    roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
+  } else { roughnessChart.data.datasets[1].data = []; }
   addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
 }
 
-function setLogMode(mode) {
-  logMode = mode;
-  document.getElementById('logLinBtn').classList.toggle('active', mode === 'linear');
-  document.getElementById('logScaleBtn').classList.toggle('active', mode === 'logscale');
-  if (roughnessChart) roughnessChart.destroy();
-  if (logMode === 'linear') {
-    roughnessChart = mkChart('roughnessChart', 'log\u2081\u2080(RMS)', 'log\u2081\u2080(iteration)', 'log\u2081\u2080(RMS roughness)', '#7dd87d', '');
-  } else {
-    roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
-  }
-  roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
-  roughnessChart.data.datasets.push({ label:'\u03B2_KPZ=0.333', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
-  roughnessChart.data.datasets.push({ label:'\u03B2_EW=0.25', data:[], borderColor:'rgba(125,221,125,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
-  roughnessChart.data.datasets.push({ label:'\u03B2_rand=0.5', data:[], borderColor:'rgba(226,75,74,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
-  roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+function setFitRange(min, max) {
+  document.getElementById('fitMin').value = min;
+  document.getElementById('fitMax').value = max;
+  refitBeta();
+}
 
-  var fitMinVal = +document.getElementById('fitMin').value || 1;
-  var fitMaxVal = +document.getElementById('fitMax').value || Infinity;
-  var fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
-  var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x:Math.log10(p.x), y:Math.log10(p.y) }; });
-  if (logMode === 'linear') {
-    roughnessChart.data.datasets[0].data = logData;
-    if (fit && logData.length > 0) {
-      var fMinLog = Math.log10(Math.max(1, fitMinVal));
-      var fMaxLog = Math.log10(isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x);
-      roughnessChart.data.datasets[1].data = [{x:fMinLog,y:fit.intercept+fit.beta*fMinLog},{x:fMaxLog,y:fit.intercept+fit.beta*fMaxLog}];
-    }
-  } else {
-    roughnessChart.data.datasets[0].data = roughnessData;
-    if (fit && roughnessData.length > 0) {
-      var fMin = Math.max(1, fitMinVal);
-      var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
-      roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
-    }
+function toggleSkewKurt() {
+  var show = document.getElementById('showSkewKurt').checked;
+  var els = document.querySelectorAll('[data-metric="skewkurt"]');
+  for (var i = 0; i < els.length; i++) els[i].style.display = show ? '' : 'none';
+  if (statsChart) {
+    statsChart.data.datasets[1].hidden = !show;
+    statsChart.data.datasets[2].hidden = !show;
+    statsChart.options.scales.y2.display = show;
+    statsChart.update();
   }
-  addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
-  roughnessChart.update();
-  document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
 }
 
 /* ── Height-Height Correlation G(r) ── */
