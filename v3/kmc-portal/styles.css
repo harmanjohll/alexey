@@ -180,5 +180,13 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,0.08)}
 .sweep-summary-grid .sv{font-size:18px;font-weight:500;color:var(--text-primary);font-family:'JetBrains Mono',monospace}
 .sweep-summary-grid .sv.sm{font-size:14px}
 
-@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.stat-grid.four{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.sweep-summary-grid{grid-template-columns:1fr 1fr}}
+/* Key Findings panel */
+.finding-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 8px;background:var(--bg);border:1px solid var(--border-light);border-radius:2px}
+.finding-label{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin-right:8px}
+.finding-value{font-size:12px;font-weight:500;color:var(--text-primary);font-family:'JetBrains Mono',monospace;text-align:right}
+.finding-value.match-good{color:#3ca03c}
+.finding-value.match-close{color:#f0b429}
+.finding-value.match-far{color:#e24b4a}
+
+@media(max-width:900px){.param-grid{grid-template-columns:1fr 1fr}.stat-grid.four{grid-template-columns:1fr 1fr}.dash-row.triple{grid-template-columns:1fr 1fr}.sweep-grid{grid-template-columns:1fr 1fr}.sweep-summary-grid{grid-template-columns:1fr 1fr}#findingsContent{grid-template-columns:1fr}}
 @media(max-width:600px){.param-grid{grid-template-columns:1fr}.dash-row,.dash-row.wide,.dash-row.triple{grid-template-columns:1fr}.sweep-grid{grid-template-columns:1fr}.sweep-summary-grid{grid-template-columns:1fr}}
