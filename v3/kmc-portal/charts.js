@@ -1,5 +1,150 @@
 /* charts.js — Chart.js plot management for KMC portal */
 
+/* ── Chart PNG Export (white background, 2x resolution) ── */
+function exportChartPNG(canvasId) {
+  var srcCanvas = document.getElementById(canvasId);
+  if (!srcCanvas) return;
+  // Find the chart title from the card-label in the parent card
+  var card = srcCanvas.closest('.dash-card');
+  var title = '';
+  if (card) {
+    var lbl = card.querySelector('.card-label');
+    if (lbl) title = lbl.textContent;
+  }
+  // Get the Chart.js instance
+  var chartInstance = Chart.getChart(srcCanvas);
+  if (!chartInstance) {
+    // Not a Chart.js canvas — export raw (e.g. lattice)
+    exportRawCanvasPNG(srcCanvas, title);
+    return;
+  }
+  // Save original styles, swap to white-background export theme
+  var origBg = chartInstance.options.plugins.customCanvasBackground;
+  var origScales = {};
+  var scaleKeys = Object.keys(chartInstance.options.scales || {});
+  for (var i = 0; i < scaleKeys.length; i++) {
+    var sk = scaleKeys[i];
+    var s = chartInstance.options.scales[sk];
+    origScales[sk] = {
+      gridColor: s.grid ? s.grid.color : undefined,
+      tickColor: s.ticks ? s.ticks.color : undefined,
+      titleColor: s.title ? s.title.color : undefined
+    };
+    if (s.grid) s.grid.color = 'rgba(0,0,0,0.1)';
+    if (s.ticks) s.ticks.color = '#333';
+    if (s.title) s.title.color = '#333';
+  }
+  var origLegColor = null;
+  if (chartInstance.options.plugins.legend && chartInstance.options.plugins.legend.labels) {
+    origLegColor = chartInstance.options.plugins.legend.labels.color;
+    chartInstance.options.plugins.legend.labels.color = '#333';
+  }
+  // Register a temporary background plugin
+  var bgPlugin = {
+    id: 'exportBg',
+    beforeDraw: function(chart) {
+      var ctx = chart.ctx;
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, chart.width, chart.height);
+      ctx.restore();
+    }
+  };
+  chartInstance.config.plugins = chartInstance.config.plugins || [];
+  chartInstance.config.plugins.push(bgPlugin);
+  chartInstance.update('none');
+  // Create hi-res export canvas
+  var scale = 2;
+  var srcW = srcCanvas.width, srcH = srcCanvas.height;
+  var pad = title ? 36 : 0;
+  var exp = document.createElement('canvas');
+  exp.width = srcW * scale;
+  exp.height = (srcH + pad) * scale;
+  var ectx = exp.getContext('2d');
+  ectx.scale(scale, scale);
+  ectx.fillStyle = '#ffffff';
+  ectx.fillRect(0, 0, srcW, srcH + pad);
+  if (title) {
+    ectx.font = '500 11px "JetBrains Mono", monospace';
+    ectx.fillStyle = '#333';
+    ectx.fillText(title, 12, 22);
+  }
+  ectx.drawImage(srcCanvas, 0, pad, srcW, srcH);
+  // Restore original theme
+  chartInstance.config.plugins = chartInstance.config.plugins.filter(function(p) { return p.id !== 'exportBg'; });
+  for (var i = 0; i < scaleKeys.length; i++) {
+    var sk = scaleKeys[i];
+    var s = chartInstance.options.scales[sk];
+    var o = origScales[sk];
+    if (s.grid && o.gridColor !== undefined) s.grid.color = o.gridColor;
+    if (s.ticks && o.tickColor !== undefined) s.ticks.color = o.tickColor;
+    if (s.title && o.titleColor !== undefined) s.title.color = o.titleColor;
+  }
+  if (origLegColor !== null && chartInstance.options.plugins.legend && chartInstance.options.plugins.legend.labels) {
+    chartInstance.options.plugins.legend.labels.color = origLegColor;
+  }
+  chartInstance.update('none');
+  // Download
+  var slug = (title || canvasId).replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+  var link = document.createElement('a');
+  link.download = 'kmc_' + slug + '.png';
+  link.href = exp.toDataURL('image/png');
+  link.click();
+}
+
+function exportRawCanvasPNG(srcCanvas, title) {
+  var scale = 2;
+  var pad = title ? 36 : 0;
+  var w = srcCanvas.width, h = srcCanvas.height;
+  var exp = document.createElement('canvas');
+  exp.width = w * scale;
+  exp.height = (h + pad) * scale;
+  var ctx = exp.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h + pad);
+  if (title) {
+    ctx.font = '500 11px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#333';
+    ctx.fillText(title, 12, 22);
+  }
+  ctx.drawImage(srcCanvas, 0, pad, w, h);
+  var slug = (title || 'canvas').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+  var link = document.createElement('a');
+  link.download = 'kmc_' + slug + '.png';
+  link.href = exp.toDataURL('image/png');
+  link.click();
+}
+
+/* Auto-inject export buttons into all chart cards */
+function injectExportButtons() {
+  var canvases = document.querySelectorAll('.chart-wrap canvas, .lattice-wrap canvas, .heightmap-wrap canvas');
+  for (var i = 0; i < canvases.length; i++) {
+    var cvs = canvases[i];
+    var card = cvs.closest('.dash-card');
+    if (!card || card.querySelector('.export-png-btn')) continue;
+    var hdr = card.querySelector('.card-hdr');
+    if (!hdr) {
+      // card-label only (no card-hdr) — wrap it
+      var lbl = card.querySelector('.card-label');
+      if (!lbl) continue;
+      var wrap = document.createElement('div');
+      wrap.className = 'card-hdr';
+      lbl.parentNode.insertBefore(wrap, lbl);
+      wrap.appendChild(lbl);
+      hdr = wrap;
+    }
+    var btn = document.createElement('button');
+    btn.className = 'sm export-png-btn';
+    btn.style.marginLeft = 'auto';
+    btn.textContent = '\u2193 PNG';
+    btn.setAttribute('data-canvas', cvs.id);
+    btn.onclick = function() { exportChartPNG(this.getAttribute('data-canvas')); };
+    hdr.appendChild(btn);
+  }
+}
+
+
 var roughnessChart = null, etchChart = null, surfaceChart = null, concChart = null;
 var statsChart = null, histChart = null;
 var pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = null;
@@ -38,12 +183,16 @@ function mkChart(id, label, xLabel, yLabel, color, scaleType) {
 
 function initCharts() {
   roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
-  // Add fit + universality reference lines
+  // Add fit (full-width) + fit-range highlight + universality reference lines
   roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'\u03B2_KPZ=0.333', data:[], borderColor:'rgba(125,160,221,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'\u03B2_EW=0.25', data:[], borderColor:'rgba(125,221,125,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
   roughnessChart.data.datasets.push({ label:'\u03B2_rand=0.5', data:[], borderColor:'rgba(226,75,74,0.5)', borderWidth:1, borderDash:[3,4], pointRadius:0, fill:false });
-  roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+  // Dataset 5: fit range highlight (solid segment over the fitted region)
+  roughnessChart.data.datasets.push({ label:'fit range', data:[], borderColor:'#f0b429', borderWidth:3, pointRadius:0, fill:false });
+  roughnessChart.options.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12,
+    filter: function(item) { return item.text !== 'fit range'; }
+  } };
 
   // Etch depth & rate (dual y-axis)
   var eOpts = JSON.parse(JSON.stringify(chartDefaults));
@@ -71,7 +220,13 @@ function initCharts() {
   var sOpts = JSON.parse(JSON.stringify(chartDefaults));
   sOpts.scales.x.title = { display:true, text:'iteration', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
   sOpts.scales.y.title = { display:true, text:'RMS', color:'#7dd87d', font:{family:'JetBrains Mono',size:9} };
-  sOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+  sOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12,
+    filter: function(item) {
+      var cb = document.getElementById('showSkewKurt');
+      if (cb && !cb.checked && (item.text === 'Skewness' || item.text === 'Kurtosis')) return false;
+      return true;
+    }
+  } };
   statsChart = new Chart(document.getElementById('statsChart'), {
     type:'line',
     data:{ labels:[], datasets:[
@@ -213,9 +368,15 @@ function updateCharts(d) {
   var fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
   roughnessChart.data.datasets[0].data = roughnessData;
   if (fit && roughnessData.length > 0) {
+    // Full-width dashed fit line (extends across entire data range)
+    var rMin = roughnessData[0].x, rMax = roughnessData[roughnessData.length-1].x;
+    roughnessChart.data.datasets[1].data = [{x:rMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(Math.max(1,rMin)))},{x:rMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(rMax))}];
+    // Solid highlight segment over the actual fit range
     var fMin = Math.max(1, fitMinVal);
-    var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
-    roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
+    var fMax = isFinite(fitMaxVal) ? Math.min(fitMaxVal, rMax) : rMax;
+    roughnessChart.data.datasets[5].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
+  } else {
+    roughnessChart.data.datasets[5].data = [];
   }
   var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
   addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
@@ -272,10 +433,15 @@ function refitBeta() {
   var fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
   var logData = roughnessData.filter(function(p) { return p.x > 0 && p.y > 0; }).map(function(p) { return { x: Math.log10(p.x), y: Math.log10(p.y) }; });
   if (fit && roughnessData.length > 0) {
+    var rMin = roughnessData[0].x, rMax = roughnessData[roughnessData.length-1].x;
+    roughnessChart.data.datasets[1].data = [{x:rMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(Math.max(1,rMin)))},{x:rMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(rMax))}];
     var fMin = Math.max(1, fitMinVal);
-    var fMax = isFinite(fitMaxVal) ? fitMaxVal : roughnessData[roughnessData.length-1].x;
-    roughnessChart.data.datasets[1].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
-  } else { roughnessChart.data.datasets[1].data = []; }
+    var fMax = isFinite(fitMaxVal) ? Math.min(fitMaxVal, rMax) : rMax;
+    roughnessChart.data.datasets[5].data = [{x:fMin,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMin))},{x:fMax,y:Math.pow(10,fit.intercept+fit.beta*Math.log10(fMax))}];
+  } else {
+    roughnessChart.data.datasets[1].data = [];
+    roughnessChart.data.datasets[5].data = [];
+  }
   addUniversalityLines(fit, logData, roughnessData, fitMinVal, fitMaxVal);
   roughnessChart.update();
   document.getElementById('betaDisp').textContent = fit ? '\u03B2 = ' + fit.beta.toFixed(4) : '\u03B2 = \u2014';
