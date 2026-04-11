@@ -180,6 +180,10 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,0.08)}
 .sweep-summary-grid .sv{font-size:18px;font-weight:500;color:var(--text-primary);font-family:'JetBrains Mono',monospace}
 .sweep-summary-grid .sv.sm{font-size:14px}
 
+/* Export PNG buttons */
+.export-png-btn{color:var(--text-tertiary);border-color:var(--border-light);opacity:.6;transition:opacity .15s}
+.export-png-btn:hover{opacity:1;color:var(--accent);border-color:var(--accent-border)}
+
 /* Key Findings panel */
 .finding-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 8px;background:var(--bg);border:1px solid var(--border-light);border-radius:2px}
 .finding-label{font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;margin-right:8px}

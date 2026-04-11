@@ -305,4 +305,5 @@ document.addEventListener('DOMContentLoaded', function() {
   renderScalingTable();
   initCharts();
   updateScalingPlots();
+  injectExportButtons();
 });
