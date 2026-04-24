@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMC · Advanced · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../_common/theme.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+<a href="../../index.html" class="nav-back">&larr; studio home</a>
+<div class="portal-tag">ADVANCED EXPLORATION &middot; KINETIC MONTE CARLO</div>
+<div class="portal-title">SiGe Thin Film Simulator</div>
+<div class="portal-sub">This wraps reference Fortran 90 KMC code for Silicon-Germanium thin-film etching (kept in <code>FortranReference/KMC/</code>). I ported the physics faithfully to run in the browser via a Web Worker, and built visualisations, sweeps, and roughness-analysis dashboards around it. The core physics — desorption, surface diffusion, bulk diffusion with Metropolis criterion — came from the research implementation; what I added was instrumentation and exploration tooling.</div>
+<div style="background:var(--accent-subtle);border:1px solid var(--accent-border);border-left:2px solid var(--accent);padding:10px 14px;border-radius:0 4px 4px 0;font-size:12px;color:var(--text-secondary);line-height:1.65;margin:0 0 1.5rem">
+  <b style="color:var(--accent-light);font-weight:500">Honest framing:</b> This is learning work — I did not originate the KMC algorithm. I followed published research code, ported it to JavaScript, and wrapped it in a UI so I could experiment with parameters and see the results. The portal here is my instrumentation; the physics is not mine.
+</div>
+
+<!-- LEARNING GUIDE -->
+<div class="panel" id="guidePanel">
+  <div class="panel-hdr" onclick="togglePanel('guidePanel')">
+    <span class="snum">GUIDE</span>
+    <span class="sname">Understanding the Numbers</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="note" style="border-left-color:var(--accent-light)"><b>The big picture:</b> You are simulating what happens when a Silicon-Germanium surface gets etched &mdash; atoms are stripped away, leaving behind a landscape of bumps and pits. The numbers below help you describe <em>what that landscape looks like</em> and <em>how it got that way</em>.</div>
+
+    <div style="font-size:13px;line-height:1.85;color:var(--text-secondary);margin-bottom:18px">
+
+    <details open style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">RMS Roughness &mdash; &ldquo;How bumpy is the surface?&rdquo;</summary>
+      <p style="margin:6px 0">RMS roughness is the <b>standard deviation of surface heights</b> &mdash; a single number capturing how far, on average, each point sits from the mean height.</p>
+      <svg viewBox="0 0 260 85" style="width:100%;max-width:300px;display:block;margin:10px 0" xmlns="http://www.w3.org/2000/svg">
+        <line x1="20" y1="45" x2="240" y2="45" stroke="var(--text-tertiary)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="244" y="48" fill="var(--text-tertiary)" font-size="8" font-family="JetBrains Mono,monospace">mean</text>
+        <path d="M20,45 Q45,20 70,35 Q95,50 120,25 Q145,0 160,40 Q175,65 200,30 Q220,55 240,42" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <line x1="70" y1="35" x2="70" y2="45" stroke="#f0b429" stroke-width="1.5"/><text x="74" y="42" fill="#f0b429" font-size="7" font-family="JetBrains Mono,monospace">d</text>
+        <line x1="120" y1="25" x2="120" y2="45" stroke="#f0b429" stroke-width="1.5"/><text x="124" y="38" fill="#f0b429" font-size="7" font-family="JetBrains Mono,monospace">d</text>
+        <line x1="200" y1="30" x2="200" y2="45" stroke="#f0b429" stroke-width="1.5"/><text x="204" y="40" fill="#f0b429" font-size="7" font-family="JetBrains Mono,monospace">d</text>
+        <text x="80" y="78" fill="var(--text-tertiary)" font-size="8" font-family="JetBrains Mono,monospace">RMS = average size of these arrows</text>
+      </svg>
+      <p style="margin:6px 0"><b>Think of it like:</b> Running your hand across a table. Small RMS = polished smooth. Large RMS = gravel road.</p>
+      <p style="margin:6px 0"><b>What to look for:</b> Watch RMS grow over time. Does it plateau (saturate) or keep climbing?</p>
+      <p style="margin:6px 0;color:var(--text-tertiary);font-size:12px">Formula: RMS = &radic;(&langle;[h(x) &minus; &langle;h&rangle;]&sup2;&rangle;)</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">&beta; (Beta) &mdash; &ldquo;How fast does roughness grow?&rdquo;</summary>
+      <p style="margin:6px 0">Beta is the slope on a log-log plot of RMS vs iteration &mdash; a power law: RMS &prop; t<sup>&beta;</sup>. It tells you <b>how fast</b> the surface gets rougher.</p>
+      <svg viewBox="0 0 220 120" style="width:100%;max-width:260px;display:block;margin:10px 0" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="100" x2="200" y2="100" stroke="var(--text-tertiary)" stroke-width="0.5"/>
+        <line x1="30" y1="100" x2="30" y2="10" stroke="var(--text-tertiary)" stroke-width="0.5"/>
+        <text x="100" y="115" fill="var(--text-tertiary)" font-size="8" font-family="JetBrains Mono,monospace" text-anchor="middle">log(iteration)</text>
+        <text x="10" y="55" fill="var(--text-tertiary)" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-90,10,55)">log(RMS)</text>
+        <line x1="40" y1="90" x2="190" y2="15" stroke="#e24b4a" stroke-width="1.5" opacity="0.6"/>
+        <text x="192" y="14" fill="#e24b4a" font-size="8" font-family="JetBrains Mono,monospace">&beta;=0.5</text>
+        <line x1="40" y1="90" x2="190" y2="40" stroke="#f0b429" stroke-width="1.5" opacity="0.6"/>
+        <text x="192" y="39" fill="#f0b429" font-size="8" font-family="JetBrains Mono,monospace">&beta;=0.33</text>
+        <line x1="40" y1="90" x2="190" y2="52.5" stroke="#7dd87d" stroke-width="1.5" opacity="0.6"/>
+        <text x="192" y="52" fill="#7dd87d" font-size="8" font-family="JetBrains Mono,monospace">&beta;=0.25</text>
+        <text x="34" y="98" fill="var(--text-tertiary)" font-size="7" font-family="JetBrains Mono,monospace">steep = fast</text>
+        <text x="140" y="62" fill="var(--text-tertiary)" font-size="7" font-family="JetBrains Mono,monospace">shallow = slow</text>
+      </svg>
+      <p style="margin:6px 0"><b>Think of it like:</b> The steepness of a hill. Steeper slope = surface roughens faster.</p>
+      <p style="margin:6px 0"><b>What to look for:</b> Use the fit range buttons (Early / Growth / Full) to fit &beta; over different regions. A straight line on the log-log chart means a clean power law. Record &beta; along with T, &theta;, and P_des.</p>
+      <ul style="margin:4px 0 8px 18px">
+        <li><b>&beta; &asymp; 0.25</b> &mdash; Edwards-Wilkinson (slow, smooth)</li>
+        <li><b>&beta; &asymp; 0.33</b> &mdash; KPZ (moderate)</li>
+        <li><b>&beta; &asymp; 0.5</b> &mdash; Random deposition (fast, noisy)</li>
+      </ul>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">&alpha; (Alpha) &amp; &xi; (Xi) &mdash; &ldquo;How does roughness vary across distance?&rdquo;</summary>
+      <p style="margin:6px 0"><b>&alpha;</b> (roughness exponent) tells you how height differences grow with separation distance. <b>&xi;</b> (correlation length) is the distance beyond which heights are unrelated &mdash; the typical feature size.</p>
+      <svg viewBox="0 0 240 110" style="width:100%;max-width:280px;display:block;margin:10px 0" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="90" x2="220" y2="90" stroke="var(--text-tertiary)" stroke-width="0.5"/>
+        <line x1="30" y1="90" x2="30" y2="10" stroke="var(--text-tertiary)" stroke-width="0.5"/>
+        <text x="125" y="105" fill="var(--text-tertiary)" font-size="8" font-family="JetBrains Mono,monospace" text-anchor="middle">log(r)</text>
+        <text x="10" y="50" fill="var(--text-tertiary)" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-90,10,50)">log G(r)</text>
+        <path d="M35,85 L100,40 Q130,25 160,22 L210,22" fill="none" stroke="#7da0dd" stroke-width="2"/>
+        <line x1="130" y1="22" x2="130" y2="90" stroke="var(--text-tertiary)" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="125" y="98" fill="var(--accent)" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">&xi;</text>
+        <text x="55" y="55" fill="#f0b429" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-42,55,55)">slope = &alpha;</text>
+        <text x="160" y="18" fill="var(--text-tertiary)" font-size="7" font-family="JetBrains Mono,monospace">saturated</text>
+      </svg>
+      <p style="margin:6px 0"><b>Think of it like:</b> &xi; is the size of the &ldquo;bubbles&rdquo; on the surface. If &xi; = 50, bumps and pits are about 50 sites wide. &alpha; tells you how jagged each bump is.</p>
+      <p style="margin:6px 0"><b>What to look for:</b> On the G(r) chart, the rising slope gives &alpha; and the flat region starts at &xi;.</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">Skewness &amp; Kurtosis &mdash; &ldquo;What shape is the height distribution?&rdquo;</summary>
+      <p style="margin:6px 0"><b>Skewness</b> measures lopsidedness: negative = deep pits (long low tail), positive = tall peaks. <b>Kurtosis</b> measures extremes: high kurtosis = unusually deep pits or tall spikes.</p>
+      <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+        <svg viewBox="0 0 80 60" style="width:80px;flex:0 0 auto" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5,50 Q15,48 25,40 Q35,20 40,10 Q45,20 55,38 Q65,48 75,50" fill="none" stroke="#e24b4a" stroke-width="1.5"/>
+          <text x="40" y="58" fill="var(--text-tertiary)" font-size="7" font-anchor="middle" font-family="JetBrains Mono,monospace" text-anchor="middle">neg skew</text>
+          <text x="40" y="7" fill="#e24b4a" font-size="6" font-family="JetBrains Mono,monospace" text-anchor="middle">deep pits</text>
+        </svg>
+        <svg viewBox="0 0 80 60" style="width:80px;flex:0 0 auto" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5,50 Q20,45 30,30 Q37,12 40,10 Q43,12 50,30 Q60,45 75,50" fill="none" stroke="#7dd87d" stroke-width="1.5"/>
+          <text x="40" y="58" fill="var(--text-tertiary)" font-size="7" font-family="JetBrains Mono,monospace" text-anchor="middle">symmetric</text>
+        </svg>
+        <svg viewBox="0 0 80 60" style="width:80px;flex:0 0 auto" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5,50 Q15,48 25,38 Q35,20 40,10 Q45,20 55,40 Q65,48 75,50" fill="none" stroke="#f0b429" stroke-width="1.5"/>
+          <text x="40" y="58" fill="var(--text-tertiary)" font-size="7" font-family="JetBrains Mono,monospace" text-anchor="middle">pos skew</text>
+          <text x="40" y="7" fill="#f0b429" font-size="6" font-family="JetBrains Mono,monospace" text-anchor="middle">tall peaks</text>
+        </svg>
+      </div>
+      <svg viewBox="0 0 200 65" style="width:100%;max-width:240px;display:block;margin:10px 0" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10,55 Q40,50 60,35 Q80,15 100,10 Q120,15 140,35 Q160,50 190,55" fill="none" stroke="var(--text-tertiary)" stroke-width="1" stroke-dasharray="3,3"/>
+        <path d="M10,55 Q50,52 70,45 Q85,20 100,5 Q115,20 130,45 Q150,52 190,55" fill="none" stroke="#7da0dd" stroke-width="1.5"/>
+        <text x="100" y="62" fill="var(--text-tertiary)" font-size="7" font-family="JetBrains Mono,monospace" text-anchor="middle">high kurtosis = sharper peak, fatter tails</text>
+        <text x="165" y="42" fill="var(--text-tertiary)" font-size="6" font-family="JetBrains Mono,monospace">normal</text>
+        <text x="132" y="28" fill="#7da0dd" font-size="6" font-family="JetBrains Mono,monospace">high kurt</text>
+      </svg>
+      <p style="margin:6px 0"><b>Think of it like:</b> Skewness = is the surface dented down or pushed up? Kurtosis = are there extreme outliers?</p>
+      <p style="margin:6px 0"><b>What to look for:</b> Negative skewness + high kurtosis = scattered deep pits &mdash; the signature of preferential Ge etching. Enable the Skew/Kurt toggle to track these during a run.</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">Pit Analysis &mdash; &ldquo;Where are the holes, and how big are they?&rdquo;</summary>
+      <p style="margin:6px 0">Identifies <b>depressions</b> in the surface &mdash; regions significantly below the mean. Reports count, width, depth, and coverage.</p>
+      <svg viewBox="0 0 260 80" style="width:100%;max-width:300px;display:block;margin:10px 0" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="30" x2="250" y2="30" stroke="var(--text-tertiary)" stroke-width="0.8" stroke-dasharray="4,3"/>
+        <text x="252" y="33" fill="var(--text-tertiary)" font-size="7" font-family="JetBrains Mono,monospace">mean ht</text>
+        <line x1="10" y1="42" x2="250" y2="42" stroke="#f0b429" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <text x="252" y="45" fill="#f0b429" font-size="7" font-family="JetBrains Mono,monospace">cutoff</text>
+        <path d="M10,28 L40,25 L60,27 L70,42 L80,58 L95,60 L110,55 L120,42 L135,26 L160,28 L175,42 L185,52 L195,42 L210,27 L240,30 L250,28" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+        <rect x="70" y="42" width="50" height="20" fill="rgba(226,75,74,0.15)" rx="1"/>
+        <line x1="70" y1="65" x2="120" y2="65" stroke="#e24b4a" stroke-width="1"/>
+        <text x="95" y="74" fill="#e24b4a" font-size="7" font-family="JetBrains Mono,monospace" text-anchor="middle">pit width</text>
+        <line x1="95" y1="30" x2="95" y2="60" stroke="#e24b4a" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <text x="100" y="50" fill="#e24b4a" font-size="6" font-family="JetBrains Mono,monospace">depth</text>
+      </svg>
+      <p style="margin:6px 0"><b>Think of it like:</b> Counting craters on the moon and measuring each one. More craters = more Ge was etched away.</p>
+      <p style="margin:6px 0"><b>What to look for:</b> Pit count and coverage change with &theta; and temperature. Do pits get wider or deeper?</p>
+    </details>
+
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:6px">Etch Depth &amp; Selectivity &mdash; &ldquo;How much material was removed?&rdquo;</summary>
+      <p style="margin:6px 0"><b>Etch depth</b> = how far the average surface has moved down. <b>Selectivity</b> = Ge atoms removed per Si atom removed. High selectivity means the etchant strongly prefers Ge.</p>
+      <p style="margin:6px 0"><b>Think of it like:</b> Etch depth is how deep the hole gets. Selectivity is how picky the etchant is about what it removes.</p>
+      <p style="margin:6px 0"><b>What to look for:</b> Higher P_des increases etch depth. High selectivity creates pits at Ge-rich sites.</p>
+    </details>
+
+    </div>
+
+    <div style="background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:14px;margin-bottom:14px">
+      <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:10px;font-family:'JetBrains Mono',monospace">Suggested Single-Run Experiments</div>
+      <div style="font-size:13px;line-height:1.85;color:var(--text-secondary)">
+        <p style="margin-bottom:8px">Start with the <b>Standard</b> preset and run a full simulation. Watch the lattice evolve and the charts update. Then try changing <b>one parameter at a time</b>:</p>
+        <ol style="margin:0 0 0 18px">
+          <li style="margin-bottom:6px"><b>Temperature:</b> Run at 300K, 500K, 800K, 1000K. Record &beta;, pit count, RMS roughness. Does higher temperature make the surface smoother or rougher? Why?</li>
+          <li style="margin-bottom:6px"><b>Ge fraction (&theta;):</b> Try 0.05, 0.2, 0.5. With more germanium, do you get more pits? Bigger pits? Does the skewness change?</li>
+          <li style="margin-bottom:6px"><b>Desorption probability (P_des):</b> Try 0.01, 0.1, 0.3, 0.5. Higher P_des means atoms leave the surface more easily. What happens to etch depth and roughness?</li>
+          <li style="margin-bottom:6px"><b>Lattice size (lattx):</b> Try 128, 512, 1024 with the same conditions. Does &beta; change? This tests whether your result depends on system size or is a true physical property.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div style="background:var(--bg);border:1px solid var(--border-light);border-radius:2px;padding:14px">
+      <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:10px;font-family:'JetBrains Mono',monospace">What To Record in Your Logbook</div>
+      <div style="font-size:13px;line-height:1.85;color:var(--text-secondary)">
+        After each run, open the logbook and note:
+        <ol style="margin:6px 0 0 18px">
+          <li>Parameters you used (T, &theta;, P_des, lattx, niter1)</li>
+          <li>Final &beta; value and the fit range you used</li>
+          <li>Final RMS roughness</li>
+          <li>Pit count, average pit width, and pit coverage</li>
+          <li>&alpha; and &xi; from the correlation chart</li>
+          <li>Skewness and kurtosis &mdash; are they positive or negative? What does that tell you?</li>
+          <li>What the lattice cross-section looks like &mdash; is it smooth, pitted, or very rough?</li>
+          <li>Anything that surprised you or contradicted your prediction</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- INVESTIGATION PROTOCOL -->
+<div class="panel" id="invPanel">
+  <div class="panel-hdr" onclick="togglePanel('invPanel')">
+    <span class="snum">INVESTIGATIONS</span>
+    <span class="sname">Guided Experiments</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>Key question:</b> What controls how SiGe surfaces roughen and form pits during etching? Each investigation below sweeps one parameter while holding others fixed (P_Si=0, P_Ge=1, lattz=2048). Write your hypothesis, lock it, then run.</div>
+
+    <div class="sl" style="margin-bottom:8px">SPEED PRESET</div>
+    <div style="display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <button class="speed-btn" data-speed="quick" onclick="setSpeed('quick')">Quick (256&times;3k)</button>
+      <button class="speed-btn active" data-speed="standard" onclick="setSpeed('standard')">Standard (512&times;5k)</button>
+      <button class="speed-btn" data-speed="thorough" onclick="setSpeed('thorough')">Thorough (1024&times;10k)</button>
+      <span id="speedInfo" style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-left:8px">lattx=512, 5000 iterations per point</span>
+    </div>
+
+    <div class="inv-list">
+      <div class="inv-card">
+        <div class="inv-card-hdr">
+          <span class="inv-num">01</span>
+          <span class="inv-q">How does temperature affect surface roughness and pit formation?</span>
+        </div>
+        <div class="inv-method">Sweep T from 300K to 1000K (8 points). Collect &beta;, pit count, &alpha;, &xi;, etch depth.</div>
+        <textarea id="invHyp1" class="inv-hyp" placeholder="e.g. I predict that higher temperatures will produce smoother surfaces because atoms have more energy to diffuse and fill in gaps. I think pit count will decrease with temperature..."></textarea>
+        <div class="inv-actions">
+          <span class="ts-label" id="invTs1"></span>
+          <button id="invLockBtn1" onclick="lockInvHypothesis(1)">Lock hypothesis</button>
+          <button id="invRunBtn1" onclick="runInvestigation(1)">Run investigation &rarr;</button>
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-card-hdr">
+          <span class="inv-num">02</span>
+          <span class="inv-q">Does more germanium mean more pits?</span>
+        </div>
+        <div class="inv-method">Sweep &theta; from 0.05 to 0.6 (8 points). With P_Ge=1 and P_Si=0, only Ge atoms can desorb.</div>
+        <textarea id="invHyp2" class="inv-hyp" placeholder="e.g. I predict that increasing Ge fraction will increase the number of pits because more Ge atoms are available to be etched away, leaving holes in the surface..."></textarea>
+        <div class="inv-actions">
+          <span class="ts-label" id="invTs2"></span>
+          <button id="invLockBtn2" onclick="lockInvHypothesis(2)">Lock hypothesis</button>
+          <button id="invRunBtn2" onclick="runInvestigation(2)">Run investigation &rarr;</button>
+        </div>
+      </div>
+
+      <div class="inv-card">
+        <div class="inv-card-hdr">
+          <span class="inv-num">03</span>
+          <span class="inv-q">What does desorption probability control?</span>
+        </div>
+        <div class="inv-method">Sweep P_des from 0.01 to 0.5 (8 points). Higher P_des means more atoms attempt to leave the surface.</div>
+        <textarea id="invHyp3" class="inv-hyp" placeholder="e.g. I predict that increasing the desorption probability will make the surface rougher and increase etch depth, because more atoms are being removed..."></textarea>
+        <div class="inv-actions">
+          <span class="ts-label" id="invTs3"></span>
+          <button id="invLockBtn3" onclick="lockInvHypothesis(3)">Lock hypothesis</button>
+          <button id="invRunBtn3" onclick="runInvestigation(3)">Run investigation &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PARAMETERS -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">PARAMS</span>
+    <span class="sname">Simulation Parameters</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div style="margin-bottom:10px">
+      <button class="preset-btn active" onclick="loadPreset('default',this)">Standard</button>
+      <button class="preset-btn" onclick="loadPreset('highGe',this)">High Ge (&theta;=0.5)</button>
+      <button class="preset-btn" onclick="loadPreset('highTemp',this)">High Temp (800K)</button>
+      <button class="preset-btn" onclick="loadPreset('noDesorp',this)">No Desorption</button>
+    </div>
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Composition</div>
+        <div class="param-row"><span class="param-lbl">&theta; (Ge fraction)</span><input type="number" id="pTheta" value="0.2" step="0.05" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">P_des</span><input type="number" id="pPdes" value="0.1" step="0.05" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">P_Ge</span><input type="number" id="pPge" value="1.0" step="0.1" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">P_Si</span><input type="number" id="pPsi" value="0.0" step="0.1" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">envt</span><input type="number" id="pEnvt" value="0" step="1" min="0" max="8"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Energetics <span class="unit">(kcal/mol)</span></div>
+        <div class="param-row"><span class="param-lbl">E_SiSi</span><input type="number" id="pEsisi" value="-1.6835" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_SiGe</span><input type="number" id="pEsige" value="-1.534" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_GeGe</span><input type="number" id="pEgege" value="-1.365" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_SiVc</span><input type="number" id="pEsivc" value="0.37375" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">E_GeVc</span><input type="number" id="pEgevc" value="0.0" step="0.01"></div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Simulation</div>
+        <div class="param-row"><span class="param-lbl">Temp <span class="unit">K</span></span><input type="number" id="pTemp" value="500" step="50" min="100" max="2000"></div>
+        <div class="param-row"><span class="param-lbl">niter1 <span class="unit">outer</span></span><input type="number" id="pNiter1" value="10000" step="100" min="1" max="100000"></div>
+        <div class="param-row"><span class="param-lbl">niter2 <span class="unit">&times;lattx</span></span><input type="number" id="pNiter2" value="100" step="10" min="10"></div>
+        <div class="param-row"><span class="param-lbl">lattx</span><select id="pLattx"><option value="32">32</option><option value="64">64</option><option value="128">128</option><option value="256">256</option><option value="512" selected>512</option><option value="1024">1024</option><option value="2048">2048</option></select></div>
+        <div class="param-row"><span class="param-lbl">lattz</span><select id="pLattz" onchange="autoAdjustZstopZlo()"><option value="1024">1024</option><option value="2048" selected>2048</option><option value="4096">4096</option></select></div>
+        <div class="param-row"><span class="param-lbl">zstop</span><input type="number" id="pZstop" value="1843" step="100"></div>
+        <div class="param-row"><span class="param-lbl">zlo</span><input type="number" id="pZlo" value="1536" step="100"></div>
+        <div class="param-row"><span class="param-lbl">seed</span><input type="number" id="pSeed" value="-381791011" step="1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
+  <div class="mode-tab" onclick="setMode('tsweep')">Temperature Sweep</div>
+  <div class="mode-tab" onclick="setMode('csweep')">Composition Sweep</div>
+  <div class="mode-tab" onclick="setMode('dsweep')">Desorption Sweep</div>
+</div>
+
+<!-- SINGLE RUN MODE -->
+<div class="mode-section active" id="modeSingle">
+<div class="controls">
+  <button id="runBtn" onclick="startSim()">&#9654; Run Simulation</button>
+  <button id="pauseBtn" onclick="pauseSim()" disabled>&#9208; Pause</button>
+  <button id="resumeBtn" onclick="resumeSim()" disabled style="display:none">&#9654; Resume</button>
+  <button id="resetBtn" onclick="resetSim()" class="danger">&#8634; Reset</button>
+  <label style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px;margin-left:8px;cursor:pointer"><input type="checkbox" id="showSkewKurt" onchange="toggleSkewKurt()"> Skew/Kurt</label>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    <span class="progress-text" id="progText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- TEMPERATURE SWEEP MODE -->
+<div class="mode-section" id="modeTsweep">
+<div class="note"><b>Investigation:</b> How does substrate temperature affect film roughness and surface statistics? Sweep T across a range while keeping all other parameters fixed.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>T min (K)</label><input type="number" id="tswTmin" value="300" step="50"></div>
+  <div class="sweep-item"><label>T max (K)</label><input type="number" id="tswTmax" value="1000" step="50"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="tswPts" value="5" min="3" max="20"></div>
+  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="tswNiter" value="50" step="10" min="10"></div>
+</div>
+<div class="controls">
+  <button id="tswRunBtn" onclick="runTempSweep()">&#9654; Run Temperature Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="tswProgFill"></div></div>
+    <span class="progress-text" id="tswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- COMPOSITION SWEEP MODE -->
+<div class="mode-section" id="modeCsweep">
+<div class="note"><b>Investigation:</b> How does the Ge fraction (&theta;) affect surface morphology? Sweep &theta; from 0 (pure Si) to 1 (pure Ge).</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>&theta; min</label><input type="number" id="cswThetaMin" value="0" step="0.1" min="0" max="1"></div>
+  <div class="sweep-item"><label>&theta; max</label><input type="number" id="cswThetaMax" value="1" step="0.1" min="0" max="1"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="cswPts" value="6" min="3" max="20"></div>
+  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="cswNiter" value="50" step="10" min="10"></div>
+</div>
+<div class="controls">
+  <button id="cswRunBtn" onclick="runCompSweep()">&#9654; Run Composition Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="cswProgFill"></div></div>
+    <span class="progress-text" id="cswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- DESORPTION SWEEP MODE -->
+<div class="mode-section" id="modeDsweep">
+<div class="note"><b>Investigation:</b> How does the desorption probability affect etching behaviour? Higher P_des means atoms are more likely to leave the surface, increasing etch rate and potentially roughness.</div>
+<div class="sweep-grid">
+  <div class="sweep-item"><label>P_des min</label><input type="number" id="dswPdesMin" value="0.01" step="0.01" min="0.01" max="1"></div>
+  <div class="sweep-item"><label>P_des max</label><input type="number" id="dswPdesMax" value="0.5" step="0.05" min="0.01" max="1"></div>
+  <div class="sweep-item"><label>Points</label><input type="number" id="dswPts" value="8" min="3" max="20"></div>
+</div>
+<div class="controls">
+  <button id="dswRunBtn" onclick="runDesorpSweep()">&#9654; Run Desorption Sweep</button>
+  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="dswProgFill"></div></div>
+    <span class="progress-text" id="dswProgText">Ready</span>
+  </div>
+</div>
+</div>
+
+<!-- SINGLE RUN DASHBOARD -->
+<div class="dashboard" id="singleDash">
+  <!-- Key Findings -->
+  <div class="dash-card" id="findingsCard" style="display:none">
+    <div class="card-hdr">
+      <span class="card-label">Key Findings</span>
+      <button class="sm" onclick="captureFindings()">Copy as text</button>
+    </div>
+    <div id="findingsContent" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">
+      <div class="finding-row"><span class="finding-label">Parameters</span><span class="finding-value" id="findParams">&mdash;</span></div>
+      <div class="finding-row"><span class="finding-label">Growth exponent &beta;</span><span class="finding-value" id="findBeta">&mdash;</span></div>
+      <div class="finding-row"><span class="finding-label">Universality class</span><span class="finding-value" id="findClass">&mdash;</span></div>
+      <div class="finding-row"><span class="finding-label">Surface character</span><span class="finding-value" id="findSurface">&mdash;</span></div>
+      <div class="finding-row"><span class="finding-label">Roughness &alpha; / &xi;</span><span class="finding-value" id="findCorr">&mdash;</span></div>
+      <div class="finding-row"><span class="finding-label">Pit summary</span><span class="finding-value" id="findPits">&mdash;</span></div>
+    </div>
+  </div>
+  <!-- Lattice visualization -->
+  <div class="lattice-section">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Lattice Cross-Section</span>
+        <button class="sm" id="viewCross" onclick="setView('cross')" style="background:var(--accent-subtle)">Cross-section</button>
+        <button class="sm" id="viewHmap" onclick="setView('hmap')">Height map</button>
+        <label style="margin-left:auto">Zoom <input type="range" id="zoomSlider" min="1" max="8" value="2" step="1" oninput="applyZoom()"><span id="zoomVal">2x</span></label>
+      </div>
+      <div class="lattice-wrap" id="latticeWrap">
+        <canvas id="latticeCanvas" width="500" height="150"></canvas>
+        <div class="lattice-tooltip" id="latticeTip"></div>
+      </div>
+      <div class="heightmap-wrap" id="hmapWrap" style="display:none">
+        <canvas id="hmapCanvas" width="500" height="40"></canvas>
+      </div>
+      <div class="legend">
+        <span><span class="legend-swatch" style="background:#26A69A"></span>Si</span>
+        <span><span class="legend-swatch" style="background:#FF7043"></span>Ge</span>
+        <span><span class="legend-swatch" style="background:#0a0f0a;border:0.5px solid var(--border)"></span>Vacancy</span>
+        <span style="margin-left:auto;color:var(--text-tertiary)">hover for details</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">Surface Statistics</div>
+      <div class="stat-grid four">
+        <div class="stat-item"><div class="stat-label">Iteration</div><div class="stat-value" id="stIter">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Avg Height</div><div class="stat-value" id="stAveht">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">RMS Roughness</div><div class="stat-value" id="stRms">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Std Dev</div><div class="stat-value" id="stStd">&mdash;</div></div>
+        <div class="stat-item" data-metric="skewkurt" style="display:none"><div class="stat-label">Skewness</div><div class="stat-value" id="stSkew">&mdash;</div></div>
+        <div class="stat-item" data-metric="skewkurt" style="display:none"><div class="stat-label">Kurtosis (excess)</div><div class="stat-value" id="stKurt">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Height Range</div><div class="stat-value sm" id="stRange">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Surface Width</div><div class="stat-value sm" id="stWidth">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Etch Depth</div><div class="stat-value sm" id="stEtchDepth">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Etch Rate</div><div class="stat-value sm" id="stEtchRate">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Ge/Si Selectivity</div><div class="stat-value sm" id="stSelectivity">&mdash;</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Events (cumulative)</div>
+      <table class="events-table">
+        <tr><th>Type</th><th style="text-align:right">Count</th></tr>
+        <tr><td>Desorptions</td><td class="num" id="evDes">0</td></tr>
+        <tr><td>&nbsp; &mdash; Ge</td><td class="num" id="evGeD">0</td></tr>
+        <tr><td>&nbsp; &mdash; Si</td><td class="num" id="evSiD">0</td></tr>
+        <tr><td>Surface diffusion</td><td class="num" id="evSdf">0</td></tr>
+        <tr><td>Bulk diffusion</td><td class="num" id="evBdf">0</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Row 2: Roughness + Height -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">RMS Roughness vs Iteration</span>
+        <span class="beta-display" id="betaDisp" data-tip="Growth exponent: slope of log(RMS) vs log(iteration) in the fit range.">&beta; = &mdash;</span>
+        <span style="font-size:9px;color:var(--text-tertiary);margin-left:8px">fit range:</span>
+        <input type="number" id="fitMin" value="1" min="1" style="width:55px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
+        <span style="font-size:9px;color:var(--text-tertiary)">to</span>
+        <input type="number" id="fitMax" value="10000" min="1" style="width:60px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
+        <button class="sm" onclick="resetFitZoom()">Show all</button>
+      </div>
+      <div class="chart-wrap"><canvas id="roughnessChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Etch Depth &amp; Rate vs Iteration</div>
+      <div class="chart-wrap"><canvas id="etchChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Stats evolution + Height distribution -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Statistics vs Iteration</div>
+      <div class="chart-wrap"><canvas id="statsChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Height Distribution (current)</div>
+      <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Surface + Concentration -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Profile &mdash; ht(x)</div>
+      <div class="chart-wrap"><canvas id="surfaceChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Concentration Profile &mdash; Ge fraction vs depth</div>
+      <div class="chart-wrap"><canvas id="concChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 4.5: Height-Height Correlation G(r) -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Height-Height Correlation G(r)</span>
+        <span class="beta-display" style="color:#7da0dd;background:rgba(125,160,221,0.08);border-color:rgba(125,160,221,0.3)" data-tip="Roughness exponent from G(r) slope. Measures how rough the surface is at different length scales. EW &amp; KPZ (1+1D) = 0.5.">&alpha; = <span id="alphaCorr">&mdash;</span></span>
+        <span style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace" data-tip="Correlation length: the distance beyond which surface heights become uncorrelated. Larger &xi; = longer-range surface features.">&xi; = <span id="xiCorrStat">&mdash;</span></span>
+      </div>
+      <div class="chart-wrap"><canvas id="corrChart"></canvas></div>
+      <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:6px;line-height:1.6">
+        G(r) = &radic;&langle;[h(x+r) &minus; h(x)]&sup2;&rangle; &middot; Slope gives &alpha; (roughness exponent) &middot; Saturation at &xi; (correlation length)
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Correlation Summary</div>
+      <div class="stat-grid four">
+        <div class="stat-item"><div class="stat-label" data-tip="Roughness exponent from G(r) log-log slope. Gives &alpha; from a single run without needing multiple system sizes.">&alpha; (roughness)</div><div class="stat-value sm" id="alphaCorr2" style="color:#7da0dd">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Correlation length: the length scale at which G(r) saturates. Surface features are correlated within this distance.">&xi; (corr length)</div><div class="stat-value sm" id="xiCorr2">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Self-consistency check: G(&infin;)/&radic;2 should equal the direct RMS roughness. If they match, the correlation function is reliable.">G(&infin;)/&radic;2</div><div class="stat-value sm" id="gInfRms">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="RMS roughness computed directly from the height array. Compare with G(&infin;)/&radic;2 above &mdash; they should agree.">RMS (direct)</div><div class="stat-value sm" id="rmsDirectCorr">&mdash;</div></div>
+      </div>
+      <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:8px;line-height:1.6">
+        G(&infin;)/&radic;2 should converge to the direct RMS roughness (self-consistency check).<br>
+        &alpha; from G(r) gives the roughness exponent from a <b>single run</b> &mdash; no multiple system sizes needed.
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 5: Pit Analysis -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr" style="flex-wrap:wrap;gap:6px">
+        <span class="card-label">Pit Analysis</span>
+        <select id="pitMethod" style="font-size:10px;padding:2px 4px;background:var(--surface);color:var(--text-primary);border:0.5px solid var(--border)" onchange="updatePitAnalysis()">
+          <option value="sigma" selected>k &times; &sigma; below mean</option>
+          <option value="range">k &times; range below mean</option>
+          <option value="slope">slope-based</option>
+        </select>
+        <span style="font-size:9px;color:var(--text-tertiary)">k:</span>
+        <input type="number" id="pitThreshold" value="1.0" min="0.1" max="5.0" step="0.1" style="width:48px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
+        <span style="font-size:9px;color:var(--text-tertiary)">min width:</span>
+        <input type="number" id="pitMinWidth" value="3" min="1" max="50" step="1" style="width:40px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
+        <span style="font-size:9px;color:var(--text-tertiary)">gap merge:</span>
+        <input type="number" id="pitGapMerge" value="2" min="0" max="20" step="1" style="width:36px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
+        <button class="sm" onclick="updatePitAnalysis()">Refresh</button>
+        <button class="sm" onclick="autoSuggestPitParams()" style="color:#f0b429;border-color:rgba(240,180,41,0.4)">Auto-suggest</button>
+        <span id="roughnessStabilized" style="font-size:9px;font-family:'JetBrains Mono',monospace;margin-left:4px"></span>
+      </div>
+      <div class="stat-grid four" id="pitStats">
+        <div class="stat-item"><div class="stat-label" data-tip="Number of contiguous surface depressions below the cutoff height. Each pit is a connected region of sites below the threshold.">Pit Count</div><div class="stat-value sm" id="pitCount">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Mean horizontal extent of each pit in lattice sites. Wider pits suggest coalescence or correlated etching.">Avg Pit Width</div><div class="stat-value sm" id="pitAvgW">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Widest single pit observed on the surface, in lattice sites.">Max Pit Width</div><div class="stat-value sm" id="pitMaxW">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Mean vertical depth from the average surface height down to the pit bottom. Deeper pits = more aggressive local etching.">Avg Pit Depth</div><div class="stat-value sm" id="pitAvgD">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Deepest single pit observed, measured from mean surface height to the lowest point.">Max Pit Depth</div><div class="stat-value sm" id="pitMaxD">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Fraction of the surface occupied by pits: (total pit sites / lattx) &times; 100%. High coverage suggests uniform pitting; low = isolated pits.">Pit Coverage</div><div class="stat-value sm" id="pitCoverage">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Height threshold below which surface is classified as a pit. For &sigma;-method: cutoff = mean &minus; k&times;&sigma;. Sites below this line are pit material.">Cutoff Height</div><div class="stat-value sm" id="pitCutoff">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label" data-tip="Average surface height across all lattice sites. This is the baseline from which pit depth is measured.">Mean Height</div><div class="stat-value sm" id="pitMeanH">&mdash;</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Pit Width Distribution</div>
+      <div class="chart-wrap"><canvas id="pitHistChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 6: Pit surface + Scaling Exponents -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Surface Profile with Pits Highlighted</div>
+      <div class="chart-wrap"><canvas id="pitSurfaceChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Family-Vicsek Scaling Exponents</span>
+        <button class="sm" onclick="autoRecordScaling()">Auto-record current run</button>
+        <button class="sm danger" onclick="clearScalingData()">Clear data</button>
+      </div>
+      <div style="margin-bottom:10px">
+        <table class="events-table" id="scalingTable">
+          <tr><th>L (lattx)</th><th style="text-align:right">w_sat (RMS)</th><th style="text-align:right">t_x (iter)</th><th></th></tr>
+        </table>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace">Manual add:</span>
+          <input type="number" id="scaleL" placeholder="L" style="width:60px;font-size:10px;padding:2px 4px">
+          <input type="number" id="scaleWsat" placeholder="w_sat" step="0.001" style="width:70px;font-size:10px;padding:2px 4px">
+          <input type="number" id="scaleTx" placeholder="t_x" style="width:60px;font-size:10px;padding:2px 4px">
+          <button class="sm" onclick="addScalingEntry()">Add</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="height:140px;position:relative"><canvas id="alphaChart"></canvas></div>
+        <div style="height:140px;position:relative"><canvas id="zChart"></canvas></div>
+      </div>
+      <div class="stat-grid four" id="scalingStats">
+        <div class="stat-item" style="border-color:var(--accent-border);background:var(--accent-subtle)"><div class="stat-label">Class match</div><div class="stat-value sm" id="scaleClass" style="font-size:12px;color:#7dd87d;font-weight:600">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">&beta; (growth)</div><div class="stat-value sm" id="scaleBeta" style="color:#f0b429">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">&alpha; (roughness)</div><div class="stat-value sm" id="scaleAlpha" style="color:#7da0dd">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">z = &alpha;/&beta; (dynamic)</div><div class="stat-value sm" id="scaleZ" style="color:#e24b4a">&mdash;</div></div>
+      </div>
+      <div style="font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-top:8px;line-height:1.6">
+        1+1D: <span style="color:#7da0dd">Random &beta;=0.5</span> &middot; <span style="color:#7dd87d">EW &beta;=0.25 &alpha;=0.5 z=2</span> &middot; <span style="color:#f0b429">KPZ &beta;=0.333 &alpha;=0.5 z=1.5</span><br>
+        2+1D: <span style="color:#7dd87d">EW &beta;&asymp;0 (log) z=2</span> &middot; <span style="color:#f0b429">KPZ &beta;&asymp;0.24 &alpha;&asymp;0.39 z&asymp;1.61</span> &middot; <span style="color:#dd8844">MBE &beta;=0.25 &alpha;=1 z=4</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPERATURE SWEEP DASHBOARD -->
+<div class="dashboard" id="tswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card"><div class="card-label">RMS Roughness vs Temperature</div><div class="chart-wrap"><canvas id="tswRoughChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&beta; (Growth Exponent) vs Temperature</div><div class="chart-wrap"><canvas id="tswBetaChart"></canvas></div></div>
+  </div>
+  <div class="dash-row triple">
+    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Skewness vs Temperature</div><div class="chart-wrap"><canvas id="tswSkewChart"></canvas></div></div>
+    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Kurtosis vs Temperature</div><div class="chart-wrap"><canvas id="tswKurtChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">Pit Count vs Temperature</div><div class="chart-wrap"><canvas id="tswPitsChart"></canvas></div></div>
+  </div>
+  <div class="dash-row triple">
+    <div class="dash-card"><div class="card-label">Avg Pit Width vs Temperature</div><div class="chart-wrap"><canvas id="tswPitWidthChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&alpha; (Roughness Exponent) vs Temperature</div><div class="chart-wrap"><canvas id="tswAlphaChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&xi; (Correlation Length) vs Temperature</div><div class="chart-wrap"><canvas id="tswXiChart"></canvas></div></div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card"><div class="card-label">Etch Depth vs Temperature</div><div class="chart-wrap"><canvas id="tswEtchChart"></canvas></div></div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Summary</div>
+      <div id="tswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+  </div>
+  <div class="dash-card" style="margin-bottom:14px">
+    <div class="card-hdr"><span class="card-label">Results Table</span>
+      <button class="sm" onclick="exportSweepCSV()">Export CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Param</th><th>RMS</th><th>&beta;</th><th>Pits</th><th>Pit W</th><th>Coverage</th><th>&alpha;</th><th>&xi;</th><th>Etch</th><th>Select.</th></tr></thead>
+        <tbody id="tswTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="dash-card">
+    <div class="card-hdr"><span class="card-label">Lattice Snapshots</span></div>
+    <div class="snap-gallery" id="tswGallery"></div>
+  </div>
+</div>
+
+<!-- COMPOSITION SWEEP DASHBOARD -->
+<div class="dashboard" id="cswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card"><div class="card-label">RMS Roughness vs &theta;</div><div class="chart-wrap"><canvas id="cswRoughChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&beta; (Growth Exponent) vs &theta;</div><div class="chart-wrap"><canvas id="cswBetaChart"></canvas></div></div>
+  </div>
+  <div class="dash-row triple">
+    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Skewness vs &theta;</div><div class="chart-wrap"><canvas id="cswSkewChart"></canvas></div></div>
+    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Kurtosis vs &theta;</div><div class="chart-wrap"><canvas id="cswKurtChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">Pit Count vs &theta;</div><div class="chart-wrap"><canvas id="cswPitsChart"></canvas></div></div>
+  </div>
+  <div class="dash-row triple">
+    <div class="dash-card"><div class="card-label">Avg Pit Width vs &theta;</div><div class="chart-wrap"><canvas id="cswPitWidthChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&alpha; (Roughness Exponent) vs &theta;</div><div class="chart-wrap"><canvas id="cswAlphaChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&xi; (Correlation Length) vs &theta;</div><div class="chart-wrap"><canvas id="cswXiChart"></canvas></div></div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card"><div class="card-label">Etch Depth vs &theta;</div><div class="chart-wrap"><canvas id="cswEtchChart"></canvas></div></div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Summary</div>
+      <div id="cswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+  </div>
+  <div class="dash-card" style="margin-bottom:14px">
+    <div class="card-hdr"><span class="card-label">Results Table</span>
+      <button class="sm" onclick="exportSweepCSV()">Export CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Param</th><th>RMS</th><th>&beta;</th><th>Pits</th><th>Pit W</th><th>Coverage</th><th>&alpha;</th><th>&xi;</th><th>Etch</th><th>Select.</th></tr></thead>
+        <tbody id="cswTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="dash-card">
+    <div class="card-hdr"><span class="card-label">Lattice Snapshots</span></div>
+    <div class="snap-gallery" id="cswGallery"></div>
+  </div>
+</div>
+
+<!-- DESORPTION SWEEP DASHBOARD -->
+<div class="dashboard" id="dswDash" style="display:none">
+  <div class="dash-row">
+    <div class="dash-card"><div class="card-label">RMS Roughness vs P_des</div><div class="chart-wrap"><canvas id="dswRoughChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&beta; (Growth Exponent) vs P_des</div><div class="chart-wrap"><canvas id="dswBetaChart"></canvas></div></div>
+  </div>
+  <div class="dash-row triple">
+    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Skewness vs P_des</div><div class="chart-wrap"><canvas id="dswSkewChart"></canvas></div></div>
+    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Kurtosis vs P_des</div><div class="chart-wrap"><canvas id="dswKurtChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">Pit Count vs P_des</div><div class="chart-wrap"><canvas id="dswPitsChart"></canvas></div></div>
+  </div>
+  <div class="dash-row triple">
+    <div class="dash-card"><div class="card-label">Avg Pit Width vs P_des</div><div class="chart-wrap"><canvas id="dswPitWidthChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&alpha; (Roughness Exponent) vs P_des</div><div class="chart-wrap"><canvas id="dswAlphaChart"></canvas></div></div>
+    <div class="dash-card"><div class="card-label">&xi; (Correlation Length) vs P_des</div><div class="chart-wrap"><canvas id="dswXiChart"></canvas></div></div>
+  </div>
+  <div class="dash-row">
+    <div class="dash-card"><div class="card-label">Etch Depth vs P_des</div><div class="chart-wrap"><canvas id="dswEtchChart"></canvas></div></div>
+    <div class="dash-card">
+      <div class="card-label">Sweep Summary</div>
+      <div id="dswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+  </div>
+  <div class="dash-card" style="margin-bottom:14px">
+    <div class="card-hdr"><span class="card-label">Results Table</span>
+      <button class="sm" onclick="exportSweepCSV()">Export CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Param</th><th>RMS</th><th>&beta;</th><th>Pits</th><th>Pit W</th><th>Coverage</th><th>&alpha;</th><th>&xi;</th><th>Etch</th><th>Select.</th></tr></thead>
+        <tbody id="dswTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="dash-card">
+    <div class="card-hdr"><span class="card-label">Lattice Snapshots</span></div>
+    <div class="snap-gallery" id="dswGallery"></div>
+  </div>
+</div>
+
+<!-- SNAPSHOTS -->
+<div class="panel" id="snapPanel">
+  <div class="panel-hdr" onclick="togglePanel('snapPanel')">
+    <span class="snum">SNAPS</span>
+    <span class="sname">Iteration Snapshots</span>
+    <span class="toggle">&#9660; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="snap-strip" id="snapStrip">
+      <div style="font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGBOOK -->
+<div class="panel collapsed" id="logbookPanel">
+  <div class="panel-hdr" onclick="togglePanel('logbookPanel')">
+    <span class="snum">LOG</span>
+    <span class="sname">Logbook</span>
+    <span class="toggle">&#9654; expand</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Run a simulation and record your observations.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+        <button onclick="exportSnapshot()" style="font-size:9px;padding:4px 10px;color:#4a9aaa;border-color:rgba(74,154,170,0.4)">Export data (JSON)</button>
+        <button onclick="copyResultsTable()" style="font-size:9px;padding:4px 10px;color:#7da0dd;border-color:rgba(125,160,221,0.4)">Copy results table</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="../../_common/theme.js"></script>
+<script src="lattice-render.js"></script>
+<script src="charts.js"></script>
+<script src="data.js"></script>
+<script src="sweep.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

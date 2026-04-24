@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_common/theme.css">
+<link rel="stylesheet" href="_common/chrome.css">
+<style>
+  .about-wrap{max-width:640px;margin:0 auto}
+  .about-wrap h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:20px;margin:1.5rem 0 0.5rem;color:var(--text-primary)}
+  .about-wrap p{font-size:15px;color:var(--text-secondary);line-height:1.8;margin-bottom:0.75rem}
+  .about-wrap code{font-size:12px;background:var(--surface-alt);border:1px solid var(--border-light);padding:1px 6px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a href="index.html" class="nav-back">← studio</a>
+
+<div class="about-wrap">
+  <div class="hero" style="padding:1rem 0 1.5rem;text-align:left">
+    <div class="hero-name" style="text-align:left;letter-spacing:0;font-size:clamp(24px,4vw,32px);margin-bottom:4px">About</div>
+    <div class="hero-sub" style="margin-bottom:0">Alexey Mikhail Johll · Singapore · 2025–2026</div>
+  </div>
+
+  <p>I'm a secondary school student in Singapore. My interests are football, astronomy, mathematics, and the ways complicated systems are made of simple rules. This site is a working portfolio for university and scholarship applications.</p>
+
+  <h2>How I actually use this site</h2>
+  <p>Each studio experiment forces me into the same sequence. Before the simulation unlocks, I write my hypothesis in my own words and lock it — the text becomes read-only and timestamped. Then I run the simulation, read the results, and write my interpretation. Only after I've written the interpretation does the coach appear, and it only ever asks one Socratic question at a time. I can reply; it asks another. Nothing about the work gets assigned to me by the computer.</p>
+
+  <p>When I finish an experiment I click <code>Export to portfolio</code>. That downloads a JSON file containing my hypothesis, interpretation, coach transcript, logbook, and a snapshot of the key chart. I commit that file into <code>v4/work/</code>. The exhibit page then reads those files and presents the work to anyone visiting the URL. This is why the exhibit is the public evidence and the studio is my private workbench.</p>
+
+  <h2>What is mine, and what isn't</h2>
+  <p>The three studio experiments — Football, Fractal, Random Walk — are mine. I wrote the hypotheses, interpreted the results, replied to the coach, and made the editorial calls about what to investigate.</p>
+
+  <p>The two advanced portals — KMC and MD — are different. They wrap reference Fortran 90 research code for Silicon-Germanium surface science. I did not originate the algorithms. What I did was port the physics to the browser via Web Workers and build instrumentation — visualisations, parameter sweeps, analysis dashboards — around the core simulations so I could experiment with them and see what the parameters do. They're learning work, and the pages say so.</p>
+
+  <h2>Technical approach</h2>
+  <p>Pure HTML, CSS, and JavaScript. No build tools, no frameworks, no <code>package.json</code>. Libraries (Chart.js, p5.js, Three.js) load from CDNs. State is <code>localStorage</code> plus committed JSON in <code>v4/work/</code>. The AI coach runs through a Cloudflare Worker proxy — if it's unreachable, the studio falls back to a copy-paste-to-Claude workflow so I'm never blocked.</p>
+
+  <h2>A note on the coach</h2>
+  <p>The coach is set up so it physically cannot give me answers. Its system prompt requires exactly one question per response, no preamble, no praise, no explanation. If I get stuck, it points me at my own words and my own data. I can print out every coach question it ever asked me; I cannot print out an answer it gave me, because it never gives any.</p>
+</div>
+
+<div class="exp-nav" style="max-width:640px;margin:2rem auto 1rem">
+  <a href="exhibit.html">← public exhibit</a>
+  <a class="nav-center" href="index.html">studio</a>
+  <span class="nav-disabled"></span>
+</div>
+
+</div>
+
+<script src="_common/theme.js"></script>
+</body>
+</html>

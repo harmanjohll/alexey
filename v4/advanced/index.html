@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced explorations · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_common/theme.css">
+<link rel="stylesheet" href="../_common/chrome.css">
+</head>
+<body>
+<div class="wrap">
+
+<a href="../index.html" class="nav-back">← studio home</a>
+
+<div class="hero" style="padding:1.5rem 1rem 1rem;text-align:left">
+  <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--accent-light);margin-bottom:10px">Advanced Explorations</div>
+  <div class="hero-name" style="text-align:left;letter-spacing:0;font-size:clamp(22px,3.5vw,30px)">Working with research code</div>
+</div>
+
+<div style="background:var(--accent-subtle);border:1px solid var(--accent-border);border-left:2px solid var(--accent);padding:14px 18px;border-radius:0 4px 4px 0;margin-bottom:1.5rem">
+  <p style="font-size:13px;color:var(--text-secondary);line-height:1.75">
+    These two portals wrap reference Fortran 90 research code for Silicon-Germanium surface science, kept in <code>FortranReference/</code> at the repo root. I did not originate the algorithms; I ported the physics to run in the browser (via Web Workers) and built instrumentation, sweeps, and 3D visualisations around the core simulations so I could experiment with parameters and understand the results.
+  </p>
+  <p style="font-size:13px;color:var(--text-secondary);line-height:1.75;margin-top:10px">
+    These sit outside the main hypothesis-lock workflow of the studio experiments because they are learning tools, not original investigations. If a reviewer wants to know what original scientific thinking I've done, the public exhibit is the honest answer — the three experiments in Football, Fractal, and Random Walk.
+  </p>
+</div>
+
+<div class="section-hdr"><span class="section-label">Two portals</span><span class="section-count">2</span><span class="section-line"></span></div>
+
+<div class="grid">
+  <a class="card" href="kmc/">
+    <div class="card-inner">
+      <div class="card-top"><span class="card-num" style="color:var(--cat-advanced);border-color:var(--cat-advanced);background:transparent">KMC</span></div>
+      <div class="card-title">SiGe thin-film simulator</div>
+      <div class="card-desc">2D Kinetic Monte Carlo for surface etching. Desorption, surface diffusion, bulk diffusion with Metropolis criterion. Roughness exponents, pit analysis, temperature/composition sweeps.</div>
+      <div class="card-tags"><span class="tag">kinetic monte carlo</span><span class="tag">web worker port</span></div>
+    </div>
+  </a>
+  <a class="card" href="md/">
+    <div class="card-inner">
+      <div class="card-top"><span class="card-num" style="color:var(--cat-advanced);border-color:var(--cat-advanced);background:transparent">MD</span></div>
+      <div class="card-title">SiGe surface energy</div>
+      <div class="card-desc">Tersoff-potential MD with GCMC species swaps. μ<sub>Ge</sub> × layer-thickness sweeps, Boettger regression for surface energy, 3D visualisation, Gibbs surface excess.</div>
+      <div class="card-tags"><span class="tag">molecular dynamics</span><span class="tag">tersoff</span></div>
+    </div>
+  </a>
+</div>
+
+<div class="exp-nav">
+  <a href="../fractal/">← prev · fractal</a>
+  <a class="nav-center" href="../index.html">home</a>
+  <span class="nav-disabled">end of studio →</span>
+</div>
+
+</div>
+
+<script src="../_common/theme.js"></script>
+</body>
+</html>

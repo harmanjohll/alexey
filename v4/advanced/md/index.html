@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MD · Advanced · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../_common/theme.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+<a href="../../index.html" class="nav-back">&larr; studio home</a>
+<div class="portal-tag">ADVANCED EXPLORATION &middot; TERSOFF MOLECULAR DYNAMICS</div>
+<div class="portal-title">SiGe Surface Energy</div>
+<div class="portal-sub">Tersoff-potential MD for Silicon-Germanium surfaces with GCMC species swaps, μ<sub>Ge</sub> × layer-thickness sweeps, and Boettger regression for surface energy. The physics comes from reference Fortran 90 code in <code>FortranReference/tersoff/</code>; what I built is the browser port, 3D visualisation, and sweep dashboards.</div>
+<div style="background:var(--accent-subtle);border:1px solid var(--accent-border);border-left:2px solid var(--accent);padding:10px 14px;border-radius:0 4px 4px 0;font-size:12px;color:var(--text-secondary);line-height:1.65;margin:0 0 1.5rem">
+  <b style="color:var(--accent-light);font-weight:500">Honest framing:</b> This is learning work. I did not originate the Tersoff potential or the MD algorithm. I ported the reference implementation into a Web Worker and wrapped it in a UI for running parameter sweeps and inspecting results. The portal is my instrumentation; the physics is not mine.
+</div>
+
+<!-- ─── Parameter Panel ─── -->
+<div class="panel" id="paramPanel">
+  <div class="panel-hdr" onclick="togglePanel('paramPanel')">
+    <span class="snum">PARAMS</span>
+    <span class="sname">Experiment Parameters</span>
+    <span class="toggle">&blacktriangledown; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="param-grid">
+
+      <div class="param-group">
+        <div class="group-label">Slab &amp; MD</div>
+        <div class="param-row"><span class="param-lbl">Cells x</span><span class="param-val">3</span></div>
+        <div class="param-row"><span class="param-lbl">Cells y</span><span class="param-val">3</span></div>
+        <div class="param-row"><span class="param-lbl">niter1 <span class="unit">(outer loops)</span></span><input type="number" id="paramNiter1" value="200" min="1"></div>
+        <div class="param-row"><span class="param-lbl">niter2 <span class="unit">(VV steps)</span></span><input type="number" id="paramNiter2" value="50" min="1"></div>
+        <div class="param-row"><span class="param-lbl">niter3 <span class="unit">(pair swaps)</span></span><input type="number" id="paramNiter3" value="0" min="0"></div>
+        <div class="param-row"><span class="param-lbl">niter4 <span class="unit">(GCMC)</span></span><input type="number" id="paramNiter4" value="50" min="0"></div>
+        <div class="param-row"><span class="param-lbl">Temperature <span class="unit">(K)</span></span><input type="number" id="paramTemp" value="300" min="1"></div>
+        <div class="param-row"><span class="param-lbl">Timestep <span class="unit">(fs)</span></span><input type="number" id="paramDt" value="0.02" step="0.001" min="0.001"></div>
+      </div>
+
+      <div class="param-group">
+        <div class="group-label">Chemical Potential</div>
+        <div class="param-row"><span class="param-lbl">&mu;_Si <span class="unit">(eV)</span></span><span class="param-val">0.00</span></div>
+        <div class="param-row"><span class="param-lbl">&mu;_Ge start <span class="unit">(eV)</span></span><input type="number" id="paramMuStart" value="0.50" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">&mu;_Ge end <span class="unit">(eV)</span></span><input type="number" id="paramMuEnd" value="1.10" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">&mu;_Ge step <span class="unit">(eV)</span></span><input type="number" id="paramMuStep" value="0.05" step="0.01"></div>
+        <div class="param-row"><span class="param-lbl">Initial &theta;</span><span class="param-val">0.0 (pure Si)</span></div>
+      </div>
+
+      <div class="param-group">
+        <div class="group-label">Strain &amp; Geometry</div>
+        <div class="param-row"><span class="param-lbl">Vegard fraction f</span><input type="number" id="paramVegard" value="0" step="0.05" min="0" max="1"></div>
+        <div class="param-row"><span class="param-lbl">lattx <span class="unit">(&Aring;)</span></span><span class="param-val" id="dispLattx">7.680</span></div>
+        <div class="param-row"><span class="param-lbl">latty <span class="unit">(&Aring;)</span></span><span class="param-val" id="dispLatty">7.680</span></div>
+        <div class="param-row"><span class="param-lbl">lattz <span class="unit">(&Aring;)</span></span><span class="param-val" id="dispLattz">5.431</span></div>
+        <div class="param-row" style="flex-direction:column;align-items:flex-start">
+          <span class="param-lbl" style="margin-bottom:4px">ncellz values</span>
+          <div class="ncz-checks" id="nczChecks">
+            <label><input type="checkbox" value="2" checked> 2</label>
+            <label><input type="checkbox" value="3" checked> 3</label>
+            <label><input type="checkbox" value="4" checked> 4</label>
+            <label><input type="checkbox" value="5" checked> 5</label>
+            <label><input type="checkbox" value="6" checked> 6</label>
+            <label><input type="checkbox" value="7" checked> 7</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ─── Experiment Control ─── -->
+<div class="experiment-control">
+  <button class="primary" id="btnRunSweep" onclick="runFullSweep()">Run Full &mu; Sweep</button>
+  <button id="btnRunSingle" onclick="runSingleMuSweep()">Run Single &mu; Point</button>
+  <button class="danger" id="btnCancel" onclick="cancelSweep()" disabled>Cancel</button>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-text" id="progressText">Ready</span>
+  </div>
+  <span class="experiment-control status-text" id="statusText"></span>
+</div>
+
+<!-- ─── Live Monitor ─── -->
+<div class="dashboard">
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-label">3D Slab Viewer</div>
+      <div class="render-modes" id="renderModes">
+        <button data-style="bs" class="active" onclick="setRenderStyle('bs')">Ball &amp; Stick</button>
+        <button data-style="vdw" onclick="setRenderStyle('vdw')">VDW</button>
+        <button data-style="stick" onclick="setRenderStyle('stick')">Stick</button>
+        <button data-style="layer" onclick="setRenderStyle('layer')">Layer Color</button>
+        <span style="margin-left:auto;font-size:9px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace">VIEW:</span>
+        <button class="sm" onclick="setPresetView('top')">Top</button>
+        <button class="sm" onclick="setPresetView('front')">Front</button>
+        <button class="sm" onclick="setPresetView('side')">Side</button>
+        <button class="sm" onclick="setPresetView('iso')">Iso</button>
+      </div>
+      <div id="viewer3d"></div>
+      <div class="color-legend" id="colorLegend">
+        <span><span class="dot" style="background:#3ca0a0"></span>Silicon</span>
+        <span><span class="dot" style="background:#dd8844"></span>Germanium</span>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Live Statistics</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">Energy/atom</div><div class="stat-value sm" id="statEpa">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Temperature</div><div class="stat-value sm" id="statTemp">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Si atoms</div><div class="stat-value sm" id="statNSi">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Ge atoms</div><div class="stat-value sm" id="statNGe">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Ge fraction</div><div class="stat-value sm" id="statGeFrac">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Step</div><div class="stat-value sm" id="statStep">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">MC accept %</div><div class="stat-value sm" id="statMcPct">&mdash;</div></div>
+        <div class="stat-item"><div class="stat-label">Current &mu;_Ge</div><div class="stat-value sm" id="statMuGe">&mdash;</div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="card-label" id="layerChartLabel">Ge Layer Distribution</div>
+        <div class="chart-wrap" style="height:160px"><canvas id="layerChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Live Energy / Temp Charts ─── -->
+<div class="dashboard">
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Energy History</div>
+      <div class="chart-wrap"><canvas id="energyChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Temperature History</div>
+      <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Results: Layer Sweep & Surface Energy ─── -->
+<div class="panel" id="resultsPanel">
+  <div class="panel-hdr" onclick="togglePanel('resultsPanel')">
+    <span class="snum">RESULTS</span>
+    <span class="sname">Layer Sweep &amp; Surface Energy</span>
+    <span class="toggle">&blacktriangledown; collapse</span>
+  </div>
+  <div class="panel-body">
+    <!-- Row 1: Two parallel regression charts -->
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">E_total vs N_layers</div>
+        <div class="chart-wrap tall"><canvas id="dlLayerChart"></canvas></div>
+        <div id="fitResult" style="display:none;margin-top:10px">
+          <div class="fit-result">
+            <div class="fit-label">Surface Energy &gamma; = intercept / 2</div>
+            <div class="fit-value" id="fitValue">&mdash;</div>
+            <div class="fit-detail" id="fitDetail"></div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">N_Ge vs N_layers</div>
+        <div class="chart-wrap tall"><canvas id="dlCompChart"></canvas></div>
+        <div id="compFitResult" style="display:none;margin-top:10px">
+          <div class="fit-result">
+            <div class="fit-label">Bulk Ge Fraction x_bulk = slope / atoms_per_layer</div>
+            <div class="fit-value" id="compFitValue">&mdash;</div>
+            <div class="fit-detail" id="compFitDetail"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Ge layer distribution -->
+    <div class="dash-row" style="margin-top:14px">
+      <div class="dash-card">
+        <div class="card-label">Ge Distribution by Layer (symmetric surface &rarr; bulk)</div>
+        <div class="chart-wrap"><canvas id="dlGeLayerChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Raw data table -->
+    <div style="margin-top:14px">
+      <div class="card-label">Per-ncellz Data (current &mu;_Ge)</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ncz</th><th>N_layers</th><th>natom</th><th>E/atom (eV)</th><th>E_total (eV)</th><th>N_Ge</th><th>Ge frac (global)</th>
+          </tr>
+        </thead>
+        <tbody id="rawTableBody">
+          <tr><td colspan="7" style="text-align:center;color:var(--text-tertiary);font-style:italic">No data yet. Run a sweep.</td></tr>
+        </tbody>
+      </table>
+      <div class="controls">
+        <button onclick="recalcFitFromTable(currentLayerData)">Recalculate fit</button>
+        <button onclick="addLayerRow()">Add row</button>
+        <button class="danger" onclick="clearRawTable()">Clear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Master: Surface Energy vs Composition ─── -->
+<div class="panel" id="masterPanel">
+  <div class="panel-hdr" onclick="togglePanel('masterPanel')">
+    <span class="snum">MASTER</span>
+    <span class="sname">Surface Energy vs Composition</span>
+    <span class="toggle">&blacktriangledown; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Surface Energy vs Ge Composition</div>
+        <div class="chart-wrap tall"><canvas id="dlSurfGeChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Summary Results</div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>&mu;_Ge</th><th>&gamma; (eV)</th><th>E R&sup2;</th><th>x_bulk</th><th>comp R&sup2;</th><th>&Delta;&Gamma; (atoms)</th><th>Ge L1</th><th>Ge L2</th><th>Ge L3</th><th>Ge L4</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody">
+            <tr><td colspan="10" style="text-align:center;color:var(--text-tertiary);font-style:italic">No data yet.</td></tr>
+          </tbody>
+        </table>
+        <div class="export-row">
+          <button onclick="exportCSV(window.summaryData)">Export CSV</button>
+          <button onclick="exportJSON(window.summaryData, window.rawDataMap)">Export JSON</button>
+          <button onclick="copyToClipboard(window.summaryData)">Copy to clipboard</button>
+          <button onclick="saveExperiment(window.summaryData, window.rawDataMap)">Save to localStorage</button>
+          <button class="danger" onclick="clearAllData()">Clear all data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../../_common/theme.js"></script>
+<script src="viz3d.js"></script>
+<script src="charts.js"></script>
+<script src="data.js"></script>
+<script src="sweep.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
