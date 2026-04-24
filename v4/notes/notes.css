@@ -1,0 +1,62 @@
+/* Printable primer — two-page briefing style. Same family as the studio but stripped
+   back for print. Light mode only; a toggle makes no sense on a PDF. */
+
+:root{
+  --bg:#ffffff;
+  --surface:#fafaf6;
+  --border:#d4cfc5;
+  --border-light:#e8e4dc;
+  --text-primary:#1a1a18;
+  --text-secondary:#4a4542;
+  --text-tertiary:#9a9490;
+  --accent:#2d5a3d;
+  --accent-light:#3d7a52;
+  --accent-subtle:rgba(45,90,61,0.08);
+  --accent-border:rgba(45,90,61,0.2);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text-primary);font-family:'DM Sans',system-ui,sans-serif;line-height:1.7;padding:2rem 1.25rem 3rem}
+.page{max-width:640px;margin:0 auto}
+
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-subtle)}
+
+.back{display:inline-block;font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;margin-bottom:1.5rem;padding:4px 10px;border:1px solid var(--border);border-radius:2px;border-bottom-color:var(--border)}
+.back:hover{color:var(--accent);border-color:var(--accent-border)}
+
+.kicker{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-light);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+h1{font-family:'Instrument Serif',serif;font-weight:400;font-size:34px;line-height:1.15;margin-bottom:6px}
+.tagline{font-family:'Instrument Serif',serif;font-style:italic;font-size:17px;color:var(--text-secondary);margin-bottom:1.75rem}
+
+h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:20px;margin:1.5rem 0 0.5rem;color:var(--text-primary)}
+p{font-size:14.5px;color:var(--text-primary);margin-bottom:0.75rem}
+ol,ul{margin:0 0 0.75rem 1.25rem}
+li{font-size:14.5px;margin-bottom:4px}
+li::marker{color:var(--accent-light)}
+strong{font-weight:600;color:var(--text-primary)}
+em{font-style:italic;color:var(--text-secondary)}
+
+.rule{background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--accent);border-radius:0 3px 3px 0;padding:14px 18px;margin:1rem 0 1.25rem;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.7;color:var(--text-primary)}
+.rule b{color:var(--accent-light);font-weight:500}
+
+.worked{background:var(--surface);border:1px solid var(--border-light);border-radius:3px;padding:14px 18px;margin:0.75rem 0 1.25rem}
+.worked h3{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:8px}
+.worked p{font-size:14px;color:var(--text-primary);margin-bottom:0.4rem}
+
+.questions{background:var(--accent-subtle);border:1px solid var(--accent-border);border-radius:3px;padding:14px 18px 14px 18px;margin:1rem 0 1.25rem}
+.questions h3{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:10px}
+.questions ol{margin-left:1.1rem}
+.questions li{margin-bottom:8px;color:var(--text-primary);font-size:14.5px}
+
+.pitfalls li{color:var(--text-secondary)}
+
+.meta{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border-light);font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-tertiary);line-height:1.7}
+
+@media print{
+  body{padding:0;color:#000}
+  .back,.no-print{display:none}
+  .page{max-width:none}
+  a{color:#000;border-bottom:none}
+  h1{font-size:28px}
+  .rule,.worked,.questions{break-inside:avoid}
+}
