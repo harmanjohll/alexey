@@ -15,7 +15,7 @@ function chartDefaults() {
   var textPrimary = style.getPropertyValue('--text-primary').trim() || '#e8e8e8';
   var textSec = style.getPropertyValue('--text-secondary').trim() || '#8a8a8a';
   return {
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: "'Space Mono', monospace",
     gridColor: borderLight,
     tickColor: textMuted,
     tooltipBg: surface,

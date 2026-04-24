@@ -306,7 +306,7 @@ function drawHeatmap(canvas, model) {
   ctx.stroke();
 
   // Model label
-  ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.font = '10px "Space Mono", monospace';
   ctx.fillStyle = '#7dd87d';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';

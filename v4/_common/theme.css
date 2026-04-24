@@ -1,4 +1,6 @@
-/* v4 theme — single source of truth. Light + [data-theme="dark"]. */
+/* v4 theme — colour + per-category accent overrides.
+   Studios and primers set <html data-cat="football|fractal|walk|advanced">
+   to carry their own accent through every border, button, and timestamp. */
 
 :root {
   --bg: #f7f5f0;
@@ -8,19 +10,23 @@
   --border: #d4cfc5;
   --border-light: #e8e4dc;
   --text-primary: #1a1a18;
-  --text-secondary: #6b6560;
-  --text-tertiary: #9a9490;
+  --text-secondary: #5e5853;
+  --text-tertiary: #8a847f;
   --accent: #2d5a3d;
   --accent-light: #3d7a52;
   --accent-subtle: rgba(45, 90, 61, 0.08);
-  --accent-border: rgba(45, 90, 61, 0.2);
+  --accent-border: rgba(45, 90, 61, 0.22);
   --warning: #b8891c;
   --danger: #c0392b;
 
   --cat-football: #2d5a3d;
-  --cat-fractal:  #2d5a7a;
-  --cat-walk:     #4a5a9f;
-  --cat-advanced: #7a6a3d;
+  --cat-fractal:  #1e6b6b;
+  --cat-walk:     #4a4aa8;
+  --cat-advanced: #8c6514;
+
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-body:    'Space Grotesk', system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-mono:    'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 [data-theme="dark"] {
@@ -30,18 +36,55 @@
   --surface-alt: #161616;
   --border: rgba(61, 207, 176, 0.14);
   --border-light: rgba(61, 207, 176, 0.06);
-  --text-primary: #e8e8e8;
-  --text-secondary: #999999;
-  --text-tertiary: #666666;
+  --text-primary: #eeeeec;
+  --text-secondary: #a8a8a4;
+  --text-tertiary: #72726e;
   --accent: #3dcfb0;
   --accent-light: #6eddc5;
   --accent-subtle: rgba(61, 207, 176, 0.08);
-  --accent-border: rgba(61, 207, 176, 0.22);
+  --accent-border: rgba(61, 207, 176, 0.24);
   --warning: #f0b429;
   --danger: #e24b4a;
 
   --cat-football: #6edd9e;
   --cat-fractal:  #6ec0dd;
-  --cat-walk:     #8da6ff;
-  --cat-advanced: #d9be6e;
+  --cat-walk:     #9aa6ff;
+  --cat-advanced: #e0b45a;
+}
+
+/* ── Per-category accent overrides ── */
+/* Light mode */
+[data-cat="football"]{
+  --accent:#2d5a3d; --accent-light:#3d7a52;
+  --accent-subtle:rgba(45,90,61,0.09); --accent-border:rgba(45,90,61,0.25);
+}
+[data-cat="fractal"]{
+  --accent:#1e6b6b; --accent-light:#2d8a8a;
+  --accent-subtle:rgba(30,107,107,0.09); --accent-border:rgba(30,107,107,0.25);
+}
+[data-cat="walk"]{
+  --accent:#4a4aa8; --accent-light:#6262c0;
+  --accent-subtle:rgba(74,74,168,0.09); --accent-border:rgba(74,74,168,0.25);
+}
+[data-cat="advanced"]{
+  --accent:#8c6514; --accent-light:#b0832e;
+  --accent-subtle:rgba(140,101,20,0.09); --accent-border:rgba(140,101,20,0.25);
+}
+
+/* Dark mode — brighter values so they stay distinguishable */
+[data-theme="dark"][data-cat="football"]{
+  --accent:#6edd9e; --accent-light:#9eeab8;
+  --accent-subtle:rgba(110,221,158,0.10); --accent-border:rgba(110,221,158,0.28);
+}
+[data-theme="dark"][data-cat="fractal"]{
+  --accent:#6ec0dd; --accent-light:#9ed4e5;
+  --accent-subtle:rgba(110,192,221,0.10); --accent-border:rgba(110,192,221,0.28);
+}
+[data-theme="dark"][data-cat="walk"]{
+  --accent:#9aa6ff; --accent-light:#c0cbff;
+  --accent-subtle:rgba(154,166,255,0.10); --accent-border:rgba(154,166,255,0.28);
+}
+[data-theme="dark"][data-cat="advanced"]{
+  --accent:#e0b45a; --accent-light:#eaca87;
+  --accent-subtle:rgba(224,180,90,0.10); --accent-border:rgba(224,180,90,0.28);
 }

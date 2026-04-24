@@ -44,17 +44,17 @@ function _tooltipOpts() {
     borderWidth: 1,
     titleColor: _chartTheme.tooltipTitle(),
     bodyColor: _chartTheme.tooltipBody(),
-    titleFont: {family: 'JetBrains Mono', size: 10},
-    bodyFont: {family: 'JetBrains Mono', size: 10}
+    titleFont: {family: 'Space Mono', size: 10},
+    bodyFont: {family: 'Space Mono', size: 10}
   };
 }
 
 function _axOpts(label) {
   var o = {
     grid: {color: _chartTheme.gridColor()},
-    ticks: {color: _chartTheme.tickColor(), font: {family: 'JetBrains Mono', size: 9}}
+    ticks: {color: _chartTheme.tickColor(), font: {family: 'Space Mono', size: 9}}
   };
-  if (label) o.title = {display: true, text: label, color: _chartTheme.tickColor(), font: {family: 'JetBrains Mono', size: 9}};
+  if (label) o.title = {display: true, text: label, color: _chartTheme.tickColor(), font: {family: 'Space Mono', size: 9}};
   return o;
 }
 

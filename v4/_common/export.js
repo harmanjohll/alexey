@@ -67,7 +67,7 @@ var Exporter = (function () {
         '<h4>Ready to publish?</h4>' +
         '<p>Export your hypothesis, results, interpretation, and coach dialogue as a single JSON file. Commit it to <code>v4/work/' + opts.id + '.json</code> so reviewers can read your work on the public exhibit.</p>' +
         '<button type="button" class="primary" id="exportBtn_' + opts.id + '">Export to portfolio →</button>' +
-        '<span id="exportHint_' + opts.id + '" style="font-size:11px;color:var(--text-tertiary);font-family:\'JetBrains Mono\',monospace;margin-left:10px"></span>' +
+        '<span id="exportHint_' + opts.id + '" style="font-size:11px;color:var(--text-tertiary);font-family:\'Space Mono\',monospace;margin-left:10px"></span>' +
       '</div>';
     document.getElementById('exportBtn_' + opts.id).onclick = function () {
       if (!Store.get(opts.id, 'hypothesis')) {
