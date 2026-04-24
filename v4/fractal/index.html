@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fractal Growth · Studio · Alexey Mikhail Johll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_common/theme.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+<a href="../index.html" class="nav-back">&larr; studio home</a>
+<div class="portal-tag">FRACTAL PORTAL &middot; GROWTH &amp; DIMENSION</div>
+<h1 class="portal-title">How Do Fractals Grow?</h1>
+<p class="portal-sub">Grow fractal aggregates through diffusion-limited aggregation (DLA). Measure fractal dimension, sweep sticking probability, compare seed geometries, and explore Koch snowflake geometry with ruler measurement and Monte Carlo area estimation.</p>
+
+<!-- WHAT IS THIS? -->
+<div class="panel" id="panelGuide">
+  <div class="panel-hdr" onclick="togglePanel('panelGuide')">
+    <span class="snum">GUIDE</span>
+    <span class="sname">What Is Fractal Dimension?</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="note" style="border-left-color:var(--accent-light)">
+      <b>The big idea:</b> A line is 1-dimensional. A filled square is 2-dimensional. But some shapes &mdash; like coastlines, tree branches, and the patterns you'll grow here &mdash; are <em>in between</em>. Their dimension is a fraction, like 1.71. That fraction is called the <b>fractal dimension D</b>, and it measures how much the shape fills space.
+    </div>
+
+    <div style="font-size:13px;line-height:1.8;color:var(--text-secondary);margin-bottom:14px">
+      <p style="margin-bottom:10px"><b>How we measure D:</b> Imagine drawing circles of increasing radius r around the centre of a fractal. Count the particles M inside each circle. If M grows as r<sup>D</sup>, then D is the fractal dimension. On a log-log plot (the M(r) chart), this means the <b>slope of the line = D</b>.</p>
+      <p style="margin-bottom:10px"><b>D &asymp; 1.0</b> &rarr; almost a straight line (very thin, branchy structure)<br>
+      <b>D &asymp; 1.5</b> &rarr; moderately space-filling (bushy but with gaps)<br>
+      <b>D &asymp; 2.0</b> &rarr; nearly fills the plane (very dense, almost solid)</p>
+      <p style="margin-bottom:10px"><b>DLA (Diffusion-Limited Aggregation):</b> Particles are released one by one far from the centre. Each one walks randomly until it bumps into the growing cluster and sticks. The result is a branchy, tree-like structure with D &asymp; 1.71 &mdash; it fills space more than a line but less than a solid disk.</p>
+      <p><b>Koch snowflake:</b> A mathematical fractal built by replacing each line segment with a zigzag pattern, over and over. Its dimension is exactly log(4)/log(3) &asymp; 1.26, which you can verify with the ruler measurement tool.</p>
+    </div>
+
+    <div style="font-size:13px;line-height:1.8;color:var(--text-secondary)">
+      <b>Quick guide to the four tabs:</b>
+      <ul style="margin:6px 0 0 18px">
+        <li><b>Grow Aggregate</b> &mdash; Grow a DLA fractal and measure its dimension D from the M(r) chart. Use "Watch mode" to see particles walking in real time.</li>
+        <li><b>Sticking Sweep</b> &mdash; Test whether stickiness affects D. Lower stickiness lets particles penetrate deeper before sticking, changing the shape.</li>
+        <li><b>Seed Comparison</b> &mdash; Does the starting shape (point, line, circle) change D? Run all three and compare.</li>
+        <li><b>Koch Snowflake</b> &mdash; A mathematical fractal. Slide the iteration slider to see it grow. Use the ruler measurement to derive D from the coastline paradox. Run Monte Carlo to estimate its area.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ RESEARCH AGENDA ═══════ -->
+<div class="panel" id="panelInv">
+  <div class="panel-hdr" onclick="togglePanel('panelInv')">
+    <span class="snum">AGENDA</span>
+    <span class="sname">Research Questions</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>How to use this:</b> Each investigation pre-configures the simulation and runs it for you. Start with #01, observe, record in the logbook, then move to #02. By the end you'll have measured fractal dimension in four different ways.</div>
+    <div class="inv-list">
+      <div class="inv-item" onclick="runInvestigation(1)">
+        <span class="inv-num">01</span>
+        <span class="inv-q">What is the fractal dimension of DLA?</span>
+        <span class="inv-method">Grow 10k particles, measure D via M(r) regression</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="runInvestigation(2)">
+        <span class="inv-num">02</span>
+        <span class="inv-q">Does stickiness change the fractal?</span>
+        <span class="inv-method">Sweep p_stick 0.05&ndash;1.0, plot D vs sticking</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="runInvestigation(3)">
+        <span class="inv-num">03</span>
+        <span class="inv-q">How does the seed shape matter?</span>
+        <span class="inv-method">Compare point, line, circle seeds &mdash; same D?</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="runInvestigation(4)">
+        <span class="inv-num">04</span>
+        <span class="inv-q">Koch vs DLA: same dimension?</span>
+        <span class="inv-method">Koch D&asymp;1.26, DLA D&asymp;1.71 &mdash; why different?</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="runInvestigation(5)">
+        <span class="inv-num">05</span>
+        <span class="inv-q">Does particle count change D?</span>
+        <span class="inv-method">Grow with 1k, 5k, 10k particles &mdash; compare dimension</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="runInvestigation(6)">
+        <span class="inv-num">06</span>
+        <span class="inv-q">Why is Koch dimension exactly log4/log3?</span>
+        <span class="inv-method">Iteration 5, 6 ruler sizes &mdash; slope gives D = 1.26</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+    </div>
+    <div class="inv-custom">
+      <textarea id="customInv" placeholder="Write your own research question here..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PARAMETERS ═══════ -->
+<div class="panel" id="panelParams">
+  <div class="panel-hdr" onclick="togglePanel('panelParams')">
+    <span class="snum">PARAMETERS</span>
+    <span class="sname">Simulation Controls</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="param-grid">
+      <div class="param-group">
+        <div class="group-label">Growth</div>
+        <div class="param-row">
+          <span class="param-lbl">Max particles</span>
+          <input type="number" id="pMaxP" value="5000" min="100" max="50000" step="100">
+        </div>
+        <div class="param-row">
+          <span class="param-lbl">Grid size</span>
+          <input type="number" id="pGrid" value="300" min="100" max="800" step="50">
+        </div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Physics</div>
+        <div class="param-row">
+          <span class="param-lbl">Sticking prob</span>
+          <input type="number" id="pStick" value="1.0" min="0.01" max="1.0" step="0.01">
+        </div>
+        <div class="param-row">
+          <span class="param-lbl">Seed type</span>
+          <select id="pSeed">
+            <option value="point">Point</option>
+            <option value="line">Line</option>
+            <option value="circle">Circle</option>
+          </select>
+        </div>
+      </div>
+      <div class="param-group">
+        <div class="group-label">Walker</div>
+        <div class="param-row">
+          <span class="param-lbl">Launch radius &times;</span>
+          <input type="number" id="pLaunch" value="1.5" min="1.1" max="3.0" step="0.1">
+        </div>
+        <div class="param-row">
+          <span class="param-lbl">Kill radius &times;</span>
+          <input type="number" id="pKill" value="3.0" min="1.5" max="5.0" step="0.5">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODE TABS ═══════ -->
+<div class="mode-tabs">
+  <div class="mode-tab active" data-mode="grow" onclick="setMode('grow')">Grow Aggregate</div>
+  <div class="mode-tab" data-mode="sweep" onclick="setMode('sweep')">Sticking Sweep</div>
+  <div class="mode-tab" data-mode="seedcmp" onclick="setMode('seedcmp')">Seed Comparison</div>
+  <div class="mode-tab" data-mode="koch" onclick="setMode('koch')">Koch Snowflake</div>
+</div>
+
+<!-- ═══════ MODE 1: GROW AGGREGATE ═══════ -->
+<div class="mode-section active" id="mode-grow">
+  <div class="controls">
+    <button id="btnWatch" onclick="toggleWatchMode()" title="Watch individual particles walk randomly and stick to the aggregate">Watch mode: OFF</button>
+    <button id="btnGrow" onclick="runGrow()">Grow aggregate &rarr;</button>
+    <button id="btnStop" onclick="stopGrow()" disabled class="danger">Stop</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="growProgFill"></div></div>
+      <span class="progress-text" id="growProgText">Ready</span>
+    </div>
+  </div>
+  <div class="note" id="watchNote" style="display:none;margin-bottom:10px"><b>Watch mode:</b> You'll see each particle (yellow dot) doing a random walk until it bumps into the aggregate and sticks. This is slow — use small particle counts (100–500) to see the process clearly. The fractal tree-like structure forms because outer branches <em>shield</em> the interior from new walkers.</div>
+
+  <div class="dashboard">
+    <div class="dash-row wide">
+      <div class="dash-card">
+        <div class="card-label">DLA Aggregate</div>
+        <div class="canvas-wrap"><canvas id="dlaCanvas" width="500" height="500"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Statistics</div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-label">Particles</div>
+            <div class="stat-value" id="stCount">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Fractal D</div>
+            <div class="stat-value" id="stFracD">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Max Radius</div>
+            <div class="stat-value sm" id="stRadius">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Sticking</div>
+            <div class="stat-value sm" id="stStick">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">M(r) &mdash; Mass vs Radius</div>
+        <div class="chart-wrap"><canvas id="massChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="note">
+          <b>How to read this chart:</b> Each point is the number of particles M within radius r from the centre. On a log-log plot, the slope equals the fractal dimension D. For DLA, expect D &asymp; 1.71.
+        </div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">What To Record</div>
+        <div class="note" style="margin-bottom:0">
+          <b>After each run, log these in your logbook:</b><br>
+          1. How many particles you grew<br>
+          2. The fractal dimension D shown in Statistics<br>
+          3. What the aggregate looks like (branchy? dense? symmetrical?)<br>
+          4. Sticking probability used<br>
+          5. Anything that surprised you
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Experiments To Try</div>
+        <div style="font-size:12px;line-height:1.7;color:var(--text-secondary)">
+          <b>Vary one thing at a time:</b><br>
+          &bull; <b>Particle count:</b> Grow 500, 2000, 10000. Does D change or stabilise?<br>
+          &bull; <b>Sticking probability:</b> Try 1.0, 0.5, 0.1, 0.05. What happens to the branches?<br>
+          &bull; <b>Grid size:</b> Try 200 vs 600. Does the shape look different?<br>
+          &bull; <b>Watch mode:</b> Turn it on with 200 particles. Where do walkers tend to stick &mdash; tips or interior?
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODE 2: STICKING SWEEP ═══════ -->
+<div class="mode-section" id="mode-sweep">
+  <div class="sweep-grid">
+    <div class="sweep-item">
+      <label>Min sticking</label>
+      <input type="number" id="swMin" value="0.05" min="0.01" max="1.0" step="0.05">
+    </div>
+    <div class="sweep-item">
+      <label>Max sticking</label>
+      <input type="number" id="swMax" value="1.0" min="0.1" max="1.0" step="0.05">
+    </div>
+    <div class="sweep-item">
+      <label>Sweep points</label>
+      <input type="number" id="swSteps" value="6" min="2" max="20" step="1">
+    </div>
+    <div class="sweep-item">
+      <label>Particles each</label>
+      <input type="number" id="swParticles" value="3000" min="500" max="20000" step="500">
+    </div>
+  </div>
+  <div class="controls">
+    <button id="btnSweep" onclick="runSweep()">Run sweep &rarr;</button>
+    <button id="btnSweepStop" onclick="stopSweep()" disabled class="danger">Stop</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="swProgFill"></div></div>
+      <span class="progress-text" id="swProgText">Ready</span>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Fractal Dimension vs Sticking Probability</div>
+        <div class="chart-wrap tall"><canvas id="swDimChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Results Table</div>
+        <table class="ptable">
+          <thead><tr><th>P(stick)</th><th>D</th><th>Particles</th></tr></thead>
+          <tbody id="swTableBody"></tbody>
+        </table>
+        <div class="note" style="margin-top:10px">
+          <b>What to look for:</b> Does lower sticking probability produce denser or sparser aggregates? How does that affect the fractal dimension?
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODE 3: SEED COMPARISON ═══════ -->
+<div class="mode-section" id="mode-seedcmp">
+  <div class="controls">
+    <button id="btnSeedComp" onclick="runSeedComp()">Compare seeds &rarr;</button>
+    <button id="btnSeedStop" onclick="stopSeedComp()" disabled class="danger">Stop</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="scProgFill"></div></div>
+      <span class="progress-text" id="scProgText">Ready</span>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">D by Seed Type</div>
+        <div class="chart-wrap tall"><canvas id="scDimChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Last Aggregate</div>
+        <div class="canvas-wrap"><canvas id="scAggCanvas" width="500" height="500"></canvas></div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-label">Point D</div>
+            <div class="stat-value sm" id="scStat1">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Line D</div>
+            <div class="stat-value sm" id="scStat2">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Circle D</div>
+            <div class="stat-value sm" id="scStat3">--</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="note"><b>Key question:</b> The seed determines where growth begins. Does it change the fundamental fractal structure, or does the random walk process dominate?</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODE 4: KOCH SNOWFLAKE ═══════ -->
+<div class="mode-section" id="mode-koch">
+  <div class="note" style="margin-bottom:14px">
+    <b>The coastline paradox:</b> Measured length depends on ruler size. As the ruler shrinks, the measured length grows without bound. Koch snowflakes are mathematical idealisations of this phenomenon.
+  </div>
+
+  <div class="param-grid" style="margin-bottom:14px">
+    <div class="param-group">
+      <div class="group-label">Fractal</div>
+      <div class="param-row">
+        <span class="param-lbl">Type</span>
+        <select id="kochType" onchange="updateKoch()">
+          <option value="snowflake">Koch Snowflake</option>
+          <option value="antisnowflake">Anti-snowflake</option>
+          <option value="sierpinski">Sierpinski Triangle</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <label>Iteration</label>
+        <input type="range" id="kochIter" min="0" max="6" value="0" oninput="updateKoch()">
+        <span class="cv" id="kochIterVal">0</span>
+      </div>
+    </div>
+    <div class="param-group">
+      <div class="group-label">Ruler Measurement</div>
+      <div class="ctrl-row">
+        <label>Ruler size</label>
+        <input type="range" id="kochRuler" min="0" max="9" value="0" oninput="measureKochRuler(+this.value)">
+        <span class="cv" id="kochRulerVal">--</span>
+      </div>
+      <div class="param-row"><span class="param-lbl">Rulers used</span><span id="kochRulerCount">--</span></div>
+      <div class="param-row"><span class="param-lbl">Measured length</span><span id="kochRulerLen">--</span></div>
+      <div class="param-row"><span class="param-lbl">Fractal D &asymp;</span><span id="kochFracDim" style="color:var(--accent-light);font-weight:500">--</span></div>
+    </div>
+    <div class="param-group">
+      <div class="group-label">Monte Carlo Area</div>
+      <div class="param-row">
+        <span class="param-lbl">Points</span>
+        <select id="kochMCPoints">
+          <option value="1000">1,000</option>
+          <option value="2000" selected>2,000</option>
+          <option value="5000">5,000</option>
+          <option value="10000">10,000</option>
+        </select>
+      </div>
+      <button onclick="runKochMC()" style="margin-top:6px;width:100%">Run MC area &rarr;</button>
+      <div class="param-row" style="margin-top:6px"><span class="param-lbl">Inside / Total</span><span id="kochMCInside">--</span></div>
+      <div class="param-row"><span class="param-lbl">Estimated area</span><span id="kochMCArea">--</span></div>
+      <div class="param-row"><span class="param-lbl">Theoretical area</span><span id="kochMCTheo">--</span></div>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="dash-row wide">
+      <div class="dash-card">
+        <div class="card-label">Koch Fractal</div>
+        <div class="canvas-wrap"><canvas id="kochCanvas" width="500" height="500"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">Perimeter Growth</div>
+        <table class="ptable">
+          <thead><tr><th>Iter</th><th>Segments</th><th>Seg Len</th><th>Perimeter</th></tr></thead>
+          <tbody id="kochPerimBody"></tbody>
+        </table>
+        <div class="chart-wrap" style="height:200px;margin-top:10px"><canvas id="perimChart"></canvas></div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="card-label">Ruler: log-log Plot</div>
+        <div class="chart-wrap"><canvas id="rulerChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="card-label">MC Area Convergence</div>
+        <div class="chart-wrap"><canvas id="mcAreaChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ COACH ═══════ -->
+<div class="panel" id="panelCoach">
+  <div class="panel-hdr" onclick="togglePanel('panelCoach')">
+    <span class="snum">COACH</span>
+    <span class="sname">AI Mentor</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="sl" style="margin-bottom:8px">your interpretation</div>
+    <textarea id="coachInterp" placeholder="What patterns did you notice? What surprised you? What does fractal dimension mean physically?"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button id="btnCoach" onclick="askCoach()">Ask coach &rarr;</button>
+    </div>
+    <div style="margin-top:14px;padding:14px;background:var(--bg-deep);border:1px solid var(--accent-border);border-left:3px solid var(--accent);border-radius:0 2px 2px 0">
+      <div class="sl" style="color:var(--accent);margin-bottom:6px">COACH'S QUESTION</div>
+      <div id="coachQ" style="font-size:13px;line-height:1.7;font-style:italic;color:var(--text-primary)">
+        <span style="color:var(--text-tertiary);font-size:12px">Write your interpretation above, then click "Ask coach" for a Socratic question.</span>
+      </div>
+    </div>
+    <div id="coachThread" class="thread" style="margin-top:14px"></div>
+    <div id="coachReplySec" style="display:none;margin-top:12px">
+      <div class="sl" style="margin-bottom:6px">your reply to coach</div>
+      <textarea id="coachReply" style="min-height:60px" placeholder="Answer coach's question here..."></textarea>
+      <div style="margin-top:6px"><button onclick="sendCoachReply()">Send reply &rarr;</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ LOGBOOK ═══════ -->
+<div class="panel" id="panelLog">
+  <div class="panel-hdr" onclick="togglePanel('panelLog')">
+    <span class="snum">LOGBOOK</span>
+    <span class="sname">Experiment Notes</span>
+    <span class="toggle">&darr; collapse</span>
+  </div>
+  <div class="panel-body">
+    <div class="logbook-entries" id="logbookEntries">
+      <div class="logbook-empty">No entries yet. Record your observations and conclusions.</div>
+    </div>
+    <div class="logbook-add">
+      <select id="logType">
+        <option value="obs">Observation</option>
+        <option value="quest">Question</option>
+        <option value="conc">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Record an observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button onclick="addLogEntry()">Save to logbook</button>
+        <button onclick="exportLogbook()" style="font-size:9px;padding:4px 10px">Export markdown</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="exportMount"></div>
+
+<div class="exp-nav">
+  <a href="../random-walk/">← prev · random walk</a>
+  <a class="nav-center" href="../index.html">home</a>
+  <a href="../advanced/">next · advanced →</a>
+</div>
+
+</div><!-- .wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="../_common/theme.js"></script>
+<script src="../_common/store.js"></script>
+<script src="../_common/lock.js"></script>
+<script src="../_common/coach.js"></script>
+<script src="../_common/export.js"></script>
+<script src="simulation.js"></script>
+<script src="render.js"></script>
+<script src="charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

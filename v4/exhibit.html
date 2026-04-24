@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exhibit · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_common/theme.css">
+<link rel="stylesheet" href="_common/chrome.css">
+<link rel="stylesheet" href="_common/exhibit.css">
+</head>
+<body>
+<div class="wrap">
+
+<a href="index.html" class="nav-back">← studio</a>
+
+<div class="hero">
+  <div class="hero-name">ALEXEY MIKHAIL JOHLL</div>
+  <div class="hero-sub">Computational Science — Exhibit</div>
+  <div class="hero-loc">Singapore · 2025–2026</div>
+  <div class="hero-nav">
+    <a href="index.html" class="hero-link">Studio →</a>
+    <span class="hero-dot">·</span>
+    <a href="about.html" class="hero-link">About</a>
+  </div>
+</div>
+
+<div id="exhibitRoot"></div>
+
+</div>
+
+<script src="_common/theme.js"></script>
+<script src="_common/exhibit-render.js"></script>
+<script>
+(function () {
+  var EXPERIMENTS = [
+    { id: 'football',    category: 'Football Analytics',    title: 'Where do goals come from?' },
+    { id: 'fractal',     category: 'Fractal Mathematics',   title: 'How do fractals grow?' },
+    { id: 'random-walk', category: 'Probability & Dynamics', title: "The drunkard's walk" }
+  ];
+
+  function qs(name) {
+    var m = new URLSearchParams(window.location.search).get(name);
+    return m || null;
+  }
+
+  async function renderIndex() {
+    var root = document.getElementById('exhibitRoot');
+    root.innerHTML =
+      '<p style="max-width:620px;margin:0 auto 1.5rem;text-align:center;font-size:13px;color:var(--text-secondary);line-height:1.75">' +
+        'The computation is the tool. My thinking is the product. Each page below shows the hypothesis I wrote before running anything, the result I got, the interpretation I wrote afterwards, and the Socratic dialogue with the coach — ported as-committed from my studio session. If an entry is empty, I haven\'t published that experiment yet.' +
+      '</p>' +
+      '<div class="exhibit-index" id="exhibitList"></div>';
+
+    var list = document.getElementById('exhibitList');
+    for (var i = 0; i < EXPERIMENTS.length; i++) {
+      var ex = EXPERIMENTS[i];
+      var json = await Exhibit.fetchJSON('work/' + ex.id + '.json');
+
+      var item = document.createElement('div');
+      item.className = 'exhibit-index-item';
+
+      if (!json) {
+        item.innerHTML =
+          '<div class="exhibit-index-cat">' + ex.category + '</div>' +
+          '<div class="exhibit-index-title">' + ex.title + '</div>' +
+          '<div class="exhibit-index-hyp" style="font-style:normal;color:var(--text-tertiary)">Not yet published to the exhibit.</div>' +
+          '<div class="exhibit-index-meta">Open in <a href="' + ex.id + '/">studio</a> to write a hypothesis and export.</div>';
+      } else {
+        var hyp = (json.hypothesis && json.hypothesis.text) || '';
+        var excerpt = hyp.length > 220 ? hyp.slice(0, 220) + '…' : hyp;
+        var when = json.hypothesis && json.hypothesis.locked_at ? new Date(json.hypothesis.locked_at).toLocaleDateString() : '';
+        item.innerHTML =
+          '<a href="?exp=' + ex.id + '">' +
+            '<div class="exhibit-index-cat">' + (json.category || ex.category) + '</div>' +
+            '<div class="exhibit-index-title">' + (json.title || ex.title) + '</div>' +
+            '<div class="exhibit-index-hyp">' + (excerpt || '(no hypothesis written)') + '</div>' +
+            '<div class="exhibit-index-meta">' + (when ? 'hypothesis locked · ' + when : '') + '</div>' +
+          '</a>';
+      }
+      list.appendChild(item);
+    }
+  }
+
+  async function renderOne(expId) {
+    var root = document.getElementById('exhibitRoot');
+    var json = await Exhibit.fetchJSON('work/' + expId + '.json');
+    if (!json) {
+      root.innerHTML =
+        '<div class="exhibit-empty">No portfolio data at <code>work/' + expId + '.json</code> yet. ' +
+        '<a href="' + expId + '/" style="color:var(--accent)">Open the studio</a> to run this experiment and export.</div>' +
+        '<p style="text-align:center;margin-top:1rem"><a href="exhibit.html" class="hero-link">← back to index</a></p>';
+      return;
+    }
+    Exhibit.renderOne(json, root);
+    var back = document.createElement('p');
+    back.style.textAlign = 'center';
+    back.style.marginTop = '1.5rem';
+    back.innerHTML = '<a href="exhibit.html" class="hero-link">← back to exhibit index</a>';
+    root.appendChild(back);
+  }
+
+  var exp = qs('exp');
+  if (exp) renderOne(exp);
+  else renderIndex();
+})();
+</script>
+</body>
+</html>

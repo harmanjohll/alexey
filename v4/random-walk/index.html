@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Walk · Studio · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../_common/theme.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+
+<a href="../index.html" class="nav-back">&larr; studio home</a>
+
+<div class="portal-tag">RANDOM WALK PORTAL &middot; PROBABILITY &amp; STATISTICAL PHYSICS</div>
+<div class="portal-title">The Drunkard's Walk</div>
+<div class="portal-sub">After N random steps, how far do you end up from where you started? Simulate hundreds of walkers taking hundreds of steps and discover the surprising square-root law that underlies Brownian motion, stock prices, and diffusion.</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 01 &middot; HYPOTHESIS
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepHyp">
+  <div class="panel-hdr">
+    <span class="snum">step 01</span>
+    <span class="sname">Hypothesis</span>
+    <span class="shint">Write your prediction before running anything</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>Scientific method:</b> Before running any simulation, write down what you predict. If a walker takes N random steps, how far from the origin will they typically end up? What happens if you quadruple the number of steps? How will 1D differ from 2D?</div>
+    <textarea id="hypText" placeholder="e.g. I predict that after N random steps, walkers will end up on average about N/2 steps from their starting point. If you double the number of steps, the distance should double too. In 2D, I think walkers will spread out in a circle..."></textarea>
+    <div class="row">
+      <span class="ts-label" id="hypTS"></span>
+      <button id="lockBtn" type="button">Lock hypothesis and begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 02 &middot; METHOD — Understanding Random Walks
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepMethod">
+  <div class="panel-hdr">
+    <span class="snum">step 02</span>
+    <span class="sname">Method &mdash; Understanding random walks</span>
+    <span class="shint">What is a random walk and why does it matter?</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">A random walk is the simplest model of unpredictable motion. At each step, the walker moves in a random direction. Despite this total randomness, a precise mathematical law emerges from the chaos.</p>
+
+    <div class="note">
+      <b>1D walk:</b> The walker steps left or right with equal probability. After N steps, their position is the sum of N random +1/-1 choices.<br><br>
+      <b>2D walk:</b> The walker steps in a random direction (any angle 0&ndash;360&deg;). Their position after N steps is a vector sum of N random directions.<br><br>
+      <b>The key prediction:</b> After N steps, the average distance from the origin is proportional to &radic;N &mdash; <em>not</em> N. This means 4&times; more steps gives only 2&times; the spread. 100&times; more steps gives only 10&times; the spread. This is the square-root law.
+    </div>
+
+    <div class="note">
+      <b>Step distributions:</b> With <em>uniform</em> steps, every step is the same size. With <em>Gaussian</em> steps, step sizes vary &mdash; most are small but some are large. Does the &radic;N law still hold?<br><br>
+      <b>Measuring spread:</b> We use <em>RMS distance</em> (root-mean-square) &mdash; square every walker's distance, average, then take the square root. RMS is more mathematically natural than simple average distance.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     GUIDE — Understanding the Numbers
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepGuide">
+  <div class="panel-hdr">
+    <span class="snum">GUIDE</span>
+    <span class="sname">Understanding the Numbers</span>
+    <span class="shint">What the statistics mean and what to look for</span>
+  </div>
+  <div class="panel-body">
+    <div style="font-size:13px;line-height:1.85;color:var(--text-secondary)">
+
+    <details open style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">RMS Distance &mdash; &ldquo;How far did they spread?&rdquo;</summary>
+      <p style="margin:6px 0">After N steps, each walker ends up somewhere. Some are close to the origin, some are far. The <b>RMS (root-mean-square) distance</b> is a single number that captures the typical spread. It&rsquo;s calculated by squaring every walker&rsquo;s distance, averaging, then taking the square root.</p>
+      <p style="margin:6px 0">Why not just use the average distance? RMS gives more weight to walkers that ventured far, and it&rsquo;s the natural quantity that the &radic;N law predicts.</p>
+    </details>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">The &radic;N Law &mdash; The Key Discovery</summary>
+      <p style="margin:6px 0">After N random steps of size s, the RMS distance from the origin is approximately <b>s &times; &radic;N</b>. This means:</p>
+      <ul style="margin:4px 0 8px 18px">
+        <li>100 steps &rarr; spread of about 10 &times; step size</li>
+        <li>400 steps (4&times; more) &rarr; spread of about 20 (only 2&times; more, since &radic;4 = 2)</li>
+        <li>10,000 steps &rarr; spread of about 100 (not 10,000!)</li>
+      </ul>
+      <p style="margin:6px 0">The <b>ratio (actual / theory)</b> in the analysis section tests this. If it&rsquo;s close to 1.0, the law holds. The <b>&radic;N law test</b> checks it differently: it divides RMS at full steps by RMS at quarter steps &mdash; should be &asymp; 2.0.</p>
+    </details>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">The RMS Chart &mdash; How To Read It</summary>
+      <p style="margin:6px 0">The <b>solid line</b> is the actual RMS distance at each step. The <b>dashed line</b> is the theoretical &radic;N prediction. If they overlap, the theory is confirmed. Watch how the actual line fluctuates around the theoretical one &mdash; this is randomness in action.</p>
+      <p style="margin:6px 0">With more walkers, the actual line gets smoother (closer to theory). With fewer walkers, it&rsquo;s noisier. This is the power of large samples.</p>
+    </details>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-weight:500;color:var(--text-primary);font-size:14px;margin-bottom:4px">The Histogram &mdash; Where Do Walkers End Up?</summary>
+      <p style="margin:6px 0">In <b>1D</b>, the histogram shows final positions along the number line. It should look like a <b>bell curve</b> centred at zero &mdash; most walkers stay near the origin, few wander very far.</p>
+      <p style="margin:6px 0">In <b>2D</b>, it shows the distribution of <b>distances</b> from the origin (always positive). The peak is not at zero because in 2D, there are more directions to wander away than back.</p>
+    </details>
+
+    </div>
+
+    <div style="background:var(--bg-deep);border:1px solid var(--border-light);border-radius:2px;padding:14px;margin-top:6px">
+      <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-bottom:8px;font-family:'JetBrains Mono',monospace">What To Record After Each Run</div>
+      <div style="font-size:12px;line-height:1.75;color:var(--text-secondary)">
+        1. <b>Settings:</b> Dimension (1D/2D), walkers, steps, step type (uniform/Gaussian)<br>
+        2. <b>Final RMS distance</b> and <b>theoretical &radic;N</b> value<br>
+        3. <b>Ratio</b> (actual / theory) &mdash; how close to 1.0?<br>
+        4. <b>&radic;N law test</b> &mdash; how close to 2.0?<br>
+        5. How the histogram looks &mdash; bell-shaped? Skewed? Wide or narrow?<br>
+        6. Whether the RMS chart hugs the theoretical line or wiggles a lot<br>
+        7. Use <b>Save batch</b> to overlay multiple runs, then describe the comparison
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     RESEARCH AGENDA
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepAgenda">
+  <div class="panel-hdr">
+    <span class="snum">AGENDA</span>
+    <span class="sname">Research Questions</span>
+    <span class="shint">Guided investigations to try</span>
+  </div>
+  <div class="panel-body">
+    <div class="note"><b>How to use this:</b> Each question suggests a specific experiment. Work through them in order or skip to what interests you. For each, run the simulation, observe, and record what you find in the logbook.</div>
+    <div class="inv-list">
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">01</span>
+        <span class="inv-q">Does distance really grow as &radic;N?</span>
+        <span class="inv-method">100 walkers: 100, 400, 1600, 6400 steps. Does RMS double each time?</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">02</span>
+        <span class="inv-q">1D vs 2D: same scaling law?</span>
+        <span class="inv-method">Run identical params in both dimensions. Compare RMS/&radic;N ratio.</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">03</span>
+        <span class="inv-q">Do Gaussian steps change the spreading?</span>
+        <span class="inv-method">Compare uniform vs Gaussian step type &mdash; same walker count, same steps.</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">04</span>
+        <span class="inv-q">What happens with 1 walker vs 200?</span>
+        <span class="inv-method">Run 1 walker for 500 steps. Then 200. Does &radic;N need many walkers?</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+      <div class="inv-item" onclick="document.getElementById('stepLab').scrollIntoView({behavior:'smooth'})">
+        <span class="inv-num">05</span>
+        <span class="inv-q">How far can a single walker go?</span>
+        <span class="inv-method">1 walker, 5000 steps, run 5 times. How much does the endpoint vary?</span>
+        <span class="inv-go">&rarr;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 03 &middot; DATA COLLECTION — Run Your Walk
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepLab">
+  <div class="panel-hdr">
+    <span class="snum">step 03</span>
+    <span class="sname">Data collection &mdash; Run your walk</span>
+    <span class="shint" id="labHint">Lock your hypothesis first</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">Set the parameters below and press Play. Watch the walkers spread out in real time. Use the batch system to save runs and compare different configurations.</p>
+
+    <div id="simCanvas"></div>
+
+    <div class="ctrl-bar">
+      <div class="ctrl-grp"><label>dimension</label><div class="tog-grp"><button id="btn1D" onclick="setDim(1)">1D</button><button id="btn2D" class="active" onclick="setDim(2)">2D</button></div></div>
+      <div class="ctrl-grp"><label>walkers <span class="cv" id="cvW">100</span></label><input type="range" id="slW" min="10" max="500" value="100" step="10" oninput="document.getElementById('cvW').textContent=this.value"></div>
+      <div class="ctrl-grp"><label>steps <span class="cv" id="cvS">500</span></label><input type="range" id="slS" min="50" max="10000" value="500" step="50" oninput="document.getElementById('cvS').textContent=this.value"></div>
+      <div class="ctrl-grp"><label>step type</label><div class="tog-grp"><button id="btnUni" class="active" onclick="setStepType('uniform')">Uniform</button><button id="btnGau" onclick="setStepType('gaussian')">Gaussian</button></div></div>
+      <div class="ctrl-grp"><label>speed <span class="cv" id="cvSp">5</span>x</label><input type="range" id="slSp" min="1" max="20" value="5" oninput="document.getElementById('cvSp').textContent=this.value"></div>
+      <div class="ctrl-grp"><label>controls</label><div style="display:flex;gap:4px"><button id="btnPlay" onclick="doPlay()" disabled>Play</button><button id="btnPause" onclick="doPause()" disabled>Pause</button><button id="btnStep" onclick="doStep()" disabled>Step</button></div></div>
+      <div class="ctrl-grp"><label>batch</label><div style="display:flex;gap:4px"><button id="btnBatch" onclick="saveBatch()" disabled>Save batch</button><button class="danger" onclick="clearBatches()">Clear</button></div></div>
+      <button class="danger" onclick="resetSim()">Reset</button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item"><span class="sl">step</span><span class="sv sm accent" id="stStep">0 / 500</span></div>
+      <div class="stat-item"><span class="sl">rms distance</span><span class="sv sm accent" id="stRMS">0.00</span></div>
+      <div class="stat-item"><span class="sl">theoretical &radic;N</span><span class="sv sm" id="stTheo">0.00</span></div>
+      <div class="stat-item"><span class="sl">max distance</span><span class="sv sm" id="stMax">0.00</span></div>
+      <div class="stat-item"><span class="sl">mean distance</span><span class="sv sm" id="stMean">0.00</span></div>
+      <div class="stat-item"><span class="sl">walkers</span><span class="sv sm" id="stCount">100</span></div>
+    </div>
+
+    <div class="res-grid" style="margin-top:14px">
+      <div>
+        <div class="sl" style="margin-bottom:8px">RMS DISTANCE vs STEP NUMBER</div>
+        <div class="chart-wrap tall"><canvas id="rmsChart"></canvas></div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">FINAL POSITION DISTRIBUTION</div>
+        <div class="chart-wrap tall"><canvas id="histChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 04 &middot; ANALYSIS — What the Data Shows
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepRes" style="display:none">
+  <div class="panel-hdr">
+    <span class="snum">step 04</span>
+    <span class="sname">Analysis &mdash; What the data shows</span>
+    <span class="shint">Simulation complete</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">Your simulation is complete. Here are the key statistics. Compare the actual RMS with the theoretical &radic;N prediction &mdash; how close is the ratio to 1.0?</p>
+
+    <div class="res-grid">
+      <div>
+        <div class="rstat"><span class="rl">Final RMS distance</span><span class="rv" id="rRMS">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Theoretical &radic;N &times; step size</span><span class="rv" id="rTheo">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Ratio (actual / theory)</span><span class="rv" id="rRatio">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Maximum distance reached</span><span class="rv" id="rMaxD">&mdash;</span></div>
+        <div class="rstat"><span class="rl">Walkers beyond 2&times;RMS</span><span class="rv" id="rOut">&mdash;</span></div>
+        <div class="rstat"><span class="rl">&radic;N law test: RMS(full) / RMS(quarter)</span><span class="rv" id="rSqrt">&mdash;</span></div>
+      </div>
+      <div>
+        <div class="model-note">
+          <b>What to look for:</b><br><br>
+          &bull; <b>Ratio &asymp; 1.0</b> means the &radic;N law holds for your simulation.<br>
+          &bull; <b>&radic;N law test &asymp; 2.0&times;</b> means quadrupling steps doubles spread (since &radic;4 = 2).<br>
+          &bull; <b>Walkers beyond 2&times;RMS</b> should be about 5% &mdash; rare outliers, not zero.<br>
+          &bull; Use <b>Save batch</b> to compare different configurations on the same RMS chart.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 05 &middot; CONTEXT — Where Random Walks Appear
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepContext">
+  <div class="panel-hdr">
+    <span class="snum">step 05</span>
+    <span class="sname">Context &mdash; Where random walks appear</span>
+    <span class="shint">The same &radic;N law shows up everywhere</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">The random walk isn't just a mathematical curiosity. The same &radic;t scaling law appears in physics, biology, finance, and computer science. Every time something moves unpredictably, the random walk is there.</p>
+
+    <div class="context-grid">
+      <div class="context-card">
+        <h4>Brownian Motion</h4>
+        <p>In 1827, botanist Robert Brown watched pollen grains jittering in water under a microscope. In 1905, Einstein proved they were being kicked by invisible water molecules &mdash; and that the average displacement grows as &radic;t. This was one of the first proofs that atoms exist.</p>
+        <div class="year">Einstein, 1905</div>
+      </div>
+      <div class="context-card">
+        <h4>Stock Prices</h4>
+        <p>The "random walk hypothesis" says stock prices change unpredictably &mdash; each day's change is like a random step. If true, the spread of possible future prices grows as &radic;t, not t. This is why long-term investing is hard to predict but short-term swings are even more random.</p>
+        <div class="year">Bachelier, 1900</div>
+      </div>
+      <div class="context-card">
+        <h4>Diffusion</h4>
+        <p>Drop ink into water. It spreads. The radius of the ink cloud grows as &radic;t &mdash; exactly the random walk law. Each ink molecule is being kicked randomly by water molecules, doing a 3D random walk. Heat spreads the same way.</p>
+        <div class="year">Fick's Law, 1855</div>
+      </div>
+      <div class="context-card">
+        <h4>DNA Polymers</h4>
+        <p>A long polymer chain (like DNA) is a 3D random walk of molecular segments. The end-to-end distance of a chain with N segments is proportional to &radic;N. This explains why DNA packs so efficiently &mdash; it's not stretched out, it's a random coil.</p>
+        <div class="year">Flory, 1953</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 06 &middot; EXTENSION — Dimension Comparison
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepExtension">
+  <div class="panel-hdr">
+    <span class="snum">step 06</span>
+    <span class="sname">Extension &mdash; 1D vs 2D comparison</span>
+    <span class="shint">Does dimension change the scaling law?</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">Run the same experiment in 1D and 2D side by side. The &radic;N law should hold in both &mdash; but does the RMS/&radic;N ratio differ between dimensions? Use the main simulation above with the batch system: run 1D, save batch, switch to 2D, run again. The overlay will show you the comparison directly.</p>
+
+    <div class="note"><b>What to try:</b> Set 100 walkers, 500 steps, uniform. Run in 2D, save batch. Switch to 1D, run, save batch. Compare the two RMS curves on the chart. Are they identical? If not, which dimension spreads faster &mdash; and why?</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP 07 &middot; DISCUSSION — AI Coach
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel" id="stepInterp">
+  <div class="panel-hdr">
+    <span class="snum">step 07</span>
+    <span class="sname">Discussion &mdash; Your findings</span>
+    <span class="shint">Interpret the results &mdash; what do they actually mean?</span>
+  </div>
+  <div class="panel-body">
+    <p class="section-intro">Return to your hypothesis. What did the data show? Where were you right, and where were you wrong? Your coach will challenge your thinking with one precise question.</p>
+
+    <div class="interp-grid">
+      <div>
+        <div class="sl" style="margin-bottom:8px">YOUR INTERPRETATION</div>
+        <textarea id="interpText" placeholder="What did the simulation show? Did it match your hypothesis? Was the &radic;N law what you expected? How did 1D compare to 2D? What surprised you about the histogram shape? What are the limitations of this model?"></textarea>
+        <div class="brow">
+          <button id="askBtn" onclick="askCoach()">Ask coach &rarr;</button>
+        </div>
+        <div class="thread" id="thread"></div>
+        <div class="reply-sec" id="replySec">
+          <div class="sl" style="margin:12px 0 6px">YOUR REPLY TO COACH</div>
+          <textarea id="replyText" style="min-height:70px" placeholder="Answer coach's question here..."></textarea>
+          <div class="brow"><button onclick="sendReply()">Send reply &rarr;</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-bottom:8px">COACH'S QUESTION</div>
+        <div class="ai-box">
+          <div class="ai-lbl">Alexey's Coach</div>
+          <div class="ai-q" id="aiQ">
+            <span class="ai-ph">Write your interpretation and click "Ask coach" &mdash; your coach will challenge your thinking with one precise question.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOGBOOK
+     ═══════════════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="panel-hdr">
+    <span class="snum">logbook</span>
+    <span class="sname">Research logbook</span>
+    <span class="shint">Record observations, questions, conclusions</span>
+  </div>
+  <div class="panel-body">
+    <div id="logEntries"></div>
+    <div class="logbook-add" style="margin-top:12px">
+      <select id="logType">
+        <option value="observation">Observation</option>
+        <option value="question">Question</option>
+        <option value="conclusion">Conclusion</option>
+      </select>
+      <textarea id="logText" placeholder="Write your observation, question, or conclusion..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="addLogEntry()">Save entry</button>
+        <button onclick="exportLogbook()">Export .md</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="exportMount"></div>
+
+<div class="exp-nav">
+  <a href="../football/">← prev · football</a>
+  <a class="nav-center" href="../index.html">home</a>
+  <span class="nav-disabled">next →</span>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="../_common/theme.js"></script>
+<script src="../_common/store.js"></script>
+<script src="../_common/lock.js"></script>
+<script src="../_common/coach.js"></script>
+<script src="../_common/export.js"></script>
+<script src="simulation.js"></script>
+<script src="render.js"></script>
+<script src="charts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

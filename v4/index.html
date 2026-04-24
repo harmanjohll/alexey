@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alexey Mikhail Johll · Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_common/theme.css">
+<link rel="stylesheet" href="_common/chrome.css">
+<style>
+  .studio-intro{max-width:640px;margin:0 auto 1.5rem;text-align:center;font-size:13px;color:var(--text-secondary);line-height:1.7}
+  .studio-intro code{font-size:11px;background:var(--surface-alt);border:1px solid var(--border-light);padding:1px 6px;border-radius:2px}
+  .cat-badge{font-weight:500}
+  .cat-football .card-num{color:var(--cat-football);border-color:var(--cat-football);background:transparent}
+  .cat-fractal  .card-num{color:var(--cat-fractal); border-color:var(--cat-fractal); background:transparent}
+  .cat-walk     .card-num{color:var(--cat-walk);    border-color:var(--cat-walk);    background:transparent}
+  .cat-advanced .card-num{color:var(--cat-advanced);border-color:var(--cat-advanced);background:transparent}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-name">ALEXEY MIKHAIL JOHLL</div>
+  <div class="hero-sub">Computational Science — Studio</div>
+  <div class="hero-loc">Singapore · 2025–2026</div>
+  <div class="hero-nav">
+    <a href="exhibit.html" class="hero-link">Public exhibit →</a>
+    <span class="hero-dot">·</span>
+    <a href="about.html" class="hero-link">About</a>
+  </div>
+</div>
+
+<p class="studio-intro">This is the workbench. Each card below opens an experiment where I write a hypothesis, run a simulation, interpret the results, and talk to a coach. When I finish an experiment I export a JSON snapshot and commit it to <code>v4/work/</code> so reviewers can read my thinking on the exhibit.</p>
+
+<!-- FOOTBALL ANALYTICS -->
+<div class="section-hdr"><span class="section-label">Football Analytics</span><span class="section-count">1 experiment</span><span class="section-line"></span></div>
+<div class="grid">
+  <a class="card cat-football" href="football/">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">xG</span>
+        <span class="card-status" id="status_football">…</span>
+      </div>
+      <div class="card-title">Where do goals come from?</div>
+      <div class="card-desc">Geometric and logistic xG models, scenario generator, Monte Carlo for distributions of match outcomes, six-league context, and a Build-Your-Own-League head-to-head simulator.</div>
+      <div class="card-tags"><span class="tag">expected goals</span><span class="tag">monte carlo</span><span class="tag">football analytics</span></div>
+    </div>
+  </a>
+</div>
+
+<!-- FRACTAL MATHEMATICS -->
+<div class="section-hdr"><span class="section-label">Fractal Mathematics</span><span class="section-count">1 experiment</span><span class="section-line"></span></div>
+<div class="grid">
+  <a class="card cat-fractal" href="fractal/">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">DLA</span>
+        <span class="card-status" id="status_fractal">…</span>
+      </div>
+      <div class="card-title">How do fractals grow?</div>
+      <div class="card-desc">Diffusion-limited aggregation with M(r) fractal-dimension regression, sticking-probability sweeps, seed-shape comparison, and Koch snowflakes with ruler measurement.</div>
+      <div class="card-tags"><span class="tag">fractals</span><span class="tag">DLA</span><span class="tag">dimension</span></div>
+    </div>
+  </a>
+</div>
+
+<!-- PROBABILITY & DYNAMICS -->
+<div class="section-hdr"><span class="section-label">Probability &amp; Dynamics</span><span class="section-count">1 experiment</span><span class="section-line"></span></div>
+<div class="grid">
+  <a class="card cat-walk" href="random-walk/">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">RW</span>
+        <span class="card-status" id="status_random-walk">…</span>
+      </div>
+      <div class="card-title">The drunkard's walk</div>
+      <div class="card-desc">1D and 2D random walks, RMS-distance vs N, uniform vs Gaussian step distributions, and a direct test of the √N law across conditions.</div>
+      <div class="card-tags"><span class="tag">random walk</span><span class="tag">√N law</span><span class="tag">diffusion</span></div>
+    </div>
+  </a>
+</div>
+
+<!-- ADVANCED EXPLORATIONS -->
+<div class="section-hdr"><span class="section-label">Advanced Explorations</span><span class="section-count">2 portals</span><span class="section-line"></span></div>
+<div class="grid">
+  <a class="card cat-advanced" href="advanced/kmc/">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">KMC</span>
+        <span class="card-status">learning</span>
+      </div>
+      <div class="card-title">SiGe thin-film etching</div>
+      <div class="card-desc">Kinetic Monte Carlo for surface roughness and pit formation. I instrumented reference Fortran code and built visualisations and sweeps around it — the physics came from established research implementations.</div>
+      <div class="card-tags"><span class="tag">kinetic monte carlo</span><span class="tag">materials science</span><span class="tag">instrumented</span></div>
+    </div>
+  </a>
+  <a class="card cat-advanced" href="advanced/md/">
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">MD</span>
+        <span class="card-status">learning</span>
+      </div>
+      <div class="card-title">SiGe surface energy</div>
+      <div class="card-desc">Tersoff-potential molecular dynamics with species swaps. Again this wraps reference Fortran code — I built slab sweeps, Boettger regression, and 3D visualisation around it to understand surface thermodynamics.</div>
+      <div class="card-tags"><span class="tag">molecular dynamics</span><span class="tag">tersoff potential</span><span class="tag">instrumented</span></div>
+    </div>
+  </a>
+</div>
+
+<!-- ABOUT -->
+<div class="section-hdr"><span class="section-label">About this portfolio</span><span class="section-line"></span></div>
+<div class="card" style="padding:22px 24px;margin-bottom:2rem">
+  <p style="font-size:14px;color:var(--text-secondary);line-height:1.8">Every experiment begins with a question I wrote myself. I lock my hypothesis before the simulation runs. I write my own interpretation. The coach asks questions — it never gives answers. When I finish, I export the whole record as a JSON file and commit it, so the exhibit page is my actual work, not an empty promise.</p>
+  <p style="margin-top:12px"><a href="about.html" class="hero-link">About me →</a> <a href="exhibit.html" class="hero-link" style="margin-left:8px">Read the public exhibit →</a></p>
+</div>
+
+</div>
+
+<script src="_common/theme.js"></script>
+<script src="_common/store.js"></script>
+<script>
+(function () {
+  ['football', 'fractal', 'random-walk'].forEach(function (id) {
+    var el = document.getElementById('status_' + id);
+    if (!el) return;
+    var s = Store.status(id);
+    if (s === 'exported') { el.textContent = 'exhibit exported'; el.classList.add('status-exported'); }
+    else if (s === 'locked') { el.textContent = 'hypothesis locked'; el.classList.add('status-locked'); }
+    else { el.textContent = 'not started'; el.classList.add('status-not'); }
+  });
+})();
+</script>
+</body>
+</html>
