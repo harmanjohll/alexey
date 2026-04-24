@@ -70,12 +70,26 @@
         var hyp = (json.hypothesis && json.hypothesis.text) || '';
         var excerpt = hyp.length > 220 ? hyp.slice(0, 220) + '…' : hyp;
         var when = json.hypothesis && json.hypothesis.locked_at ? new Date(json.hypothesis.locked_at).toLocaleDateString() : '';
+        var dialogue = Array.isArray(json.dialogue) ? json.dialogue : [];
+        var exchanges = 0;
+        for (var k = 0; k < dialogue.length; k++) if (dialogue[k].role === 'assistant') exchanges++;
+        var logbook = Array.isArray(json.logbook) ? json.logbook : [];
+        var hasFigure = !!(json.figure && json.figure.data_url);
+        var exported = json.meta && json.meta.exported_at ? new Date(json.meta.exported_at).toLocaleDateString() : '';
+
+        var meta = [];
+        if (when) meta.push('locked ' + when);
+        if (hasFigure) meta.push('figure');
+        if (exchanges > 0) meta.push(exchanges + ' coach exchange' + (exchanges === 1 ? '' : 's'));
+        if (logbook.length > 0) meta.push(logbook.length + ' logbook entr' + (logbook.length === 1 ? 'y' : 'ies'));
+        if (exported) meta.push('updated ' + exported);
+
         item.innerHTML =
           '<a href="?exp=' + ex.id + '">' +
             '<div class="exhibit-index-cat">' + (json.category || ex.category) + '</div>' +
             '<div class="exhibit-index-title">' + (json.title || ex.title) + '</div>' +
             '<div class="exhibit-index-hyp">' + (excerpt || '(no hypothesis written)') + '</div>' +
-            '<div class="exhibit-index-meta">' + (when ? 'hypothesis locked · ' + when : '') + '</div>' +
+            '<div class="exhibit-index-meta">' + meta.join(' · ') + '</div>' +
           '</a>';
       }
       list.appendChild(item);

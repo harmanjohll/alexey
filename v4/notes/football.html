@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Primer · xG · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+<div class="page">
+
+<a href="../football/" class="back">← back to studio</a>
+
+<div class="kicker">Primer · Football Analytics</div>
+<h1>Expected Goals (xG)</h1>
+<div class="tagline">A probability, not a prediction.</div>
+
+<p><strong>The question.</strong> You watch a match. Your team takes 18 shots but scores only once. Were they unlucky, or were the shots actually bad? Gut feel can't tell you — but geometry can.</p>
+
+<h2>The rule</h2>
+<div class="rule">
+<b>xG</b> is a probability between <b>0</b> and <b>1</b> assigned to every shot, based on where it was taken from.<br>
+A shot with <b>xG = 0.3</b> means: if you took this same shot 100 times, you'd expect to score about 30.<br>
+<b>Sum of xG across all shots ≈ expected goals</b> over the long run.
+</div>
+
+<p>The cheapest xG model uses only two inputs: <strong>distance to goal</strong> and <strong>angle subtended by the goal posts</strong>. Wider angle + shorter distance = higher xG. Real professional models layer in shot type (header, free kick, penalty), assist context, and defender pressure — but geometry does most of the work.</p>
+
+<h2>Why it matters</h2>
+<p>Over one match, luck dominates. Over a season (~400 shots), actual goals converge on total xG. A team consistently over-performing its xG is either <em>extraordinary</em> at finishing, or <em>lucky</em> — and the two look identical from a single season of data. Clubs use this to spot under-valued players and over-valued results.</p>
+
+<div class="worked">
+<h3>Worked example</h3>
+<p><strong>A shot from the penalty spot, 11 m out, dead centre.</strong></p>
+<p>Angle subtended by the 7.32 m goal = 2 · atan(3.66 / 11) ≈ 37°.<br>Geometric xG (with a distance-decay factor) ≈ <strong>0.28</strong>.</p>
+<p>Now move the same shot 5 m wider. Distance barely changes, but the angle collapses to ~18°. xG drops to <strong>~0.10</strong> — roughly a third. That's why "getting closer to goal" matters less than "getting a better angle."</p>
+</div>
+
+<div class="questions">
+<h3>Before you run the simulation</h3>
+<ol>
+<li>Where on the pitch do you think xG is highest, and why?</li>
+<li>Two shots at the same distance — one central, one wide. Same xG, or different? Why?</li>
+<li>If a team's total xG across a match is 1.8 but they score 0 goals, what are the two possible reasons — and how would you tell them apart?</li>
+</ol>
+</div>
+
+<h2>Common pitfalls</h2>
+<ul class="pitfalls">
+<li>xG tells you about <em>the long run</em>, not the next shot. A 0.9 xG shot still misses 10% of the time.</li>
+<li>"This team over-performed xG by 15 goals" does <strong>not</strong> prove their strikers are better. It could be noise. Check next season.</li>
+<li>Geometric xG can't see defenders, keeper position, pressure, or state of the game. The simple model leaves those out — which is a feature for learning, not a flaw.</li>
+<li>Sum of xG ≠ guaranteed goals. The Monte Carlo distribution shows the full spread of possible match outcomes.</li>
+</ul>
+
+<h2>Further reading</h2>
+<ul>
+<li>StatsBomb, <em>What is xG?</em> — the clearest basic explainer.</li>
+<li>Optapro, <em>Expected Goals: the big picture</em> — industry-level treatment with validation.</li>
+<li>Sumpter, <em>Soccermatics</em> (2016) — accessible book-length intro to the maths of football, including xG chapters.</li>
+</ul>
+
+<div class="meta">Primer · Alexey Mikhail Johll · Singapore 2025–2026 · print-ready two-page briefing</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Primer · Fractals · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+<div class="page">
+
+<a href="../fractal/" class="back">← back to studio</a>
+
+<div class="kicker">Primer · Fractal Mathematics</div>
+<h1>Fractal dimension &amp; DLA</h1>
+<div class="tagline">Shapes that live between the integers.</div>
+
+<p><strong>The question.</strong> What is the length of Britain's coastline? If you measure with a 100&nbsp;km ruler, you get one answer. A 10&nbsp;km ruler — longer. A 1&nbsp;km ruler — longer still. The measured length depends on the ruler. So: how long is it <em>really</em>?</p>
+
+<h2>The rule</h2>
+<div class="rule">
+For a fractal shape, mass within radius <b>r</b> grows as a power law:<br>
+<b>M(r) ∝ r<sup>D</sup></b>,<br>
+where <b>D</b> is the fractal dimension.<br><br>
+A smooth line → <b>D = 1</b>.<br>
+A filled square → <b>D = 2</b>.<br>
+A fractal sits <b>between</b>: jagged enough to fill more space than a line, too sparse to fill a plane.
+</div>
+
+<p>Real fractals have non-integer dimensions. A coastline typically sits around D ≈ 1.2–1.3. A diffusion-limited aggregate (DLA) cluster comes in at D ≈ 1.71 in 2D. Lightning bolts, river networks, blood vessels, bronchial trees — all fractals, all with their own characteristic D.</p>
+
+<h2>Why it matters</h2>
+<p>Fractal dimension is the rigorous answer to "how jagged is this shape?" It's the single number that captures how a structure fills space. In biology it correlates with how efficiently lungs and blood vessels distribute oxygen. In materials science it controls surface roughness and thin-film growth. In geography it quantifies terrain. One number, huge reach.</p>
+
+<div class="worked">
+<h3>Worked example · Koch snowflake</h3>
+<p><strong>Start with an equilateral triangle.</strong> Replace the middle third of each side with two sides of a smaller triangle. Repeat.</p>
+<p>Each iteration multiplies the perimeter by 4/3. After <em>n</em> iterations: perimeter = (4/3)<sup>n</sup> × original. This <strong>diverges to infinity</strong> — the snowflake's perimeter grows without bound — yet the enclosed area stays finite. An infinitely long curve wrapped around a finite region.</p>
+<p>Its fractal dimension: <strong>D = log 4 / log 3 ≈ 1.2619</strong>. More than a line, less than a plane.</p>
+</div>
+
+<div class="questions">
+<h3>Before you run the simulation</h3>
+<ol>
+<li>Why does a coastline's measured length depend on the length of your ruler?</li>
+<li>What do you expect the fractal dimension of a DLA cluster to be — 1, 2, or somewhere between? Sketch one and compare.</li>
+<li>If a shape has dimension 1.7, what does that tell you about how densely it fills space — closer to a line or closer to a square?</li>
+</ol>
+</div>
+
+<h2>Common pitfalls</h2>
+<ul class="pitfalls">
+<li>Fractal dimension is often irrational. Don't expect round numbers.</li>
+<li>Finite simulations yield <em>approximate</em> D. True fractals require infinite iteration; what you measure is always an estimate with error bars.</li>
+<li>Two fractals with the same D can look very different. Dimension measures space-filling; it doesn't capture full morphology.</li>
+<li>In DLA, changing sticking probability changes both the <em>shape</em> and the <em>dimension</em>. Low sticking → denser, higher D. High sticking → spindlier, lower D.</li>
+</ul>
+
+<h2>Further reading</h2>
+<ul>
+<li>Mandelbrot, <em>The Fractal Geometry of Nature</em> (1982) — the founding text, still unmatched for visual examples.</li>
+<li>Witten &amp; Sander, 1981 <em>Physical Review Letters</em> paper — the original DLA model.</li>
+<li>Pritchard, <em>Fractal Foundation</em> online materials — accessible intro with interactive examples.</li>
+</ul>
+
+<div class="meta">Primer · Alexey Mikhail Johll · Singapore 2025–2026 · print-ready two-page briefing</div>
+
+</div>
+</body>
+</html>

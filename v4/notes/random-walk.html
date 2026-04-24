@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Primer · Random Walk · Alexey Mikhail Johll</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+<div class="page">
+
+<a href="../random-walk/" class="back">← back to studio</a>
+
+<div class="kicker">Primer · Probability &amp; Dynamics</div>
+<h1>Random walks and the √N&nbsp;law</h1>
+<div class="tagline">Why spread grows slower than you'd expect.</div>
+
+<p><strong>The question.</strong> Start at the origin. Flip a coin — heads go right, tails go left. Do this 100 times. How far from the origin do you end up? Not obvious, because each step cancels or reinforces the previous one at random.</p>
+
+<h2>The rule</h2>
+<div class="rule">
+After <b>N</b> random steps of size <b>s</b>, the average distance from the origin is<br>
+<b>RMS(distance) ≈ s · √N</b>.<br><br>
+Quadruple <b>N</b> → distance only <b>doubles</b>. Not quadruples.
+</div>
+
+<p>This is the deepest rule in diffusion. It's why ink spreads slowly through water, why stock prices drift only modestly over short horizons, why heat takes forever to move through a long rod. In every case, randomness and cancellation combine to produce a <strong>square root</strong> — never linear.</p>
+
+<h2>Why it matters</h2>
+<p>The same √N scaling shows up across wildly different systems: Brownian motion of pollen in water, the size of a folded DNA strand, the spread of a rumour, the width of a price distribution after N trading days. If something diffuses, its spread grows as the square root of time. Memorise this one rule and you'll recognise it everywhere.</p>
+
+<div class="worked">
+<h3>Worked example</h3>
+<p><strong>A walker takes 100 unit steps in 1D, equally likely left or right.</strong></p>
+<p>Expected RMS distance = √100 × 1 = <strong>10 steps</strong>.<br>Take 400 steps instead → RMS = √400 = <strong>20 steps</strong>. Four times the steps, only twice the distance.</p>
+<p>Take 10,000 steps → RMS = 100. To travel ten times further, you need a hundred times as many steps. Diffusion is slow; this is why.</p>
+</div>
+
+<div class="questions">
+<h3>Before you run the simulation</h3>
+<ol>
+<li>If you walk 100 steps, roughly how far are you from the origin? Guess now, before looking.</li>
+<li>What happens if you take 400 steps instead of 100 — twice as far, or four times? Why?</li>
+<li>In 2D, does the √N rule still hold? Will walkers tend to go further or less far than in 1D, and why?</li>
+</ol>
+</div>
+
+<h2>Common pitfalls</h2>
+<ul class="pitfalls">
+<li>Each walker's individual path looks nothing like the average. The √N law is about the <em>statistics</em> of many walkers, not any single trajectory.</li>
+<li>Uniform vs Gaussian step sizes change the <em>constant</em> in the law, not the √N scaling. The square root is robust.</li>
+<li>1D and 2D both scale as √N. But the spread's <em>shape</em> differs: a Gaussian bell in 1D, a circular halo in 2D.</li>
+<li>The law assumes independent steps. If steps correlate (a "persistent" walk), scaling shifts towards linear. Watch for this.</li>
+</ul>
+
+<h2>Further reading</h2>
+<ul>
+<li>Berg, <em>Random Walks in Biology</em> (1993) — classic introduction grounded in biology.</li>
+<li>Einstein, 1905 paper on Brownian motion — short, readable, historically famous.</li>
+<li>3Blue1Brown, <em>"But what is a random walk?"</em> — excellent visual intuition on YouTube.</li>
+</ul>
+
+<div class="meta">Primer · Alexey Mikhail Johll · Singapore 2025–2026 · print-ready two-page briefing</div>
+
+</div>
+</body>
+</html>
