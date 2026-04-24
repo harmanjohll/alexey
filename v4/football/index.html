@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-cat="football">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Football · Studio · Alexey Mikhail Johll</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../_common/theme.css">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -153,7 +153,7 @@
       <button data-model="logistic" onclick="setModel('logistic')">Logistic</button>
     </div>
     <div class="shot-type-sel">
-      <span style="font-size:10px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace;line-height:2.5">SHOT TYPE</span>
+      <span style="font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace;line-height:2.5">SHOT TYPE</span>
       <button class="active" data-type="open" onclick="setShotType('open')">Open Play</button>
       <button data-type="header" onclick="setShotType('header')">Header</button>
       <button data-type="freekick" onclick="setShotType('freekick')">Free Kick</button>
@@ -227,7 +227,7 @@
         <div class="sit-group">
           <label class="sit-lbl">Minute</label>
           <input type="range" id="scnMinute" min="1" max="95" value="45" oninput="document.getElementById('scnMinVal').textContent=this.value" style="width:80px">
-          <span id="scnMinVal" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:24px">45</span>
+          <span id="scnMinVal" style="font-size:11px;font-family:'Space Mono',monospace;color:var(--accent-light);min-width:24px">45</span>
         </div>
         <div class="sit-group">
           <label class="sit-lbl">Score</label>
@@ -289,7 +289,7 @@
       <div class="precision-entry" style="margin-bottom:10px">
         <span class="sit-lbl">xG MULTIPLIER</span>
         <input type="range" id="sensSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="runSensitivity()" style="width:150px">
-        <span id="sensValue" style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--accent-light);min-width:40px">1.0&times;</span>
+        <span id="sensValue" style="font-size:13px;font-family:'Space Mono',monospace;color:var(--accent-light);min-width:40px">1.0&times;</span>
       </div>
       <div id="sensResults" style="display:none">
         <div class="res-grid">

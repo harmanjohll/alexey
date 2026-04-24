@@ -94,7 +94,7 @@ function startSim() {
   roughnessData = []; etchDepthData = []; etchRateData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
   initialAveHt = null;
   destroyCharts(); initCharts();
-  document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'JetBrains Mono\',monospace;padding:20px">Running...</div>';
+  document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'Space Mono\',monospace;padding:20px">Running...</div>';
   setInputsEnabled(false);
   document.getElementById('runBtn').disabled = true;
   document.getElementById('pauseBtn').disabled = false;
@@ -210,7 +210,7 @@ function resetSim() {
   setInputsEnabled(true);
   document.getElementById('latticeCanvas').getContext('2d').clearRect(0, 0, 500, 150);
   document.getElementById('hmapCanvas').getContext('2d').clearRect(0, 0, 500, 40);
-  document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'JetBrains Mono\',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>';
+  document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'Space Mono\',monospace;padding:20px">Snapshots at iterations 1, 10, 20, 50, 100, 200, 500</div>';
 }
 
 /* ── Key Findings auto-summary ── */

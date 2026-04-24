@@ -65,7 +65,7 @@ function exportChartPNG(canvasId) {
   ectx.fillStyle = '#ffffff';
   ectx.fillRect(0, 0, srcW, srcH + pad);
   if (title) {
-    ectx.font = '500 11px "JetBrains Mono", monospace';
+    ectx.font = '500 11px "Space Mono", monospace';
     ectx.fillStyle = '#333';
     ectx.fillText(title, 12, 22);
   }
@@ -104,7 +104,7 @@ function exportRawCanvasPNG(srcCanvas, title) {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, w, h + pad);
   if (title) {
-    ctx.font = '500 11px "JetBrains Mono", monospace';
+    ctx.font = '500 11px "Space Mono", monospace';
     ctx.fillStyle = '#333';
     ctx.fillText(title, 12, 22);
   }
@@ -161,18 +161,18 @@ var chartDefaults = {
   plugins: {
     legend: { display: false },
     tooltip: { backgroundColor:'#111a11', borderColor:'rgba(60,160,60,0.3)', borderWidth:1, titleColor:'#e8f0e8', bodyColor:'#7a9a7a',
-      titleFont:{family:'JetBrains Mono',size:10}, bodyFont:{family:'JetBrains Mono',size:10} }
+      titleFont:{family:'Space Mono',size:10}, bodyFont:{family:'Space Mono',size:10} }
   },
   scales: {
-    x: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}} },
-    y: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}} }
+    x: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}} },
+    y: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}} }
   }
 };
 
 function mkChart(id, label, xLabel, yLabel, color, scaleType) {
   var opts = JSON.parse(JSON.stringify(chartDefaults));
-  opts.scales.x.title = { display:true, text:xLabel, color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  opts.scales.y.title = { display:true, text:yLabel, color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  opts.scales.x.title = { display:true, text:xLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  opts.scales.y.title = { display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
   if (scaleType === 'log') { opts.scales.x.type = 'logarithmic'; opts.scales.y.type = 'logarithmic'; }
   return new Chart(document.getElementById(id), {
     type: 'line',
@@ -189,7 +189,7 @@ function initCharts() {
 
   // Etch depth & rate (dual y-axis)
   var eOpts = JSON.parse(JSON.stringify(chartDefaults));
-  eOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+  eOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
   etchChart = new Chart(document.getElementById('etchChart'), {
     type:'line',
     data:{ labels:[], datasets:[
@@ -199,9 +199,9 @@ function initCharts() {
     options: { responsive:true, maintainAspectRatio:false, animation:{duration:0},
       plugins: eOpts.plugins,
       scales: {
-        x: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'iteration',color:'#4a6a4a',font:{family:'JetBrains Mono',size:9}} },
-        y: { position:'left', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'etch depth (layers)',color:'#4a9aaa',font:{family:'JetBrains Mono',size:9}} },
-        y2: { position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'rate (layers/iter)',color:'#f0b429',font:{family:'JetBrains Mono',size:9}} }
+        x: { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'iteration',color:'#4a6a4a',font:{family:'Space Mono',size:9}} },
+        y: { position:'left', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'etch depth (layers)',color:'#4a9aaa',font:{family:'Space Mono',size:9}} },
+        y2: { position:'right', grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'rate (layers/iter)',color:'#f0b429',font:{family:'Space Mono',size:9}} }
       }
     }
   });
@@ -211,9 +211,9 @@ function initCharts() {
 
   // Stats evolution chart (dual y-axis)
   var sOpts = JSON.parse(JSON.stringify(chartDefaults));
-  sOpts.scales.x.title = { display:true, text:'iteration', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  sOpts.scales.y.title = { display:true, text:'RMS', color:'#7dd87d', font:{family:'JetBrains Mono',size:9} };
-  sOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12,
+  sOpts.scales.x.title = { display:true, text:'iteration', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  sOpts.scales.y.title = { display:true, text:'RMS', color:'#7dd87d', font:{family:'Space Mono',size:9} };
+  sOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12,
     filter: function(item) {
       var cb = document.getElementById('showSkewKurt');
       if (cb && !cb.checked && (item.text === 'Skewness' || item.text === 'Kurtosis')) return false;
@@ -231,8 +231,8 @@ function initCharts() {
       plugins: sOpts.plugins,
       scales: {
         x: sOpts.scales.x,
-        y: { position:'left', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'RMS',color:'#7dd87d',font:{family:'JetBrains Mono',size:9}} },
-        y2: { position:'right', display:false, grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9}}, title:{display:true,text:'skew / kurt',color:'#f0b429',font:{family:'JetBrains Mono',size:9}} }
+        y: { position:'left', grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'RMS',color:'#7dd87d',font:{family:'Space Mono',size:9}} },
+        y2: { position:'right', display:false, grid:{drawOnChartArea:false}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'skew / kurt',color:'#f0b429',font:{family:'Space Mono',size:9}} }
       }
     }
   });
@@ -242,8 +242,8 @@ function initCharts() {
 
   // Height distribution histogram
   var hOpts = JSON.parse(JSON.stringify(chartDefaults));
-  hOpts.scales.x.title = { display:true, text:'height', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  hOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  hOpts.scales.x.title = { display:true, text:'height', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  hOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
   histChart = new Chart(document.getElementById('histChart'), {
     type:'bar',
     data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(60,160,60,0.5)', borderWidth:0, borderRadius:2 }] },
@@ -252,8 +252,8 @@ function initCharts() {
 
   // Pit width histogram
   var phOpts = JSON.parse(JSON.stringify(chartDefaults));
-  phOpts.scales.x.title = { display:true, text:'pit width (sites)', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  phOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  phOpts.scales.x.title = { display:true, text:'pit width (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  phOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
   pitHistChart = new Chart(document.getElementById('pitHistChart'), {
     type:'bar',
     data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(226,75,74,0.5)', borderWidth:0, borderRadius:2 }] },
@@ -262,9 +262,9 @@ function initCharts() {
 
   // Pit-highlighted surface profile
   var psOpts = JSON.parse(JSON.stringify(chartDefaults));
-  psOpts.scales.x.title = { display:true, text:'x', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  psOpts.scales.y.title = { display:true, text:'height', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  psOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+  psOpts.scales.x.title = { display:true, text:'x', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  psOpts.scales.y.title = { display:true, text:'height', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  psOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
   pitSurfaceChart = new Chart(document.getElementById('pitSurfaceChart'), {
     type:'line',
     data:{ labels:[], datasets:[
@@ -291,8 +291,8 @@ function destroySweepCharts() {
 
 function mkSweepChart(id, xLabel, yLabel, color) {
   var opts = JSON.parse(JSON.stringify(chartDefaults));
-  opts.scales.x.title = { display:true, text:xLabel, color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  opts.scales.y.title = { display:true, text:yLabel, color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  opts.scales.x.title = { display:true, text:xLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  opts.scales.y.title = { display:true, text:yLabel, color:'#4a6a4a', font:{family:'Space Mono',size:9} };
   return new Chart(document.getElementById(id), {
     type: 'scatter',
     data: { datasets:[{ data:[], borderColor:color, backgroundColor:color, borderWidth:1.5, pointRadius:4, showLine:true, tension:0.2, fill:false }] },
@@ -483,9 +483,9 @@ function fitAlpha(corrData) {
 function initCorrChart() {
   if (corrChart) corrChart.destroy();
   var cOpts = JSON.parse(JSON.stringify(chartDefaults));
-  cOpts.scales.x.title = { display:true, text:'log\u2081\u2080(r)', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  cOpts.scales.y.title = { display:true, text:'log\u2081\u2080(G(r))', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  cOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'JetBrains Mono',size:9},boxWidth:12} };
+  cOpts.scales.x.title = { display:true, text:'log\u2081\u2080(r)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  cOpts.scales.y.title = { display:true, text:'log\u2081\u2080(G(r))', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  cOpts.plugins.legend = { display:true, labels:{color:'#7a9a7a',font:{family:'Space Mono',size:9},boxWidth:12} };
   corrChart = new Chart(document.getElementById('corrChart'), {
     type:'scatter',
     data:{ datasets:[
@@ -564,8 +564,8 @@ function initScalingCharts() {
   if (alphaChart) alphaChart.destroy();
   if (zChart) zChart.destroy();
   var aOpts = JSON.parse(JSON.stringify(chartDefaults));
-  aOpts.scales.x.title = { display:true, text:'log\u2081\u2080(L)', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  aOpts.scales.y.title = { display:true, text:'log\u2081\u2080(w_sat)', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  aOpts.scales.x.title = { display:true, text:'log\u2081\u2080(L)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  aOpts.scales.y.title = { display:true, text:'log\u2081\u2080(w_sat)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
   alphaChart = new Chart(document.getElementById('alphaChart'), {
     type:'scatter',
     data:{ datasets:[
@@ -575,8 +575,8 @@ function initScalingCharts() {
     options: aOpts
   });
   var zOpts = JSON.parse(JSON.stringify(chartDefaults));
-  zOpts.scales.x.title = { display:true, text:'log\u2081\u2080(L)', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
-  zOpts.scales.y.title = { display:true, text:'log\u2081\u2080(t_x)', color:'#4a6a4a', font:{family:'JetBrains Mono',size:9} };
+  zOpts.scales.x.title = { display:true, text:'log\u2081\u2080(L)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  zOpts.scales.y.title = { display:true, text:'log\u2081\u2080(t_x)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
   zChart = new Chart(document.getElementById('zChart'), {
     type:'scatter',
     data:{ datasets:[

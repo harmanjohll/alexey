@@ -27,12 +27,12 @@ function initRMSChart(canvasId) {
     options: {
       responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
       plugins: {
-        legend: { display: true, labels: { color: t.tick, font: { family: 'JetBrains Mono', size: 9 }, boxWidth: 12 } },
-        tooltip: { backgroundColor: t.tooltip.bg, borderColor: t.tooltip.border, borderWidth: 1, titleColor: t.tooltip.title, bodyColor: t.tooltip.body, titleFont: { family: 'JetBrains Mono', size: 10 }, bodyFont: { family: 'JetBrains Mono', size: 10 } }
+        legend: { display: true, labels: { color: t.tick, font: { family: 'Space Mono', size: 9 }, boxWidth: 12 } },
+        tooltip: { backgroundColor: t.tooltip.bg, borderColor: t.tooltip.border, borderWidth: 1, titleColor: t.tooltip.title, bodyColor: t.tooltip.body, titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 10 } }
       },
       scales: {
-        x: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 6 } },
-        y: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'JetBrains Mono', size: 9 } } }
+        x: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 6 } },
+        y: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'Space Mono', size: 9 } } }
       }
     }
   });
@@ -81,11 +81,11 @@ function initHistChart(canvasId) {
       responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
       plugins: {
         legend: { display: false },
-        tooltip: { backgroundColor: t.tooltip.bg, borderColor: t.tooltip.border, borderWidth: 1, titleColor: t.tooltip.title, bodyColor: t.tooltip.body, titleFont: { family: 'JetBrains Mono', size: 10 }, bodyFont: { family: 'JetBrains Mono', size: 10 } }
+        tooltip: { backgroundColor: t.tooltip.bg, borderColor: t.tooltip.border, borderWidth: 1, titleColor: t.tooltip.title, bodyColor: t.tooltip.body, titleFont: { family: 'Space Mono', size: 10 }, bodyFont: { family: 'Space Mono', size: 10 } }
       },
       scales: {
-        x: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'JetBrains Mono', size: 8 }, maxTicksLimit: 8 } },
-        y: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'JetBrains Mono', size: 9 } } }
+        x: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'Space Mono', size: 8 }, maxTicksLimit: 8 } },
+        y: { grid: { color: t.grid }, ticks: { color: t.tick, font: { family: 'Space Mono', size: 9 } } }
       }
     }
   });
