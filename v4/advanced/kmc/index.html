@@ -293,16 +293,7 @@
   </div>
 </div>
 
-<!-- MODE TABS -->
-<div class="mode-tabs">
-  <div class="mode-tab active" onclick="setMode('single')">Single Run</div>
-  <div class="mode-tab" onclick="setMode('tsweep')">Temperature Sweep</div>
-  <div class="mode-tab" onclick="setMode('csweep')">Composition Sweep</div>
-  <div class="mode-tab" onclick="setMode('dsweep')">Desorption Sweep</div>
-</div>
-
-<!-- SINGLE RUN MODE -->
-<div class="mode-section active" id="modeSingle">
+<!-- RUN CONTROLS -->
 <div class="controls">
   <button id="runBtn" onclick="startSim()">&#9654; Run Simulation</button>
   <button id="pauseBtn" onclick="pauseSim()" disabled>&#9208; Pause</button>
@@ -314,62 +305,17 @@
     <span class="progress-text" id="progText">Ready</span>
   </div>
 </div>
-</div>
 
-<!-- TEMPERATURE SWEEP MODE -->
-<div class="mode-section" id="modeTsweep">
-<div class="note"><b>Investigation:</b> How does substrate temperature affect film roughness and surface statistics? Sweep T across a range while keeping all other parameters fixed.</div>
-<div class="sweep-grid">
-  <div class="sweep-item"><label>T min (K)</label><input type="number" id="tswTmin" value="300" step="50"></div>
-  <div class="sweep-item"><label>T max (K)</label><input type="number" id="tswTmax" value="1000" step="50"></div>
-  <div class="sweep-item"><label>Points</label><input type="number" id="tswPts" value="5" min="3" max="20"></div>
-  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="tswNiter" value="50" step="10" min="10"></div>
-</div>
-<div class="controls">
-  <button id="tswRunBtn" onclick="runTempSweep()">&#9654; Run Temperature Sweep</button>
-  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="tswProgFill"></div></div>
-    <span class="progress-text" id="tswProgText">Ready</span>
+<!-- COOKBOOK -->
+<div class="dash-card" style="margin-bottom:1rem">
+  <div class="card-hdr">
+    <span class="card-label">Cookbook</span>
+    <span style="font-size:11px;color:var(--text-tertiary);font-family:'Space Mono',monospace">recipe-driven measurement workflow · replaces scripted sweeps</span>
   </div>
-</div>
-</div>
-
-<!-- COMPOSITION SWEEP MODE -->
-<div class="mode-section" id="modeCsweep">
-<div class="note"><b>Investigation:</b> How does the Ge fraction (&theta;) affect surface morphology? Sweep &theta; from 0 (pure Si) to 1 (pure Ge).</div>
-<div class="sweep-grid">
-  <div class="sweep-item"><label>&theta; min</label><input type="number" id="cswThetaMin" value="0" step="0.1" min="0" max="1"></div>
-  <div class="sweep-item"><label>&theta; max</label><input type="number" id="cswThetaMax" value="1" step="0.1" min="0" max="1"></div>
-  <div class="sweep-item"><label>Points</label><input type="number" id="cswPts" value="6" min="3" max="20"></div>
-  <div class="sweep-item"><label>niter1 / point</label><input type="number" id="cswNiter" value="50" step="10" min="10"></div>
-</div>
-<div class="controls">
-  <button id="cswRunBtn" onclick="runCompSweep()">&#9654; Run Composition Sweep</button>
-  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="cswProgFill"></div></div>
-    <span class="progress-text" id="cswProgText">Ready</span>
+  <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;padding:8px 0 12px">
+    Each entry is one measurable quantity. Configure parameters in the panel above, run the simulation, click <b>Capture from current run</b>, and the row fills itself in. Repeat with different parameter values. Once the table has enough rows, the auto-plot appears below it. State is saved per entry.
   </div>
-</div>
-</div>
-
-<!-- DESORPTION SWEEP MODE -->
-<div class="mode-section" id="modeDsweep">
-<div class="note"><b>Investigation:</b> How does the desorption probability affect etching behaviour? Higher P_des means atoms are more likely to leave the surface, increasing etch rate and potentially roughness.</div>
-<div class="sweep-grid">
-  <div class="sweep-item"><label>P_des min</label><input type="number" id="dswPdesMin" value="0.01" step="0.01" min="0.01" max="1"></div>
-  <div class="sweep-item"><label>P_des max</label><input type="number" id="dswPdesMax" value="0.5" step="0.05" min="0.01" max="1"></div>
-  <div class="sweep-item"><label>Points</label><input type="number" id="dswPts" value="8" min="3" max="20"></div>
-</div>
-<div class="controls">
-  <button id="dswRunBtn" onclick="runDesorpSweep()">&#9654; Run Desorption Sweep</button>
-  <button onclick="cancelSweep()" class="danger">&#9632; Cancel</button>
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="dswProgFill"></div></div>
-    <span class="progress-text" id="dswProgText">Ready</span>
-  </div>
-</div>
+  <div id="cookbookRoot" class="cookbook-root"></div>
 </div>
 
 <!-- SINGLE RUN DASHBOARD -->
@@ -673,125 +619,6 @@
   </div>
 </div>
 
-<!-- TEMPERATURE SWEEP DASHBOARD -->
-<div class="dashboard" id="tswDash" style="display:none">
-  <div class="dash-row">
-    <div class="dash-card"><div class="card-label">RMS Roughness vs Temperature</div><div class="chart-wrap"><canvas id="tswRoughChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&beta; (Growth Exponent) vs Temperature</div><div class="chart-wrap"><canvas id="tswBetaChart"></canvas></div></div>
-  </div>
-  <div class="dash-row triple">
-    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Skewness vs Temperature</div><div class="chart-wrap"><canvas id="tswSkewChart"></canvas></div></div>
-    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Kurtosis vs Temperature</div><div class="chart-wrap"><canvas id="tswKurtChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">Pit Count vs Temperature</div><div class="chart-wrap"><canvas id="tswPitsChart"></canvas></div></div>
-  </div>
-  <div class="dash-row triple">
-    <div class="dash-card"><div class="card-label">Avg Pit Width vs Temperature</div><div class="chart-wrap"><canvas id="tswPitWidthChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&alpha; (Roughness Exponent) vs Temperature</div><div class="chart-wrap"><canvas id="tswAlphaChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&xi; (Correlation Length) vs Temperature</div><div class="chart-wrap"><canvas id="tswXiChart"></canvas></div></div>
-  </div>
-  <div class="dash-row">
-    <div class="dash-card"><div class="card-label">Etch Depth vs Temperature</div><div class="chart-wrap"><canvas id="tswEtchChart"></canvas></div></div>
-    <div class="dash-card">
-      <div class="card-label">Sweep Summary</div>
-      <div id="tswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'Space Mono',monospace"></div>
-    </div>
-  </div>
-  <div class="dash-card" style="margin-bottom:14px">
-    <div class="card-hdr"><span class="card-label">Results Table</span>
-      <button class="sm" onclick="exportSweepCSV()">Export CSV</button>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="data-table">
-        <thead><tr><th>Param</th><th>RMS</th><th>&beta;</th><th>Pits</th><th>Pit W</th><th>Coverage</th><th>&alpha;</th><th>&xi;</th><th>Etch</th><th>Select.</th></tr></thead>
-        <tbody id="tswTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="dash-card">
-    <div class="card-hdr"><span class="card-label">Lattice Snapshots</span></div>
-    <div class="snap-gallery" id="tswGallery"></div>
-  </div>
-</div>
-
-<!-- COMPOSITION SWEEP DASHBOARD -->
-<div class="dashboard" id="cswDash" style="display:none">
-  <div class="dash-row">
-    <div class="dash-card"><div class="card-label">RMS Roughness vs &theta;</div><div class="chart-wrap"><canvas id="cswRoughChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&beta; (Growth Exponent) vs &theta;</div><div class="chart-wrap"><canvas id="cswBetaChart"></canvas></div></div>
-  </div>
-  <div class="dash-row triple">
-    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Skewness vs &theta;</div><div class="chart-wrap"><canvas id="cswSkewChart"></canvas></div></div>
-    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Kurtosis vs &theta;</div><div class="chart-wrap"><canvas id="cswKurtChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">Pit Count vs &theta;</div><div class="chart-wrap"><canvas id="cswPitsChart"></canvas></div></div>
-  </div>
-  <div class="dash-row triple">
-    <div class="dash-card"><div class="card-label">Avg Pit Width vs &theta;</div><div class="chart-wrap"><canvas id="cswPitWidthChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&alpha; (Roughness Exponent) vs &theta;</div><div class="chart-wrap"><canvas id="cswAlphaChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&xi; (Correlation Length) vs &theta;</div><div class="chart-wrap"><canvas id="cswXiChart"></canvas></div></div>
-  </div>
-  <div class="dash-row">
-    <div class="dash-card"><div class="card-label">Etch Depth vs &theta;</div><div class="chart-wrap"><canvas id="cswEtchChart"></canvas></div></div>
-    <div class="dash-card">
-      <div class="card-label">Sweep Summary</div>
-      <div id="cswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'Space Mono',monospace"></div>
-    </div>
-  </div>
-  <div class="dash-card" style="margin-bottom:14px">
-    <div class="card-hdr"><span class="card-label">Results Table</span>
-      <button class="sm" onclick="exportSweepCSV()">Export CSV</button>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="data-table">
-        <thead><tr><th>Param</th><th>RMS</th><th>&beta;</th><th>Pits</th><th>Pit W</th><th>Coverage</th><th>&alpha;</th><th>&xi;</th><th>Etch</th><th>Select.</th></tr></thead>
-        <tbody id="cswTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="dash-card">
-    <div class="card-hdr"><span class="card-label">Lattice Snapshots</span></div>
-    <div class="snap-gallery" id="cswGallery"></div>
-  </div>
-</div>
-
-<!-- DESORPTION SWEEP DASHBOARD -->
-<div class="dashboard" id="dswDash" style="display:none">
-  <div class="dash-row">
-    <div class="dash-card"><div class="card-label">RMS Roughness vs P_des</div><div class="chart-wrap"><canvas id="dswRoughChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&beta; (Growth Exponent) vs P_des</div><div class="chart-wrap"><canvas id="dswBetaChart"></canvas></div></div>
-  </div>
-  <div class="dash-row triple">
-    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Skewness vs P_des</div><div class="chart-wrap"><canvas id="dswSkewChart"></canvas></div></div>
-    <div class="dash-card" data-metric="skewkurt" style="display:none"><div class="card-label">Kurtosis vs P_des</div><div class="chart-wrap"><canvas id="dswKurtChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">Pit Count vs P_des</div><div class="chart-wrap"><canvas id="dswPitsChart"></canvas></div></div>
-  </div>
-  <div class="dash-row triple">
-    <div class="dash-card"><div class="card-label">Avg Pit Width vs P_des</div><div class="chart-wrap"><canvas id="dswPitWidthChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&alpha; (Roughness Exponent) vs P_des</div><div class="chart-wrap"><canvas id="dswAlphaChart"></canvas></div></div>
-    <div class="dash-card"><div class="card-label">&xi; (Correlation Length) vs P_des</div><div class="chart-wrap"><canvas id="dswXiChart"></canvas></div></div>
-  </div>
-  <div class="dash-row">
-    <div class="dash-card"><div class="card-label">Etch Depth vs P_des</div><div class="chart-wrap"><canvas id="dswEtchChart"></canvas></div></div>
-    <div class="dash-card">
-      <div class="card-label">Sweep Summary</div>
-      <div id="dswSummary" style="font-size:11px;color:var(--text-secondary);line-height:1.8;font-family:'Space Mono',monospace"></div>
-    </div>
-  </div>
-  <div class="dash-card" style="margin-bottom:14px">
-    <div class="card-hdr"><span class="card-label">Results Table</span>
-      <button class="sm" onclick="exportSweepCSV()">Export CSV</button>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="data-table">
-        <thead><tr><th>Param</th><th>RMS</th><th>&beta;</th><th>Pits</th><th>Pit W</th><th>Coverage</th><th>&alpha;</th><th>&xi;</th><th>Etch</th><th>Select.</th></tr></thead>
-        <tbody id="dswTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="dash-card">
-    <div class="card-hdr"><span class="card-label">Lattice Snapshots</span></div>
-    <div class="snap-gallery" id="dswGallery"></div>
-  </div>
-</div>
 
 <!-- SNAPSHOTS -->
 <div class="panel" id="snapPanel">
@@ -843,7 +670,7 @@
 <script src="lattice-render.js"></script>
 <script src="charts.js"></script>
 <script src="data.js"></script>
-<script src="sweep.js"></script>
+<script src="cookbook.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

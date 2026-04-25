@@ -368,4 +368,5 @@ document.addEventListener('DOMContentLoaded', function() {
   updateScalingPlots();
   injectExportButtons();
   if (typeof restorePhases === 'function') restorePhases();
+  if (typeof renderCookbook === 'function') renderCookbook();
 });

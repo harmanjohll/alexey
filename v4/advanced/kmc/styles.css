@@ -190,6 +190,24 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,0.08)}
 .finding-value.match-close{color:#f0b429}
 .finding-value.match-far{color:#e24b4a}
 
+/* Cookbook */
+.cookbook-root{display:flex;flex-direction:column;gap:14px}
+.cookbook-card{background:var(--bg);border:1px solid var(--border-light);border-radius:3px;padding:14px 16px}
+.cookbook-card .card-hdr{margin-bottom:8px}
+.cookbook-card .card-hdr button{margin-left:auto}
+.cookbook-card .card-hdr button + button{margin-left:6px}
+.cookbook-why{font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:8px;font-family:var(--font-body)}
+.cookbook-recipe{font-size:11px;color:var(--text-tertiary);line-height:1.6;font-family:var(--font-mono);background:var(--accent-subtle);border-left:2px solid var(--accent);padding:8px 12px;border-radius:0 3px 3px 0;margin-bottom:8px}
+.cookbook-recipe b{color:var(--accent-light);font-weight:500}
+.cookbook-suggested{font-size:11px;color:var(--text-tertiary);line-height:1.6;font-family:var(--font-mono);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cookbook-suggested b{color:var(--text-secondary)}
+.cookbook-table{margin-bottom:10px;overflow-x:auto}
+.cookbook-table table.events-table{width:100%;border-collapse:collapse}
+.cookbook-table table.events-table th{font-size:10px;font-weight:500;color:var(--accent);font-family:var(--font-mono);text-align:left;padding:5px 8px;border-bottom:1px solid var(--border-light);text-transform:uppercase;letter-spacing:.5px}
+.cookbook-table table.events-table td{padding:3px 6px;border-bottom:1px solid var(--border-light);font-family:var(--font-mono);font-size:11px;color:var(--text-primary)}
+.cookbook-derived{font-size:13px;color:var(--text-primary);font-family:var(--font-mono);background:var(--accent-subtle);border:1px solid var(--accent-border);border-radius:3px;padding:8px 12px;margin-bottom:10px}
+.cookbook-plot{margin-top:8px;height:200px}
+
 /* Multi-phase β analysis */
 .phase-controls{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
 .phase-controls input[type="number"]{width:60px;padding:2px 4px;font-size:10px;font-family:var(--font-mono)}
