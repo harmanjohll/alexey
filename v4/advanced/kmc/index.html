@@ -579,6 +579,21 @@
     </div>
   </div>
 
+  <!-- Row 5b: Pit depth distribution + Width-vs-Depth scaling -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-label">Pit Depth Distribution</div>
+      <div class="chart-wrap"><canvas id="pitDepthHistChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Width vs Depth (log-log)</span>
+        <span class="beta-display" id="pitScalingDisp" data-tip="Power-law exponent: depth ∝ width^p. Self-similar pits give p≈1; deeper-than-wide pits give p>1.">depth ∝ width<sup>p</sup>, p = &mdash;</span>
+      </div>
+      <div class="chart-wrap"><canvas id="pitWvDChart"></canvas></div>
+    </div>
+  </div>
+
   <!-- Row 6: Pit surface + Scaling Exponents -->
   <div class="dash-row">
     <div class="dash-card">

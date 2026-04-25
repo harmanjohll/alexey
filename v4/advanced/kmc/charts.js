@@ -148,6 +148,7 @@ function injectExportButtons() {
 var roughnessChart = null, etchChart = null, surfaceChart = null, concChart = null;
 var statsChart = null, histChart = null;
 var pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = null;
+var pitDepthHistChart = null, pitWvDChart = null;
 var corrChart = null;
 var tswRoughChart = null, tswSkewChart = null, tswKurtChart = null;
 var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
@@ -260,6 +261,32 @@ function initCharts() {
     options: phOpts
   });
 
+  // Pit depth histogram
+  var pdOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pdOpts.scales.x.title = { display:true, text:'pit depth (lattice units)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pdOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitDepthHistChart = new Chart(document.getElementById('pitDepthHistChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(74,154,170,0.5)', borderWidth:0, borderRadius:2 }] },
+    options: pdOpts
+  });
+
+  // Pit width-vs-depth scatter (log-log) with power-law fit
+  var pwdOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pwdOpts.scales.x.type = 'logarithmic';
+  pwdOpts.scales.y.type = 'logarithmic';
+  pwdOpts.scales.x.title = { display:true, text:'pit width (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pwdOpts.scales.y.title = { display:true, text:'pit depth', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pwdOpts.plugins.legend = { display:false };
+  pitWvDChart = new Chart(document.getElementById('pitWvDChart'), {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'pits', data:[], borderColor:'rgba(226,75,74,0.8)', backgroundColor:'rgba(226,75,74,0.6)', borderWidth:0, pointRadius:3, showLine:false },
+      { label:'fit',  data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[6,3], pointRadius:0, fill:false, showLine:true }
+    ]},
+    options: pwdOpts
+  });
+
   // Pit-highlighted surface profile
   var psOpts = JSON.parse(JSON.stringify(chartDefaults));
   psOpts.scales.x.title = { display:true, text:'x', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
@@ -280,8 +307,8 @@ function initCharts() {
 }
 
 function destroyCharts() {
-  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitSurfaceChart, alphaChart, zChart, corrChart].forEach(function(c) { if(c) c.destroy(); });
-  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitSurfaceChart = alphaChart = zChart = corrChart = null;
+  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart].forEach(function(c) { if(c) c.destroy(); });
+  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = null;
 }
 
 function destroySweepCharts() {

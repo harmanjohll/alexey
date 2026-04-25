@@ -260,6 +260,73 @@ function updatePitAnalysis() {
   document.getElementById('pitCutoff').textContent = result.cutoff.toFixed(1) + (result.sigma > 0 ? ' (\u03C3=' + result.sigma.toFixed(2) + ')' : '');
   document.getElementById('pitMeanH').textContent = result.mean.toFixed(1);
 
+  // Pit depth histogram (Freedman-Diaconis binning, capped at 20 bins)
+  if (pitDepthHistChart) {
+    if (pits.length > 0) {
+      var depths = pits.map(function(p){ return p.depth; }).sort(function(a,b){return a-b;});
+      var dMin = depths[0], dMax = depths[depths.length-1];
+      var iqr = depths[Math.floor(depths.length*0.75)] - depths[Math.floor(depths.length*0.25)];
+      var fdW = iqr > 1e-6 ? 2 * iqr / Math.pow(depths.length, 1/3) : Math.max((dMax-dMin)/8, 0.5);
+      var nBinsD = Math.min(20, Math.max(4, Math.ceil((dMax - dMin) / fdW) || 4));
+      var binWD = (dMax - dMin) / nBinsD || 1;
+      var binsD = new Array(nBinsD).fill(0);
+      var labelsD = [];
+      for (var b = 0; b < nBinsD; b++) {
+        var lo = dMin + b * binWD;
+        var hi = dMin + (b + 1) * binWD;
+        labelsD.push(lo.toFixed(1) + '–' + hi.toFixed(1));
+      }
+      for (var i = 0; i < depths.length; i++) {
+        var bi = Math.min(nBinsD - 1, Math.floor((depths[i] - dMin) / binWD));
+        binsD[bi]++;
+      }
+      pitDepthHistChart.data.labels = labelsD;
+      pitDepthHistChart.data.datasets[0].data = binsD;
+      pitDepthHistChart.update();
+    } else {
+      pitDepthHistChart.data.labels = [];
+      pitDepthHistChart.data.datasets[0].data = [];
+      pitDepthHistChart.update();
+    }
+  }
+
+  // Width vs depth scatter, log-log, with power-law fit (depth ∝ width^p)
+  if (pitWvDChart) {
+    if (pits.length >= 3) {
+      var pts = pits.filter(function(p){ return p.width > 0 && p.depth > 0; })
+                    .map(function(p){ return { x: p.width, y: p.depth }; });
+      pitWvDChart.data.datasets[0].data = pts;
+      // OLS in log-log space → slope = exponent p
+      if (pts.length >= 3) {
+        var n = pts.length, sx=0, sy=0, sxy=0, sxx=0;
+        for (var i = 0; i < n; i++) {
+          var lx = Math.log10(pts[i].x), ly = Math.log10(pts[i].y);
+          sx += lx; sy += ly; sxy += lx*ly; sxx += lx*lx;
+        }
+        var den = n*sxx - sx*sx;
+        var p = den !== 0 ? (n*sxy - sx*sy) / den : null;
+        var ic = p !== null ? (sy - p*sx) / n : null;
+        if (p !== null && isFinite(p)) {
+          var xs = pts.map(function(d){return d.x;});
+          var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+          pitWvDChart.data.datasets[1].data = [
+            { x: xMin, y: Math.pow(10, ic + p*Math.log10(xMin)) },
+            { x: xMax, y: Math.pow(10, ic + p*Math.log10(xMax)) }
+          ];
+          var disp = document.getElementById('pitScalingDisp');
+          if (disp) disp.innerHTML = 'depth &prop; width<sup>p</sup>, p = <b>' + p.toFixed(3) + '</b>';
+        }
+      }
+      pitWvDChart.update();
+    } else {
+      pitWvDChart.data.datasets[0].data = [];
+      pitWvDChart.data.datasets[1].data = [];
+      pitWvDChart.update();
+      var disp2 = document.getElementById('pitScalingDisp');
+      if (disp2) disp2.innerHTML = 'depth &prop; width<sup>p</sup>, p = &mdash;';
+    }
+  }
+
   // Pit width histogram
   if (pitHistChart && pits.length > 0) {
     var widths = pits.map(function(p) { return p.width; });
