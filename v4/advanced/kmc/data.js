@@ -433,6 +433,135 @@ function linkPitsAcrossFrames(prevPits, currentPits, opts) {
 
 function resetPitTracking() { _nextPitId = 1; }
 
+/* ── Spatial statistics for pit centres ───────────────────────────────────
+   Periodic 1D: distance between two centres = min(|d|, lattx - |d|).
+   nearestNeighbourDistances → array of NN distances, one per pit.
+   pairwiseSeparations → all pairwise distances (use for histogram / g(r)). */
+function pitCentre(p) { return p.start + (p.width - 1) / 2; }
+
+function periodicDist(a, b, L) {
+  var d = Math.abs(a - b);
+  return Math.min(d, L - d);
+}
+
+function nearestNeighbourDistances(pits, lattx) {
+  if (!pits || pits.length < 2) return [];
+  var c = pits.map(pitCentre);
+  var dists = [];
+  for (var i = 0; i < c.length; i++) {
+    var best = Infinity;
+    for (var j = 0; j < c.length; j++) {
+      if (i === j) continue;
+      var d = periodicDist(c[i], c[j], lattx);
+      if (d < best) best = d;
+    }
+    dists.push(best);
+  }
+  return dists;
+}
+
+function pairwiseSeparations(pits, lattx) {
+  if (!pits || pits.length < 2) return [];
+  var c = pits.map(pitCentre);
+  var out = [];
+  for (var i = 0; i < c.length - 1; i++) {
+    for (var j = i + 1; j < c.length; j++) {
+      out.push(periodicDist(c[i], c[j], lattx));
+    }
+  }
+  return out;
+}
+
+/* Pair correlation g(r) for pit centres on a 1D periodic line.
+   g(r) = (counts in shell [r, r+dr]) / (expected counts for Poisson)
+   where expected = (2 · N · (N-1) / lattx) · dr  (factor 2 for both sides
+   on a 1D line; using min-image distance, effective shell length = 2·dr).
+   Returns { r:[...], g:[...] }. */
+function pairCorrelation(pits, lattx, opts) {
+  opts = opts || {};
+  var nBins = opts.nBins || 30;
+  var rMax = opts.rMax || (lattx / 2);
+  if (!pits || pits.length < 2) return { r: [], g: [] };
+  var dr = rMax / nBins;
+  var counts = new Array(nBins).fill(0);
+  var seps = pairwiseSeparations(pits, lattx);
+  for (var i = 0; i < seps.length; i++) {
+    if (seps[i] >= rMax) continue;
+    var bi = Math.min(nBins - 1, Math.floor(seps[i] / dr));
+    counts[bi]++;
+  }
+  var N = pits.length;
+  // Each separation contributes to one shell; normalise by expected count
+  // for a Poisson process at the same density (N pits in lattx sites,
+  // shell of width 2·dr in 1D periodic).
+  var density = N / lattx;
+  var r = [], g = [];
+  for (var b = 0; b < nBins; b++) {
+    var rMid = (b + 0.5) * dr;
+    var expected = N * (N - 1) * 2 * dr / lattx; // pairs in this shell for uniform random
+    var observed = counts[b] * 2; // each pair counted once → multiply by 2 to match expected
+    r.push(rMid);
+    g.push(expected > 0 ? observed / expected : 0);
+  }
+  return { r: r, g: g };
+}
+
+/* ── Pit Composition ──────────────────────────────────────────────────────
+   For each pit, look at the top N solid cells of every column inside the
+   pit's x range, count Ge atoms vs total. Returns:
+     { perPit:[{id, depth, geFrac, nCells}], poolGe, poolSi, refGeFrac }
+   refGeFrac is the same metric computed over columns OUTSIDE all pits, as
+   a baseline. Walls are sampled within depthSamples cells below ht[x]. */
+function pitComposition(pits, htArr, sliceData, sliceH, sliceStart, lattx, opts) {
+  if (!sliceData || !htArr || !lattx) return { perPit: [], refGeFrac: null, refN: 0 };
+  opts = opts || {};
+  var depthSamples = opts.depthSamples || 4;
+
+  function geFracInColumn(x) {
+    var ge = 0, total = 0;
+    var topZ = htArr[x] - 1;
+    for (var d = 0; d < depthSamples; d++) {
+      var z = topZ - d;
+      var zIdx = z - sliceStart;
+      if (zIdx < 0 || zIdx >= sliceH) continue;
+      var sp = sliceData[x * sliceH + zIdx];
+      if (sp === 2) { ge++; total++; }
+      else if (sp === 1) { total++; }
+    }
+    return { ge: ge, total: total };
+  }
+
+  var inPit = new Uint8Array(lattx);
+  for (var p = 0; p < pits.length; p++) {
+    for (var x = pits[p].start; x < pits[p].start + pits[p].width && x < lattx; x++) inPit[x] = 1;
+  }
+
+  var perPit = [];
+  for (var p = 0; p < pits.length; p++) {
+    var ge = 0, total = 0;
+    for (var x = pits[p].start; x < pits[p].start + pits[p].width && x < lattx; x++) {
+      var c = geFracInColumn(x);
+      ge += c.ge; total += c.total;
+    }
+    perPit.push({
+      id: pits[p].id,
+      depth: pits[p].depth,
+      width: pits[p].width,
+      geFrac: total > 0 ? ge / total : null,
+      nCells: total
+    });
+  }
+
+  // Reference: Ge fraction in columns NOT in any pit.
+  var refGe = 0, refN = 0;
+  for (var x = 0; x < lattx; x++) {
+    if (inPit[x]) continue;
+    var cc = geFracInColumn(x);
+    refGe += cc.ge; refN += cc.total;
+  }
+  return { perPit: perPit, refGeFrac: refN > 0 ? refGe / refN : null, refN: refN };
+}
+
 /* ── Scaling Exponents ── */
 function renderScalingTable() {
   var tbl = document.getElementById('scalingTable');

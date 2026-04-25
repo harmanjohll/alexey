@@ -208,6 +208,7 @@ function startSim() {
           updateCorrelation();
           if (typeof redrawLatticeWithPits === 'function') redrawLatticeWithPits();
           if (typeof updatePitTrackingCharts === 'function') updatePitTrackingCharts();
+          if (typeof updatePitSpatialAndCompositionCharts === 'function') updatePitSpatialAndCompositionCharts(params.lattx);
         }
       }
 

@@ -594,6 +594,28 @@
     </div>
   </div>
 
+  <!-- Row 5d: Spatial statistics + composition -->
+  <div class="dash-row triple">
+    <div class="dash-card">
+      <div class="card-label">Pit NN Distance Distribution</div>
+      <div class="chart-wrap"><canvas id="pitNNChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Pair Correlation g(r)</span>
+        <span class="beta-display" id="pitGRDisp" data-tip="g(r) = observed pairs at separation r / expected for random Poisson with same density. g(r) ≈ 1 → random; >1 → clustered; <1 → repelled.">g(r) = 1 baseline</span>
+      </div>
+      <div class="chart-wrap"><canvas id="pitGRChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Pit Ge fraction vs depth</span>
+        <span class="beta-display" id="pitCompDisp" data-tip="Ge fraction inside pit walls (top N solid cells per column). Compare against reference baseline computed on non-pit columns.">ref = &mdash;</span>
+      </div>
+      <div class="chart-wrap"><canvas id="pitCompChart"></canvas></div>
+    </div>
+  </div>
+
   <!-- Row 5c: Pit tracking — lifetime distribution + nucleation rate -->
   <div class="dash-row">
     <div class="dash-card">

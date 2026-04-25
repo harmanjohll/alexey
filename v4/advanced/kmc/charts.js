@@ -150,6 +150,7 @@ var statsChart = null, histChart = null;
 var pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = null;
 var pitDepthHistChart = null, pitWvDChart = null;
 var pitLifetimeChart = null, pitNucleationChart = null;
+var pitNNChart = null, pitGRChart = null, pitCompChart = null;
 var corrChart = null;
 var tswRoughChart = null, tswSkewChart = null, tswKurtChart = null;
 var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
@@ -312,6 +313,44 @@ function initCharts() {
     options: pnOpts
   });
 
+  // Nearest-neighbour distance histogram
+  var nnOpts = JSON.parse(JSON.stringify(chartDefaults));
+  nnOpts.scales.x.title = { display:true, text:'NN distance (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  nnOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitNNChart = new Chart(document.getElementById('pitNNChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(110,192,221,0.55)', borderWidth:0, borderRadius:2 }] },
+    options: nnOpts
+  });
+
+  // Pair correlation g(r)
+  var grOpts = JSON.parse(JSON.stringify(chartDefaults));
+  grOpts.scales.x.title = { display:true, text:'r (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  grOpts.scales.y.title = { display:true, text:'g(r)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  grOpts.plugins.legend = { display:false };
+  pitGRChart = new Chart(document.getElementById('pitGRChart'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'g(r)', data:[], borderColor:'#9aa6ff', borderWidth:1.5, pointRadius:0, fill:false, tension:0.2 },
+      { label:'baseline', data:[], borderColor:'rgba(120,120,120,0.4)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false }
+    ]},
+    options: grOpts
+  });
+
+  // Pit Ge fraction vs depth (scatter), with reference horizontal line
+  var pcOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pcOpts.scales.x.title = { display:true, text:'pit depth', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pcOpts.scales.y.title = { display:true, text:'Ge fraction in pit walls', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pcOpts.plugins.legend = { display:false };
+  pitCompChart = new Chart(document.getElementById('pitCompChart'), {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'pits',     data:[], borderColor:'rgba(255,112,67,0.85)', backgroundColor:'rgba(255,112,67,0.6)', borderWidth:0, pointRadius:3, showLine:false },
+      { label:'baseline', data:[], borderColor:'rgba(120,120,120,0.5)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false, showLine:true }
+    ]},
+    options: pcOpts
+  });
+
   // Pit-highlighted surface profile
   var psOpts = JSON.parse(JSON.stringify(chartDefaults));
   psOpts.scales.x.title = { display:true, text:'x', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
@@ -332,8 +371,8 @@ function initCharts() {
 }
 
 function destroyCharts() {
-  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart, pitLifetimeChart, pitNucleationChart].forEach(function(c) { if(c) c.destroy(); });
-  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = pitLifetimeChart = pitNucleationChart = null;
+  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart, pitLifetimeChart, pitNucleationChart, pitNNChart, pitGRChart, pitCompChart].forEach(function(c) { if(c) c.destroy(); });
+  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = pitLifetimeChart = pitNucleationChart = pitNNChart = pitGRChart = pitCompChart = null;
 }
 
 function destroySweepCharts() {
@@ -781,6 +820,91 @@ function updatePitTrackingCharts() {
     pitNucleationChart.data.datasets[0].data = bornData;
     pitNucleationChart.data.datasets[1].data = diedData;
     pitNucleationChart.update();
+  }
+}
+
+/* Refresh spatial-statistics + composition charts. Called from app.js
+   per worker iteration after trackPits(). */
+function updatePitSpatialAndCompositionCharts(lattx) {
+  var pits = window._currentPits || [];
+  // ── NN distance histogram ──
+  if (pitNNChart) {
+    var nn = (typeof nearestNeighbourDistances === 'function') ? nearestNeighbourDistances(pits, lattx) : [];
+    if (nn.length >= 3) {
+      nn.sort(function(a,b){return a-b;});
+      var nnMin = nn[0], nnMax = nn[nn.length-1];
+      var iqr = nn[Math.floor(nn.length*0.75)] - nn[Math.floor(nn.length*0.25)];
+      var fdW = iqr > 0 ? 2 * iqr / Math.pow(nn.length, 1/3) : Math.max((nnMax-nnMin)/8, 1);
+      var nBins = Math.min(20, Math.max(4, Math.ceil((nnMax - nnMin) / fdW) || 4));
+      var binW = (nnMax - nnMin) / nBins || 1;
+      var bins = new Array(nBins).fill(0);
+      var labels = [];
+      for (var b = 0; b < nBins; b++) {
+        var lo = nnMin + b * binW;
+        var hi = nnMin + (b + 1) * binW;
+        labels.push(Math.round(lo) + '–' + Math.round(hi));
+      }
+      for (var i = 0; i < nn.length; i++) {
+        var bi = Math.min(nBins - 1, Math.floor((nn[i] - nnMin) / binW));
+        bins[bi]++;
+      }
+      pitNNChart.data.labels = labels;
+      pitNNChart.data.datasets[0].data = bins;
+      pitNNChart.update();
+    } else {
+      pitNNChart.data.labels = [];
+      pitNNChart.data.datasets[0].data = [];
+      pitNNChart.update();
+    }
+  }
+
+  // ── Pair correlation g(r) ──
+  if (pitGRChart) {
+    if (pits.length >= 4) {
+      var pc = pairCorrelation(pits, lattx, { nBins: 30, rMax: lattx / 2 });
+      var grPts = [], basePts = [];
+      for (var k = 0; k < pc.r.length; k++) {
+        grPts.push({ x: pc.r[k], y: pc.g[k] });
+        basePts.push({ x: pc.r[k], y: 1 });
+      }
+      pitGRChart.data.datasets[0].data = grPts;
+      pitGRChart.data.datasets[1].data = basePts;
+      pitGRChart.update();
+    } else {
+      pitGRChart.data.datasets[0].data = [];
+      pitGRChart.data.datasets[1].data = [];
+      pitGRChart.update();
+    }
+  }
+
+  // ── Composition scatter ──
+  if (pitCompChart && typeof pitComposition === 'function') {
+    if (pits.length > 0 && typeof lastSliceData !== 'undefined' && lastSliceData && typeof lastFullHt !== 'undefined' && lastFullHt) {
+      var comp = pitComposition(pits, lastFullHt, lastSliceData, lastSliceH, lastSliceStart, lattx, { depthSamples: 4 });
+      var scatter = comp.perPit
+        .filter(function(c){ return c.geFrac !== null; })
+        .map(function(c){ return { x: c.depth, y: c.geFrac }; });
+      pitCompChart.data.datasets[0].data = scatter;
+      // Baseline horizontal line at refGeFrac
+      if (comp.refGeFrac !== null && scatter.length > 0) {
+        var xs = scatter.map(function(s){return s.x;});
+        var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+        pitCompChart.data.datasets[1].data = [
+          { x: xMin, y: comp.refGeFrac }, { x: xMax, y: comp.refGeFrac }
+        ];
+      } else {
+        pitCompChart.data.datasets[1].data = [];
+      }
+      var disp = document.getElementById('pitCompDisp');
+      if (disp) disp.textContent = comp.refGeFrac !== null
+        ? 'ref Ge = ' + comp.refGeFrac.toFixed(3) + ' (n=' + comp.refN + ')'
+        : 'ref = —';
+      pitCompChart.update();
+    } else {
+      pitCompChart.data.datasets[0].data = [];
+      pitCompChart.data.datasets[1].data = [];
+      pitCompChart.update();
+    }
   }
 }
 
