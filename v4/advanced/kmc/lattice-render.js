@@ -2,15 +2,18 @@
 
 var lastSliceData = null;
 var lastSliceH = 0;
+var lastSliceStart = 0;
 var lastLattx = 500;
 var lastHtRaw = null;
 var lastFullHt = null;
 var viewMode = 'cross';
+var pitOverlayEnabled = true;
 
-function renderLattice(sliceBuffer, sliceH, lattx, targetCanvas) {
+function renderLattice(sliceBuffer, sliceH, lattx, targetCanvas, sliceStart) {
   lastSliceData = new Uint8Array(sliceBuffer.slice(0));
   lastSliceH = sliceH;
   lastLattx = lattx;
+  if (typeof sliceStart === 'number') lastSliceStart = sliceStart;
   var cvs;
   if (targetCanvas) {
     cvs = targetCanvas;
@@ -37,6 +40,65 @@ function renderLattice(sliceBuffer, sliceH, lattx, targetCanvas) {
     }
   }
   ctx.putImageData(img, 0, 0);
+  if (!targetCanvas) drawPitOverlay(ctx, lattx, sliceH, lastSliceStart);
+}
+
+/* Outline currently-detected pits on the lattice cross-section. Pit cells are
+   drawn as a thin coloured rectangle from x_start to x_start+width, spanning
+   the pit's vertical depth band (rim down to lowest height). */
+function drawPitOverlay(ctx, lattx, sliceH, sliceStart) {
+  if (!pitOverlayEnabled) return;
+  var pits = window._currentPits;
+  if (!pits || !pits.length) return;
+  ctx.save();
+  ctx.lineWidth = 1;
+  for (var i = 0; i < pits.length; i++) {
+    var p = pits[i];
+    var x0 = p.start;
+    var x1 = p.start + p.width;
+    if (x1 > lattx) x1 = lattx;
+    var topZ = (typeof p.rim === 'number') ? p.rim : (p.minH + p.depth);
+    var botZ = p.minH;
+    // Map world-z to canvas-row. The slice is rendered with row = world_z - sliceStart.
+    var topRow = Math.max(0, Math.min(sliceH - 1, topZ - sliceStart));
+    var botRow = Math.max(0, Math.min(sliceH - 1, botZ - sliceStart));
+    var yLo = Math.min(topRow, botRow);
+    var yHi = Math.max(topRow, botRow);
+    var w = x1 - x0;
+    var h = Math.max(1, yHi - yLo + 1);
+    ctx.strokeStyle = 'rgba(240,180,41,0.85)';
+    ctx.strokeRect(x0 + 0.5, yLo + 0.5, w - 1, h - 1);
+    // Optional persistent ID label (rendered when present from tracking pass)
+    if (typeof p.id === 'number') {
+      ctx.fillStyle = 'rgba(240,180,41,0.95)';
+      ctx.font = '7px "Space Mono", monospace';
+      ctx.textBaseline = 'top';
+      ctx.fillText('#' + p.id, x0 + 1, yLo + 1);
+    }
+  }
+  ctx.restore();
+}
+
+/* Re-paint the cached lattice slice and overlay current pits.
+   Called after pit analysis to keep the overlay in sync without
+   waiting for the next worker message. */
+function redrawLatticeWithPits() {
+  if (!lastSliceData || !lastSliceH || !lastLattx) return;
+  var cvs = document.getElementById('latticeCanvas');
+  if (!cvs) return;
+  var ctx = cvs.getContext('2d');
+  var img = ctx.createImageData(lastLattx, lastSliceH);
+  for (var x = 0; x < lastLattx; x++) {
+    for (var z = 0; z < lastSliceH; z++) {
+      var sp = lastSliceData[x * lastSliceH + z];
+      var idx = (z * lastLattx + x) * 4;
+      if (sp === 1) { img.data[idx]=38; img.data[idx+1]=166; img.data[idx+2]=154; img.data[idx+3]=255; }
+      else if (sp === 2) { img.data[idx]=255; img.data[idx+1]=112; img.data[idx+2]=67; img.data[idx+3]=255; }
+      else { img.data[idx]=10; img.data[idx+1]=15; img.data[idx+2]=10; img.data[idx+3]=255; }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  drawPitOverlay(ctx, lastLattx, lastSliceH, lastSliceStart);
 }
 
 function renderHeightMap(htBuffer, lattx) {

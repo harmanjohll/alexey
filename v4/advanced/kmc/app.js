@@ -126,7 +126,7 @@ function startSim() {
       document.getElementById('evBdf').textContent = d.events.bdiff.toLocaleString();
 
       updateCharts(d);
-      renderLattice(d.sliceData, d.sliceH, params.lattx);
+      renderLattice(d.sliceData, d.sliceH, params.lattx, null, d.sliceStart);
 
       // Etch stats
       var depth = etchDepthData.length > 0 ? etchDepthData[etchDepthData.length - 1].y : 0;
@@ -147,6 +147,7 @@ function startSim() {
         if (lastFullHt) {
           updatePitAnalysis();
           updateCorrelation();
+          if (typeof redrawLatticeWithPits === 'function') redrawLatticeWithPits();
         }
       }
 

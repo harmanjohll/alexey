@@ -541,15 +541,21 @@
     <div class="dash-card">
       <div class="card-hdr" style="flex-wrap:wrap;gap:6px">
         <span class="card-label">Pit Analysis</span>
-        <select id="pitMethod" style="font-size:10px;padding:2px 4px;background:var(--surface);color:var(--text-primary);border:0.5px solid var(--border)" onchange="updatePitAnalysis()">
-          <option value="sigma" selected>k &times; &sigma; below mean</option>
-          <option value="range">k &times; range below mean</option>
-          <option value="slope">slope-based</option>
+        <select id="pitMethod" style="font-size:10px;padding:2px 4px;background:var(--surface);color:var(--text-primary);border:0.5px solid var(--border)" onchange="updatePitAnalysis()" data-tip="local-mean: rolling-window baseline. watershed: local minima + topological basins. sigma/range/slope: legacy global thresholds.">
+          <option value="local-mean" selected>local mean (rolling window)</option>
+          <option value="watershed">watershed (local minima)</option>
+          <option value="sigma">k × σ below mean (legacy)</option>
+          <option value="range">k × range below mean (legacy)</option>
+          <option value="slope">slope-based (legacy)</option>
         </select>
-        <span style="font-size:9px;color:var(--text-tertiary)">k:</span>
+        <span style="font-size:9px;color:var(--text-tertiary)" data-tip="Multiplier on local σ (or global σ for legacy methods).">k:</span>
         <input type="number" id="pitThreshold" value="1.0" min="0.1" max="5.0" step="0.1" style="width:48px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
+        <span style="font-size:9px;color:var(--text-tertiary)" data-tip="Local-mean window as a fraction of lattx. 0.05 = 5% of the surface.">window %:</span>
+        <input type="number" id="pitWindowPct" value="10" min="1" max="50" step="1" style="width:40px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
         <span style="font-size:9px;color:var(--text-tertiary)">min width:</span>
         <input type="number" id="pitMinWidth" value="3" min="1" max="50" step="1" style="width:40px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
+        <span style="font-size:9px;color:var(--text-tertiary)" data-tip="Pits shallower than this are filtered out. Useful for watershed which has no global threshold.">min depth:</span>
+        <input type="number" id="pitMinDepth" value="0" min="0" max="100" step="0.5" style="width:48px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
         <span style="font-size:9px;color:var(--text-tertiary)">gap merge:</span>
         <input type="number" id="pitGapMerge" value="2" min="0" max="20" step="1" style="width:36px;font-size:10px;padding:2px 4px" onchange="updatePitAnalysis()">
         <button class="sm" onclick="updatePitAnalysis()">Refresh</button>
