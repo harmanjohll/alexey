@@ -290,24 +290,16 @@ function updateFindings(d, params) {
   document.getElementById('findParams').textContent =
     'T=' + params.temp + 'K, \u03B8=' + params.theta + ', P_des=' + params.pdes + ', ' + params.lattx + '\u00D7' + params.lattz + ', ' + params.niter1 + ' iter';
 
-  // Beta
+  // Beta — display the live single-fit; the universality badge below
+  // delegates to refreshUniversalityBadge() which prefers the asymptotic
+  // phase β when multi-phase data is available.
   var fitMinVal = +document.getElementById('fitMin').value || 1;
   var fitMaxVal = +document.getElementById('fitMax').value || Infinity;
   var fit = fitPowerLaw(roughnessData, fitMinVal, fitMaxVal);
   var betaEl = document.getElementById('findBeta');
   if (fit) {
-    var bv = fit.beta;
-    betaEl.textContent = '\u03B2 = ' + bv.toFixed(4) + ' (fit ' + fitMinVal + '\u2013' + (isFinite(fitMaxVal) ? fitMaxVal : 'end') + ')';
-    // Universality class match
-    var classes = [{name:'Random',b:0.5},{name:'KPZ',b:0.333},{name:'EW',b:0.25}];
-    var best = classes[0], bestD = Math.abs(bv - classes[0].b);
-    for (var i = 1; i < classes.length; i++) {
-      var dd = Math.abs(bv - classes[i].b);
-      if (dd < bestD) { best = classes[i]; bestD = dd; }
-    }
-    var classEl = document.getElementById('findClass');
-    classEl.textContent = best.name + ' (\u03B2=' + best.b + ', \u0394=' + bestD.toFixed(3) + ')';
-    classEl.className = 'finding-value ' + (bestD < 0.03 ? 'match-good' : bestD < 0.08 ? 'match-close' : 'match-far');
+    betaEl.textContent = '\u03B2 = ' + fit.beta.toFixed(4) + ' (fit ' + fitMinVal + '\u2013' + (isFinite(fitMaxVal) ? fitMaxVal : 'end') + ')';
+    if (typeof refreshUniversalityBadge === 'function') refreshUniversalityBadge();
   } else {
     betaEl.textContent = '\u2014';
     document.getElementById('findClass').textContent = '\u2014';

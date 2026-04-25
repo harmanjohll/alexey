@@ -533,6 +533,48 @@ function _mergeByBIC(phases, allLogPts, opts) {
   return phases;
 }
 
+/* Refit a single segment using ALL linear data points within [iterStart, iterEnd]
+   inclusive. Returns the same shape as _olsLogLog. */
+function _fitRangeAllData(rawData, iterStart, iterEnd) {
+  var pts = rawData.filter(function(d) {
+    return d.x > 0 && d.y > 1e-6 && d.x >= iterStart && d.x <= iterEnd;
+  });
+  if (pts.length < 3) return null;
+  pts.sort(function(a, b) { return a.x - b.x; });
+  var logPts = pts.map(function(d) { return { x: Math.log10(d.x), y: Math.log10(d.y) }; });
+  var fit = _olsLogLog(logPts, 0, logPts.length - 1);
+  if (!fit) return null;
+  // Override displayed boundaries with the requested iter range, not the
+  // sampled extremes — phase boundaries should be contiguous in iteration space.
+  fit.xStart = iterStart;
+  fit.xEnd = iterEnd;
+  return fit;
+}
+
+/* Force phase ranges to be contiguous: phase i+1 starts at phase i's end + 1.
+   Refits each phase using all linear data points in its range. */
+function _snapAndRefitContiguous(phases, rawData) {
+  if (!phases || phases.length === 0) return phases;
+  var sorted = phases.slice().sort(function(a, b) { return a.xStart - b.xStart; });
+  var validX = rawData.filter(function(d) { return d.x > 0 && d.y > 1e-6; }).map(function(d) { return d.x; });
+  if (validX.length === 0) return sorted;
+  validX.sort(function(a, b) { return a - b; });
+  var dataStart = validX[0], dataEnd = validX[validX.length - 1];
+
+  var bounds = [dataStart];
+  for (var i = 1; i < sorted.length; i++) bounds.push(Math.round(sorted[i].xStart));
+  bounds.push(dataEnd + 1);
+
+  var refit = [];
+  for (var j = 0; j < sorted.length; j++) {
+    var lo = bounds[j], hi = bounds[j + 1] - 1;
+    if (j === sorted.length - 1) hi = dataEnd;
+    var f = _fitRangeAllData(rawData, lo, hi);
+    if (f) refit.push(f);
+  }
+  return refit.length ? refit : sorted;
+}
+
 /* Top-level: detect phases on raw {x, y} data. Returns {phases, logPts}. */
 function fitPhases(rawData, opts) {
   opts = opts || {};
@@ -548,12 +590,34 @@ function fitPhases(rawData, opts) {
   if (useLog) working = _logResample(working, 32);
   if (working.length < minSegN * 2) {
     var single = _olsLogLog(working.map(function(d){return{x:Math.log10(d.x),y:Math.log10(d.y)};}), 0, working.length-1);
-    return { phases: single ? [single] : [], logPts: working.map(function(d){return{x:Math.log10(d.x),y:Math.log10(d.y)};}), source: working };
+    var phasesS = single ? _snapAndRefitContiguous([single], rawData) : [];
+    return { phases: phasesS, logPts: working.map(function(d){return{x:Math.log10(d.x),y:Math.log10(d.y)};}), source: working };
   }
   var logPts = working.map(function(d) { return { x: Math.log10(d.x), y: Math.log10(d.y) }; });
   var phases = _recursiveSplit(logPts, 0, { r2Threshold:threshold, minSegN:minSegN, maxDepth:maxDepth }, 0);
   phases = _mergeByBIC(phases, logPts, { maxPhases:maxPhases, deltaBic:deltaBic });
+  // Snap phase boundaries so they're contiguous in iteration space, then
+  // refit each phase using ALL linear data points (not just the log-resampled subset).
+  phases = _snapAndRefitContiguous(phases, rawData);
   return { phases: phases, logPts: logPts, source: working };
+}
+
+/* Split phase at index i into two halves at iteration `splitIter`. Refits each
+   half using all linear data in its range. */
+function splitPhase(i, splitIter) {
+  if (i < 0 || i >= currentPhases.length) return;
+  var p = currentPhases[i];
+  splitIter = Math.round(splitIter);
+  if (!isFinite(splitIter) || splitIter <= p.xStart || splitIter >= p.xEnd) return;
+  var left  = _fitRangeAllData(roughnessData, p.xStart, splitIter);
+  var right = _fitRangeAllData(roughnessData, splitIter + 1, p.xEnd);
+  if (!left || !right) return;
+  currentPhases = currentPhases.slice(0, i).concat([left, right], currentPhases.slice(i + 1));
+  persistPhases();
+  renderPhasesOnMain();
+  renderPhaseRows('phaseRows');
+  renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  refreshUniversalityBadge();
 }
 
 /* Persist current phases to localStorage via the v4 Store. */
@@ -617,6 +681,7 @@ function renderPhaseRows(targetId) {
         '<span class="phase-beta">β = <b>' + p.beta.toFixed(4) + '</b></span>' +
         '<span class="phase-r2">R² = ' + p.r2.toFixed(4) + '</span>' +
         '<span class="phase-n">n = ' + p.n + '</span>' +
+        '<button class="sm" data-split="' + i + '" title="Split this phase into two at a chosen iteration">split</button>' +
         (i < currentPhases.length - 1 ? '<button class="sm" data-merge="' + i + '">merge →</button>' : '<span class="phase-spacer"></span>') +
       '</div>';
   }
@@ -632,6 +697,24 @@ function renderPhaseRows(targetId) {
     var mb = rows[r].querySelector('button[data-merge]');
     if (mb) mb.addEventListener('click', function (e) {
       mergePhase(+e.target.getAttribute('data-merge'));
+    });
+    var sb = rows[r].querySelector('button[data-split]');
+    if (sb) sb.addEventListener('click', function (e) {
+      var pi = +e.target.getAttribute('data-split');
+      var phase = currentPhases[pi];
+      if (!phase) return;
+      var midpoint = Math.round((phase.xStart + phase.xEnd) / 2);
+      var input = prompt(
+        'Split phase ' + (pi + 1) + ' (iter ' + Math.round(phase.xStart) + '–' + Math.round(phase.xEnd) + ')\nat which iteration?',
+        String(midpoint)
+      );
+      if (input === null) return;
+      var splitAt = parseInt(input, 10);
+      if (!isFinite(splitAt) || splitAt <= phase.xStart || splitAt >= phase.xEnd) {
+        alert('Split iteration must be strictly inside the phase range.');
+        return;
+      }
+      splitPhase(pi, splitAt);
     });
   }
 }
@@ -703,13 +786,13 @@ function autoDetectPhases() {
   renderPhasesOnMain();
   renderPhaseRows('phaseRows');
   renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  refreshUniversalityBadge();
 }
 
-/* Apply manual edits from the phase-rows inputs. */
+/* Apply manual edits from the phase-rows inputs. Phases stay contiguous. */
 function applyManualPhases() {
   var rows = document.querySelectorAll('.phase-row');
   if (!rows.length) return;
-  // Read all inputs into ranges, sort by start.
   var ranges = [];
   rows.forEach(function (row) {
     var s = +row.querySelector('.phase-start').value;
@@ -717,14 +800,9 @@ function applyManualPhases() {
     if (s > 0 && e > s) ranges.push({ s:s, e:e });
   });
   ranges.sort(function(a, b) { return a.s - b.s; });
-  // Refit each range from raw data.
   var newPhases = [];
   for (var i = 0; i < ranges.length; i++) {
-    var r = ranges[i];
-    var pts = roughnessData.filter(function(d) { return d.x >= r.s && d.x <= r.e && d.y > 0; });
-    if (pts.length < 3) continue;
-    var logPts = pts.map(function(d) { return { x: Math.log10(d.x), y: Math.log10(d.y) }; });
-    var fit = _olsLogLog(logPts, 0, logPts.length - 1);
+    var fit = _fitRangeAllData(roughnessData, ranges[i].s, ranges[i].e);
     if (fit) newPhases.push(fit);
   }
   currentPhases = newPhases;
@@ -732,22 +810,21 @@ function applyManualPhases() {
   renderPhasesOnMain();
   renderPhaseRows('phaseRows');
   renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  refreshUniversalityBadge();
 }
 
-/* Merge phase i with phase i+1 and refit. */
+/* Merge phase i with phase i+1 and refit using all linear data in the union. */
 function mergePhase(i) {
   if (i < 0 || i >= currentPhases.length - 1) return;
   var a = currentPhases[i], b = currentPhases[i + 1];
-  var pts = roughnessData.filter(function(d) { return d.x >= a.xStart && d.x <= b.xEnd && d.y > 0; });
-  if (pts.length < 3) return;
-  var logPts = pts.map(function(d) { return { x: Math.log10(d.x), y: Math.log10(d.y) }; });
-  var merged = _olsLogLog(logPts, 0, logPts.length - 1);
+  var merged = _fitRangeAllData(roughnessData, a.xStart, b.xEnd);
   if (!merged) return;
   currentPhases = currentPhases.slice(0, i).concat([merged], currentPhases.slice(i + 2));
   persistPhases();
   renderPhasesOnMain();
   renderPhaseRows('phaseRows');
   renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  refreshUniversalityBadge();
 }
 
 function clearPhases() {
@@ -756,6 +833,45 @@ function clearPhases() {
   renderPhasesOnMain();
   renderPhaseRows('phaseRows');
   renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  refreshUniversalityBadge();
+}
+
+/* Match β against canonical universality classes. Prefers the asymptotic
+   phase β (last phase) when multi-phase data exists, falls back to the
+   live single-fit β otherwise. Updates the #findClass element so the
+   header readout stays consistent with the multi-phase analysis. */
+function refreshUniversalityBadge() {
+  var classEl = document.getElementById('findClass');
+  if (!classEl) return;
+  var bv = null, source = null;
+  if (currentPhases && currentPhases.length > 0) {
+    bv = currentPhases[currentPhases.length - 1].beta;
+    source = currentPhases.length === 1 ? 'fit' : 'asymptotic phase ' + currentPhases.length;
+  } else if (roughnessData && roughnessData.length >= 3) {
+    var fitMinEl = document.getElementById('fitMin');
+    var fitMaxEl = document.getElementById('fitMax');
+    var fitMin = fitMinEl ? +fitMinEl.value || 1 : 1;
+    var fitMax = fitMaxEl ? +fitMaxEl.value || Infinity : Infinity;
+    var f = fitPowerLaw(roughnessData, fitMin, fitMax);
+    if (f) { bv = f.beta; source = 'live fit'; }
+  }
+  if (bv === null) {
+    classEl.textContent = '—';
+    classEl.className = 'finding-value';
+    return;
+  }
+  var classes = [
+    { name: 'Random deposition', b: 0.5  },
+    { name: 'KPZ',               b: 0.333 },
+    { name: 'EW',                b: 0.25 }
+  ];
+  var best = classes[0], bestD = Math.abs(bv - classes[0].b);
+  for (var i = 1; i < classes.length; i++) {
+    var dd = Math.abs(bv - classes[i].b);
+    if (dd < bestD) { best = classes[i]; bestD = dd; }
+  }
+  classEl.textContent = best.name + ' (β=' + best.b + ', Δ=' + bestD.toFixed(3) + ', from ' + source + ')';
+  classEl.className = 'finding-value ' + (bestD < 0.03 ? 'match-good' : bestD < 0.08 ? 'match-close' : 'match-far');
 }
 
 /* Update lifetime histogram + nucleation/death rate charts.

@@ -307,16 +307,19 @@
 </div>
 
 <!-- COOKBOOK -->
-<div class="dash-card" style="margin-bottom:1rem">
-  <div class="card-hdr">
+<details class="dash-card cookbook-collapse" style="margin-bottom:1rem">
+  <summary class="cookbook-summary">
     <span class="card-label">Cookbook</span>
-    <span style="font-size:11px;color:var(--text-tertiary);font-family:'Space Mono',monospace">recipe-driven measurement workflow · replaces scripted sweeps</span>
+    <span class="cookbook-summary-meta">recipe-driven measurement workflow · <span id="cookbookSummaryStats">click to expand</span></span>
+    <span class="cookbook-summary-caret">▾</span>
+  </summary>
+  <div class="cookbook-body">
+    <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;padding:8px 0 12px">
+      Each entry is one measurable quantity. Configure parameters in the panel above, run the simulation, click <b>Capture from current run</b>, and the row fills itself in. Repeat with different parameter values. Once the table has enough rows, the auto-plot appears below it. State is saved per entry.
+    </div>
+    <div id="cookbookRoot" class="cookbook-root"></div>
   </div>
-  <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;padding:8px 0 12px">
-    Each entry is one measurable quantity. Configure parameters in the panel above, run the simulation, click <b>Capture from current run</b>, and the row fills itself in. Repeat with different parameter values. Once the table has enough rows, the auto-plot appears below it. State is saved per entry.
-  </div>
-  <div id="cookbookRoot" class="cookbook-root"></div>
-</div>
+</details>
 
 <!-- SINGLE RUN DASHBOARD -->
 <div class="dashboard" id="singleDash">
@@ -342,7 +345,10 @@
         <span class="card-label">Lattice Cross-Section</span>
         <button class="sm" id="viewCross" onclick="setView('cross')" style="background:var(--accent-subtle)">Cross-section</button>
         <button class="sm" id="viewHmap" onclick="setView('hmap')">Height map</button>
-        <label style="margin-left:auto">Zoom <input type="range" id="zoomSlider" min="1" max="8" value="2" step="1" oninput="applyZoom()"><span id="zoomVal">2x</span></label>
+        <label style="margin-left:auto;font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace;display:inline-flex;align-items:center;gap:4px;cursor:pointer" data-tip="Show persistent pit IDs (#N labels) on the cross-section. Useful when you want to follow one specific pit across iterations.">
+          <input type="checkbox" id="showPitIds" onchange="togglePitIds(this.checked)"> Pit IDs
+        </label>
+        <label>Zoom <input type="range" id="zoomSlider" min="1" max="8" value="2" step="1" oninput="applyZoom()"><span id="zoomVal">2x</span></label>
       </div>
       <div class="lattice-wrap" id="latticeWrap">
         <canvas id="latticeCanvas" width="500" height="150"></canvas>
@@ -419,7 +425,9 @@
         <span class="phase-controls">
           <button class="sm" type="button" onclick="autoDetectPhases()" data-tip="Run recursive bisection on log-log w(t). Default R²≥0.998, max 5 phases.">auto-detect</button>
           <button class="sm" type="button" onclick="clearPhases()">clear</button>
-          <label class="phase-toggle"><input type="checkbox" id="phaseLogResample"> log-spaced fit</label>
+          <label class="phase-toggle" data-tip="Pick ~14 log-spaced points from the data for the regression instead of using all 10000 linear points. Gives early-time data equal weight, which usually resolves more phases. The chart axes are already log-log either way — this only changes which points feed the fit.">
+            <input type="checkbox" id="phaseLogResample"> fairer to early-time data
+          </label>
           <span class="phase-tunable">R² ≥ <input type="number" id="phaseR2Thr" value="0.998" step="0.001" min="0.9" max="1"></span>
           <span class="phase-tunable">max <input type="number" id="phaseMax" value="5" min="1" max="6"></span>
         </span>

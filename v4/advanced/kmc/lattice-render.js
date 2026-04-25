@@ -8,6 +8,12 @@ var lastHtRaw = null;
 var lastFullHt = null;
 var viewMode = 'cross';
 var pitOverlayEnabled = true;
+var pitIdsVisible = false;
+
+function togglePitIds(checked) {
+  pitIdsVisible = !!checked;
+  if (typeof redrawLatticeWithPits === 'function') redrawLatticeWithPits();
+}
 
 function renderLattice(sliceBuffer, sliceH, lattx, targetCanvas, sliceStart) {
   lastSliceData = new Uint8Array(sliceBuffer.slice(0));
@@ -68,8 +74,8 @@ function drawPitOverlay(ctx, lattx, sliceH, sliceStart) {
     var h = Math.max(1, yHi - yLo + 1);
     ctx.strokeStyle = 'rgba(240,180,41,0.85)';
     ctx.strokeRect(x0 + 0.5, yLo + 0.5, w - 1, h - 1);
-    // Optional persistent ID label (rendered when present from tracking pass)
-    if (typeof p.id === 'number') {
+    // Persistent ID label (only when the user opts in via "Pit IDs" toggle).
+    if (pitIdsVisible && typeof p.id === 'number') {
       ctx.fillStyle = 'rgba(240,180,41,0.95)';
       ctx.font = '7px "Space Mono", monospace';
       ctx.textBaseline = 'top';
