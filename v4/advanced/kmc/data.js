@@ -4,18 +4,30 @@ var scalingData = [];
 try { scalingData = JSON.parse(localStorage.getItem('alexey_kmc_scaling') || '[]'); } catch(e) { scalingData = []; }
 var LOGBOOK_KEY = 'alexey_kmc_logbook';
 
-/* ── Pit Analysis ── */
+/* ── Pit Analysis ──
+   Methods:
+     'local-mean' (default) — depth measured against a rolling-window local mean,
+        window = windowPct * lattx. Robust against tilt and long-wavelength
+        curvature. Cutoff = local_mean(x) − k · local_σ(x).
+     'watershed' — find local minima of h(x); expand each outward until the
+        height returns to within ε of the surrounding mean. Topological pit
+        definition; threshold-free apart from min depth.
+     'sigma'  — global cutoff = mean − k · σ. (legacy, kept for comparison)
+     'range'  — global cutoff = mean − k · range. (legacy)
+     'slope'  — slope-based descent detector. (legacy)
+*/
 function analyzePits(htArray, opts) {
-  /* opts: { method:'sigma'|'range'|'slope', k:1.0, minWidth:3, gapMerge:2, slopeThresh:1.0 } */
   if (!opts) opts = {};
-  var method = opts.method || 'sigma';
+  var method = opts.method || 'local-mean';
   var k = opts.k !== undefined ? opts.k : 1.0;
   var minWidth = opts.minWidth !== undefined ? opts.minWidth : 3;
+  var minDepth = opts.minDepth !== undefined ? opts.minDepth : 0;
   var gapMerge = opts.gapMerge !== undefined ? opts.gapMerge : 2;
   var slopeThresh = opts.slopeThresh !== undefined ? opts.slopeThresh : 1.0;
+  var windowPct = opts.windowPct !== undefined ? opts.windowPct : 0.10;
 
   var n = htArray.length;
-  if (n === 0) return { pits: [], cutoff: 0, mean: 0, range: 0, sigma: 0 };
+  if (n === 0) return { pits: [], cutoff: 0, mean: 0, range: 0, sigma: 0, method: method };
 
   var sum = 0;
   for (var i = 0; i < n; i++) sum += htArray[i];
@@ -31,101 +43,204 @@ function analyzePits(htArray, opts) {
   }
   var sigma = Math.sqrt(m2 / n);
   var range = hMax - hMin;
-  if (range === 0) return { pits: [], cutoff: mean, mean: mean, range: 0, sigma: 0 };
+  if (range === 0) return { pits: [], cutoff: mean, mean: mean, range: 0, sigma: 0, method: method };
 
+  // ── Watershed branch is structurally different (no contiguous-below-cutoff scan).
+  if (method === 'watershed') {
+    var ws = _watershedPits(htArray, n, mean, { minDepth: Math.max(minDepth, 0.5), minWidth: minWidth });
+    return { pits: ws, cutoff: mean, mean: mean, range: range, sigma: sigma, method: method, windowPct: windowPct };
+  }
+
+  // ── Threshold-based branches build a per-column belowCutoff[] mask.
+  var belowCutoff = new Uint8Array(n);
   var cutoff;
-  var belowCutoff;
 
-  if (method === 'slope') {
-    // Slope-based: find pit regions by local gradient
-    // Compute forward difference gradient
+  if (method === 'local-mean') {
+    var w = Math.max(8, Math.round(windowPct * n));
+    if (w % 2 === 0) w++;
+    var halfW = (w - 1) >> 1;
+    // Sliding-window mean and σ with periodic wrap.
+    var localMean = new Float64Array(n);
+    var localSigma = new Float64Array(n);
+    // Initial window sum at i=0
+    var windowSum = 0, windowSqSum = 0;
+    for (var j = -halfW; j <= halfW; j++) {
+      var idx = ((j % n) + n) % n;
+      windowSum += htArray[idx];
+      windowSqSum += htArray[idx] * htArray[idx];
+    }
+    for (var i = 0; i < n; i++) {
+      var lm = windowSum / w;
+      var lv = windowSqSum / w - lm * lm;
+      if (lv < 0) lv = 0;
+      localMean[i] = lm;
+      localSigma[i] = Math.sqrt(lv);
+      // slide window forward by 1
+      var dropIdx = ((i - halfW) % n + n) % n;
+      var addIdx  = ((i + halfW + 1) % n + n) % n;
+      windowSum += htArray[addIdx] - htArray[dropIdx];
+      windowSqSum += htArray[addIdx] * htArray[addIdx] - htArray[dropIdx] * htArray[dropIdx];
+    }
+    for (var i = 0; i < n; i++) {
+      var localCut = localMean[i] - k * Math.max(localSigma[i], 0.5);
+      if (htArray[i] < localCut) belowCutoff[i] = 1;
+    }
+    cutoff = mean - k * sigma; // representative scalar for display
+  } else if (method === 'slope') {
     var grad = new Float64Array(n);
     for (var i = 0; i < n - 1; i++) grad[i] = htArray[i + 1] - htArray[i];
     grad[n - 1] = 0;
-
-    // Mark pit interiors: regions below mean where bounded by steep slopes
-    belowCutoff = new Uint8Array(n);
-    cutoff = mean; // pits must be below mean
-    var inDescent = false, descentStart = -1;
+    cutoff = mean;
     for (var i = 0; i < n; i++) {
-      if (grad[i] > slopeThresh) {
-        // steep ascending slope = potential right edge of pit
-        inDescent = false;
-      } else if (grad[i] < -slopeThresh) {
-        // steep descending slope = potential left edge of pit
-        if (!inDescent) { inDescent = true; descentStart = i; }
-      }
-      // Mark below-mean regions that follow a descent
       if (htArray[i] < mean) belowCutoff[i] = 1;
     }
   } else {
-    // Threshold-based methods
-    if (method === 'sigma') {
-      cutoff = mean - k * sigma;
-    } else {
-      cutoff = mean - k * range;
-    }
-    belowCutoff = new Uint8Array(n);
+    if (method === 'range') cutoff = mean - k * range;
+    else                    cutoff = mean - k * sigma; // 'sigma' default within this branch
     for (var i = 0; i < n; i++) {
       if (htArray[i] < cutoff) belowCutoff[i] = 1;
     }
   }
 
-  // Extract contiguous regions
+  // ── Extract contiguous below-cutoff runs.
   var rawPits = [];
-  var inPit = false, pitStart = 0, pitMinH = Infinity;
+  var inPit = false, pitStart = 0, pitMinH = Infinity, pitMinX = 0;
   for (var i = 0; i < n; i++) {
     if (belowCutoff[i]) {
-      if (!inPit) { inPit = true; pitStart = i; pitMinH = htArray[i]; }
-      if (htArray[i] < pitMinH) pitMinH = htArray[i];
+      if (!inPit) { inPit = true; pitStart = i; pitMinH = htArray[i]; pitMinX = i; }
+      if (htArray[i] < pitMinH) { pitMinH = htArray[i]; pitMinX = i; }
     } else {
       if (inPit) {
-        rawPits.push({ start: pitStart, end: i, width: i - pitStart, depth: mean - pitMinH, minH: pitMinH });
+        rawPits.push({ start: pitStart, end: i, width: i - pitStart, depth: mean - pitMinH, minH: pitMinH, minX: pitMinX });
         inPit = false;
       }
     }
   }
-  if (inPit) rawPits.push({ start: pitStart, end: n, width: n - pitStart, depth: mean - pitMinH, minH: pitMinH });
+  if (inPit) rawPits.push({ start: pitStart, end: n, width: n - pitStart, depth: mean - pitMinH, minH: pitMinH, minX: pitMinX });
 
-  // Merge pits separated by small gaps
+  // ── Merge pits separated by small gaps.
   var merged = [];
   for (var i = 0; i < rawPits.length; i++) {
     if (merged.length > 0) {
       var last = merged[merged.length - 1];
       var gap = rawPits[i].start - last.end;
       if (gap <= gapMerge) {
-        // Merge: extend last pit to include this one
         last.end = rawPits[i].end;
         last.width = last.end - last.start;
-        if (rawPits[i].minH < last.minH) last.minH = rawPits[i].minH;
+        if (rawPits[i].minH < last.minH) { last.minH = rawPits[i].minH; last.minX = rawPits[i].minX; }
         last.depth = mean - last.minH;
         continue;
       }
     }
-    merged.push({ start: rawPits[i].start, end: rawPits[i].end, width: rawPits[i].width, depth: rawPits[i].depth, minH: rawPits[i].minH });
+    merged.push({ start: rawPits[i].start, end: rawPits[i].end, width: rawPits[i].width, depth: rawPits[i].depth, minH: rawPits[i].minH, minX: rawPits[i].minX });
   }
 
-  // Filter by minimum width
+  // ── Filter by minimum width and depth.
   var pits = [];
   for (var i = 0; i < merged.length; i++) {
-    if (merged[i].width >= minWidth) {
-      pits.push({ start: merged[i].start, width: merged[i].width, depth: merged[i].depth });
+    if (merged[i].width >= minWidth && merged[i].depth >= minDepth) {
+      pits.push({ start: merged[i].start, width: merged[i].width, depth: merged[i].depth, minX: merged[i].minX, minH: merged[i].minH });
     }
   }
 
-  return { pits: pits, cutoff: cutoff, mean: mean, range: range, sigma: sigma, method: method };
+  return { pits: pits, cutoff: cutoff, mean: mean, range: range, sigma: sigma, method: method, windowPct: windowPct };
+}
+
+/* Watershed: find local minima, expand each outward until h returns to its
+   surrounding-mean reference. Pits do not overlap; each minimum gets its own basin. */
+function _watershedPits(htArray, n, globalMean, opts) {
+  var minDepth = opts.minDepth || 0.5;
+  var minWidth = opts.minWidth || 3;
+
+  // Find strict local minima (lower than both neighbours, with periodic wrap).
+  var minima = [];
+  for (var i = 0; i < n; i++) {
+    var prev = (i - 1 + n) % n;
+    var next = (i + 1) % n;
+    if (htArray[i] <= htArray[prev] && htArray[i] < htArray[next]) {
+      minima.push(i);
+    }
+  }
+  // Sort minima by height (deepest first) so we claim the floor before competing minima do.
+  minima.sort(function(a, b) { return htArray[a] - htArray[b]; });
+
+  var claimed = new Int32Array(n);
+  for (var k = 0; k < n; k++) claimed[k] = -1;
+  var pits = [];
+
+  for (var m = 0; m < minima.length; m++) {
+    var seedX = minima[m];
+    if (claimed[seedX] !== -1) continue;
+    var seedH = htArray[seedX];
+
+    // Expand left while heights stay non-increasing as we move outward
+    // (they should rise out of the basin). Stop when the height starts
+    // descending again (we'd be entering a different basin).
+    var L = seedX, R = seedX;
+    var leftDone = false, rightDone = false;
+    var prevLeftH = seedH, prevRightH = seedH;
+
+    while (!leftDone || !rightDone) {
+      if (!leftDone) {
+        var nL = (L - 1 + n) % n;
+        if (claimed[nL] !== -1 && claimed[nL] !== m) { leftDone = true; }
+        else if (htArray[nL] >= prevLeftH) { L = nL; prevLeftH = htArray[nL]; }
+        else { leftDone = true; }
+      }
+      if (!rightDone) {
+        var nR = (R + 1) % n;
+        if (claimed[nR] !== -1 && claimed[nR] !== m) { rightDone = true; }
+        else if (htArray[nR] >= prevRightH) { R = nR; prevRightH = htArray[nR]; }
+        else { rightDone = true; }
+      }
+      // Safety: stop if we've claimed everything (avoid infinite wrap).
+      if (((R - L + n) % n) >= n - 1) break;
+    }
+
+    // Compute pit metrics.
+    var rim = Math.max(prevLeftH, prevRightH);
+    var depth = rim - seedH;
+    var width;
+    if (R >= L) width = R - L + 1;
+    else width = (n - L) + R + 1; // wrapped
+    if (depth < minDepth || width < minWidth) continue;
+
+    // Mark claimed cells.
+    var x = L, count = 0;
+    while (true) {
+      claimed[x] = m;
+      if (x === R) break;
+      x = (x + 1) % n;
+      if (++count > n) break;
+    }
+
+    pits.push({ start: L, width: width, depth: depth, minX: seedX, minH: seedH, rim: rim });
+  }
+
+  // Sort pits by start for downstream code that assumes ordered output.
+  pits.sort(function(a, b) { return a.start - b.start; });
+  return pits;
 }
 
 function updatePitAnalysis() {
   if (!lastFullHt || lastFullHt.length === 0) return;
   var methodEl = document.getElementById('pitMethod');
-  var method = methodEl ? methodEl.value : 'sigma';
+  var method = methodEl ? methodEl.value : 'local-mean';
   var k = +(document.getElementById('pitThreshold').value) || 1.0;
   var minW = +(document.getElementById('pitMinWidth') || {}).value || 3;
+  var minD = +(document.getElementById('pitMinDepth') || {}).value || 0;
   var gapM = +(document.getElementById('pitGapMerge') || {}).value || 2;
   var slopeT = +(document.getElementById('pitSlopeThresh') || {}).value || 1.0;
-  var result = analyzePits(lastFullHt, { method: method, k: k, minWidth: minW, gapMerge: gapM, slopeThresh: slopeT });
+  var windowPctVal = +(document.getElementById('pitWindowPct') || {}).value;
+  var windowPct = (windowPctVal && windowPctVal > 0) ? (windowPctVal / 100) : 0.05;
+  var result = analyzePits(lastFullHt, {
+    method: method, k: k, minWidth: minW, minDepth: minD,
+    gapMerge: gapM, slopeThresh: slopeT, windowPct: windowPct
+  });
   var pits = result.pits;
+  // Make pits available to renderers (lattice overlay etc.)
+  window._currentPits = pits;
+  window._currentPitMethod = result.method;
 
   document.getElementById('pitCount').textContent = pits.length;
   if (pits.length > 0) {
@@ -144,6 +259,73 @@ function updatePitAnalysis() {
   }
   document.getElementById('pitCutoff').textContent = result.cutoff.toFixed(1) + (result.sigma > 0 ? ' (\u03C3=' + result.sigma.toFixed(2) + ')' : '');
   document.getElementById('pitMeanH').textContent = result.mean.toFixed(1);
+
+  // Pit depth histogram (Freedman-Diaconis binning, capped at 20 bins)
+  if (pitDepthHistChart) {
+    if (pits.length > 0) {
+      var depths = pits.map(function(p){ return p.depth; }).sort(function(a,b){return a-b;});
+      var dMin = depths[0], dMax = depths[depths.length-1];
+      var iqr = depths[Math.floor(depths.length*0.75)] - depths[Math.floor(depths.length*0.25)];
+      var fdW = iqr > 1e-6 ? 2 * iqr / Math.pow(depths.length, 1/3) : Math.max((dMax-dMin)/8, 0.5);
+      var nBinsD = Math.min(20, Math.max(4, Math.ceil((dMax - dMin) / fdW) || 4));
+      var binWD = (dMax - dMin) / nBinsD || 1;
+      var binsD = new Array(nBinsD).fill(0);
+      var labelsD = [];
+      for (var b = 0; b < nBinsD; b++) {
+        var lo = dMin + b * binWD;
+        var hi = dMin + (b + 1) * binWD;
+        labelsD.push(lo.toFixed(1) + '–' + hi.toFixed(1));
+      }
+      for (var i = 0; i < depths.length; i++) {
+        var bi = Math.min(nBinsD - 1, Math.floor((depths[i] - dMin) / binWD));
+        binsD[bi]++;
+      }
+      pitDepthHistChart.data.labels = labelsD;
+      pitDepthHistChart.data.datasets[0].data = binsD;
+      pitDepthHistChart.update();
+    } else {
+      pitDepthHistChart.data.labels = [];
+      pitDepthHistChart.data.datasets[0].data = [];
+      pitDepthHistChart.update();
+    }
+  }
+
+  // Width vs depth scatter, log-log, with power-law fit (depth ∝ width^p)
+  if (pitWvDChart) {
+    if (pits.length >= 3) {
+      var pts = pits.filter(function(p){ return p.width > 0 && p.depth > 0; })
+                    .map(function(p){ return { x: p.width, y: p.depth }; });
+      pitWvDChart.data.datasets[0].data = pts;
+      // OLS in log-log space → slope = exponent p
+      if (pts.length >= 3) {
+        var n = pts.length, sx=0, sy=0, sxy=0, sxx=0;
+        for (var i = 0; i < n; i++) {
+          var lx = Math.log10(pts[i].x), ly = Math.log10(pts[i].y);
+          sx += lx; sy += ly; sxy += lx*ly; sxx += lx*lx;
+        }
+        var den = n*sxx - sx*sx;
+        var p = den !== 0 ? (n*sxy - sx*sy) / den : null;
+        var ic = p !== null ? (sy - p*sx) / n : null;
+        if (p !== null && isFinite(p)) {
+          var xs = pts.map(function(d){return d.x;});
+          var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+          pitWvDChart.data.datasets[1].data = [
+            { x: xMin, y: Math.pow(10, ic + p*Math.log10(xMin)) },
+            { x: xMax, y: Math.pow(10, ic + p*Math.log10(xMax)) }
+          ];
+          var disp = document.getElementById('pitScalingDisp');
+          if (disp) disp.innerHTML = 'depth &prop; width<sup>p</sup>, p = <b>' + p.toFixed(3) + '</b>';
+        }
+      }
+      pitWvDChart.update();
+    } else {
+      pitWvDChart.data.datasets[0].data = [];
+      pitWvDChart.data.datasets[1].data = [];
+      pitWvDChart.update();
+      var disp2 = document.getElementById('pitScalingDisp');
+      if (disp2) disp2.innerHTML = 'depth &prop; width<sup>p</sup>, p = &mdash;';
+    }
+  }
 
   // Pit width histogram
   if (pitHistChart && pits.length > 0) {
@@ -192,6 +374,192 @@ function updatePitAnalysis() {
     pitSurfaceChart.data.datasets[2].data = threshY;
     pitSurfaceChart.update();
   }
+}
+
+/* ── Pit Tracking Across Time ────────────────────────────────────────────
+   linkPitsAcrossFrames matches pits between consecutive snapshots by
+   interval overlap (Jaccard ≥ threshold). Returns the current-frame pits
+   with .id assigned: existing IDs for matched pits, new IDs for newcomers.
+   Caller maintains a registry of {id → {birth, death, history[]}}. */
+
+var _nextPitId = 1;
+
+function linkPitsAcrossFrames(prevPits, currentPits, opts) {
+  if (!currentPits || !currentPits.length) return [];
+  opts = opts || {};
+  var threshold = opts.jaccard !== undefined ? opts.jaccard : 0.3;
+
+  if (!prevPits || !prevPits.length) {
+    // All current pits are newcomers.
+    for (var i = 0; i < currentPits.length; i++) {
+      currentPits[i].id = _nextPitId++;
+    }
+    return currentPits;
+  }
+
+  // Score every (prev, curr) pair.
+  var pairs = [];
+  for (var p = 0; p < prevPits.length; p++) {
+    var a = prevPits[p];
+    var aS = a.start, aE = a.start + a.width - 1, aW = a.width;
+    for (var c = 0; c < currentPits.length; c++) {
+      var b = currentPits[c];
+      var bS = b.start, bE = b.start + b.width - 1, bW = b.width;
+      var overlap = Math.min(aE, bE) - Math.max(aS, bS) + 1;
+      if (overlap <= 0) continue;
+      var jaccard = overlap / (aW + bW - overlap);
+      if (jaccard >= threshold) {
+        pairs.push({ prev: p, curr: c, score: jaccard });
+      }
+    }
+  }
+  // Greedy: pair best-scoring matches first.
+  pairs.sort(function(x, y) { return y.score - x.score; });
+  var prevTaken = new Uint8Array(prevPits.length);
+  var currTaken = new Uint8Array(currentPits.length);
+  for (var k = 0; k < pairs.length; k++) {
+    var pr = pairs[k];
+    if (prevTaken[pr.prev] || currTaken[pr.curr]) continue;
+    currentPits[pr.curr].id = prevPits[pr.prev].id;
+    prevTaken[pr.prev] = 1;
+    currTaken[pr.curr] = 1;
+  }
+  // Unmatched current pits get fresh IDs.
+  for (var i = 0; i < currentPits.length; i++) {
+    if (!currTaken[i]) currentPits[i].id = _nextPitId++;
+  }
+  return currentPits;
+}
+
+function resetPitTracking() { _nextPitId = 1; }
+
+/* ── Spatial statistics for pit centres ───────────────────────────────────
+   Periodic 1D: distance between two centres = min(|d|, lattx - |d|).
+   nearestNeighbourDistances → array of NN distances, one per pit.
+   pairwiseSeparations → all pairwise distances (use for histogram / g(r)). */
+function pitCentre(p) { return p.start + (p.width - 1) / 2; }
+
+function periodicDist(a, b, L) {
+  var d = Math.abs(a - b);
+  return Math.min(d, L - d);
+}
+
+function nearestNeighbourDistances(pits, lattx) {
+  if (!pits || pits.length < 2) return [];
+  var c = pits.map(pitCentre);
+  var dists = [];
+  for (var i = 0; i < c.length; i++) {
+    var best = Infinity;
+    for (var j = 0; j < c.length; j++) {
+      if (i === j) continue;
+      var d = periodicDist(c[i], c[j], lattx);
+      if (d < best) best = d;
+    }
+    dists.push(best);
+  }
+  return dists;
+}
+
+function pairwiseSeparations(pits, lattx) {
+  if (!pits || pits.length < 2) return [];
+  var c = pits.map(pitCentre);
+  var out = [];
+  for (var i = 0; i < c.length - 1; i++) {
+    for (var j = i + 1; j < c.length; j++) {
+      out.push(periodicDist(c[i], c[j], lattx));
+    }
+  }
+  return out;
+}
+
+/* Pair correlation g(r) for pit centres on a 1D periodic line.
+   g(r) = (counts in shell [r, r+dr]) / (expected counts for Poisson)
+   where expected = (2 · N · (N-1) / lattx) · dr  (factor 2 for both sides
+   on a 1D line; using min-image distance, effective shell length = 2·dr).
+   Returns { r:[...], g:[...] }. */
+function pairCorrelation(pits, lattx, opts) {
+  opts = opts || {};
+  var nBins = opts.nBins || 30;
+  var rMax = opts.rMax || (lattx / 2);
+  if (!pits || pits.length < 2) return { r: [], g: [] };
+  var dr = rMax / nBins;
+  var counts = new Array(nBins).fill(0);
+  var seps = pairwiseSeparations(pits, lattx);
+  for (var i = 0; i < seps.length; i++) {
+    if (seps[i] >= rMax) continue;
+    var bi = Math.min(nBins - 1, Math.floor(seps[i] / dr));
+    counts[bi]++;
+  }
+  var N = pits.length;
+  // Each separation contributes to one shell; normalise by expected count
+  // for a Poisson process at the same density (N pits in lattx sites,
+  // shell of width 2·dr in 1D periodic).
+  var density = N / lattx;
+  var r = [], g = [];
+  for (var b = 0; b < nBins; b++) {
+    var rMid = (b + 0.5) * dr;
+    var expected = N * (N - 1) * 2 * dr / lattx; // pairs in this shell for uniform random
+    var observed = counts[b] * 2; // each pair counted once → multiply by 2 to match expected
+    r.push(rMid);
+    g.push(expected > 0 ? observed / expected : 0);
+  }
+  return { r: r, g: g };
+}
+
+/* ── Pit Composition ──────────────────────────────────────────────────────
+   For each pit, look at the top N solid cells of every column inside the
+   pit's x range, count Ge atoms vs total. Returns:
+     { perPit:[{id, depth, geFrac, nCells}], poolGe, poolSi, refGeFrac }
+   refGeFrac is the same metric computed over columns OUTSIDE all pits, as
+   a baseline. Walls are sampled within depthSamples cells below ht[x]. */
+function pitComposition(pits, htArr, sliceData, sliceH, sliceStart, lattx, opts) {
+  if (!sliceData || !htArr || !lattx) return { perPit: [], refGeFrac: null, refN: 0 };
+  opts = opts || {};
+  var depthSamples = opts.depthSamples || 4;
+
+  function geFracInColumn(x) {
+    var ge = 0, total = 0;
+    var topZ = htArr[x] - 1;
+    for (var d = 0; d < depthSamples; d++) {
+      var z = topZ - d;
+      var zIdx = z - sliceStart;
+      if (zIdx < 0 || zIdx >= sliceH) continue;
+      var sp = sliceData[x * sliceH + zIdx];
+      if (sp === 2) { ge++; total++; }
+      else if (sp === 1) { total++; }
+    }
+    return { ge: ge, total: total };
+  }
+
+  var inPit = new Uint8Array(lattx);
+  for (var p = 0; p < pits.length; p++) {
+    for (var x = pits[p].start; x < pits[p].start + pits[p].width && x < lattx; x++) inPit[x] = 1;
+  }
+
+  var perPit = [];
+  for (var p = 0; p < pits.length; p++) {
+    var ge = 0, total = 0;
+    for (var x = pits[p].start; x < pits[p].start + pits[p].width && x < lattx; x++) {
+      var c = geFracInColumn(x);
+      ge += c.ge; total += c.total;
+    }
+    perPit.push({
+      id: pits[p].id,
+      depth: pits[p].depth,
+      width: pits[p].width,
+      geFrac: total > 0 ? ge / total : null,
+      nCells: total
+    });
+  }
+
+  // Reference: Ge fraction in columns NOT in any pit.
+  var refGe = 0, refN = 0;
+  for (var x = 0; x < lattx; x++) {
+    if (inPit[x]) continue;
+    var cc = geFracInColumn(x);
+    refGe += cc.ge; refN += cc.total;
+  }
+  return { perPit: perPit, refGeFrac: refN > 0 ? refGe / refN : null, refN: refN };
 }
 
 /* ── Scaling Exponents ── */

@@ -148,6 +148,9 @@ function injectExportButtons() {
 var roughnessChart = null, etchChart = null, surfaceChart = null, concChart = null;
 var statsChart = null, histChart = null;
 var pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = null;
+var pitDepthHistChart = null, pitWvDChart = null;
+var pitLifetimeChart = null, pitNucleationChart = null;
+var pitNNChart = null, pitGRChart = null, pitCompChart = null;
 var corrChart = null;
 var tswRoughChart = null, tswSkewChart = null, tswKurtChart = null;
 var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
@@ -260,6 +263,94 @@ function initCharts() {
     options: phOpts
   });
 
+  // Pit depth histogram
+  var pdOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pdOpts.scales.x.title = { display:true, text:'pit depth (lattice units)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pdOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitDepthHistChart = new Chart(document.getElementById('pitDepthHistChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(74,154,170,0.5)', borderWidth:0, borderRadius:2 }] },
+    options: pdOpts
+  });
+
+  // Pit width-vs-depth scatter (log-log) with power-law fit
+  var pwdOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pwdOpts.scales.x.type = 'logarithmic';
+  pwdOpts.scales.y.type = 'logarithmic';
+  pwdOpts.scales.x.title = { display:true, text:'pit width (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pwdOpts.scales.y.title = { display:true, text:'pit depth', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pwdOpts.plugins.legend = { display:false };
+  pitWvDChart = new Chart(document.getElementById('pitWvDChart'), {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'pits', data:[], borderColor:'rgba(226,75,74,0.8)', backgroundColor:'rgba(226,75,74,0.6)', borderWidth:0, pointRadius:3, showLine:false },
+      { label:'fit',  data:[], borderColor:'#f0b429', borderWidth:1.5, borderDash:[6,3], pointRadius:0, fill:false, showLine:true }
+    ]},
+    options: pwdOpts
+  });
+
+  // Pit lifetime histogram
+  var plOpts = JSON.parse(JSON.stringify(chartDefaults));
+  plOpts.scales.x.title = { display:true, text:'lifetime (iterations)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  plOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitLifetimeChart = new Chart(document.getElementById('pitLifetimeChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(160,106,216,0.55)', borderWidth:0, borderRadius:2 }] },
+    options: plOpts
+  });
+
+  // Nucleation + death rate vs iteration (smoothed line, dual series)
+  var pnOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pnOpts.scales.x.title = { display:true, text:'iteration', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pnOpts.scales.y.title = { display:true, text:'pits per window', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pnOpts.plugins.legend = { display:true, labels:{ color:'#7a9a7a', font:{family:'Space Mono',size:9}, boxWidth:12 } };
+  pitNucleationChart = new Chart(document.getElementById('pitNucleationChart'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'born',  data:[], borderColor:'#7dd87d', borderWidth:1.5, pointRadius:0, fill:false, tension:0.2 },
+      { label:'died',  data:[], borderColor:'#e24b4a', borderWidth:1.5, pointRadius:0, fill:false, tension:0.2 }
+    ]},
+    options: pnOpts
+  });
+
+  // Nearest-neighbour distance histogram
+  var nnOpts = JSON.parse(JSON.stringify(chartDefaults));
+  nnOpts.scales.x.title = { display:true, text:'NN distance (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  nnOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitNNChart = new Chart(document.getElementById('pitNNChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(110,192,221,0.55)', borderWidth:0, borderRadius:2 }] },
+    options: nnOpts
+  });
+
+  // Pair correlation g(r)
+  var grOpts = JSON.parse(JSON.stringify(chartDefaults));
+  grOpts.scales.x.title = { display:true, text:'r (sites)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  grOpts.scales.y.title = { display:true, text:'g(r)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  grOpts.plugins.legend = { display:false };
+  pitGRChart = new Chart(document.getElementById('pitGRChart'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'g(r)', data:[], borderColor:'#9aa6ff', borderWidth:1.5, pointRadius:0, fill:false, tension:0.2 },
+      { label:'baseline', data:[], borderColor:'rgba(120,120,120,0.4)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false }
+    ]},
+    options: grOpts
+  });
+
+  // Pit Ge fraction vs depth (scatter), with reference horizontal line
+  var pcOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pcOpts.scales.x.title = { display:true, text:'pit depth', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pcOpts.scales.y.title = { display:true, text:'Ge fraction in pit walls', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pcOpts.plugins.legend = { display:false };
+  pitCompChart = new Chart(document.getElementById('pitCompChart'), {
+    type:'scatter',
+    data:{ datasets:[
+      { label:'pits',     data:[], borderColor:'rgba(255,112,67,0.85)', backgroundColor:'rgba(255,112,67,0.6)', borderWidth:0, pointRadius:3, showLine:false },
+      { label:'baseline', data:[], borderColor:'rgba(120,120,120,0.5)', borderWidth:1, borderDash:[4,3], pointRadius:0, fill:false, showLine:true }
+    ]},
+    options: pcOpts
+  });
+
   // Pit-highlighted surface profile
   var psOpts = JSON.parse(JSON.stringify(chartDefaults));
   psOpts.scales.x.title = { display:true, text:'x', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
@@ -280,8 +371,8 @@ function initCharts() {
 }
 
 function destroyCharts() {
-  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitSurfaceChart, alphaChart, zChart, corrChart].forEach(function(c) { if(c) c.destroy(); });
-  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitSurfaceChart = alphaChart = zChart = corrChart = null;
+  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart, pitLifetimeChart, pitNucleationChart, pitNNChart, pitGRChart, pitCompChart].forEach(function(c) { if(c) c.destroy(); });
+  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = pitLifetimeChart = pitNucleationChart = pitNNChart = pitGRChart = pitCompChart = null;
 }
 
 function destroySweepCharts() {
@@ -300,7 +391,7 @@ function mkSweepChart(id, xLabel, yLabel, color) {
   });
 }
 
-/* Power-law regression on log-log data */
+/* Power-law regression on log-log data — single segment OLS. */
 function fitPowerLaw(data, xMin, xMax) {
   var valid = data.filter(function(d) { return d.x > 0 && d.y > 0; });
   if (xMin !== undefined && xMax !== undefined) {
@@ -316,6 +407,517 @@ function fitPowerLaw(data, xMin, xMax) {
   var beta = (n*sxy - sx*sy) / denom;
   var intercept = (sy - beta*sx) / n;
   return { beta: beta, intercept: intercept };
+}
+
+/* ───────────────────────── Multi-phase β analysis ─────────────────────────
+   Detect distinct linear regimes on log-log w(t) by recursive bisection,
+   then prune by BIC. Faithful to Fortran data; pure post-processing. */
+
+var PHASE_COLORS = ['#7dd87d', '#4a9aaa', '#f0b429', '#e24b4a', '#a06ad8'];
+var currentPhases = [];
+var phaseMiniCharts = [];
+var phaseLogResample = false;
+
+/* OLS in already-log-transformed space. Returns {beta, intercept, r2, sse, n, xStart, xEnd, idxStart, idxEnd}. */
+function _olsLogLog(logPts, idxStart, idxEnd) {
+  var n = logPts.length;
+  if (n < 3) return null;
+  var sx=0, sy=0, sxy=0, sxx=0;
+  for (var i = 0; i < n; i++) { sx += logPts[i].x; sy += logPts[i].y; sxy += logPts[i].x*logPts[i].y; sxx += logPts[i].x*logPts[i].x; }
+  var denom = n*sxx - sx*sx;
+  if (Math.abs(denom) < 1e-15) return null;
+  var beta = (n*sxy - sx*sy) / denom;
+  var intercept = (sy - beta*sx) / n;
+  var meanY = sy / n;
+  var ssTot = 0, sse = 0;
+  for (var j = 0; j < n; j++) {
+    var pred = intercept + beta * logPts[j].x;
+    sse += (logPts[j].y - pred) * (logPts[j].y - pred);
+    ssTot += (logPts[j].y - meanY) * (logPts[j].y - meanY);
+  }
+  var r2 = ssTot < 1e-15 ? 1 : 1 - sse / ssTot;
+  return {
+    beta: beta, intercept: intercept, r2: r2, sse: sse, n: n,
+    xStart: Math.pow(10, logPts[0].x), xEnd: Math.pow(10, logPts[n-1].x),
+    idxStart: idxStart, idxEnd: idxEnd
+  };
+}
+
+/* Pick log-spaced sample of original (non-log) data. Returns up to nTarget
+   points whose x-values approximate a geometric series. */
+function _logResample(rawData, nTarget) {
+  var valid = rawData.filter(function(d) { return d.x > 0 && d.y > 0; });
+  if (valid.length <= nTarget) return valid;
+  valid.sort(function(a, b) { return a.x - b.x; });
+  var xMin = valid[0].x, xMax = valid[valid.length - 1].x;
+  var logMin = Math.log10(xMin), logMax = Math.log10(xMax);
+  var seen = {}, picked = [];
+  for (var k = 0; k < nTarget; k++) {
+    var target = Math.pow(10, logMin + (logMax - logMin) * k / (nTarget - 1));
+    // find nearest valid point in log-space
+    var bestIdx = 0, bestDist = Infinity;
+    for (var i = 0; i < valid.length; i++) {
+      var d = Math.abs(Math.log10(valid[i].x) - Math.log10(target));
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    }
+    if (!seen[bestIdx]) { seen[bestIdx] = 1; picked.push(valid[bestIdx]); }
+  }
+  picked.sort(function(a, b) { return a.x - b.x; });
+  return picked;
+}
+
+/* Recursive top-down bisection. Splits at point of largest residual when
+   the segment R² is below threshold. Returns an array of segment fits. */
+function _recursiveSplit(logPts, idxOffset, opts, depth) {
+  var threshold = opts.r2Threshold;
+  var minSegN = opts.minSegN;
+  var maxDepth = opts.maxDepth;
+  var fit = _olsLogLog(logPts, idxOffset, idxOffset + logPts.length - 1);
+  if (!fit) return [];
+  if (fit.r2 >= threshold || logPts.length < minSegN * 2 || depth >= maxDepth) {
+    return [fit];
+  }
+  // largest-residual split candidate (avoid the endpoints)
+  var bestI = -1, bestRes = -1;
+  for (var i = minSegN; i < logPts.length - minSegN; i++) {
+    var pred = fit.intercept + fit.beta * logPts[i].x;
+    var res = Math.abs(logPts[i].y - pred);
+    if (res > bestRes) { bestRes = res; bestI = i; }
+  }
+  if (bestI < 0) return [fit];
+  var left  = _recursiveSplit(logPts.slice(0, bestI), idxOffset, opts, depth + 1);
+  var right = _recursiveSplit(logPts.slice(bestI), idxOffset + bestI, opts, depth + 1);
+  return left.concat(right);
+}
+
+/* BIC for a partitioning. Lower is better. n = total points across all phases. */
+function _bicForPhases(phases) {
+  var n = 0, sse = 0;
+  for (var i = 0; i < phases.length; i++) { n += phases[i].n; sse += phases[i].sse; }
+  if (n === 0) return Infinity;
+  // 2 free params per phase (slope + intercept), penalty ~ k·log(n).
+  var k = phases.length * 2;
+  return n * Math.log(sse / n) + k * Math.log(n);
+}
+
+/* Bottom-up merge: drop the split that raises BIC the least when undone.
+   Repeats while BIC drops or stays within deltaBic of current. Caps phases at maxPhases. */
+function _mergeByBIC(phases, allLogPts, opts) {
+  var maxPhases = opts.maxPhases;
+  var deltaBic = opts.deltaBic;
+  function refit(p) {
+    return _olsLogLog(allLogPts.slice(p.idxStart, p.idxEnd + 1), p.idxStart, p.idxEnd);
+  }
+  while (phases.length > 1) {
+    var curBIC = _bicForPhases(phases);
+    var bestIdx = -1, bestBIC = Infinity, bestMerged = null;
+    for (var i = 0; i < phases.length - 1; i++) {
+      var merged = _olsLogLog(
+        allLogPts.slice(phases[i].idxStart, phases[i+1].idxEnd + 1),
+        phases[i].idxStart, phases[i+1].idxEnd
+      );
+      if (!merged) continue;
+      var trial = phases.slice(0, i).concat([merged], phases.slice(i + 2));
+      var trialBIC = _bicForPhases(trial);
+      if (trialBIC < bestBIC) { bestBIC = trialBIC; bestIdx = i; bestMerged = merged; }
+    }
+    if (bestIdx < 0) break;
+    var improvesBIC = bestBIC <= curBIC + deltaBic;
+    var overCap = phases.length > maxPhases;
+    if (improvesBIC || overCap) {
+      phases = phases.slice(0, bestIdx).concat([bestMerged], phases.slice(bestIdx + 2));
+    } else {
+      break;
+    }
+  }
+  return phases;
+}
+
+/* Top-level: detect phases on raw {x, y} data. Returns {phases, logPts}. */
+function fitPhases(rawData, opts) {
+  opts = opts || {};
+  var threshold = opts.r2Threshold || 0.998;
+  var maxPhases = opts.maxPhases || 5;
+  var minSegN   = opts.minSegN   || 4;
+  var maxDepth  = opts.maxDepth  || 4;
+  var deltaBic  = opts.deltaBic  || 2;
+  var useLog    = !!opts.logResample;
+
+  var working = rawData.filter(function(d) { return d.x > 0 && d.y > 1e-6; });
+  working.sort(function(a, b) { return a.x - b.x; });
+  if (useLog) working = _logResample(working, 32);
+  if (working.length < minSegN * 2) {
+    var single = _olsLogLog(working.map(function(d){return{x:Math.log10(d.x),y:Math.log10(d.y)};}), 0, working.length-1);
+    return { phases: single ? [single] : [], logPts: working.map(function(d){return{x:Math.log10(d.x),y:Math.log10(d.y)};}), source: working };
+  }
+  var logPts = working.map(function(d) { return { x: Math.log10(d.x), y: Math.log10(d.y) }; });
+  var phases = _recursiveSplit(logPts, 0, { r2Threshold:threshold, minSegN:minSegN, maxDepth:maxDepth }, 0);
+  phases = _mergeByBIC(phases, logPts, { maxPhases:maxPhases, deltaBic:deltaBic });
+  return { phases: phases, logPts: logPts, source: working };
+}
+
+/* Persist current phases to localStorage via the v4 Store. */
+function persistPhases() {
+  if (typeof Store === 'undefined' || !currentPhases || !currentPhases.length) return;
+  var slim = currentPhases.map(function(p) {
+    return { xStart:p.xStart, xEnd:p.xEnd, beta:p.beta, intercept:p.intercept, r2:p.r2, n:p.n, idxStart:p.idxStart, idxEnd:p.idxEnd };
+  });
+  Store.set('kmc', 'phases', slim);
+}
+
+/* Render multi-phase fit lines onto the main roughness chart. Datasets:
+   [0] raw points (managed by updateCharts), [1] live single-fit line
+   (managed by refitBeta), [2..N] one phase line each (managed here). */
+function renderPhasesOnMain() {
+  if (!roughnessChart) return;
+  // Trim everything past dataset 1 (preserves raw + live single-fit)
+  while (roughnessChart.data.datasets.length > 2) {
+    roughnessChart.data.datasets.pop();
+  }
+  if (!currentPhases || currentPhases.length === 0) {
+    roughnessChart.update();
+    return;
+  }
+  for (var i = 0; i < currentPhases.length; i++) {
+    var p = currentPhases[i];
+    var color = PHASE_COLORS[i % PHASE_COLORS.length];
+    var x0 = p.xStart, x1 = p.xEnd;
+    var y0 = Math.pow(10, p.intercept + p.beta * Math.log10(x0));
+    var y1 = Math.pow(10, p.intercept + p.beta * Math.log10(x1));
+    roughnessChart.data.datasets.push({
+      label: 'phase ' + (i + 1),
+      data: [{ x:x0, y:y0 }, { x:x1, y:y1 }],
+      borderColor: color, borderWidth: 2.5,
+      pointRadius: 0, fill: false, tension: 0
+    });
+  }
+  roughnessChart.update();
+}
+
+/* Render the per-phase rows table into a target container. */
+function renderPhaseRows(targetId) {
+  var el = document.getElementById(targetId);
+  if (!el) return;
+  if (!currentPhases || !currentPhases.length) {
+    el.innerHTML = '<div style="padding:10px;color:var(--text-tertiary);font-size:11px;font-family:\'Space Mono\',monospace">no phases yet — click <b>auto-detect</b> after a run</div>';
+    return;
+  }
+  var html = '<div class="phase-rows">';
+  for (var i = 0; i < currentPhases.length; i++) {
+    var p = currentPhases[i];
+    var color = PHASE_COLORS[i % PHASE_COLORS.length];
+    html +=
+      '<div class="phase-row" data-phase="' + i + '">' +
+        '<span class="phase-swatch" style="background:' + color + '"></span>' +
+        '<span class="phase-label">phase ' + (i + 1) + '</span>' +
+        '<span class="phase-range">' +
+          'iter <input type="number" class="phase-start" value="' + Math.round(p.xStart) + '" min="1" data-phase="' + i + '"> ' +
+          '– <input type="number" class="phase-end"   value="' + Math.round(p.xEnd)   + '" min="1" data-phase="' + i + '">' +
+        '</span>' +
+        '<span class="phase-beta">β = <b>' + p.beta.toFixed(4) + '</b></span>' +
+        '<span class="phase-r2">R² = ' + p.r2.toFixed(4) + '</span>' +
+        '<span class="phase-n">n = ' + p.n + '</span>' +
+        (i < currentPhases.length - 1 ? '<button class="sm" data-merge="' + i + '">merge →</button>' : '<span class="phase-spacer"></span>') +
+      '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+  // Wire up edits
+  var rows = el.querySelectorAll('.phase-row');
+  for (var r = 0; r < rows.length; r++) {
+    var inputs = rows[r].querySelectorAll('input[type="number"]');
+    inputs.forEach(function (inp) {
+      inp.addEventListener('change', function () { applyManualPhases(); });
+    });
+    var mb = rows[r].querySelector('button[data-merge]');
+    if (mb) mb.addEventListener('click', function (e) {
+      mergePhase(+e.target.getAttribute('data-merge'));
+    });
+  }
+}
+
+/* Render small per-phase mini-charts. Destroys old ones first. */
+function renderPhaseMiniCharts(containerId, allRawData) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  // Destroy old mini charts
+  for (var k = 0; k < phaseMiniCharts.length; k++) {
+    if (phaseMiniCharts[k]) phaseMiniCharts[k].destroy();
+  }
+  phaseMiniCharts = [];
+  el.innerHTML = '';
+  if (!currentPhases || !currentPhases.length) return;
+
+  for (var i = 0; i < currentPhases.length; i++) {
+    var p = currentPhases[i];
+    var color = PHASE_COLORS[i % PHASE_COLORS.length];
+    var card = document.createElement('div');
+    card.className = 'phase-mini-card';
+    card.innerHTML =
+      '<div class="phase-mini-hdr">' +
+        '<span class="phase-mini-num" style="color:' + color + '">phase ' + (i + 1) + '</span>' +
+        '<span class="phase-mini-beta">β = ' + p.beta.toFixed(3) + '</span>' +
+        '<span class="phase-mini-r2">R² = ' + p.r2.toFixed(3) + '</span>' +
+      '</div>' +
+      '<canvas class="phase-mini-canvas"></canvas>';
+    el.appendChild(card);
+    var cvs = card.querySelector('canvas');
+    var pts = allRawData.filter(function(d){ return d.x >= p.xStart && d.x <= p.xEnd && d.y > 0; });
+    var fitLine = [
+      { x: p.xStart, y: Math.pow(10, p.intercept + p.beta * Math.log10(p.xStart)) },
+      { x: p.xEnd,   y: Math.pow(10, p.intercept + p.beta * Math.log10(p.xEnd))   }
+    ];
+    var inst = new Chart(cvs, {
+      type: 'line',
+      data: { datasets: [
+        { label:'data', data:pts, borderColor:color, backgroundColor:color, borderWidth:0, pointRadius:1.5, showLine:false },
+        { label:'fit',  data:fitLine, borderColor:color, borderWidth:2, pointRadius:0, fill:false, borderDash:[4,3] }
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+        plugins: { legend:{display:false}, tooltip:{enabled:false} },
+        scales: {
+          x: { type:'logarithmic', grid:{color:'rgba(60,160,60,0.06)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8},maxTicksLimit:4} },
+          y: { type:'logarithmic', grid:{color:'rgba(60,160,60,0.06)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8},maxTicksLimit:4} }
+        }
+      }
+    });
+    phaseMiniCharts.push(inst);
+  }
+}
+
+/* User-triggered: auto-detect phases on the current roughness data. */
+function autoDetectPhases() {
+  if (!roughnessData || roughnessData.length < 8) return;
+  var thrEl = document.getElementById('phaseR2Thr');
+  var maxEl = document.getElementById('phaseMax');
+  var logEl = document.getElementById('phaseLogResample');
+  var threshold = thrEl ? +thrEl.value || 0.998 : 0.998;
+  var maxPhases = maxEl ? +maxEl.value || 5 : 5;
+  phaseLogResample = logEl ? logEl.checked : false;
+  var result = fitPhases(roughnessData, {
+    r2Threshold: threshold, maxPhases: maxPhases, logResample: phaseLogResample
+  });
+  currentPhases = result.phases;
+  persistPhases();
+  renderPhasesOnMain();
+  renderPhaseRows('phaseRows');
+  renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+}
+
+/* Apply manual edits from the phase-rows inputs. */
+function applyManualPhases() {
+  var rows = document.querySelectorAll('.phase-row');
+  if (!rows.length) return;
+  // Read all inputs into ranges, sort by start.
+  var ranges = [];
+  rows.forEach(function (row) {
+    var s = +row.querySelector('.phase-start').value;
+    var e = +row.querySelector('.phase-end').value;
+    if (s > 0 && e > s) ranges.push({ s:s, e:e });
+  });
+  ranges.sort(function(a, b) { return a.s - b.s; });
+  // Refit each range from raw data.
+  var newPhases = [];
+  for (var i = 0; i < ranges.length; i++) {
+    var r = ranges[i];
+    var pts = roughnessData.filter(function(d) { return d.x >= r.s && d.x <= r.e && d.y > 0; });
+    if (pts.length < 3) continue;
+    var logPts = pts.map(function(d) { return { x: Math.log10(d.x), y: Math.log10(d.y) }; });
+    var fit = _olsLogLog(logPts, 0, logPts.length - 1);
+    if (fit) newPhases.push(fit);
+  }
+  currentPhases = newPhases;
+  persistPhases();
+  renderPhasesOnMain();
+  renderPhaseRows('phaseRows');
+  renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+}
+
+/* Merge phase i with phase i+1 and refit. */
+function mergePhase(i) {
+  if (i < 0 || i >= currentPhases.length - 1) return;
+  var a = currentPhases[i], b = currentPhases[i + 1];
+  var pts = roughnessData.filter(function(d) { return d.x >= a.xStart && d.x <= b.xEnd && d.y > 0; });
+  if (pts.length < 3) return;
+  var logPts = pts.map(function(d) { return { x: Math.log10(d.x), y: Math.log10(d.y) }; });
+  var merged = _olsLogLog(logPts, 0, logPts.length - 1);
+  if (!merged) return;
+  currentPhases = currentPhases.slice(0, i).concat([merged], currentPhases.slice(i + 2));
+  persistPhases();
+  renderPhasesOnMain();
+  renderPhaseRows('phaseRows');
+  renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+}
+
+function clearPhases() {
+  currentPhases = [];
+  if (typeof Store !== 'undefined') Store.remove('kmc', 'phases');
+  renderPhasesOnMain();
+  renderPhaseRows('phaseRows');
+  renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+}
+
+/* Update lifetime histogram + nucleation/death rate charts.
+   Reads pitRegistry, nucleationByIter, deathsByIter declared in app.js. */
+function updatePitTrackingCharts() {
+  if (typeof pitRegistry === 'undefined') return;
+  // ── Lifetime histogram ──
+  if (pitLifetimeChart) {
+    var lifetimes = [];
+    var ids = Object.keys(pitRegistry);
+    for (var i = 0; i < ids.length; i++) {
+      var rec = pitRegistry[ids[i]];
+      var death = rec.deathIter !== null ? rec.deathIter : rec.lastSeenIter;
+      var lt = death - rec.birthIter + 1;
+      if (lt > 0) lifetimes.push(lt);
+    }
+    var disp = document.getElementById('pitTrackedCount');
+    if (disp) disp.textContent = String(ids.length);
+    if (lifetimes.length >= 3) {
+      lifetimes.sort(function(a,b){return a-b;});
+      var ltMin = lifetimes[0], ltMax = lifetimes[lifetimes.length-1];
+      var iqr = lifetimes[Math.floor(lifetimes.length*0.75)] - lifetimes[Math.floor(lifetimes.length*0.25)];
+      var fdW = iqr > 0 ? 2 * iqr / Math.pow(lifetimes.length, 1/3) : Math.max((ltMax-ltMin)/8, 1);
+      var nBins = Math.min(20, Math.max(4, Math.ceil((ltMax - ltMin) / fdW) || 4));
+      var binW = (ltMax - ltMin) / nBins || 1;
+      var bins = new Array(nBins).fill(0);
+      var labels = [];
+      for (var b = 0; b < nBins; b++) {
+        var lo = ltMin + b * binW;
+        var hi = ltMin + (b + 1) * binW;
+        labels.push(Math.round(lo) + '–' + Math.round(hi));
+      }
+      for (var i2 = 0; i2 < lifetimes.length; i2++) {
+        var bi = Math.min(nBins - 1, Math.floor((lifetimes[i2] - ltMin) / binW));
+        bins[bi]++;
+      }
+      pitLifetimeChart.data.labels = labels;
+      pitLifetimeChart.data.datasets[0].data = bins;
+      pitLifetimeChart.update();
+    } else {
+      pitLifetimeChart.data.labels = [];
+      pitLifetimeChart.data.datasets[0].data = [];
+      pitLifetimeChart.update();
+    }
+  }
+  // ── Nucleation/death rate (windowed) ──
+  if (pitNucleationChart && typeof nucleationByIter !== 'undefined') {
+    var lastIter = nucleationByIter.length ? nucleationByIter[nucleationByIter.length-1].iter : 0;
+    var winSize = Math.max(1, Math.round(lastIter / 40)); // ~40 windows across the run
+    var bornAcc = {}, diedAcc = {};
+    for (var n = 0; n < nucleationByIter.length; n++) {
+      var w = Math.floor(nucleationByIter[n].iter / winSize) * winSize;
+      bornAcc[w] = (bornAcc[w] || 0) + nucleationByIter[n].count;
+    }
+    for (var n2 = 0; n2 < deathsByIter.length; n2++) {
+      var w2 = Math.floor(deathsByIter[n2].iter / winSize) * winSize;
+      diedAcc[w2] = (diedAcc[w2] || 0) + deathsByIter[n2].count;
+    }
+    var keys = Object.keys(bornAcc).map(Number).sort(function(a,b){return a-b;});
+    var bornData = keys.map(function(k){ return { x: k, y: bornAcc[k] }; });
+    var diedData = keys.map(function(k){ return { x: k, y: diedAcc[k] || 0 }; });
+    pitNucleationChart.data.datasets[0].data = bornData;
+    pitNucleationChart.data.datasets[1].data = diedData;
+    pitNucleationChart.update();
+  }
+}
+
+/* Refresh spatial-statistics + composition charts. Called from app.js
+   per worker iteration after trackPits(). */
+function updatePitSpatialAndCompositionCharts(lattx) {
+  var pits = window._currentPits || [];
+  // ── NN distance histogram ──
+  if (pitNNChart) {
+    var nn = (typeof nearestNeighbourDistances === 'function') ? nearestNeighbourDistances(pits, lattx) : [];
+    if (nn.length >= 3) {
+      nn.sort(function(a,b){return a-b;});
+      var nnMin = nn[0], nnMax = nn[nn.length-1];
+      var iqr = nn[Math.floor(nn.length*0.75)] - nn[Math.floor(nn.length*0.25)];
+      var fdW = iqr > 0 ? 2 * iqr / Math.pow(nn.length, 1/3) : Math.max((nnMax-nnMin)/8, 1);
+      var nBins = Math.min(20, Math.max(4, Math.ceil((nnMax - nnMin) / fdW) || 4));
+      var binW = (nnMax - nnMin) / nBins || 1;
+      var bins = new Array(nBins).fill(0);
+      var labels = [];
+      for (var b = 0; b < nBins; b++) {
+        var lo = nnMin + b * binW;
+        var hi = nnMin + (b + 1) * binW;
+        labels.push(Math.round(lo) + '–' + Math.round(hi));
+      }
+      for (var i = 0; i < nn.length; i++) {
+        var bi = Math.min(nBins - 1, Math.floor((nn[i] - nnMin) / binW));
+        bins[bi]++;
+      }
+      pitNNChart.data.labels = labels;
+      pitNNChart.data.datasets[0].data = bins;
+      pitNNChart.update();
+    } else {
+      pitNNChart.data.labels = [];
+      pitNNChart.data.datasets[0].data = [];
+      pitNNChart.update();
+    }
+  }
+
+  // ── Pair correlation g(r) ──
+  if (pitGRChart) {
+    if (pits.length >= 4) {
+      var pc = pairCorrelation(pits, lattx, { nBins: 30, rMax: lattx / 2 });
+      var grPts = [], basePts = [];
+      for (var k = 0; k < pc.r.length; k++) {
+        grPts.push({ x: pc.r[k], y: pc.g[k] });
+        basePts.push({ x: pc.r[k], y: 1 });
+      }
+      pitGRChart.data.datasets[0].data = grPts;
+      pitGRChart.data.datasets[1].data = basePts;
+      pitGRChart.update();
+    } else {
+      pitGRChart.data.datasets[0].data = [];
+      pitGRChart.data.datasets[1].data = [];
+      pitGRChart.update();
+    }
+  }
+
+  // ── Composition scatter ──
+  if (pitCompChart && typeof pitComposition === 'function') {
+    if (pits.length > 0 && typeof lastSliceData !== 'undefined' && lastSliceData && typeof lastFullHt !== 'undefined' && lastFullHt) {
+      var comp = pitComposition(pits, lastFullHt, lastSliceData, lastSliceH, lastSliceStart, lattx, { depthSamples: 4 });
+      var scatter = comp.perPit
+        .filter(function(c){ return c.geFrac !== null; })
+        .map(function(c){ return { x: c.depth, y: c.geFrac }; });
+      pitCompChart.data.datasets[0].data = scatter;
+      // Baseline horizontal line at refGeFrac
+      if (comp.refGeFrac !== null && scatter.length > 0) {
+        var xs = scatter.map(function(s){return s.x;});
+        var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+        pitCompChart.data.datasets[1].data = [
+          { x: xMin, y: comp.refGeFrac }, { x: xMax, y: comp.refGeFrac }
+        ];
+      } else {
+        pitCompChart.data.datasets[1].data = [];
+      }
+      var disp = document.getElementById('pitCompDisp');
+      if (disp) disp.textContent = comp.refGeFrac !== null
+        ? 'ref Ge = ' + comp.refGeFrac.toFixed(3) + ' (n=' + comp.refN + ')'
+        : 'ref = —';
+      pitCompChart.update();
+    } else {
+      pitCompChart.data.datasets[0].data = [];
+      pitCompChart.data.datasets[1].data = [];
+      pitCompChart.update();
+    }
+  }
+}
+
+/* Restore phases from localStorage when the page loads. */
+function restorePhases() {
+  if (typeof Store === 'undefined') return;
+  var saved = Store.get('kmc', 'phases');
+  if (saved && Array.isArray(saved) && saved.length) {
+    currentPhases = saved;
+    renderPhasesOnMain();
+    renderPhaseRows('phaseRows');
+    renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  }
 }
 
 function fitLogLogSlope(points) {

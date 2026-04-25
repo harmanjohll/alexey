@@ -4,6 +4,12 @@
 var currentMode = 'single';
 var running = false, pausedState = false, worker = null;
 
+/* Pit-tracking state. Filled by trackPits() each iteration. */
+var pitRegistry = {};       // id → { birthIter, lastSeenIter, deathIter|null, history:[{iter,width,depth,minX,start}] }
+var prevFramePits = null;   // last frame's pits, with .id set, for linking
+var nucleationByIter = [];  // array of { iter, count } — new pit IDs minted at each frame
+var deathsByIter = [];      // array of { iter, count } — pits that disappeared at each frame
+
 var PRESETS = {
   default: {theta:0.2,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:10000,niter2:100,lattx:512,lattz:2048,zstop:1843,zlo:1536,seed:-381791011},
   highGe: {theta:0.5,pdes:0.1,pge:1.0,psi:0.0,envt:0,esisi:-1.6835,esige:-1.534,egege:-1.365,esivc:0.37375,egevc:0.0,temp:500,niter1:10000,niter2:100,lattx:512,lattz:2048,zstop:1843,zlo:1536,seed:-381791011},
@@ -86,6 +92,55 @@ function setMode(m) {
   document.getElementById('dswDash').style.display = m === 'dsweep' ? '' : 'none';
 }
 
+/* Per-iteration pit tracking: link current pits to the previous frame
+   by interval overlap, then update the registry with births / deaths /
+   history. Drives the lifetime histogram and nucleation-rate chart. */
+function trackPits(iter) {
+  var current = window._currentPits || [];
+  // Make a shallow copy so we can attach .id without polluting source array.
+  var snap = current.map(function(p) {
+    return { start: p.start, width: p.width, depth: p.depth, minX: p.minX, minH: p.minH, rim: p.rim };
+  });
+  var linked = (typeof linkPitsAcrossFrames === 'function')
+    ? linkPitsAcrossFrames(prevFramePits, snap, { jaccard: 0.3 })
+    : snap;
+
+  // Update registry: births and history extension.
+  var seenThisFrame = {};
+  var nNew = 0;
+  for (var i = 0; i < linked.length; i++) {
+    var p = linked[i];
+    if (typeof p.id !== 'number') continue;
+    seenThisFrame[p.id] = 1;
+    if (!pitRegistry[p.id]) {
+      pitRegistry[p.id] = { birthIter: iter, lastSeenIter: iter, deathIter: null, history: [] };
+      nNew++;
+    } else {
+      pitRegistry[p.id].lastSeenIter = iter;
+    }
+    pitRegistry[p.id].history.push({ iter: iter, width: p.width, depth: p.depth, minX: p.minX, start: p.start });
+  }
+
+  // Mark deaths: previous-frame pits not seen this frame.
+  var nDeaths = 0;
+  if (prevFramePits) {
+    for (var j = 0; j < prevFramePits.length; j++) {
+      var pid = prevFramePits[j].id;
+      if (!seenThisFrame[pid] && pitRegistry[pid] && pitRegistry[pid].deathIter === null) {
+        pitRegistry[pid].deathIter = iter;
+        nDeaths++;
+      }
+    }
+  }
+
+  nucleationByIter.push({ iter: iter, count: nNew });
+  deathsByIter.push({ iter: iter, count: nDeaths });
+  prevFramePits = linked;
+
+  // Propagate IDs back to the array used by the lattice overlay so we see them.
+  for (var k = 0; k < current.length; k++) current[k].id = linked[k].id;
+}
+
 function startSim() {
   if (running) return;
   var params = readParams();
@@ -93,7 +148,11 @@ function startSim() {
   running = true; pausedState = false;
   roughnessData = []; etchDepthData = []; etchRateData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
   initialAveHt = null;
+  pitRegistry = {}; prevFramePits = null;
+  nucleationByIter = []; deathsByIter = [];
+  if (typeof resetPitTracking === 'function') resetPitTracking();
   destroyCharts(); initCharts();
+  if (typeof clearPhases === 'function') clearPhases();
   document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'Space Mono\',monospace;padding:20px">Running...</div>';
   setInputsEnabled(false);
   document.getElementById('runBtn').disabled = true;
@@ -125,7 +184,7 @@ function startSim() {
       document.getElementById('evBdf').textContent = d.events.bdiff.toLocaleString();
 
       updateCharts(d);
-      renderLattice(d.sliceData, d.sliceH, params.lattx);
+      renderLattice(d.sliceData, d.sliceH, params.lattx, null, d.sliceStart);
 
       // Etch stats
       var depth = etchDepthData.length > 0 ? etchDepthData[etchDepthData.length - 1].y : 0;
@@ -145,7 +204,11 @@ function startSim() {
         renderHeightMap(d.htRaw, params.lattx);
         if (lastFullHt) {
           updatePitAnalysis();
+          trackPits(d.iter);
           updateCorrelation();
+          if (typeof redrawLatticeWithPits === 'function') redrawLatticeWithPits();
+          if (typeof updatePitTrackingCharts === 'function') updatePitTrackingCharts();
+          if (typeof updatePitSpatialAndCompositionCharts === 'function') updatePitSpatialAndCompositionCharts(params.lattx);
         }
       }
 
@@ -162,6 +225,10 @@ function startSim() {
       document.getElementById('resumeBtn').style.display = 'none';
       setInputsEnabled(true);
       worker.terminate(); worker = null;
+      // Auto-detect phases on the completed roughness curve.
+      if (typeof autoDetectPhases === 'function' && roughnessData && roughnessData.length >= 8) {
+        try { autoDetectPhases(); } catch (e) { console.warn('phase detection failed', e); }
+      }
     }
   };
   worker.postMessage({ type: 'start', params: params });
@@ -300,4 +367,6 @@ document.addEventListener('DOMContentLoaded', function() {
   initCharts();
   updateScalingPlots();
   injectExportButtons();
+  if (typeof restorePhases === 'function') restorePhases();
+  if (typeof renderCookbook === 'function') renderCookbook();
 });
