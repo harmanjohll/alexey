@@ -465,6 +465,25 @@
     </div>
   </div>
 
+  <!-- Row 2b: Multi-phase β analysis (post-run) -->
+  <div class="dash-row wide">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Multi-phase β analysis</span>
+        <span class="phase-controls">
+          <button class="sm" type="button" onclick="autoDetectPhases()" data-tip="Run recursive bisection on log-log w(t). Default R²≥0.998, max 5 phases.">auto-detect</button>
+          <button class="sm" type="button" onclick="clearPhases()">clear</button>
+          <label class="phase-toggle"><input type="checkbox" id="phaseLogResample"> log-spaced fit</label>
+          <span class="phase-tunable">R² ≥ <input type="number" id="phaseR2Thr" value="0.998" step="0.001" min="0.9" max="1"></span>
+          <span class="phase-tunable">max <input type="number" id="phaseMax" value="5" min="1" max="6"></span>
+        </span>
+      </div>
+      <div class="phase-help">Each phase is a linear regime on log w(t) vs log t. β is the slope. Edit any phase's start/end iteration to refit. Click "merge →" to combine two adjacent phases. The mini-charts below isolate one phase each.</div>
+      <div id="phaseRows"></div>
+      <div id="phaseMiniCharts" class="phase-mini-grid"></div>
+    </div>
+  </div>
+
   <!-- Row 3: Stats evolution + Height distribution -->
   <div class="dash-row">
     <div class="dash-card">
@@ -762,6 +781,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="../../_common/theme.js"></script>
+<script src="../../_common/store.js"></script>
 <script src="lattice-render.js"></script>
 <script src="charts.js"></script>
 <script src="data.js"></script>

@@ -94,6 +94,7 @@ function startSim() {
   roughnessData = []; etchDepthData = []; etchRateData = []; rmsHistory = []; skewHistory = []; kurtHistory = [];
   initialAveHt = null;
   destroyCharts(); initCharts();
+  if (typeof clearPhases === 'function') clearPhases();
   document.getElementById('snapStrip').innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);font-family:\'Space Mono\',monospace;padding:20px">Running...</div>';
   setInputsEnabled(false);
   document.getElementById('runBtn').disabled = true;
@@ -162,6 +163,10 @@ function startSim() {
       document.getElementById('resumeBtn').style.display = 'none';
       setInputsEnabled(true);
       worker.terminate(); worker = null;
+      // Auto-detect phases on the completed roughness curve.
+      if (typeof autoDetectPhases === 'function' && roughnessData && roughnessData.length >= 8) {
+        try { autoDetectPhases(); } catch (e) { console.warn('phase detection failed', e); }
+      }
     }
   };
   worker.postMessage({ type: 'start', params: params });
@@ -300,4 +305,5 @@ document.addEventListener('DOMContentLoaded', function() {
   initCharts();
   updateScalingPlots();
   injectExportButtons();
+  if (typeof restorePhases === 'function') restorePhases();
 });
