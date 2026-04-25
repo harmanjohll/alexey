@@ -594,6 +594,21 @@
     </div>
   </div>
 
+  <!-- Row 5c: Pit tracking — lifetime distribution + nucleation rate -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Pit Lifetime Distribution</span>
+        <span class="beta-display" id="pitLifetimeDisp" data-tip="Pits matched across frames by ≥30% interval overlap. Lifetime = death_iter − birth_iter. Ongoing pits use last-seen as a lower bound.">tracked: <span id="pitTrackedCount">0</span></span>
+      </div>
+      <div class="chart-wrap"><canvas id="pitLifetimeChart"></canvas></div>
+    </div>
+    <div class="dash-card">
+      <div class="card-label">Nucleation &amp; Death Rate vs Iteration</div>
+      <div class="chart-wrap"><canvas id="pitNucleationChart"></canvas></div>
+    </div>
+  </div>
+
   <!-- Row 6: Pit surface + Scaling Exponents -->
   <div class="dash-row">
     <div class="dash-card">

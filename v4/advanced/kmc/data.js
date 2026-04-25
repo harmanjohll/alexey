@@ -376,6 +376,63 @@ function updatePitAnalysis() {
   }
 }
 
+/* ── Pit Tracking Across Time ────────────────────────────────────────────
+   linkPitsAcrossFrames matches pits between consecutive snapshots by
+   interval overlap (Jaccard ≥ threshold). Returns the current-frame pits
+   with .id assigned: existing IDs for matched pits, new IDs for newcomers.
+   Caller maintains a registry of {id → {birth, death, history[]}}. */
+
+var _nextPitId = 1;
+
+function linkPitsAcrossFrames(prevPits, currentPits, opts) {
+  if (!currentPits || !currentPits.length) return [];
+  opts = opts || {};
+  var threshold = opts.jaccard !== undefined ? opts.jaccard : 0.3;
+
+  if (!prevPits || !prevPits.length) {
+    // All current pits are newcomers.
+    for (var i = 0; i < currentPits.length; i++) {
+      currentPits[i].id = _nextPitId++;
+    }
+    return currentPits;
+  }
+
+  // Score every (prev, curr) pair.
+  var pairs = [];
+  for (var p = 0; p < prevPits.length; p++) {
+    var a = prevPits[p];
+    var aS = a.start, aE = a.start + a.width - 1, aW = a.width;
+    for (var c = 0; c < currentPits.length; c++) {
+      var b = currentPits[c];
+      var bS = b.start, bE = b.start + b.width - 1, bW = b.width;
+      var overlap = Math.min(aE, bE) - Math.max(aS, bS) + 1;
+      if (overlap <= 0) continue;
+      var jaccard = overlap / (aW + bW - overlap);
+      if (jaccard >= threshold) {
+        pairs.push({ prev: p, curr: c, score: jaccard });
+      }
+    }
+  }
+  // Greedy: pair best-scoring matches first.
+  pairs.sort(function(x, y) { return y.score - x.score; });
+  var prevTaken = new Uint8Array(prevPits.length);
+  var currTaken = new Uint8Array(currentPits.length);
+  for (var k = 0; k < pairs.length; k++) {
+    var pr = pairs[k];
+    if (prevTaken[pr.prev] || currTaken[pr.curr]) continue;
+    currentPits[pr.curr].id = prevPits[pr.prev].id;
+    prevTaken[pr.prev] = 1;
+    currTaken[pr.curr] = 1;
+  }
+  // Unmatched current pits get fresh IDs.
+  for (var i = 0; i < currentPits.length; i++) {
+    if (!currTaken[i]) currentPits[i].id = _nextPitId++;
+  }
+  return currentPits;
+}
+
+function resetPitTracking() { _nextPitId = 1; }
+
 /* ── Scaling Exponents ── */
 function renderScalingTable() {
   var tbl = document.getElementById('scalingTable');

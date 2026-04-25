@@ -149,6 +149,7 @@ var roughnessChart = null, etchChart = null, surfaceChart = null, concChart = nu
 var statsChart = null, histChart = null;
 var pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = null;
 var pitDepthHistChart = null, pitWvDChart = null;
+var pitLifetimeChart = null, pitNucleationChart = null;
 var corrChart = null;
 var tswRoughChart = null, tswSkewChart = null, tswKurtChart = null;
 var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
@@ -287,6 +288,30 @@ function initCharts() {
     options: pwdOpts
   });
 
+  // Pit lifetime histogram
+  var plOpts = JSON.parse(JSON.stringify(chartDefaults));
+  plOpts.scales.x.title = { display:true, text:'lifetime (iterations)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  plOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pitLifetimeChart = new Chart(document.getElementById('pitLifetimeChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(160,106,216,0.55)', borderWidth:0, borderRadius:2 }] },
+    options: plOpts
+  });
+
+  // Nucleation + death rate vs iteration (smoothed line, dual series)
+  var pnOpts = JSON.parse(JSON.stringify(chartDefaults));
+  pnOpts.scales.x.title = { display:true, text:'iteration', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pnOpts.scales.y.title = { display:true, text:'pits per window', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  pnOpts.plugins.legend = { display:true, labels:{ color:'#7a9a7a', font:{family:'Space Mono',size:9}, boxWidth:12 } };
+  pitNucleationChart = new Chart(document.getElementById('pitNucleationChart'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'born',  data:[], borderColor:'#7dd87d', borderWidth:1.5, pointRadius:0, fill:false, tension:0.2 },
+      { label:'died',  data:[], borderColor:'#e24b4a', borderWidth:1.5, pointRadius:0, fill:false, tension:0.2 }
+    ]},
+    options: pnOpts
+  });
+
   // Pit-highlighted surface profile
   var psOpts = JSON.parse(JSON.stringify(chartDefaults));
   psOpts.scales.x.title = { display:true, text:'x', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
@@ -307,8 +332,8 @@ function initCharts() {
 }
 
 function destroyCharts() {
-  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart].forEach(function(c) { if(c) c.destroy(); });
-  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = null;
+  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart, pitLifetimeChart, pitNucleationChart].forEach(function(c) { if(c) c.destroy(); });
+  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = pitLifetimeChart = pitNucleationChart = null;
 }
 
 function destroySweepCharts() {
@@ -692,6 +717,71 @@ function clearPhases() {
   renderPhasesOnMain();
   renderPhaseRows('phaseRows');
   renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+}
+
+/* Update lifetime histogram + nucleation/death rate charts.
+   Reads pitRegistry, nucleationByIter, deathsByIter declared in app.js. */
+function updatePitTrackingCharts() {
+  if (typeof pitRegistry === 'undefined') return;
+  // ── Lifetime histogram ──
+  if (pitLifetimeChart) {
+    var lifetimes = [];
+    var ids = Object.keys(pitRegistry);
+    for (var i = 0; i < ids.length; i++) {
+      var rec = pitRegistry[ids[i]];
+      var death = rec.deathIter !== null ? rec.deathIter : rec.lastSeenIter;
+      var lt = death - rec.birthIter + 1;
+      if (lt > 0) lifetimes.push(lt);
+    }
+    var disp = document.getElementById('pitTrackedCount');
+    if (disp) disp.textContent = String(ids.length);
+    if (lifetimes.length >= 3) {
+      lifetimes.sort(function(a,b){return a-b;});
+      var ltMin = lifetimes[0], ltMax = lifetimes[lifetimes.length-1];
+      var iqr = lifetimes[Math.floor(lifetimes.length*0.75)] - lifetimes[Math.floor(lifetimes.length*0.25)];
+      var fdW = iqr > 0 ? 2 * iqr / Math.pow(lifetimes.length, 1/3) : Math.max((ltMax-ltMin)/8, 1);
+      var nBins = Math.min(20, Math.max(4, Math.ceil((ltMax - ltMin) / fdW) || 4));
+      var binW = (ltMax - ltMin) / nBins || 1;
+      var bins = new Array(nBins).fill(0);
+      var labels = [];
+      for (var b = 0; b < nBins; b++) {
+        var lo = ltMin + b * binW;
+        var hi = ltMin + (b + 1) * binW;
+        labels.push(Math.round(lo) + '–' + Math.round(hi));
+      }
+      for (var i2 = 0; i2 < lifetimes.length; i2++) {
+        var bi = Math.min(nBins - 1, Math.floor((lifetimes[i2] - ltMin) / binW));
+        bins[bi]++;
+      }
+      pitLifetimeChart.data.labels = labels;
+      pitLifetimeChart.data.datasets[0].data = bins;
+      pitLifetimeChart.update();
+    } else {
+      pitLifetimeChart.data.labels = [];
+      pitLifetimeChart.data.datasets[0].data = [];
+      pitLifetimeChart.update();
+    }
+  }
+  // ── Nucleation/death rate (windowed) ──
+  if (pitNucleationChart && typeof nucleationByIter !== 'undefined') {
+    var lastIter = nucleationByIter.length ? nucleationByIter[nucleationByIter.length-1].iter : 0;
+    var winSize = Math.max(1, Math.round(lastIter / 40)); // ~40 windows across the run
+    var bornAcc = {}, diedAcc = {};
+    for (var n = 0; n < nucleationByIter.length; n++) {
+      var w = Math.floor(nucleationByIter[n].iter / winSize) * winSize;
+      bornAcc[w] = (bornAcc[w] || 0) + nucleationByIter[n].count;
+    }
+    for (var n2 = 0; n2 < deathsByIter.length; n2++) {
+      var w2 = Math.floor(deathsByIter[n2].iter / winSize) * winSize;
+      diedAcc[w2] = (diedAcc[w2] || 0) + deathsByIter[n2].count;
+    }
+    var keys = Object.keys(bornAcc).map(Number).sort(function(a,b){return a-b;});
+    var bornData = keys.map(function(k){ return { x: k, y: bornAcc[k] }; });
+    var diedData = keys.map(function(k){ return { x: k, y: diedAcc[k] || 0 }; });
+    pitNucleationChart.data.datasets[0].data = bornData;
+    pitNucleationChart.data.datasets[1].data = diedData;
+    pitNucleationChart.update();
+  }
 }
 
 /* Restore phases from localStorage when the page loads. */
