@@ -184,6 +184,25 @@ function renderCookbook() {
   for (var i = 0; i < COOKBOOK_ENTRIES.length; i++) {
     root.appendChild(renderCookbookCard(COOKBOOK_ENTRIES[i]));
   }
+  refreshCookbookSummary();
+}
+
+/* Update the collapsed-panel summary line with live entry-count stats. */
+function refreshCookbookSummary() {
+  var stats = document.getElementById('cookbookSummaryStats');
+  if (!stats) return;
+  var totalEntries = COOKBOOK_ENTRIES.length;
+  var withRows = 0, totalRows = 0;
+  for (var i = 0; i < COOKBOOK_ENTRIES.length; i++) {
+    var rows = getCookbookRows(COOKBOOK_ENTRIES[i].id);
+    if (rows.length > 0) withRows++;
+    totalRows += rows.length;
+  }
+  if (totalRows === 0) {
+    stats.textContent = totalEntries + ' entries · click to expand';
+  } else {
+    stats.textContent = totalRows + ' rows across ' + withRows + '/' + totalEntries + ' entries · click to expand';
+  }
 }
 
 function renderCookbookCard(entry) {
@@ -360,6 +379,7 @@ function handleCookbookAction(entry, action) {
     setCookbookRows(entry.id, rows.concat(seeded));
   }
   refreshCookbookCard(entry);
+  refreshCookbookSummary();
 }
 
 /* Lightweight Chart.js plot per entry. Rebuilt every refresh. */
