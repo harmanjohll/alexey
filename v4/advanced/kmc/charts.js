@@ -187,12 +187,10 @@ function mkChart(id, label, xLabel, yLabel, color, scaleType) {
 }
 
 function initCharts() {
-  roughnessChart = mkChart('roughnessChart', 'RMS', 'iteration', 'RMS roughness', '#7dd87d', 'log');
-  // Dataset 1: fit line within the selected range
-  roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:2, borderDash:[6,3], pointRadius:0, fill:false });
-  roughnessChart.options.plugins.legend = { display:false };
-  // Apply persisted axis-mode preference (defaults to 'log-data')
-  _applyAxisMode(roughnessChart, roughnessAxisMode);
+  // Build the roughness chart fresh in the current axis mode (default
+  // 'log-data'). Avoids post-construction scale mutation that crashes
+  // Chart.js v4 with a stack overflow.
+  _buildRoughnessChart(roughnessAxisMode);
 
   // Etch depth & rate (dual y-axis)
   var eOpts = JSON.parse(JSON.stringify(chartDefaults));
@@ -293,15 +291,8 @@ function initCharts() {
     options: pwdOpts
   });
 
-  // Pit lifetime histogram (log-spaced bins, log-y by default)
-  var plOpts = JSON.parse(JSON.stringify(chartDefaults));
-  plOpts.scales.x.title = { display:true, text:'lifetime (iterations)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
-  plOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
-  pitLifetimeChart = new Chart(document.getElementById('pitLifetimeChart'), {
-    type:'bar',
-    data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(160,106,216,0.55)', borderWidth:0, borderRadius:2 }] },
-    options: plOpts
-  });
+  // Pit lifetime histogram (log-y default; rebuilt on toggle)
+  _buildLifetimeChart(lifetimeYScale);
 
   // Pit survival by birth-iteration band
   var psOpts = JSON.parse(JSON.stringify(chartDefaults));
@@ -452,18 +443,42 @@ function _logTickCallback(value) {
 }
 
 function _applyAxisMode(chart, mode) {
-  if (!chart || !chart.options || !chart.options.scales) return;
-  var sc = chart.options.scales;
+  // Chart.js v4 cannot safely mutate scales.x/y.type after construction —
+  // the scale class is fixed at build time. Use _buildRoughnessChart instead.
+  // Kept as a no-op for safety; all real axis swaps go through setAxisMode.
+}
+
+/* Build (or rebuild) the roughness chart with the given axis mode.
+   Destroys any existing instance, recreates with fresh scale config,
+   re-feeds roughnessData and any phase fit lines. */
+function _buildRoughnessChart(mode) {
+  if (roughnessChart) { try { roughnessChart.destroy(); } catch (e) {} roughnessChart = null; }
+  var canvas = document.getElementById('roughnessChart');
+  if (!canvas) return null;
+
+  var xScale = { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'iteration',color:'#4a6a4a',font:{family:'Space Mono',size:9}} };
+  var yScale = { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'RMS roughness',color:'#4a6a4a',font:{family:'Space Mono',size:9}} };
   if (mode === 'linear') {
-    sc.x.type = 'linear'; sc.y.type = 'linear';
-    if (sc.x.ticks) delete sc.x.ticks.callback;
-    if (sc.y.ticks) delete sc.y.ticks.callback;
+    xScale.type = 'linear'; yScale.type = 'linear';
   } else {
-    sc.x.type = 'logarithmic'; sc.y.type = 'logarithmic';
+    xScale.type = 'logarithmic'; yScale.type = 'logarithmic';
     var cb = (mode === 'log-log10') ? _logTickCallback : _decadeTickCallback;
-    sc.x.ticks = sc.x.ticks || {}; sc.x.ticks.callback = cb;
-    sc.y.ticks = sc.y.ticks || {}; sc.y.ticks.callback = cb;
+    xScale.ticks.callback = cb; yScale.ticks.callback = cb;
   }
+
+  roughnessChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: [], datasets: [
+      { label: 'RMS', data: roughnessData ? roughnessData.slice() : [], borderColor: '#7dd87d', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
+      { label: 'fit', data: [], borderColor: '#f0b429', borderWidth: 2, borderDash: [6,3], pointRadius: 0, fill: false }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor:'#111a11', borderColor:'rgba(60,160,60,0.3)', borderWidth:1, titleColor:'#e8f0e8', bodyColor:'#7a9a7a', titleFont:{family:'Space Mono',size:10}, bodyFont:{family:'Space Mono',size:10} } },
+      scales: { x: xScale, y: yScale }
+    }
+  });
+  return roughnessChart;
 }
 
 function setAxisMode(mode) {
@@ -481,14 +496,21 @@ function setAxisMode(mode) {
       cap.innerHTML = 'On <b>log-log axes</b>, a power law w &prop; t<sup>β</sup> plots as a straight line. β is the slope — the steeper the line, the faster the surface roughens.';
     }
   }
-  // Apply to roughness chart
-  if (roughnessChart) {
-    _applyAxisMode(roughnessChart, mode);
-    roughnessChart.update();
-  }
+  // Rebuild the roughness chart with the new scale type (mutating scale.type
+  // on a live chart is not safe in Chart.js v4 — destroy + recreate is the
+  // robust path).
+  if (typeof _buildRoughnessChart === 'function') _buildRoughnessChart(mode);
   // Re-render mini-charts so they pick up the new mode
   if (typeof renderPhaseMiniCharts === 'function') {
     renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  }
+  // Re-apply current single fit line if any
+  if (typeof refitBeta === 'function' && roughnessData && roughnessData.length >= 3) {
+    try { refitBeta(); } catch (e) {}
+  }
+  // Re-render multi-phase fit lines if currentPhases exist
+  if (typeof renderPhasesOnMain === 'function' && currentPhases && currentPhases.length) {
+    renderPhasesOnMain();
   }
 }
 
@@ -976,13 +998,39 @@ function refreshUniversalityBadge() {
   classEl.className = 'finding-value ' + (bestD < 0.03 ? 'match-good' : bestD < 0.08 ? 'match-close' : 'match-far');
 }
 
+/* Build (or rebuild) the lifetime histogram with the given y-scale type. */
+function _buildLifetimeChart(yMode) {
+  if (pitLifetimeChart) { try { pitLifetimeChart.destroy(); } catch (e) {} pitLifetimeChart = null; }
+  var canvas = document.getElementById('pitLifetimeChart');
+  if (!canvas) return null;
+  var prevLabels = [], prevData = [];
+  // Preserve current data if any (when called via setLifetimeYScale)
+  // We can't read it back from the destroyed chart; will be repopulated
+  // by the next updatePitTrackingCharts() call.
+  var yScale = { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'count',color:'#4a6a4a',font:{family:'Space Mono',size:9}} };
+  if (yMode === 'log') yScale.type = 'logarithmic';
+  var xScale = { grid:{color:'rgba(60,160,60,0.08)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:9}}, title:{display:true,text:'lifetime (iterations)',color:'#4a6a4a',font:{family:'Space Mono',size:9}} };
+  pitLifetimeChart = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: prevLabels, datasets: [{ data: prevData, backgroundColor: 'rgba(160,106,216,0.55)', borderWidth: 0, borderRadius: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor:'#111a11', borderColor:'rgba(60,160,60,0.3)', borderWidth:1, titleColor:'#e8f0e8', bodyColor:'#7a9a7a', titleFont:{family:'Space Mono',size:10}, bodyFont:{family:'Space Mono',size:10} } },
+      scales: { x: xScale, y: yScale }
+    }
+  });
+  return pitLifetimeChart;
+}
+
 function setLifetimeYScale(mode) {
   if (mode !== 'linear' && mode !== 'log') return;
   lifetimeYScale = mode;
   if (typeof Store !== 'undefined') Store.set('kmc', 'lifetime_y', mode);
-  if (pitLifetimeChart && pitLifetimeChart.options && pitLifetimeChart.options.scales) {
-    pitLifetimeChart.options.scales.y.type = (mode === 'log') ? 'logarithmic' : 'linear';
-    pitLifetimeChart.update();
+  // Rebuild rather than mutate scale.type on a live chart.
+  if (typeof _buildLifetimeChart === 'function') _buildLifetimeChart(mode);
+  // Repopulate from current registry on next opportunity.
+  if (typeof updatePitTrackingCharts === 'function') {
+    try { updatePitTrackingCharts(); } catch (e) {}
   }
 }
 
@@ -1062,10 +1110,14 @@ function updatePitTrackingCharts() {
         }
         bins[idx]++;
       }
+      // For log-y: filter empty bins to null so Chart.js skips them
+      // (a 0 bar on a logarithmic axis can crash the scale). The actual
+      // y-scale type is set at construction time by _buildLifetimeChart.
+      var displayBins = (lifetimeYScale === 'log')
+        ? bins.map(function(v) { return v > 0 ? v : null; })
+        : bins;
       pitLifetimeChart.data.labels = labels;
-      pitLifetimeChart.data.datasets[0].data = bins;
-      // Apply y-scale preference (log / linear)
-      pitLifetimeChart.options.scales.y.type = (lifetimeYScale === 'log') ? 'logarithmic' : 'linear';
+      pitLifetimeChart.data.datasets[0].data = displayBins;
       pitLifetimeChart.update();
     } else {
       pitLifetimeChart.data.labels = [];
