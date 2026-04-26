@@ -444,4 +444,6 @@ function drawCookbookPlot(entry, rows) {
   _cookbookCharts[entry.id] = new Chart(canvas, {
     type: 'scatter', data: { datasets: datasets }, options: opts
   });
+  // Inject (or re-inject) PNG export button so this plot is downloadable.
+  if (typeof injectExportButtons === 'function') injectExportButtons();
 }
