@@ -190,6 +190,23 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,0.08)}
 .finding-value.match-close{color:#f0b429}
 .finding-value.match-far{color:#e24b4a}
 
+/* Report builder modal */
+.report-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto}
+.report-modal{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,0.35)}
+.report-modal-hdr h3{font-family:var(--font-display);font-weight:400;font-size:22px;margin-bottom:6px;color:var(--text-primary)}
+.report-modal-hdr p{font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:16px}
+.report-notes-row{margin-bottom:18px}
+.report-notes-row .sl{display:block;margin-bottom:6px}
+.report-notes-row textarea{width:100%;min-height:60px;font-size:13px;padding:10px 12px;font-family:var(--font-body)}
+.report-list{display:flex;flex-direction:column;gap:4px;margin-bottom:18px;max-height:40vh;overflow-y:auto;border:1px solid var(--border-light);border-radius:4px;padding:8px}
+.report-group-hdr{font-size:10px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);padding:8px 8px 4px;border-bottom:1px solid var(--border-light);margin-bottom:4px}
+.report-group-hdr:not(:first-child){margin-top:10px}
+.report-item{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px;color:var(--text-primary);font-family:var(--font-body);cursor:pointer;border-radius:3px}
+.report-item:hover{background:var(--accent-subtle)}
+.report-item input[type="checkbox"]{accent-color:var(--accent);margin:0}
+.report-modal-row{display:flex;justify-content:flex-end;gap:8px}
+.report-modal-row button{padding:8px 16px}
+
 /* Cookbook */
 .cookbook-collapse{padding:0;overflow:hidden}
 .cookbook-collapse summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid transparent;transition:background .15s,border-color .15s}
