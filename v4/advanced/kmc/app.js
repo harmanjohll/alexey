@@ -360,5 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
   updateScalingPlots();
   injectExportButtons();
   if (typeof restorePhases === 'function') restorePhases();
+  if (typeof restoreAxisMode === 'function') restoreAxisMode();
+  if (typeof restoreLifetimeYScale === 'function') restoreLifetimeYScale();
   if (typeof renderCookbook === 'function') renderCookbook();
 });

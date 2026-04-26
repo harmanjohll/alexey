@@ -151,6 +151,8 @@ var pitHistChart = null, pitSurfaceChart = null, alphaChart = null, zChart = nul
 var pitDepthHistChart = null, pitWvDChart = null;
 var pitLifetimeChart = null, pitNucleationChart = null;
 var pitNNChart = null, pitGRChart = null, pitCompChart = null;
+var pitSurvivalChart = null;
+var lifetimeYScale = 'log'; // 'linear' or 'log'
 var corrChart = null;
 var tswRoughChart = null, tswSkewChart = null, tswKurtChart = null;
 var cswRoughChart = null, cswSkewChart = null, cswKurtChart = null;
@@ -189,6 +191,8 @@ function initCharts() {
   // Dataset 1: fit line within the selected range
   roughnessChart.data.datasets.push({ label:'fit', data:[], borderColor:'#f0b429', borderWidth:2, borderDash:[6,3], pointRadius:0, fill:false });
   roughnessChart.options.plugins.legend = { display:false };
+  // Apply persisted axis-mode preference (defaults to 'log-data')
+  _applyAxisMode(roughnessChart, roughnessAxisMode);
 
   // Etch depth & rate (dual y-axis)
   var eOpts = JSON.parse(JSON.stringify(chartDefaults));
@@ -289,7 +293,7 @@ function initCharts() {
     options: pwdOpts
   });
 
-  // Pit lifetime histogram
+  // Pit lifetime histogram (log-spaced bins, log-y by default)
   var plOpts = JSON.parse(JSON.stringify(chartDefaults));
   plOpts.scales.x.title = { display:true, text:'lifetime (iterations)', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
   plOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
@@ -297,6 +301,20 @@ function initCharts() {
     type:'bar',
     data:{ labels:[], datasets:[{ data:[], backgroundColor:'rgba(160,106,216,0.55)', borderWidth:0, borderRadius:2 }] },
     options: plOpts
+  });
+
+  // Pit survival by birth-iteration band
+  var psOpts = JSON.parse(JSON.stringify(chartDefaults));
+  psOpts.scales.x.title = { display:true, text:'birth iteration band', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  psOpts.scales.y.title = { display:true, text:'count', color:'#4a6a4a', font:{family:'Space Mono',size:9} };
+  psOpts.plugins.legend = { display:true, labels:{ color:'#7a9a7a', font:{family:'Space Mono',size:9}, boxWidth:12 } };
+  pitSurvivalChart = new Chart(document.getElementById('pitSurvivalChart'), {
+    type:'bar',
+    data:{ labels:[], datasets:[
+      { label:'born',  data:[], backgroundColor:'rgba(110,192,221,0.45)', borderWidth:0, borderRadius:2 },
+      { label:'still alive at end', data:[], backgroundColor:'rgba(160,106,216,0.75)', borderWidth:0, borderRadius:2 }
+    ]},
+    options: psOpts
   });
 
   // Nucleation + death rate vs iteration (smoothed line, dual series)
@@ -371,8 +389,8 @@ function initCharts() {
 }
 
 function destroyCharts() {
-  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart, pitLifetimeChart, pitNucleationChart, pitNNChart, pitGRChart, pitCompChart].forEach(function(c) { if(c) c.destroy(); });
-  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = pitLifetimeChart = pitNucleationChart = pitNNChart = pitGRChart = pitCompChart = null;
+  [roughnessChart, etchChart, surfaceChart, concChart, statsChart, histChart, pitHistChart, pitDepthHistChart, pitWvDChart, pitSurfaceChart, alphaChart, zChart, corrChart, pitLifetimeChart, pitNucleationChart, pitNNChart, pitGRChart, pitCompChart, pitSurvivalChart].forEach(function(c) { if(c) c.destroy(); });
+  roughnessChart = etchChart = surfaceChart = concChart = statsChart = histChart = pitHistChart = pitDepthHistChart = pitWvDChart = pitSurfaceChart = alphaChart = zChart = corrChart = pitLifetimeChart = pitNucleationChart = pitNNChart = pitGRChart = pitCompChart = pitSurvivalChart = null;
 }
 
 function destroySweepCharts() {
@@ -407,6 +425,81 @@ function fitPowerLaw(data, xMin, xMax) {
   var beta = (n*sxy - sx*sy) / denom;
   var intercept = (sy - beta*sx) / n;
   return { beta: beta, intercept: intercept };
+}
+
+/* ───────────────────────── Axis-mode toggle ────────────────────────────
+   Three viewing modes on the RMS roughness chart, applied identically to
+   per-phase mini-charts so the user sees one consistent view:
+     'linear'    — both axes linear; raw data labels.
+     'log-data'  — both axes logarithmic; labels are data values (1, 10, 100…).
+     'log-log10' — both axes logarithmic; labels are log10(value) (0, 1, 2…).
+   In all three modes the underlying β fit is unchanged (computed in log
+   space). The toggle only affects how the chart presents the same numbers. */
+
+var roughnessAxisMode = 'log-data';
+
+function _decadeTickCallback(value) {
+  // Only show whole-decade ticks: 1, 10, 100, 1000, …
+  var l = Math.log10(value);
+  if (Math.abs(l - Math.round(l)) < 1e-6) return Number(value).toLocaleString();
+  return '';
+}
+function _logTickCallback(value) {
+  // Show log10(value) instead of value: 0, 1, 2, 3, 4
+  var l = Math.log10(value);
+  if (Math.abs(l - Math.round(l)) < 1e-6) return String(Math.round(l));
+  return '';
+}
+
+function _applyAxisMode(chart, mode) {
+  if (!chart || !chart.options || !chart.options.scales) return;
+  var sc = chart.options.scales;
+  if (mode === 'linear') {
+    sc.x.type = 'linear'; sc.y.type = 'linear';
+    if (sc.x.ticks) delete sc.x.ticks.callback;
+    if (sc.y.ticks) delete sc.y.ticks.callback;
+  } else {
+    sc.x.type = 'logarithmic'; sc.y.type = 'logarithmic';
+    var cb = (mode === 'log-log10') ? _logTickCallback : _decadeTickCallback;
+    sc.x.ticks = sc.x.ticks || {}; sc.x.ticks.callback = cb;
+    sc.y.ticks = sc.y.ticks || {}; sc.y.ticks.callback = cb;
+  }
+}
+
+function setAxisMode(mode) {
+  if (mode !== 'linear' && mode !== 'log-data' && mode !== 'log-log10') return;
+  roughnessAxisMode = mode;
+  if (typeof Store !== 'undefined') Store.set('kmc', 'axis_mode', mode);
+  // Update caption
+  var cap = document.getElementById('axisCaption');
+  if (cap) {
+    if (mode === 'linear') {
+      cap.innerHTML = 'On <b>linear axes</b>, the power-law shape is hard to read — the early-time regime is squeezed against the left edge and the slope changes continuously. Switch to <b>log-log</b> to recover β as the slope of a straight line.';
+    } else if (mode === 'log-log10') {
+      cap.innerHTML = 'On <b>log-log axes (log₁₀ labels)</b>, the axis labels show log<sub>10</sub>(value) directly — so 0, 1, 2, 3, 4 represent iterations 1, 10, 100, 1000, 10000. β still reads as the slope of the straight line.';
+    } else {
+      cap.innerHTML = 'On <b>log-log axes</b>, a power law w &prop; t<sup>β</sup> plots as a straight line. β is the slope — the steeper the line, the faster the surface roughens.';
+    }
+  }
+  // Apply to roughness chart
+  if (roughnessChart) {
+    _applyAxisMode(roughnessChart, mode);
+    roughnessChart.update();
+  }
+  // Re-render mini-charts so they pick up the new mode
+  if (typeof renderPhaseMiniCharts === 'function') {
+    renderPhaseMiniCharts('phaseMiniCharts', roughnessData);
+  }
+}
+
+function restoreAxisMode() {
+  if (typeof Store === 'undefined') return;
+  var saved = Store.get('kmc', 'axis_mode');
+  if (saved === 'linear' || saved === 'log-data' || saved === 'log-log10') {
+    var radio = document.querySelector('input[name="axisMode"][value="' + saved + '"]');
+    if (radio) radio.checked = true;
+    setAxisMode(saved);
+  }
 }
 
 /* ───────────────────────── Multi-phase β analysis ─────────────────────────
@@ -750,6 +843,18 @@ function renderPhaseMiniCharts(containerId, allRawData) {
       { x: p.xStart, y: Math.pow(10, p.intercept + p.beta * Math.log10(p.xStart)) },
       { x: p.xEnd,   y: Math.pow(10, p.intercept + p.beta * Math.log10(p.xEnd))   }
     ];
+    // Match axis mode of the main chart so all views stay consistent.
+    var axisMode = roughnessAxisMode || 'log-data';
+    var miniXOpts = { grid:{color:'rgba(60,160,60,0.06)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8},maxTicksLimit:4} };
+    var miniYOpts = { grid:{color:'rgba(60,160,60,0.06)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8},maxTicksLimit:4} };
+    if (axisMode === 'linear') {
+      miniXOpts.type = 'linear'; miniYOpts.type = 'linear';
+    } else {
+      miniXOpts.type = 'logarithmic'; miniYOpts.type = 'logarithmic';
+      var miniCb = (axisMode === 'log-log10') ? _logTickCallback : _decadeTickCallback;
+      miniXOpts.ticks.callback = miniCb;
+      miniYOpts.ticks.callback = miniCb;
+    }
     var inst = new Chart(cvs, {
       type: 'line',
       data: { datasets: [
@@ -759,10 +864,7 @@ function renderPhaseMiniCharts(containerId, allRawData) {
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
         plugins: { legend:{display:false}, tooltip:{enabled:false} },
-        scales: {
-          x: { type:'logarithmic', grid:{color:'rgba(60,160,60,0.06)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8},maxTicksLimit:4} },
-          y: { type:'logarithmic', grid:{color:'rgba(60,160,60,0.06)'}, ticks:{color:'#7a9a7a',font:{family:'Space Mono',size:8},maxTicksLimit:4} }
-        }
+        scales: { x: miniXOpts, y: miniYOpts }
       }
     });
     phaseMiniCharts.push(inst);
@@ -874,48 +976,117 @@ function refreshUniversalityBadge() {
   classEl.className = 'finding-value ' + (bestD < 0.03 ? 'match-good' : bestD < 0.08 ? 'match-close' : 'match-far');
 }
 
-/* Update lifetime histogram + nucleation/death rate charts.
+function setLifetimeYScale(mode) {
+  if (mode !== 'linear' && mode !== 'log') return;
+  lifetimeYScale = mode;
+  if (typeof Store !== 'undefined') Store.set('kmc', 'lifetime_y', mode);
+  if (pitLifetimeChart && pitLifetimeChart.options && pitLifetimeChart.options.scales) {
+    pitLifetimeChart.options.scales.y.type = (mode === 'log') ? 'logarithmic' : 'linear';
+    pitLifetimeChart.update();
+  }
+}
+
+function restoreLifetimeYScale() {
+  if (typeof Store === 'undefined') return;
+  var saved = Store.get('kmc', 'lifetime_y');
+  if (saved === 'linear' || saved === 'log') {
+    lifetimeYScale = saved;
+    var radio = document.querySelector('input[name="lifetimeY"][value="' + saved + '"]');
+    if (radio) radio.checked = true;
+    setLifetimeYScale(saved);
+  }
+}
+
+function _median(sorted) {
+  if (!sorted.length) return 0;
+  var m = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
+}
+
+/* Update lifetime histogram + survival panel + nucleation/death rate charts.
    Reads pitRegistry, nucleationByIter, deathsByIter declared in app.js. */
 function updatePitTrackingCharts() {
   if (typeof pitRegistry === 'undefined') return;
-  // ── Lifetime histogram ──
-  if (pitLifetimeChart) {
-    var lifetimes = [];
-    var ids = Object.keys(pitRegistry);
-    for (var i = 0; i < ids.length; i++) {
-      var rec = pitRegistry[ids[i]];
-      var death = rec.deathIter !== null ? rec.deathIter : rec.lastSeenIter;
-      var lt = death - rec.birthIter + 1;
-      if (lt > 0) lifetimes.push(lt);
+  var ids = Object.keys(pitRegistry);
+  var lifetimes = [];
+  var lastIter = 0;
+  for (var i = 0; i < ids.length; i++) {
+    var rec = pitRegistry[ids[i]];
+    var death = rec.deathIter !== null ? rec.deathIter : rec.lastSeenIter;
+    var lt = death - rec.birthIter + 1;
+    if (lt > 0) lifetimes.push(lt);
+    if (rec.lastSeenIter > lastIter) lastIter = rec.lastSeenIter;
+  }
+
+  // ── Header readouts ──
+  var disp = document.getElementById('pitTrackedCount');
+  if (disp) disp.textContent = String(ids.length);
+  var stats = document.getElementById('lifetimeStats');
+  if (stats) {
+    if (lifetimes.length === 0) {
+      stats.textContent = 'median — · mean — · max —';
+    } else {
+      var sorted = lifetimes.slice().sort(function(a,b){return a-b;});
+      var med = _median(sorted);
+      var sum = sorted.reduce(function(a,b){return a+b;}, 0);
+      var mean = sum / sorted.length;
+      var max = sorted[sorted.length-1];
+      stats.textContent = 'median ' + Math.round(med) + ' · mean ' + Math.round(mean) + ' · max ' + max;
     }
-    var disp = document.getElementById('pitTrackedCount');
-    if (disp) disp.textContent = String(ids.length);
+  }
+
+  // ── Lifetime histogram (log-spaced bins) ──
+  if (pitLifetimeChart) {
     if (lifetimes.length >= 3) {
       lifetimes.sort(function(a,b){return a-b;});
       var ltMin = lifetimes[0], ltMax = lifetimes[lifetimes.length-1];
-      var iqr = lifetimes[Math.floor(lifetimes.length*0.75)] - lifetimes[Math.floor(lifetimes.length*0.25)];
-      var fdW = iqr > 0 ? 2 * iqr / Math.pow(lifetimes.length, 1/3) : Math.max((ltMax-ltMin)/8, 1);
-      var nBins = Math.min(20, Math.max(4, Math.ceil((ltMax - ltMin) / fdW) || 4));
-      var binW = (ltMax - ltMin) / nBins || 1;
+      var nBins = Math.min(20, Math.max(6, Math.round(2 * Math.log10(ltMax / Math.max(1, ltMin)) * 4) || 8));
+      // Log-spaced bin edges from ltMin to ltMax (clamped to ≥1)
+      var lo0 = Math.max(1, ltMin);
+      var logLo = Math.log10(lo0), logHi = Math.log10(Math.max(ltMax, lo0 + 1));
+      var edges = [];
+      for (var e = 0; e <= nBins; e++) {
+        edges.push(Math.pow(10, logLo + (logHi - logLo) * e / nBins));
+      }
       var bins = new Array(nBins).fill(0);
       var labels = [];
       for (var b = 0; b < nBins; b++) {
-        var lo = ltMin + b * binW;
-        var hi = ltMin + (b + 1) * binW;
-        labels.push(Math.round(lo) + '–' + Math.round(hi));
+        labels.push(Math.round(edges[b]) + '–' + Math.round(edges[b + 1]));
       }
-      for (var i2 = 0; i2 < lifetimes.length; i2++) {
-        var bi = Math.min(nBins - 1, Math.floor((lifetimes[i2] - ltMin) / binW));
-        bins[bi]++;
+      for (var k = 0; k < lifetimes.length; k++) {
+        // Find the bin
+        var v = lifetimes[k];
+        var idx = nBins - 1;
+        for (var bb = 0; bb < nBins; bb++) {
+          if (v < edges[bb + 1]) { idx = bb; break; }
+        }
+        bins[idx]++;
       }
       pitLifetimeChart.data.labels = labels;
       pitLifetimeChart.data.datasets[0].data = bins;
+      // Apply y-scale preference (log / linear)
+      pitLifetimeChart.options.scales.y.type = (lifetimeYScale === 'log') ? 'logarithmic' : 'linear';
       pitLifetimeChart.update();
     } else {
       pitLifetimeChart.data.labels = [];
       pitLifetimeChart.data.datasets[0].data = [];
       pitLifetimeChart.update();
     }
+  }
+
+  // ── Survival by birth band ──
+  if (pitSurvivalChart && lastIter > 0 && typeof survivorsByBirthBand === 'function') {
+    var sv = survivorsByBirthBand(pitRegistry, lastIter, { nBands: 8 });
+    var bandLabels = sv.bands.map(function(b) { return b.lo + '–' + b.hi; });
+    var bornData = sv.bands.map(function(b) { return b.born; });
+    var aliveData = sv.bands.map(function(b) { return b.alive; });
+    pitSurvivalChart.data.labels = bandLabels;
+    pitSurvivalChart.data.datasets[0].data = bornData;
+    pitSurvivalChart.data.datasets[1].data = aliveData;
+    pitSurvivalChart.update();
+    var aliveTotal = aliveData.reduce(function(a,b){return a+b;}, 0);
+    var sd = document.getElementById('survivalAliveCount');
+    if (sd) sd.textContent = String(aliveTotal);
   }
   // ── Nucleation/death rate (windowed) ──
   if (pitNucleationChart && typeof nucleationByIter !== 'undefined') {
