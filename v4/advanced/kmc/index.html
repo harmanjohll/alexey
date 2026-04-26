@@ -300,6 +300,7 @@
   <button id="resumeBtn" onclick="resumeSim()" disabled style="display:none">&#9654; Resume</button>
   <button id="resetBtn" onclick="resetSim()" class="danger">&#8634; Reset</button>
   <label style="font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace;display:flex;align-items:center;gap:4px;margin-left:8px;cursor:pointer"><input type="checkbox" id="showSkewKurt" onchange="toggleSkewKurt()"> Skew/Kurt</label>
+  <button id="reportBtn" onclick="openReportModal()" style="margin-left:8px" data-tip="Generate a single composite PNG of the run — choose which charts and stats to include.">&#9881; Build report &rarr;</button>
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
     <span class="progress-text" id="progText">Ready</span>
@@ -702,6 +703,7 @@
 <script src="charts.js"></script>
 <script src="data.js"></script>
 <script src="cookbook.js"></script>
+<script src="report.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
