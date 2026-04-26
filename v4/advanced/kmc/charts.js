@@ -116,16 +116,21 @@ function exportRawCanvasPNG(srcCanvas, title) {
   link.click();
 }
 
-/* Auto-inject export buttons into all chart cards */
+/* Auto-inject export buttons into all chart cards. Per-canvas (not
+   per-card), so cards with more than one canvas (e.g. lattice + heightmap)
+   get a button each. Includes any canvas inside .dash-card with an id,
+   regardless of wrapper class — picks up alphaChart/zChart too. */
 function injectExportButtons() {
-  var canvases = document.querySelectorAll('.chart-wrap canvas, .lattice-wrap canvas, .heightmap-wrap canvas');
+  var canvases = document.querySelectorAll('.dash-card canvas[id], .cookbook-card canvas[id]');
   for (var i = 0; i < canvases.length; i++) {
     var cvs = canvases[i];
-    var card = cvs.closest('.dash-card');
-    if (!card || card.querySelector('.export-png-btn')) continue;
+    if (!cvs.id) continue;
+    var card = cvs.closest('.dash-card') || cvs.closest('.cookbook-card');
+    if (!card) continue;
+    // Skip only if a button already exists for THIS canvas (per-canvas).
+    if (card.querySelector('.export-png-btn[data-canvas="' + cvs.id + '"]')) continue;
     var hdr = card.querySelector('.card-hdr');
     if (!hdr) {
-      // card-label only (no card-hdr) — wrap it
       var lbl = card.querySelector('.card-label');
       if (!lbl) continue;
       var wrap = document.createElement('div');
@@ -137,7 +142,10 @@ function injectExportButtons() {
     var btn = document.createElement('button');
     btn.className = 'sm export-png-btn';
     btn.style.marginLeft = 'auto';
-    btn.textContent = '\u2193 PNG';
+    var canvasCount = card.querySelectorAll('canvas[id]').length;
+    btn.textContent = canvasCount > 1
+      ? '\u2193 ' + cvs.id.replace(/Canvas|Chart/g, '')
+      : '\u2193 PNG';
     btn.setAttribute('data-canvas', cvs.id);
     btn.onclick = function() { exportChartPNG(this.getAttribute('data-canvas')); };
     hdr.appendChild(btn);
