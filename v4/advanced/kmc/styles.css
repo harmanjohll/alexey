@@ -217,6 +217,13 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,0.08)}
 .cookbook-derived{font-size:13px;color:var(--text-primary);font-family:var(--font-mono);background:var(--accent-subtle);border:1px solid var(--accent-border);border-radius:3px;padding:8px 12px;margin-bottom:10px}
 .cookbook-plot{margin-top:8px;height:200px}
 
+/* Axis-mode toggle on roughness chart */
+.axis-mode-toggle{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+.axis-mode-toggle label{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--text-secondary);font-family:'Space Mono',monospace;cursor:pointer}
+.axis-mode-toggle input[type="radio"]{accent-color:var(--accent);margin:0}
+.axis-caption{font-size:11px;color:var(--text-secondary);font-family:var(--font-body);line-height:1.6;padding:8px 12px;background:var(--accent-subtle);border-left:2px solid var(--accent);border-radius:0 3px 3px 0;margin:6px 0 10px}
+.axis-caption b{color:var(--accent-light);font-weight:500}
+
 /* Multi-phase β analysis */
 .phase-controls{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
 .phase-controls input[type="number"]{width:60px;padding:2px 4px;font-size:10px;font-family:var(--font-mono)}

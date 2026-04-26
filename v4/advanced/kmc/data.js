@@ -433,6 +433,30 @@ function linkPitsAcrossFrames(prevPits, currentPits, opts) {
 
 function resetPitTracking() { _nextPitId = 1; }
 
+/* For each band of birth iterations, count how many of those pits are
+   still alive at lastIter. Returns { bands: [{lo, hi, alive, born}] }.
+   "Alive" = no deathIter recorded AND lastSeenIter >= lastIter - tolerance. */
+function survivorsByBirthBand(pitRegistry, lastIter, opts) {
+  opts = opts || {};
+  var nBands = opts.nBands || 8;
+  var tolerance = opts.tolerance || 0;
+  if (!pitRegistry || !lastIter || lastIter <= 0) return { bands: [] };
+  var bandSize = Math.max(1, Math.ceil(lastIter / nBands));
+  var bands = [];
+  for (var b = 0; b < nBands; b++) {
+    bands.push({ lo: b * bandSize + 1, hi: Math.min((b + 1) * bandSize, lastIter), alive: 0, born: 0 });
+  }
+  var ids = Object.keys(pitRegistry);
+  for (var i = 0; i < ids.length; i++) {
+    var rec = pitRegistry[ids[i]];
+    var bandIdx = Math.min(nBands - 1, Math.floor((rec.birthIter - 1) / bandSize));
+    bands[bandIdx].born++;
+    var isAlive = rec.deathIter === null && rec.lastSeenIter >= lastIter - tolerance;
+    if (isAlive) bands[bandIdx].alive++;
+  }
+  return { bands: bands };
+}
+
 /* ── Spatial statistics for pit centres ───────────────────────────────────
    Periodic 1D: distance between two centres = min(|d|, lattx - |d|).
    nearestNeighbourDistances → array of NN distances, one per pit.

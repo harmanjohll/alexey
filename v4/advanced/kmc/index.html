@@ -345,10 +345,7 @@
         <span class="card-label">Lattice Cross-Section</span>
         <button class="sm" id="viewCross" onclick="setView('cross')" style="background:var(--accent-subtle)">Cross-section</button>
         <button class="sm" id="viewHmap" onclick="setView('hmap')">Height map</button>
-        <label style="margin-left:auto;font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace;display:inline-flex;align-items:center;gap:4px;cursor:pointer" data-tip="Show persistent pit IDs (#N labels) on the cross-section. Useful when you want to follow one specific pit across iterations.">
-          <input type="checkbox" id="showPitIds" onchange="togglePitIds(this.checked)"> Pit IDs
-        </label>
-        <label>Zoom <input type="range" id="zoomSlider" min="1" max="8" value="2" step="1" oninput="applyZoom()"><span id="zoomVal">2x</span></label>
+        <label style="margin-left:auto">Zoom <input type="range" id="zoomSlider" min="1" max="8" value="2" step="1" oninput="applyZoom()"><span id="zoomVal">2x</span></label>
       </div>
       <div class="lattice-wrap" id="latticeWrap">
         <canvas id="latticeCanvas" width="500" height="150"></canvas>
@@ -400,7 +397,7 @@
   <!-- Row 2: Roughness + Height -->
   <div class="dash-row">
     <div class="dash-card">
-      <div class="card-hdr">
+      <div class="card-hdr" style="flex-wrap:wrap;gap:6px">
         <span class="card-label">RMS Roughness vs Iteration</span>
         <span class="beta-display" id="betaDisp" data-tip="Growth exponent: slope of log(RMS) vs log(iteration) in the fit range.">&beta; = &mdash;</span>
         <span style="font-size:9px;color:var(--text-tertiary);margin-left:8px">fit range:</span>
@@ -408,7 +405,14 @@
         <span style="font-size:9px;color:var(--text-tertiary)">to</span>
         <input type="number" id="fitMax" value="10000" min="1" style="width:60px;font-size:10px;padding:2px 4px" onchange="refitBeta()">
         <button class="sm" onclick="resetFitZoom()">Show all</button>
+        <span class="axis-mode-toggle" data-tip="Linear: power-law plots as a curve (you can see the shape but can't read β as a slope). Log-log (data labels): the same data on log axes — power law becomes a straight line with slope = β. Default. Log-log (log₁₀ labels): identical chart, but axis labels show 0/1/2/3/4 (the log values) instead of 1/10/100/1000/10000.">
+          <span style="font-size:9px;color:var(--text-tertiary);font-family:'Space Mono',monospace">axes:</span>
+          <label><input type="radio" name="axisMode" value="linear" onchange="setAxisMode(this.value)"> linear</label>
+          <label><input type="radio" name="axisMode" value="log-data" checked onchange="setAxisMode(this.value)"> log-log</label>
+          <label><input type="radio" name="axisMode" value="log-log10" onchange="setAxisMode(this.value)"> log-log (log₁₀)</label>
+        </span>
       </div>
+      <div class="axis-caption" id="axisCaption">On <b>log-log axes</b>, a power law w &prop; t<sup>β</sup> plots as a straight line. β is the slope — the steeper the line, the faster the surface roughens.</div>
       <div class="chart-wrap"><canvas id="roughnessChart"></canvas></div>
     </div>
     <div class="dash-card">
@@ -573,15 +577,34 @@
   <!-- Row 5c: Pit tracking — lifetime distribution + nucleation rate -->
   <div class="dash-row">
     <div class="dash-card">
-      <div class="card-hdr">
+      <div class="card-hdr" style="flex-wrap:wrap;gap:6px">
         <span class="card-label">Pit Lifetime Distribution</span>
-        <span class="beta-display" id="pitLifetimeDisp" data-tip="Pits matched across frames by ≥30% interval overlap. Lifetime = death_iter − birth_iter. Ongoing pits use last-seen as a lower bound.">tracked: <span id="pitTrackedCount">0</span></span>
+        <span class="beta-display" id="pitLifetimeDisp" data-tip="Pits matched across frames by ≥30% interval overlap. Lifetime = death_iter − birth_iter + 1. Ongoing pits use last-seen as a lower bound.">tracked: <span id="pitTrackedCount">0</span></span>
+        <span class="lifetime-stats" id="lifetimeStats" style="font-size:10px;color:var(--text-tertiary);font-family:'Space Mono',monospace">median &mdash; · mean &mdash; · max &mdash;</span>
+        <span class="axis-mode-toggle" style="margin-left:auto" data-tip="Linear y squashes the long tail; log y reveals the persistent pits.">
+          <span style="font-size:9px;color:var(--text-tertiary);font-family:'Space Mono',monospace">y:</span>
+          <label><input type="radio" name="lifetimeY" value="linear" onchange="setLifetimeYScale(this.value)"> linear</label>
+          <label><input type="radio" name="lifetimeY" value="log" checked onchange="setLifetimeYScale(this.value)"> log</label>
+        </span>
       </div>
+      <div class="axis-caption">Lifetime = (death_iter − birth_iter + 1), or last-seen for pits still alive at end. Tall first bin = transient pits; long tail = persistent pits that drive asymptotic morphology. Both bins depend on pit-detection method and Jaccard ≥ 0.3 linking threshold.</div>
       <div class="chart-wrap"><canvas id="pitLifetimeChart"></canvas></div>
     </div>
     <div class="dash-card">
       <div class="card-label">Nucleation &amp; Death Rate vs Iteration</div>
       <div class="chart-wrap"><canvas id="pitNucleationChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 5e: Pit survival by birth band -->
+  <div class="dash-row">
+    <div class="dash-card">
+      <div class="card-hdr">
+        <span class="card-label">Pit Survival by Birth Iteration</span>
+        <span class="beta-display" id="survivalDisp" data-tip="For each band of birth iterations, how many of those pits are still alive at the end of the run.">still alive: <span id="survivalAliveCount">0</span></span>
+      </div>
+      <div class="axis-caption">Born at iter X, still alive at iter end? The leftmost bar is the founder population — pits that nucleated early and survived the whole run; later bars are progressively more recent. A flat profile = constant turnover; a left-heavy profile = persistent founders.</div>
+      <div class="chart-wrap"><canvas id="pitSurvivalChart"></canvas></div>
     </div>
   </div>
 

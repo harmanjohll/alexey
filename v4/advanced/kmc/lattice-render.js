@@ -7,12 +7,13 @@ var lastLattx = 500;
 var lastHtRaw = null;
 var lastFullHt = null;
 var viewMode = 'cross';
-var pitOverlayEnabled = true;
+var pitOverlayEnabled = false;
 var pitIdsVisible = false;
 
 function togglePitIds(checked) {
-  pitIdsVisible = !!checked;
-  if (typeof redrawLatticeWithPits === 'function') redrawLatticeWithPits();
+  // Pit overlay was removed in Commit H — pit visualisation moved to the
+  // Surface Profile with Pits Highlighted chart. This is a no-op stub
+  // so older calls don't break.
 }
 
 function renderLattice(sliceBuffer, sliceH, lattx, targetCanvas, sliceStart) {
@@ -46,44 +47,12 @@ function renderLattice(sliceBuffer, sliceH, lattx, targetCanvas, sliceStart) {
     }
   }
   ctx.putImageData(img, 0, 0);
-  if (!targetCanvas) drawPitOverlay(ctx, lattx, sliceH, lastSliceStart);
+  // Pit overlay intentionally omitted — see Surface Profile chart.
 }
 
-/* Outline currently-detected pits on the lattice cross-section. Pit cells are
-   drawn as a thin coloured rectangle from x_start to x_start+width, spanning
-   the pit's vertical depth band (rim down to lowest height). */
-function drawPitOverlay(ctx, lattx, sliceH, sliceStart) {
-  if (!pitOverlayEnabled) return;
-  var pits = window._currentPits;
-  if (!pits || !pits.length) return;
-  ctx.save();
-  ctx.lineWidth = 1;
-  for (var i = 0; i < pits.length; i++) {
-    var p = pits[i];
-    var x0 = p.start;
-    var x1 = p.start + p.width;
-    if (x1 > lattx) x1 = lattx;
-    var topZ = (typeof p.rim === 'number') ? p.rim : (p.minH + p.depth);
-    var botZ = p.minH;
-    // Map world-z to canvas-row. The slice is rendered with row = world_z - sliceStart.
-    var topRow = Math.max(0, Math.min(sliceH - 1, topZ - sliceStart));
-    var botRow = Math.max(0, Math.min(sliceH - 1, botZ - sliceStart));
-    var yLo = Math.min(topRow, botRow);
-    var yHi = Math.max(topRow, botRow);
-    var w = x1 - x0;
-    var h = Math.max(1, yHi - yLo + 1);
-    ctx.strokeStyle = 'rgba(240,180,41,0.85)';
-    ctx.strokeRect(x0 + 0.5, yLo + 0.5, w - 1, h - 1);
-    // Persistent ID label (only when the user opts in via "Pit IDs" toggle).
-    if (pitIdsVisible && typeof p.id === 'number') {
-      ctx.fillStyle = 'rgba(240,180,41,0.95)';
-      ctx.font = '7px "Space Mono", monospace';
-      ctx.textBaseline = 'top';
-      ctx.fillText('#' + p.id, x0 + 1, yLo + 1);
-    }
-  }
-  ctx.restore();
-}
+/* drawPitOverlay — kept as a no-op so any leftover callers don't break.
+   Pit visualisation is handled by the Surface Profile chart in charts.js. */
+function drawPitOverlay() { /* deliberately empty */ }
 
 /* Re-paint the cached lattice slice and overlay current pits.
    Called after pit analysis to keep the overlay in sync without
@@ -104,7 +73,6 @@ function redrawLatticeWithPits() {
     }
   }
   ctx.putImageData(img, 0, 0);
-  drawPitOverlay(ctx, lastLattx, lastSliceH, lastSliceStart);
 }
 
 function renderHeightMap(htBuffer, lattx) {
