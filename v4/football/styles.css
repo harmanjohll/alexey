@@ -216,6 +216,46 @@ canvas.pitch-canvas{border:1px solid var(--border);border-radius:2px;display:blo
 /* === League colors === */
 .lc-epl{color:#8b5cf6}.lc-liga{color:#f59e0b}.lc-buli{color:#ef4444}.lc-seria{color:#3b82f6}.lc-l1{color:#a3e635}.lc-champ{color:#f97316}
 
+/* === Cookbook (research analysis layer) === */
+.cookbook-collapse{padding:0;overflow:hidden}
+.cookbook-collapse summary{list-style:none;cursor:pointer;padding:10px 16px;display:flex;align-items:center;gap:10px;background:var(--bg-deep);border-bottom:1px solid transparent;transition:background .15s,border-color .15s}
+.cookbook-collapse summary::-webkit-details-marker{display:none}
+.cookbook-collapse summary:hover{background:var(--accent-subtle)}
+.cookbook-collapse[open] summary{border-bottom-color:var(--border-light)}
+.cookbook-summary-meta{font-size:11px;color:var(--text-tertiary);font-family:'Space Mono',monospace}
+.cookbook-summary-caret{margin-left:auto;font-family:'Space Mono',monospace;font-size:14px;color:var(--text-tertiary);transition:transform .2s}
+.cookbook-collapse[open] .cookbook-summary-caret{transform:rotate(180deg)}
+.cookbook-body{padding:18px}
+.cookbook-root{display:flex;flex-direction:column;gap:14px}
+.cookbook-card{background:var(--bg-deep);border:1px solid var(--border-light);border-radius:2px;padding:14px 16px}
+.cookbook-card .card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.cookbook-card .card-hdr .card-label{font-size:14px;font-weight:500;color:var(--text-primary);font-family:var(--font-mono)}
+.cookbook-card .card-hdr button{margin-left:auto}
+.cookbook-card .card-hdr button + button{margin-left:6px}
+.cookbook-card button.sm{font-size:11px;padding:5px 12px}
+.cookbook-why{font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:8px}
+.cookbook-recipe{font-size:11px;color:var(--text-tertiary);line-height:1.55;font-family:var(--font-mono);background:var(--accent-subtle);border-left:2px solid var(--accent);padding:8px 12px;border-radius:0 2px 2px 0;margin-bottom:10px}
+.cookbook-recipe b{color:var(--accent-light);font-weight:500}
+.cookbook-controls{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;align-items:flex-end}
+.cookbook-control{display:flex;flex-direction:column;gap:3px}
+.cookbook-control label{font-size:9px;color:var(--text-tertiary);font-family:var(--font-mono);letter-spacing:.5px;text-transform:uppercase}
+.cookbook-control select,.cookbook-control input{background:var(--bg);border:1px solid var(--border-light);color:var(--text-primary);font-family:var(--font-mono);font-size:12px;padding:5px 8px;border-radius:2px;min-width:140px}
+.cookbook-body-mount{margin-top:6px}
+.cookbook-empty{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:14px;border:1px dashed var(--border-light);border-radius:2px;text-align:center}
+.cookbook-error{font-size:12px;color:#e24b4a;padding:10px 14px;border-left:2px solid #e24b4a;background:rgba(226,75,74,0.06);border-radius:2px}
+.cookbook-summary-line{font-size:12px;color:var(--text-secondary);font-family:var(--font-mono);margin-bottom:8px;line-height:1.6}
+.cookbook-summary-line b{color:var(--accent-light);font-weight:500}
+.cookbook-result-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px;margin-top:8px}
+.cookbook-result-table th{font-size:10px;font-weight:500;color:var(--accent);text-align:left;padding:5px 8px;border-bottom:1px solid var(--border-light);text-transform:uppercase;letter-spacing:.5px}
+.cookbook-result-table td{padding:4px 8px;border-bottom:1px solid var(--border-light);color:var(--text-primary)}
+.cookbook-confusion td{text-align:center;font-size:11px}
+.cookbook-confusion td:first-child{text-align:left}
+.cookbook-rk-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cookbook-notes{font-size:10px;color:var(--text-tertiary);font-style:italic;line-height:1.55;margin-top:10px;padding-top:8px;border-top:1px solid var(--border-light)}
+.cookbook-legend-strip{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono)}
+.cookbook-legend-strip .legend-dot i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.cookbook-heatmap-wrap{margin:8px 0;text-align:center}
+
 /* === Responsive === */
 @media(max-width:680px){
   .lab-grid{grid-template-columns:1fr}
