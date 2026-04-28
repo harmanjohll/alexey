@@ -209,9 +209,71 @@ function handleCookbookAction(entry, action) {
   }
 }
 
+/* Run every entry in sequence with sensible "demo" defaults. Async via
+   setTimeout(0) chain so the progress label paints between iterations.
+   Per-entry errors are non-fatal — surfaced in that card, others continue. */
+function runAllCookbook(opts) {
+  opts = opts || {};
+  if (typeof FOOTBALL_COOKBOOK === 'undefined' || !FOOTBALL_COOKBOOK.length) return;
+  var btn  = document.getElementById('cookbookRunAllBtn');
+  var prog = document.getElementById('cookbookRunAllProgress');
+  var demoOverrides = {
+    nIter:    '1000',
+    nMatches: '500',
+    nMatchesPerCell: '200'
+  };
+  if (btn) { btn.disabled = true; btn.textContent = 'Running…'; }
+  var results = { ok: 0, errors: [] };
+
+  function setProgress(i, label) {
+    if (!prog) return;
+    prog.textContent = i + '/' + FOOTBALL_COOKBOOK.length + ' — ' + label;
+  }
+
+  function step(i) {
+    if (i >= FOOTBALL_COOKBOOK.length) {
+      if (btn)  btn.textContent = (results.errors.length ? '✓ ' + results.ok + '/' + FOOTBALL_COOKBOOK.length + ' complete' : '✓ All five complete');
+      if (btn)  btn.disabled = false;
+      if (prog) prog.innerHTML = (results.errors.length
+        ? results.errors.length + ' entry/entries skipped (see card notes) · '
+        : 'Done · ') +
+        '<a href="#stepLab" onclick="document.getElementById(\'stepLab\').scrollIntoView({behavior:\'smooth\'});return false;">Build report →</a>';
+      refreshCookbookSummary();
+      return;
+    }
+    var entry = FOOTBALL_COOKBOOK[i];
+    setProgress(i + 1, entry.id);
+    setTimeout(function() {
+      var params = {};
+      if (entry.controls) {
+        for (var c = 0; c < entry.controls.length; c++) {
+          var ctl = entry.controls[c];
+          var v = (demoOverrides[ctl.id] !== undefined) ? demoOverrides[ctl.id] : ctl['default'];
+          params[ctl.id] = v;
+        }
+      }
+      try {
+        var result = entry.run(params);
+        setCookbookResult(entry.id, { params: params, result: result, computedAt: new Date().toISOString() });
+        var mount = document.getElementById('cookbook-mount-' + entry.id);
+        if (mount) entry.render(result, mount);
+        results.ok++;
+      } catch (e) {
+        results.errors.push({ id: entry.id, message: e && e.message ? e.message : String(e) });
+        var m = document.getElementById('cookbook-mount-' + entry.id);
+        if (m) m.innerHTML = '<div class="cookbook-error">Skipped — ' + (e && e.message ? e.message : e) + '</div>';
+        if (typeof console !== 'undefined') console.warn('runAllCookbook:', entry.id, e);
+      }
+      step(i + 1);
+    }, 0);
+  }
+  step(0);
+}
+
 /* Expose so app.js can call after DOMContentLoaded. */
 if (typeof window !== 'undefined') {
   window.renderCookbook = renderCookbook;
   window.refreshCookbookSummary = refreshCookbookSummary;
   window.getCookbookResult = getCookbookResult;
+  window.runAllCookbook = runAllCookbook;
 }

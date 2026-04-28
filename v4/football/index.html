@@ -424,6 +424,10 @@
   </summary>
   <div class="cookbook-body">
     <div class="note" style="margin-bottom:14px"><b>What this is:</b> five research-grade analyses you can run on the same dataset you've been exploring. Each one has its own button — click <b>Run analysis</b> and the result renders in the card. Results persist between page loads; clear any time. Bootstrap residuals (Q1), PCA + naive-Bayes classifier (Q2), pairwise tournament (Q3), and a "your team vs every team" capstone using your BYOL shots.</div>
+    <div class="cookbook-run-all-row">
+      <button id="cookbookRunAllBtn" class="cookbook-run-all" type="button" onclick="if(window.runAllCookbook)window.runAllCookbook()">▶ Run all 5 (demo defaults)</button>
+      <span id="cookbookRunAllProgress" class="cookbook-run-all-progress">~3 s · uses faster bootstrap and Monte Carlo settings; you can re-run any single entry at full quality</span>
+    </div>
     <div id="cookbookRoot" class="cookbook-root"></div>
   </div>
 </details>
