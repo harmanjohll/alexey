@@ -216,6 +216,10 @@
           <button id="simBtn" onclick="runMC()" disabled>Run simulations &rarr;</button>
           <button class="danger" onclick="clearShots()">Clear shots</button>
         </div>
+        <div class="brow" style="margin-top:8px">
+          <button onclick="if(window.openFootballReportModal)window.openFootballReportModal()">Build report &rarr;</button>
+          <span style="font-size:10px;color:var(--text-tertiary);font-family:var(--font-mono);align-self:center">composite 1920&times;1080 PNG</span>
+        </div>
       </div>
     </div>
 
@@ -409,6 +413,22 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
+     COOKBOOK · Research analysis layer
+     ═══════════════════════════════════════════════════════ -->
+<details class="panel cookbook-collapse" id="stepCookbook" style="margin-bottom:14px">
+  <summary class="cookbook-summary">
+    <span class="snum">cookbook</span>
+    <span class="sname">Research analysis</span>
+    <span class="cookbook-summary-meta">five protocols on the league + BYOL data · <span id="cookbookSummaryStats">click to expand</span></span>
+    <span class="cookbook-summary-caret">▾</span>
+  </summary>
+  <div class="cookbook-body">
+    <div class="note" style="margin-bottom:14px"><b>What this is:</b> five research-grade analyses you can run on the same dataset you've been exploring. Each one has its own button — click <b>Run analysis</b> and the result renders in the card. Results persist between page loads; clear any time. Bootstrap residuals (Q1), PCA + naive-Bayes classifier (Q2), pairwise tournament (Q3), and a "your team vs every team" capstone using your BYOL shots.</div>
+    <div id="cookbookRoot" class="cookbook-root"></div>
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════
      STEP 07 · DISCUSSION — Your Findings + AI Coach
      ═══════════════════════════════════════════════════════ -->
 <div class="panel" id="stepInterp">
@@ -495,6 +515,11 @@
 <script src="pitch.js"></script>
 <script src="simulation.js"></script>
 <script src="charts.js"></script>
+<script src="analysis.js"></script>
+<script src="cookbook-entries.js"></script>
+<script src="cookbook.js"></script>
+<script src="report-render.js"></script>
+<script src="report.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

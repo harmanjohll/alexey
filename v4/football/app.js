@@ -773,6 +773,11 @@ document.addEventListener('DOMContentLoaded', function () {
   renderLogbook();
   drawHeatmaps();
 
+  // Cookbook (research analysis layer)
+  if (typeof window.renderCookbook === 'function') {
+    try { window.renderCookbook(); } catch (e) { console.error('cookbook render failed', e); }
+  }
+
   // Export banner
   if (window.Exporter) {
     Exporter.mountBanner('exportMount', {
