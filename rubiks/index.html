@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FFF8EC">
+<title>Cubelab · Learn the Rubik's Cube</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="6" fill="%2314110D"/><g><rect x="8" y="8" width="14" height="14" fill="%23DC2626"/><rect x="25" y="8" width="14" height="14" fill="%23FAFAFA"/><rect x="42" y="8" width="14" height="14" fill="%230046AD"/><rect x="8" y="25" width="14" height="14" fill="%23009B48"/><rect x="25" y="25" width="14" height="14" fill="%23FFD500"/><rect x="42" y="25" width="14" height="14" fill="%23FF6F1A"/><rect x="8" y="42" width="14" height="14" fill="%23FAFAFA"/><rect x="25" y="42" width="14" height="14" fill="%230046AD"/><rect x="42" y="42" width="14" height="14" fill="%23DC2626"/></g></svg>'>
+</head>
+<body>
+
+<!-- Memphis floating shapes (purely decorative, behind everything) -->
+<div class="memphis-bg" aria-hidden="true">
+  <svg class="memphis-shape s1" viewBox="0 0 100 100">
+    <path d="M5,50 Q25,5 50,50 T95,50" fill="none" stroke="#FF5043" stroke-width="6" stroke-linecap="round"/>
+  </svg>
+  <svg class="memphis-shape s2" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="42" fill="#2966FF"/>
+    <circle cx="50" cy="50" r="20" fill="#FFF8EC"/>
+  </svg>
+  <svg class="memphis-shape s3" viewBox="0 0 100 100">
+    <g>
+      <rect x="0"  y="0"  width="20" height="20" fill="#181612"/>
+      <rect x="40" y="0"  width="20" height="20" fill="#181612"/>
+      <rect x="80" y="0"  width="20" height="20" fill="#181612"/>
+      <rect x="20" y="20" width="20" height="20" fill="#181612"/>
+      <rect x="60" y="20" width="20" height="20" fill="#181612"/>
+      <rect x="0"  y="40" width="20" height="20" fill="#181612"/>
+      <rect x="40" y="40" width="20" height="20" fill="#181612"/>
+      <rect x="80" y="40" width="20" height="20" fill="#181612"/>
+    </g>
+  </svg>
+  <svg class="memphis-shape s4" viewBox="0 0 100 100">
+    <path d="M0,50 A50,50 0 0,1 100,50 Z" fill="#FFC83D"/>
+    <path d="M0,50 L100,50" stroke="#181612" stroke-width="4"/>
+  </svg>
+  <svg class="memphis-shape s5" viewBox="0 0 100 100">
+    <polygon points="50,5 95,80 5,80" fill="#00C16E"/>
+  </svg>
+  <svg class="memphis-shape s6" viewBox="0 0 100 100">
+    <g>
+      <circle cx="20" cy="20" r="8" fill="#8847FF"/>
+      <circle cx="50" cy="20" r="8" fill="#FF5043"/>
+      <circle cx="80" cy="20" r="8" fill="#FFC83D"/>
+      <circle cx="20" cy="50" r="8" fill="#00C16E"/>
+      <circle cx="50" cy="50" r="8" fill="#2966FF"/>
+      <circle cx="80" cy="50" r="8" fill="#181612"/>
+      <circle cx="20" cy="80" r="8" fill="#FF6F1A"/>
+      <circle cx="50" cy="80" r="8" fill="#FAFAFA" stroke="#181612" stroke-width="2"/>
+      <circle cx="80" cy="80" r="8" fill="#DC2626"/>
+    </g>
+  </svg>
+</div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      <div class="logo-text">
+        <h1>cubelab</h1>
+        <div class="tag">Learn · solve · time · A. JOHLL</div>
+      </div>
+    </div>
+
+    <div class="header-tools">
+      <div class="mode-switch" role="tablist" aria-label="App mode">
+        <button class="mode-btn learn active" data-mode="learn" role="tab">Learn</button>
+        <button class="mode-btn solve" data-mode="solve" role="tab">Solve</button>
+        <button class="mode-btn time" data-mode="time" role="tab">Time</button>
+      </div>
+      <button class="btn small ghost icon" id="btnSettings" aria-label="Settings" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN STAGE -->
+  <div class="stage-grid">
+
+    <!-- LEFT: cube canvas + controls -->
+    <div>
+      <div class="cube-stage">
+        <div class="stage-corner-tl">cubelab · 3x3</div>
+        <div class="stage-corner-tr"><span id="solvedIndicator" style="color: var(--mint-deep); font-weight: 700; display: none;">● SOLVED</span></div>
+        <div class="stage-corner-bl">drag to rotate · scroll to zoom</div>
+        <div class="stage-corner-br"><span id="moveCount">0 moves</span></div>
+        <canvas class="cube-canvas" id="cubeCanvas"></canvas>
+      </div>
+
+      <div class="cube-controls">
+        <button class="btn small primary" id="btnScramble">⚡ Scramble</button>
+        <button class="btn small ghost" id="btnReset">↺ Reset</button>
+        <span style="font-family:var(--mono); font-size:10px; color:var(--ink-mute); margin-left:auto;">keys: <span class="kbd">R</span> <span class="kbd">L</span> <span class="kbd">U</span> <span class="kbd">D</span> <span class="kbd">F</span> <span class="kbd">B</span> · <span class="kbd">⇧</span>= prime · <span class="kbd">⌥</span>= 2</span>
+      </div>
+
+      <div class="move-grid">
+        <div class="move-key" data-move="U">U</div>
+        <div class="move-key prime" data-move="U'">U'</div>
+        <div class="move-key dbl" data-move="U2">U2</div>
+        <div class="move-key" data-move="D">D</div>
+        <div class="move-key prime" data-move="D'">D'</div>
+        <div class="move-key dbl" data-move="D2">D2</div>
+
+        <div class="move-key" data-move="L">L</div>
+        <div class="move-key prime" data-move="L'">L'</div>
+        <div class="move-key dbl" data-move="L2">L2</div>
+        <div class="move-key" data-move="R">R</div>
+        <div class="move-key prime" data-move="R'">R'</div>
+        <div class="move-key dbl" data-move="R2">R2</div>
+
+        <div class="move-key" data-move="F">F</div>
+        <div class="move-key prime" data-move="F'">F'</div>
+        <div class="move-key dbl" data-move="F2">F2</div>
+        <div class="move-key" data-move="B">B</div>
+        <div class="move-key prime" data-move="B'">B'</div>
+        <div class="move-key dbl" data-move="B2">B2</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: side panel that changes by mode -->
+    <aside class="side-panel">
+      <div class="mode-pane active" data-mode="learn">
+        <div class="learn-steps" id="learnSteps"></div>
+        <div id="learnContent" class="panel-card"></div>
+      </div>
+      <div class="mode-pane" data-mode="solve">
+        <div id="solveContent" class="panel-card"></div>
+      </div>
+      <div class="mode-pane" data-mode="time">
+        <div id="timeContent" class="panel-card"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Footer marker -->
+  <hr class="hr-memphis" style="margin-top: 36px;">
+  <div style="font-family: var(--mono); font-size: 10px; color: var(--ink-mute); text-align:center; letter-spacing: 0.06em; text-transform: uppercase;">
+    Cubelab · An Alexey Mikhail Johll lab · Singapore · 2026
+  </div>
+
+</div>
+
+<!-- SETTINGS DRAWER -->
+<div class="settings-drawer" id="settingsDrawer" aria-hidden="true">
+  <div class="settings-head">
+    <h2>Settings</h2>
+    <button class="btn small ghost" id="btnSettingsClose">✕</button>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-label">Feel</div>
+    <div class="toggle-row">
+      <span>Sound effects</span>
+      <div class="toggle" id="tgSound" data-setting="sound" role="switch"><div class="toggle-thumb"></div></div>
+    </div>
+    <div class="toggle-row">
+      <span>Confetti particles</span>
+      <div class="toggle" id="tgParticles" data-setting="particles" role="switch"><div class="toggle-thumb"></div></div>
+    </div>
+    <div class="toggle-row">
+      <span>Haptic vibration</span>
+      <div class="toggle" id="tgHaptics" data-setting="haptics" role="switch"><div class="toggle-thumb"></div></div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-label">Notation</div>
+    <div style="display:flex; gap:6px;">
+      <button class="btn small ghost block" data-set-notation="trigger" style="flex:1;">Trigger language</button>
+      <button class="btn small ghost block" data-set-notation="standard" style="flex:1;">Standard (R U R')</button>
+    </div>
+    <div style="font-size:12px; color:var(--ink-soft); margin-top:8px; line-height:1.55;">
+      <b>Trigger:</b> easier for first-time learners. <b>Standard:</b> speedcubing notation — the language of advanced solving.
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-label">About</div>
+    <div style="font-size:12px; color:var(--ink-soft); line-height:1.65;">
+      Built on top of <b>Alexey's flowchart</b>, with two small corrections noted in green inside Learn mode.
+      <br><br>
+      <b>Drag</b> the cube to rotate. <b>Scroll</b> to zoom. <b>Click face buttons</b> or use the <span class="kbd">RLUDFB</span> keys to turn faces.
+    </div>
+  </div>
+</div>
+
+<!-- CONFETTI overlay canvas -->
+<canvas class="confetti-canvas" id="confettiCanvas" aria-hidden="true"></canvas>
+
+<!-- CELEBRATION card overlay -->
+<div class="celebration" id="celebration" aria-hidden="true">
+  <div class="celebration-card">
+    <h2>SOLVED!</h2>
+    <p>nice one ✦</p>
+  </div>
+</div>
+
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cubejs@1.3.3/lib/cube.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cubejs@1.3.3/lib/solve.js"></script>
+
+<!-- App scripts -->
+<script src="cube-model.js"></script>
+<script src="renderer.js"></script>
+<script src="solver-beginner.js"></script>
+<script src="tutorial.js"></script>
+<script src="timer.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
