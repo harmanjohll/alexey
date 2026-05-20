@@ -212,8 +212,11 @@
 
 <!-- Libraries: classic globals -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cubejs@1.3.3/lib/cube.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cubejs@1.3.3/lib/solve.js"></script>
+<!-- ldez/cubejs (the Rubik's cube library) served from GitHub via jsdelivr.
+     The npm package named "cubejs" is Cube.dev's analytics framework — NOT
+     what we want. We pin to a known-good ref. -->
+<script src="https://cdn.jsdelivr.net/gh/ldez/cubejs@master/lib/cube.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ldez/cubejs@master/lib/solve.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js"></script>
 
