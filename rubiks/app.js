@@ -279,14 +279,16 @@ class App {
     const motion = window.motion;
     const activePane = document.querySelector('.mode-pane.active');
     if (!activePane) return;
-    if (motion && motion.animate) {
-      // fade-in pane then stagger immediate children
-      motion.animate(activePane, { opacity: [0, 1], y: [12, 0] }, { duration: 0.32, easing: motion.easeOut || 'ease-out' });
+    if (!motion || !motion.animate) return;
+    // Subtle slide only — DO NOT animate opacity. If motion fails to complete,
+    // the content remains visible (we'd rather lose the animation than the UI).
+    try {
+      motion.animate(activePane, { y: [12, 0] }, { duration: 0.32 });
       const children = activePane.querySelectorAll(':scope > *');
       children.forEach((c, i) => {
-        motion.animate(c, { opacity: [0, 1], y: [10, 0] }, { duration: 0.36, delay: 0.08 + i * 0.06, easing: motion.easeOut || 'ease-out' });
+        try { motion.animate(c, { y: [10, 0] }, { duration: 0.36, delay: 0.08 + i * 0.06 }); } catch {}
       });
-    }
+    } catch {}
   }
 
   _pulseMoveKey(face) {
@@ -384,12 +386,13 @@ class App {
       }
     } catch {}
 
-    // Stagger reveal the blocks
+    // Stagger reveal the blocks (subtle slide only — never animate opacity, so
+    // if motion silently fails the content remains visible)
     const motion = window.motion;
     if (motion && motion.animate) {
       const blocks = card.querySelectorAll(':scope > *');
       blocks.forEach((b, i) => {
-        motion.animate(b, { opacity: [0, 1], y: [10, 0] }, { duration: 0.32, delay: 0.04 + i * 0.05, easing: motion.easeOut || 'ease-out' });
+        try { motion.animate(b, { y: [10, 0] }, { duration: 0.32, delay: 0.04 + i * 0.05 }); } catch {}
       });
     }
 
@@ -809,16 +812,39 @@ class App {
   }
 }
 
-// Boot — waits for motion to be ready (or the shim) so animations work from t=0
+// Boot — waits for motion to be ready (or the shim) so animations work from t=0.
+// Wraps construction in try/catch and logs every step so failures are diagnosable
+// from the browser console.
 window.addEventListener('DOMContentLoaded', () => {
-  const start = () => {
-    if (typeof Cube !== 'undefined' && Cube.initSolver) {
-      requestIdleCallback ? requestIdleCallback(() => Cube.initSolver()) : setTimeout(() => Cube.initSolver(), 1500);
+  console.log('[cubelab] DOMContentLoaded — THREE:', typeof THREE,
+              'Cube:', typeof Cube, 'confetti:', typeof confetti,
+              'lottie:', typeof lottie, 'motion:', typeof window.motion);
+
+  const start = (trigger) => {
+    if (window.app) return;
+    console.log('[cubelab] booting (' + trigger + ')');
+    try {
+      if (typeof Cube !== 'undefined' && Cube.initSolver) {
+        const init = () => Cube.initSolver();
+        window.requestIdleCallback ? requestIdleCallback(init) : setTimeout(init, 1500);
+      }
+      window.app = new App();
+      console.log('[cubelab] app booted OK');
+    } catch (err) {
+      console.error('[cubelab] BOOT FAILED:', err);
+      // Surface to user
+      const stage = document.querySelector('.cube-stage');
+      if (stage) {
+        const note = document.createElement('div');
+        note.style.cssText = 'position:absolute;inset:auto 16px 16px 16px;background:#FF5043;color:#181612;font-family:monospace;font-size:11px;padding:10px 14px;border:2px solid #181612;border-radius:4px;box-shadow:3px 3px 0 #181612;z-index:5;';
+        note.textContent = 'Boot error: ' + (err && err.message ? err.message : err);
+        stage.appendChild(note);
+      }
     }
-    window.app = new App();
   };
-  if (window.motion) start();
-  else window.addEventListener('motion:ready', start, { once: true });
-  // belt-and-braces: start anyway after 2s if motion never loaded
-  setTimeout(() => { if (!window.app) start(); }, 2000);
+
+  if (window.motion) start('motion-already-present');
+  else window.addEventListener('motion:ready', () => start('motion:ready'), { once: true });
+  // belt-and-braces: start anyway after 1.2s if motion never loaded
+  setTimeout(() => { if (!window.app) start('timeout-fallback'); }, 1200);
 });
