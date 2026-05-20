@@ -194,29 +194,77 @@
   </div>
 </div>
 
-<!-- CONFETTI overlay canvas -->
+<!-- CONFETTI overlay canvas (kept for fallback only) -->
 <canvas class="confetti-canvas" id="confettiCanvas" aria-hidden="true"></canvas>
 
-<!-- CELEBRATION card overlay -->
+<!-- PB badge overlay -->
+<div id="pbBurst" aria-hidden="true">NEW PB <span class="delta"></span></div>
+
+<!-- CELEBRATION overlay -->
 <div class="celebration" id="celebration" aria-hidden="true">
+  <div class="celebration-scrim"></div>
+  <div class="lottie-host" id="lottieHost"></div>
   <div class="celebration-card">
-    <h2>SOLVED!</h2>
+    <h2 id="celebrationText"><span class="ch">S</span><span class="ch">O</span><span class="ch">L</span><span class="ch">V</span><span class="ch">E</span><span class="ch">D</span><span class="ch">!</span></h2>
     <p>nice one ✦</p>
   </div>
 </div>
 
-<!-- Libraries -->
+<!-- Libraries: classic globals -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cubejs@1.3.3/lib/cube.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cubejs@1.3.3/lib/solve.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js"></script>
 
-<!-- App scripts -->
-<script src="cube-model.js"></script>
-<script src="renderer.js"></script>
-<script src="solver-beginner.js"></script>
-<script src="tutorial.js"></script>
-<script src="timer.js"></script>
-<script src="app.js"></script>
+<!-- motion (ESM) — re-export to window so classic scripts can use it -->
+<script type="module">
+  try {
+    const mod = await import('https://esm.sh/motion@11.11.17');
+    window.motion = {
+      animate: mod.animate,
+      stagger: mod.stagger,
+      inView: mod.inView,
+      spring: mod.spring,
+      easeOut: mod.easeOut,
+      easeInOut: mod.easeInOut,
+    };
+  } catch (e) {
+    console.warn('motion library failed to load — falling back to no-anim shims', e);
+    window.motion = {
+      animate: (target, keyframes, opts = {}) => {
+        // tiny shim — just set final keyframe values without animation
+        const finalize = () => {
+          if (!target || !keyframes) return;
+          Object.entries(keyframes).forEach(([k, v]) => {
+            const final = Array.isArray(v) ? v[v.length - 1] : v;
+            try {
+              if (target.style && typeof final !== 'object') target.style[k] = final;
+              else if (target[k] !== undefined) target[k] = final;
+            } catch {}
+          });
+          if (opts.onComplete) opts.onComplete();
+        };
+        setTimeout(finalize, opts.delay || 0);
+        return { stop: () => {}, then: (fn) => Promise.resolve().then(fn) };
+      },
+      stagger: (gap = 0.06) => (i) => i * gap,
+      inView: () => () => {},
+      spring: () => 'ease-out',
+      easeOut: 'ease-out',
+      easeInOut: 'ease-in-out',
+    };
+  }
+  window.dispatchEvent(new Event('motion:ready'));
+</script>
+
+<!-- App scripts (defer so they run after the module above) -->
+<script defer src="cube-model.js"></script>
+<script defer src="renderer.js"></script>
+<script defer src="solver-beginner.js"></script>
+<script defer src="tutorial.js"></script>
+<script defer src="timer.js"></script>
+<script defer src="app.js"></script>
 
 </body>
 </html>

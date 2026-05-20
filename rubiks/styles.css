@@ -338,6 +338,19 @@ body {
 .move-key:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 var(--ink); }
 .move-key.prime { background: var(--card); }
 .move-key.dbl { background: var(--paper); }
+.move-key.ripple {
+  background: var(--sunshine) !important;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 0 var(--coral) !important;
+}
+.learn-step-dot.flash { background: var(--coral) !important; color: var(--card); }
+.learn-step-dot.celebrate { animation: stageCelebrate 0.7s var(--ease-bounce); }
+@keyframes stageCelebrate {
+  0% { transform: scale(1) rotate(0); }
+  35% { transform: scale(1.35) rotate(-12deg); }
+  70% { transform: scale(1.15) rotate(8deg); }
+  100% { transform: scale(1) rotate(0); }
+}
 
 /* =========================================================
    SIDE PANEL — context-sensitive (Learn / Solve / Time)
@@ -811,6 +824,25 @@ body {
   z-index: 998;
 }
 
+.celebration-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(24,22,18,0.65), rgba(24,22,18,0.2));
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-snap);
+}
+.celebration.show .celebration-scrim { opacity: 1; }
+
+.lottie-host {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lottie-host > * { max-width: 70vmin; max-height: 70vmin; }
+
 .celebration-card {
   background: var(--coral);
   border: 3px solid var(--ink);
@@ -820,11 +852,47 @@ body {
   text-align: center;
   transform: scale(0) rotate(-8deg);
   opacity: 0;
-  transition: all 0.5s var(--ease-bounce);
+  position: relative;
+  z-index: 2;
 }
 .celebration.show .celebration-card {
   transform: scale(1) rotate(-3deg);
   opacity: 1;
+}
+.celebration-card h2 .ch {
+  display: inline-block;
+  transform: translateY(40px);
+  opacity: 0;
+}
+
+#pbBurst {
+  position: fixed;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-30px) scale(0.7);
+  background: var(--ink);
+  color: var(--sunshine);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 32px;
+  padding: 16px 34px;
+  border-radius: 8px;
+  border: 3px solid var(--sunshine);
+  box-shadow: 6px 6px 0 0 var(--coral);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 996;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+#pbBurst .delta {
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paper);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
 }
 .celebration-card h2 {
   font-family: var(--display);

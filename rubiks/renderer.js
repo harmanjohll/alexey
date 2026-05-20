@@ -9,11 +9,13 @@ const CUBIE_SIZE = 0.94;
 const CUBIE_GAP = 1.0;
 const STICKER_INSET = 0.04;
 const CUBE_BODY_COLOR = 0x14110D;
+// Yellow on top (U), white on bottom (D) — matches the chart's
+// "yellow daisy on top → white cross drops to the bottom" framing.
 const STICKER_COLORS_HEX = {
-  U: 0xFAFAFA,
+  U: 0xFFD500,  // yellow (top)
   R: 0xDC2626,
   F: 0x009B48,
-  D: 0xFFD500,
+  D: 0xFAFAFA,  // white  (bottom)
   L: 0xFF6F1A,
   B: 0x0046AD,
 };
@@ -125,24 +127,29 @@ class CubeRenderer {
           const stickerGeo = new THREE.PlaneGeometry(stickerSize, stickerSize);
           const half = CUBIE_SIZE / 2 + 0.001;
 
-          const addSticker = (color, normal, rot) => {
+          const addSticker = (color, normal, rot, faceKey) => {
             const m = new THREE.MeshStandardMaterial({
               color,
               roughness: 0.45,
               metalness: 0.0,
+              emissive: 0x000000,
+              emissiveIntensity: 0,
             });
             const sticker = new THREE.Mesh(stickerGeo, m);
             sticker.position.set(normal[0] * half, normal[1] * half, normal[2] * half);
             sticker.rotation.set(rot[0], rot[1], rot[2]);
+            sticker.userData.isSticker = true;
+            sticker.userData.faceKey = faceKey;
+            sticker.userData.localNormal = { x: normal[0], y: normal[1], z: normal[2] };
             cubie.add(sticker);
           };
 
-          if (x === 1)  addSticker(STICKER_COLORS_HEX.R, [1, 0, 0],  [0, Math.PI/2, 0]);
-          if (x === -1) addSticker(STICKER_COLORS_HEX.L, [-1, 0, 0], [0, -Math.PI/2, 0]);
-          if (y === 1)  addSticker(STICKER_COLORS_HEX.U, [0, 1, 0],  [-Math.PI/2, 0, 0]);
-          if (y === -1) addSticker(STICKER_COLORS_HEX.D, [0, -1, 0], [Math.PI/2, 0, 0]);
-          if (z === 1)  addSticker(STICKER_COLORS_HEX.F, [0, 0, 1],  [0, 0, 0]);
-          if (z === -1) addSticker(STICKER_COLORS_HEX.B, [0, 0, -1], [0, Math.PI, 0]);
+          if (x === 1)  addSticker(STICKER_COLORS_HEX.R, [1, 0, 0],  [0, Math.PI/2, 0],  'R');
+          if (x === -1) addSticker(STICKER_COLORS_HEX.L, [-1, 0, 0], [0, -Math.PI/2, 0], 'L');
+          if (y === 1)  addSticker(STICKER_COLORS_HEX.U, [0, 1, 0],  [-Math.PI/2, 0, 0], 'U');
+          if (y === -1) addSticker(STICKER_COLORS_HEX.D, [0, -1, 0], [Math.PI/2, 0, 0],  'D');
+          if (z === 1)  addSticker(STICKER_COLORS_HEX.F, [0, 0, 1],  [0, 0, 0],          'F');
+          if (z === -1) addSticker(STICKER_COLORS_HEX.B, [0, 0, -1], [0, Math.PI, 0],    'B');
 
           cubie.userData.logicalPos = { x, y, z };
           cubie.userData.initialPos = { x, y, z };
@@ -169,25 +176,124 @@ class CubeRenderer {
   }
 
   _initInteraction() {
-    let dragging = false;
+    this._raycaster = new THREE.Raycaster();
+    this._grab = { active: false, gesture: 'idle', sticker: null, cubie: null,
+                   faceLocal: null, faceWorld: null, axisCandidates: null,
+                   screenStart: null, hitPoint: null };
+    this._buildFaceLookup();
+
     let lx = 0, ly = 0;
+    let dragging = false;
+
+    const ndcFromEvent = (e) => {
+      const p = this._pointerXY(e);
+      const r = this.canvas.getBoundingClientRect();
+      return {
+        x: ((p.x - r.left) / r.width) * 2 - 1,
+        y: -((p.y - r.top) / r.height) * 2 + 1,
+        clientX: p.x,
+        clientY: p.y,
+      };
+    };
 
     const start = (e) => {
+      if (this._cinematic) return; // ignore input mid-cinematic
+      const ndc = ndcFromEvent(e);
+      this._raycaster.setFromCamera({ x: ndc.x, y: ndc.y }, this.camera);
+      const hits = this._raycaster
+        .intersectObjects(this.cubies, true)
+        .filter(h => h.object && h.object.userData && h.object.userData.isSticker);
+
       dragging = true;
-      const p = this._pointerXY(e);
-      lx = p.x; ly = p.y;
+      lx = ndc.clientX; ly = ndc.clientY;
+
+      if (hits.length > 0) {
+        // start face-grab
+        const hit = hits[0];
+        const sticker = hit.object;
+        const cubie = sticker.parent;
+        const ln = sticker.userData.localNormal;
+        // transform local normal to world (cubie's rotation only)
+        const v = new THREE.Vector3(ln.x, ln.y, ln.z);
+        v.applyQuaternion(cubie.getWorldQuaternion(new THREE.Quaternion()));
+        v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));  // snap to ±1 axis
+        const axisCandidates = [];
+        if (Math.abs(v.x) < 0.5) axisCandidates.push(new THREE.Vector3(1, 0, 0));
+        if (Math.abs(v.y) < 0.5) axisCandidates.push(new THREE.Vector3(0, 1, 0));
+        if (Math.abs(v.z) < 0.5) axisCandidates.push(new THREE.Vector3(0, 0, 1));
+
+        this._grab.active = true;
+        this._grab.gesture = 'face';
+        this._grab.sticker = sticker;
+        this._grab.cubie = cubie;
+        this._grab.faceWorld = v;
+        this._grab.faceLocal = sticker.userData.localNormal;
+        this._grab.faceKey = sticker.userData.faceKey;
+        this._grab.axisCandidates = axisCandidates;
+        this._grab.screenStart = { x: ndc.clientX, y: ndc.clientY };
+        this._grab.hitPoint = hit.point.clone();
+      } else {
+        this._grab.gesture = 'orbit';
+      }
     };
+
     const move = (e) => {
       if (!dragging) return;
       const p = this._pointerXY(e);
       const dx = p.x - lx;
       const dy = p.y - ly;
       lx = p.x; ly = p.y;
-      this._spherical.theta -= dx * 0.008;
-      this._spherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, this._spherical.phi - dy * 0.008));
-      this._updateCamera();
+      if (this._grab.gesture === 'orbit') {
+        this._spherical.theta -= dx * 0.008;
+        this._spherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, this._spherical.phi - dy * 0.008));
+        this._updateCamera();
+      }
+      // face-grab: we don't preview the rotation in v1; decide on release
     };
-    const end = () => { dragging = false; };
+
+    const end = (e) => {
+      if (!dragging) { return; }
+      dragging = false;
+      if (this._grab.gesture !== 'face') {
+        this._grab.gesture = 'idle';
+        return;
+      }
+      const p = this._pointerXY(e);
+      const dx = p.x - this._grab.screenStart.x;
+      const dy = p.y - this._grab.screenStart.y;
+      const mag = Math.hypot(dx, dy);
+      if (mag < 18) {
+        this._grab.gesture = 'idle';
+        return;
+      }
+      // pick best axis by projecting drag into screen
+      const pivot = this._grab.hitPoint;
+      const projectVec = (p) => {
+        const v = p.clone().project(this.camera);
+        return { x: (v.x + 1) * 0.5 * this.canvas.clientWidth,
+                 y: (-v.y + 1) * 0.5 * this.canvas.clientHeight };
+      };
+      const base = projectVec(pivot);
+      let best = null;
+      for (const axis of this._grab.axisCandidates) {
+        const tip = pivot.clone().add(axis.clone().multiplyScalar(0.5));
+        const tipS = projectVec(tip);
+        const sx = tipS.x - base.x;
+        const sy = tipS.y - base.y;
+        const len = Math.hypot(sx, sy) || 1;
+        const score = (dx * sx + dy * sy) / len;
+        if (!best || Math.abs(score) > Math.abs(best.score)) best = { axis, score };
+      }
+      if (best) {
+        const sign = best.score > 0 ? 1 : -1;
+        const notation = this._lookupMove(this._grab.faceWorld, best.axis, sign);
+        if (notation) {
+          if (this.opts.onMove) this.opts.onMove(notation);
+          if (this.model) this.model.apply(notation);
+        }
+      }
+      this._grab.gesture = 'idle';
+    };
 
     this.canvas.addEventListener('mousedown', start);
     window.addEventListener('mousemove', move);
@@ -204,6 +310,69 @@ class CubeRenderer {
     }, { passive: false });
   }
 
+  /**
+   * Build the (faceWorld, rotationAxis, dragSign) → move-notation lookup table.
+   * For each of 6 face normals, and 2 perpendicular axes × 2 signs, decide which
+   * face turn (and direction) makes the drag feel natural.
+   *
+   * Heuristic: dragging along axis +A on face +F should rotate the +F-layer
+   * such that the face's local +A direction moves in the drag direction.
+   * The face turn axis is the face normal itself, and the direction depends
+   * on the cross-product sign.
+   */
+  _buildFaceLookup() {
+    const FN = {
+      '+x': { axis: 'x', layer: +1, faceLetter: 'R' },
+      '-x': { axis: 'x', layer: -1, faceLetter: 'L' },
+      '+y': { axis: 'y', layer: +1, faceLetter: 'U' },
+      '-y': { axis: 'y', layer: -1, faceLetter: 'D' },
+      '+z': { axis: 'z', layer: +1, faceLetter: 'F' },
+      '-z': { axis: 'z', layer: -1, faceLetter: 'B' },
+    };
+    // Sign convention for primed moves (matches MOVE_TABLE base direction)
+    const baseDir = { R: -1, L: +1, U: -1, D: +1, F: -1, B: +1 };
+    this._faceLookup = (faceWorld, dragAxisWorld, dragSign) => {
+      const key = (faceWorld.x === 1 ? '+x' : faceWorld.x === -1 ? '-x'
+                 : faceWorld.y === 1 ? '+y' : faceWorld.y === -1 ? '-y'
+                 : faceWorld.z === 1 ? '+z' : '-z');
+      const info = FN[key];
+      if (!info) return null;
+      const turnAxis = info.axis;
+      // drag axis component perpendicular to the face normal — already orthogonal by construction
+      // The rotation direction: if drag direction = +A (one of {+x,+y,+z}\faceNormal),
+      // then we rotate around faceNormal such that the face's surface drags in that direction.
+      // Compute via cross product: face × dragAxis = rotation axis direction at drag point.
+      const f = new THREE.Vector3(faceWorld.x, faceWorld.y, faceWorld.z);
+      const d = dragAxisWorld.clone().multiplyScalar(dragSign);
+      const r = new THREE.Vector3().crossVectors(f, d);
+      // r should be ±axis of rotation; we want a face turn (R/L/U/D/F/B) whose
+      // axis matches |r.dominantAxis|, and direction matches sign(r.dominantAxis component).
+      const components = [['x', r.x], ['y', r.y], ['z', r.z]];
+      components.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+      const [axisLetter, val] = components[0];
+      // The face we want to turn is `info.faceLetter` (always the clicked face).
+      // Its base direction in MOVE_TABLE is `baseDir[faceLetter]`. If sign(val) matches base
+      // direction along that axis, the move is unprimed; otherwise primed.
+      const desiredDir = Math.sign(val);
+      // Actually we already know info.faceLetter is the face being turned, and its axis is info.axis.
+      // So the rotation is around info.axis. The direction (+1 or -1) we want:
+      //   for face +X (R), base direction -1 around X (=clockwise from outside).
+      // If r is along +info.axis with positive sign, we want a rotation in that direction.
+      // baseDir[faceLetter] tells us what sign the UNPRIMED move uses on its axis.
+      // So if desiredDir === baseDir → unprimed, else primed.
+      // But we need to project `r` onto info.axis.
+      const rOnFaceAxis = info.axis === 'x' ? r.x : info.axis === 'y' ? r.y : r.z;
+      const wantedSign = Math.sign(rOnFaceAxis);
+      if (wantedSign === 0) return null;
+      const notation = (wantedSign === baseDir[info.faceLetter]) ? info.faceLetter : info.faceLetter + "'";
+      return notation;
+    };
+  }
+
+  _lookupMove(faceWorld, axisVec, sign) {
+    return this._faceLookup(faceWorld, axisVec, sign);
+  }
+
   _pointerXY(e) {
     if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
     if (e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
@@ -211,21 +380,21 @@ class CubeRenderer {
   }
 
   _handleModelEvent(payload) {
+    if (this._cinematic) {
+      // cinematic owns the animation; just bake model-state moves silently
+      if (payload.kind === 'reset') this._resetCubies();
+      return;
+    }
     if (payload.kind === 'reset') {
       this._resetCubies();
       return;
     }
-    if (payload.kind === 'sync') {
-      // explicit sync request — no-op (cubies are physical, no repaint needed)
-      return;
-    }
+    if (payload.kind === 'sync') return;
     if (payload.kind === 'move') {
       if (payload.animate === false) {
-        // snap-apply each move with no animation
         payload.moves.forEach(m => this._snapMove(m));
         return;
       }
-      // queue animations
       payload.moves.forEach(m => this._queue.push(m));
       if (!this._isAnimating) this._processQueue();
     }
@@ -437,7 +606,182 @@ class CubeRenderer {
 
   _animate() {
     this._raf = requestAnimationFrame(() => this._animate());
+    // gentle micro-shake while a cinematic is active
+    if (this._cameraShake && this._cameraShake > 0.001) {
+      const nx = (Math.random() - 0.5) * this._cameraShake;
+      const ny = (Math.random() - 0.5) * this._cameraShake;
+      this.camera.position.x += nx;
+      this.camera.position.y += ny;
+      this._cameraShake *= 0.92;
+    }
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /* =========================================================
+     HIGHLIGHTS — pulse specific cubies' stickers
+     ========================================================= */
+
+  /**
+   * Pulse emissive on the stickers of cubies whose logical position matches.
+   * @returns {() => void} disposer that clears the highlight
+   */
+  highlightPieces(pieces, opts = {}) {
+    this.clearHighlights();
+    const defaults = { color: 0xFFC83D, duration: 1300, stagger: 80, intensity: 0.9 };
+    const o = { ...defaults, ...opts };
+    const matches = [];
+
+    const keyFor = (p) => `${p.x}|${p.y}|${p.z}`;
+    const wantKeys = new Set(pieces.map(keyFor));
+
+    this.cubies.forEach(cubie => {
+      const lp = cubie.userData.logicalPos;
+      if (!wantKeys.has(keyFor(lp))) return;
+      cubie.children.forEach(ch => {
+        if (!ch.userData || !ch.userData.isSticker) return;
+        matches.push({ material: ch.material, baseEmissive: ch.material.emissive.getHex() });
+        ch.material.emissive.setHex(o.color);
+      });
+    });
+
+    const motion = window.motion;
+    const animations = [];
+
+    matches.forEach((m, i) => {
+      // Use a per-material RAF loop directly — works whether motion is present or not,
+      // and avoids depending on motion's object-property animation behaviour for Three.js materials.
+      const start = performance.now() + i * o.stagger;
+      const period = o.duration;
+      const intensityMax = o.intensity;
+      let alive = true;
+      const tick = () => {
+        if (!alive) return;
+        const now = performance.now();
+        if (now < start) { requestAnimationFrame(tick); return; }
+        const phase = ((now - start) % period) / period; // 0..1
+        // sine-shaped pulse 0 → max → 0
+        m.material.emissiveIntensity = Math.sin(phase * Math.PI) * intensityMax;
+        requestAnimationFrame(tick);
+      };
+      tick();
+      animations.push({ stop: () => { alive = false; } });
+    });
+
+    this._activeHighlight = { matches, animations };
+    return () => this.clearHighlights();
+  }
+
+  clearHighlights() {
+    if (!this._activeHighlight) return;
+    const { matches, animations } = this._activeHighlight;
+    animations.forEach(a => { try { a.stop && a.stop(); a.cancel && a.cancel(); } catch {} });
+    matches.forEach(m => {
+      m.material.emissiveIntensity = 0;
+      m.material.emissive.setHex(m.baseEmissive);
+    });
+    this._activeHighlight = null;
+  }
+
+  /* =========================================================
+     CINEMATIC — slower, dramatic scramble / solve playback
+     ========================================================= */
+
+  async scrambleCinematic(moves, opts = {}) {
+    const totalMs = opts.totalMs || 3000;
+    const onMove = opts.onMove || (() => {});
+    const perMoveMs = Math.max(80, totalMs / moves.length);
+    this._cinematic = true;
+    // gentle camera spin during scramble
+    const startTheta = this._spherical.theta;
+    for (let i = 0; i < moves.length; i++) {
+      const m = moves[i];
+      onMove(m); // tell app to update model + sound
+      await this._animateMoveWithEase(m, perMoveMs);
+      // slight camera drift
+      this._spherical.theta = startTheta + Math.sin((i / moves.length) * Math.PI) * 0.45;
+      this._updateCamera();
+      // micro-shake on each move
+      this._cameraShake = 0.03;
+    }
+    // settle camera
+    await this._easeCameraTo(startTheta, 280);
+    this._cinematic = false;
+  }
+
+  async playSolveCinematic(moves, opts = {}) {
+    const totalMs = opts.totalMs || 5000;
+    const onMove = opts.onMove || (() => {});
+    const perMoveMs = Math.max(120, totalMs / moves.length);
+    this._cinematic = true;
+    const startTheta = this._spherical.theta;
+    for (let i = 0; i < moves.length; i++) {
+      const m = moves[i];
+      onMove(m);
+      await this._animateMoveWithEase(m, perMoveMs);
+      // very subtle camera arc
+      this._spherical.theta = startTheta + (i / moves.length) * 0.55;
+      this._updateCamera();
+    }
+    await this._easeCameraTo(startTheta, 400);
+    this._cinematic = false;
+  }
+
+  _animateMoveWithEase(notation, dur) {
+    return new Promise((resolve) => {
+      const m = this._parseMove(notation);
+      if (!m) { resolve(); return; }
+      const { axis, layer, dir, times } = m;
+      const affected = this.cubies.filter(c => Math.abs(c.userData.logicalPos[axis] - layer) < 0.5);
+      const pivot = new THREE.Group();
+      this.cubeGroup.add(pivot);
+      affected.forEach(c => pivot.attach(c));
+      const targetAngle = dir * (Math.PI / 2) * times;
+      const t0 = performance.now();
+      if (this.opts.sound) this.opts.sound.click();
+      const tick = () => {
+        const t = Math.min(1, (performance.now() - t0) / dur);
+        // ease-out cubic with a tiny overshoot at the end
+        const eased = t < 1 ? 1 - Math.pow(1 - t, 3) : 1;
+        pivot.rotation[axis] = targetAngle * eased;
+        if (t < 1) requestAnimationFrame(tick);
+        else {
+          affected.forEach(c => {
+            this.cubeGroup.attach(c);
+            const lp = c.userData.logicalPos;
+            const rotated = this._rotateLogical(lp, axis, dir, times);
+            c.userData.logicalPos = rotated;
+            c.position.set(
+              Math.round(c.position.x),
+              Math.round(c.position.y),
+              Math.round(c.position.z)
+            );
+          });
+          this.cubeGroup.remove(pivot);
+          resolve();
+        }
+      };
+      tick();
+    });
+  }
+
+  _easeCameraTo(targetTheta, dur) {
+    return new Promise(resolve => {
+      const startTheta = this._spherical.theta;
+      const t0 = performance.now();
+      const tick = () => {
+        const t = Math.min(1, (performance.now() - t0) / dur);
+        const e = 1 - Math.pow(1 - t, 3);
+        this._spherical.theta = startTheta + (targetTheta - startTheta) * e;
+        this._updateCamera();
+        if (t < 1) requestAnimationFrame(tick);
+        else resolve();
+      };
+      tick();
+    });
+  }
+
+  setCameraShake(amount) {
+    this._cameraShake = amount;
   }
 
   dispose() {

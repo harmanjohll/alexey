@@ -13,6 +13,10 @@ const TUTORIAL_STAGES = [
     badge: '01',
     color: 'mint',
     intro: 'Start by forming a "daisy" — four white edge pieces around the yellow centre on top. Then drop them down to form the white cross on the bottom.',
+    highlight: {
+      label: 'D-layer edges',
+      pieces: [{x:0,y:-1,z:1},{x:1,y:-1,z:0},{x:0,y:-1,z:-1},{x:-1,y:-1,z:0}],
+    },
     blocks: [
       {
         kind: 'step',
@@ -41,6 +45,10 @@ const TUTORIAL_STAGES = [
     badge: '02',
     color: 'sunshine',
     intro: 'Now slot the four white corners in to complete the first layer. The "trigger" pattern does most of the work.',
+    highlight: {
+      label: 'D-layer corners',
+      pieces: [{x:1,y:-1,z:1},{x:-1,y:-1,z:1},{x:1,y:-1,z:-1},{x:-1,y:-1,z:-1}],
+    },
     blocks: [
       {
         kind: 'step',
@@ -87,6 +95,10 @@ const TUTORIAL_STAGES = [
     badge: '03',
     color: 'electric',
     intro: 'The middle layer edges click in next. Find a non-yellow edge in the top layer that forms an "inverted T".',
+    highlight: {
+      label: 'Equator edges',
+      pieces: [{x:1,y:0,z:1},{x:-1,y:0,z:1},{x:1,y:0,z:-1},{x:-1,y:0,z:-1}],
+    },
     blocks: [
       {
         kind: 'step',
@@ -120,7 +132,11 @@ const TUTORIAL_STAGES = [
     name: 'Yellow cross',
     badge: '04',
     color: 'sunshine',
-    intro: 'Flip the cube mentally — yellow is on top now. Form a yellow cross using one algorithm, repeated up to three times.',
+    intro: 'Yellow is on top. Form a yellow cross using one algorithm, repeated up to three times.',
+    highlight: {
+      label: 'U-layer edges',
+      pieces: [{x:0,y:1,z:1},{x:1,y:1,z:0},{x:0,y:1,z:-1},{x:-1,y:1,z:0}],
+    },
     blocks: [
       {
         kind: 'step',
@@ -156,6 +172,10 @@ const TUTORIAL_STAGES = [
     badge: '05',
     color: 'coral',
     intro: 'Get all four corner stickers to face yellow-up. Sune is your tool.',
+    highlight: {
+      label: 'U-layer corners',
+      pieces: [{x:1,y:1,z:1},{x:-1,y:1,z:1},{x:1,y:1,z:-1},{x:-1,y:1,z:-1}],
+    },
     blocks: [
       {
         kind: 'algo',
@@ -185,6 +205,10 @@ const TUTORIAL_STAGES = [
     badge: '06',
     color: 'plum',
     intro: 'All yellow now points up — but the corner colours probably don\'t match their sides yet. Cycle the corners into place.',
+    highlight: {
+      label: 'U-layer corners',
+      pieces: [{x:1,y:1,z:1},{x:-1,y:1,z:1},{x:1,y:1,z:-1},{x:-1,y:1,z:-1}],
+    },
     blocks: [
       {
         kind: 'step',
@@ -210,6 +234,10 @@ const TUTORIAL_STAGES = [
     badge: '07',
     color: 'electric',
     intro: 'The last step: cycle the yellow edges into their slots.',
+    highlight: {
+      label: 'U-layer edges',
+      pieces: [{x:0,y:1,z:1},{x:1,y:1,z:0},{x:0,y:1,z:-1},{x:-1,y:1,z:0}],
+    },
     blocks: [
       {
         kind: 'note',
