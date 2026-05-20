@@ -8,11 +8,14 @@
    ========================================================= */
 
 const FACES = ['U', 'R', 'F', 'D', 'L', 'B'];
+// Color convention: yellow on top (U), white on bottom (D) — matches
+// the chart's "form yellow daisy on top, drop white cross to the bottom"
+// and lets the beginner solver's D-stickers correspond to white pieces.
 const COLOR_BY_FACE = {
-  U: '#FAFAFA',  // white
+  U: '#FFD500',  // yellow  (top)
   R: '#DC2626',  // red
   F: '#009B48',  // green
-  D: '#FFD500',  // yellow
+  D: '#FAFAFA',  // white   (bottom)
   L: '#FF6F1A',  // orange
   B: '#0046AD',  // blue
 };
@@ -61,6 +64,17 @@ class CubeModel {
 
   /* ---------- Scrambling ---------- */
   scramble(n = 22) {
+    const moves = this.scrambleMoves(n);
+    const str = moves.join(' ');
+    this.apply(str, { animate: false });
+    return str;
+  }
+
+  /**
+   * Generate a scramble move list WITHOUT applying it.
+   * Lets the renderer drive a cinematic per-move sequence.
+   */
+  scrambleMoves(n = 22) {
     const moves = [];
     const axes = { U: 'y', D: 'y', R: 'x', L: 'x', F: 'z', B: 'z' };
     let lastAxis = '';
@@ -69,7 +83,6 @@ class CubeModel {
       let face;
       for (let attempt = 0; attempt < 20; attempt++) {
         face = FACES[Math.floor(Math.random() * 6)];
-        // disallow same face twice in a row, and disallow same axis twice in a row
         if (face !== lastFace && axes[face] !== lastAxis) break;
       }
       const mods = ['', "'", '2'];
@@ -78,9 +91,7 @@ class CubeModel {
       lastAxis = axes[face];
       lastFace = face;
     }
-    const str = moves.join(' ');
-    this.apply(str, { animate: false });
-    return str;
+    return moves;
   }
 
   /* ---------- Optimal (Kociemba) solve ---------- */

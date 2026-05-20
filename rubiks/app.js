@@ -60,68 +60,41 @@ class SoundFX {
 }
 
 /* ---------------------------------------------------------
-   Confetti — canvas particle burst on solve
+   Confetti helpers — uses canvas-confetti from CDN
    --------------------------------------------------------- */
-class Confetti {
-  constructor(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.particles = [];
-    this.colors = ['#FF5043', '#FFC83D', '#2966FF', '#00C16E', '#8847FF', '#FAFAFA', '#FF6F1A'];
-    this._raf = null;
-    this._resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    this._resize();
-    window.addEventListener('resize', this._resize);
-  }
-  burst(x = window.innerWidth / 2, y = window.innerHeight / 2, count = 140) {
-    for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-      const speed = 3 + Math.random() * 9;
-      this.particles.push({
-        x, y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - Math.random() * 2,
-        size: 6 + Math.random() * 6,
-        color: this.colors[Math.floor(Math.random() * this.colors.length)],
-        rot: Math.random() * Math.PI,
-        vr: (Math.random() - 0.5) * 0.3,
-        life: 1.0,
-        shape: Math.random() > 0.5 ? 'rect' : 'circle',
-      });
-    }
-    if (!this._raf) this._loop();
-  }
-  _loop() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.particles.forEach(p => {
-      p.vy += 0.18; // gravity
-      p.vx *= 0.995;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rot += p.vr;
-      p.life -= 0.005;
-      this.ctx.save();
-      this.ctx.translate(p.x, p.y);
-      this.ctx.rotate(p.rot);
-      this.ctx.fillStyle = p.color;
-      this.ctx.globalAlpha = Math.max(0, p.life);
-      if (p.shape === 'rect') {
-        this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-      } else {
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
-      this.ctx.restore();
-    });
-    this.particles = this.particles.filter(p => p.life > 0 && p.y < this.canvas.height + 50);
-    if (this.particles.length) {
-      this._raf = requestAnimationFrame(() => this._loop());
-    } else {
-      this._raf = null;
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-  }
+const MEMPHIS_COLORS = ['#FF5043', '#FFC83D', '#2966FF', '#00C16E', '#8847FF', '#FAFAFA', '#FF6F1A'];
+
+function fireBurst(opts = {}) {
+  if (typeof confetti !== 'function') return;
+  confetti({
+    particleCount: opts.particleCount || 140,
+    spread: opts.spread || 80,
+    startVelocity: opts.startVelocity || 38,
+    decay: 0.92,
+    gravity: 1.1,
+    ticks: 220,
+    origin: opts.origin || { x: 0.5, y: 0.55 },
+    colors: opts.colors || MEMPHIS_COLORS,
+    shapes: opts.shapes || ['square', 'circle'],
+    scalar: opts.scalar || 1.05,
+    zIndex: 999,
+  });
+}
+
+function fireStars(origin) {
+  if (typeof confetti !== 'function') return;
+  confetti({
+    particleCount: 120,
+    spread: 100,
+    startVelocity: 42,
+    gravity: 1.1,
+    ticks: 240,
+    origin: origin || { x: 0.5, y: 0.35 },
+    colors: ['#FFC83D', '#FF5043', '#FAFAFA', '#2966FF'],
+    shapes: ['star'],
+    scalar: 1.2,
+    zIndex: 999,
+  });
 }
 
 /* ---------------------------------------------------------
@@ -133,13 +106,16 @@ class App {
     this.cube = new CubeModel();
     this.sound = new SoundFX();
     this.sound.enabled = this.settings.sound;
-    this.confetti = new Confetti(document.getElementById('confettiCanvas'));
 
     const canvas = document.getElementById('cubeCanvas');
     this.renderer = new CubeRenderer(canvas, this.cube, {
       sound: this.sound,
       haptics: this.settings.haptics,
+      onMove: (m) => { /* face-grab moves */ },
     });
+
+    // optional Lottie celebration
+    this._initLottie();
 
     this.mode = 'learn';
     this.tutorialIdx = 0;
@@ -194,6 +170,7 @@ class App {
         const m = k.dataset.move;
         this.cube.apply(m);
         this.sound.tap();
+        this._pulseMoveKey(m);
       });
     });
 
@@ -266,6 +243,7 @@ class App {
         else if (e.altKey) m += '2';
         this.cube.apply(m);
         this.sound.tap();
+        this._pulseMoveKey(m);
         e.preventDefault();
       }
       if (e.code === 'KeyS' && !e.shiftKey && !e.metaKey && !e.ctrlKey && this.mode !== 'time') {
@@ -283,12 +261,44 @@ class App {
   }
 
   _setMode(m) {
+    const prev = this.mode;
     this.mode = m;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
     document.querySelectorAll('.mode-pane').forEach(p => p.classList.toggle('active', p.dataset.mode === m));
     this._renderMode();
     this.sound.tap();
+    this._animateModeSwitch();
+    // clear any active learn highlight when leaving Learn
+    if (prev === 'learn' && m !== 'learn') {
+      try { this.renderer.clearHighlights(); } catch {}
+    }
     if (m === 'time' || m === 'solve') this._maybeScrambleForMode();
+  }
+
+  _animateModeSwitch() {
+    const motion = window.motion;
+    const activePane = document.querySelector('.mode-pane.active');
+    if (!activePane) return;
+    if (motion && motion.animate) {
+      // fade-in pane then stagger immediate children
+      motion.animate(activePane, { opacity: [0, 1], y: [12, 0] }, { duration: 0.32, easing: motion.easeOut || 'ease-out' });
+      const children = activePane.querySelectorAll(':scope > *');
+      children.forEach((c, i) => {
+        motion.animate(c, { opacity: [0, 1], y: [10, 0] }, { duration: 0.36, delay: 0.08 + i * 0.06, easing: motion.easeOut || 'ease-out' });
+      });
+    }
+  }
+
+  _pulseMoveKey(face) {
+    if (!face) return;
+    const el = document.querySelector(`.move-key[data-move="${face}"]`);
+    if (!el) return;
+    const motion = window.motion;
+    el.classList.add('ripple');
+    setTimeout(() => el.classList.remove('ripple'), 320);
+    if (motion && motion.animate) {
+      motion.animate(el, { scale: [1, 1.18, 1] }, { duration: 0.32, easing: motion.easeOut || 'ease-out' });
+    }
   }
 
   _applySettings() {
@@ -357,7 +367,31 @@ class App {
     const prev = document.getElementById('btnPrevStage');
     const next = document.getElementById('btnNextStage');
     if (prev) prev.addEventListener('click', () => { this.tutorialIdx = Math.max(0, this.tutorialIdx - 1); this._renderLearn(); this.sound.tap(); });
-    if (next) next.addEventListener('click', () => { this.tutorialIdx = Math.min(TUTORIAL_STAGES.length - 1, this.tutorialIdx + 1); this._renderLearn(); this.sound.tap(); });
+    if (next) next.addEventListener('click', () => {
+      const completed = this.tutorialIdx;
+      this._celebrateStage(completed);
+      this.tutorialIdx = Math.min(TUTORIAL_STAGES.length - 1, this.tutorialIdx + 1);
+      this._renderLearn();
+    });
+
+    // Highlight relevant cube pieces for this stage
+    try {
+      if (stage.highlight && stage.highlight.pieces) {
+        this.renderer.clearHighlights();
+        this.renderer.highlightPieces(stage.highlight.pieces, { color: 0xFFC83D, duration: 1400, stagger: 100 });
+      } else {
+        this.renderer.clearHighlights();
+      }
+    } catch {}
+
+    // Stagger reveal the blocks
+    const motion = window.motion;
+    if (motion && motion.animate) {
+      const blocks = card.querySelectorAll(':scope > *');
+      blocks.forEach((b, i) => {
+        motion.animate(b, { opacity: [0, 1], y: [10, 0] }, { duration: 0.32, delay: 0.04 + i * 0.05, easing: motion.easeOut || 'ease-out' });
+      });
+    }
 
     // wire algorithm tokens
     document.querySelectorAll('.alg-token[data-alg]').forEach(el => {
@@ -500,18 +534,41 @@ class App {
   }
 
   /* ----- Scramble & solve ----- */
-  _initialScramble() { this._scramble(); }
+  _initialScramble() { this._scramble({ instant: true }); }
   _maybeScrambleForMode() {
     if (!this._lastScramble || this.cube.isSolved()) this._scramble();
   }
-  _scramble() {
+  _scramble(opts = {}) {
     this.cube.reset();
-    const str = this.cube.scramble(22);
+    if (opts.instant) {
+      // first load: skip the cinematic for instant readiness
+      const str = this.cube.scramble(22);
+      this._lastScramble = str;
+      this.timer.setScramble(str);
+      const sd = document.getElementById('scrambleDisplay');
+      if (sd) sd.textContent = str;
+      return;
+    }
+    const moves = this.cube.scrambleMoves(22);
+    const str = moves.join(' ');
     this._lastScramble = str;
     this.timer.setScramble(str);
     const sd = document.getElementById('scrambleDisplay');
     if (sd) sd.textContent = str;
     this.sound.tap();
+    // cinematic: renderer drives the animation; for each visualised move we call
+    // the model so cubejs stays in sync, but we suppress the renderer's own queue
+    // via the _cinematic flag.
+    this.renderer.scrambleCinematic(moves, {
+      totalMs: 2800,
+      onMove: (m) => {
+        // sync model silently — renderer is owning the animation
+        this.cube.cube.move(m);
+        this.cube.history.push({ move: m, t: Date.now() });
+      },
+    }).then(() => {
+      this._updateIndicators();
+    });
   }
 
   async _runOptimal() {
@@ -568,7 +625,18 @@ class App {
     const play = document.getElementById('btnPlaySolution');
     const apply = document.getElementById('btnApplyAll');
     if (play) play.addEventListener('click', () => {
-      this.cube.apply(solution);
+      const moves = solution.trim().split(/\s+/).filter(Boolean);
+      if (!moves.length) return;
+      this.renderer.playSolveCinematic(moves, {
+        totalMs: Math.min(8000, Math.max(2500, moves.length * 220)),
+        onMove: (m) => {
+          this.cube.cube.move(m);
+          this.cube.history.push({ move: m, t: Date.now() });
+        },
+      }).then(() => {
+        this._updateIndicators();
+        if (this.cube.isSolved()) this._celebrateSolve();
+      });
     });
     if (apply) apply.addEventListener('click', () => {
       this.cube.applySilent(solution);
@@ -614,7 +682,17 @@ class App {
 
   _onTimerResult(entry, stats) {
     this.sound.success();
-    this._maybeCelebrate(true);
+    // detect a new PB: stats.best comes from the FULL history including this entry,
+    // so check if this entry tied the best AND it's the only one matching or is the new minimum
+    const prevBest = this._prevBest;
+    const newPB = (prevBest === undefined || entry.ms < prevBest);
+    this._prevBest = stats.best;
+    if (newPB) {
+      const delta = (prevBest !== undefined) ? (prevBest - entry.ms) : 0;
+      this._celebratePB(delta);
+    } else {
+      this._maybeCelebrate(true);
+    }
     setTimeout(() => this._renderTime(), 300);
   }
 
@@ -625,34 +703,122 @@ class App {
     if (si) si.style.display = this.cube.isSolved() ? '' : 'none';
   }
 
-  /* ----- Celebration ----- */
+  /* ----- Lottie celebration init ----- */
+  _initLottie() {
+    if (typeof lottie === 'undefined') return;
+    // Inline a tiny CC0-style confetti burst as a fallback (basic animated SVG via Lottie JSON)
+    // We don't fetch external Lottie to keep the app self-contained.
+    // The lottie host is decorative — confetti library + CSS handle the main celebration.
+    this._lottieAnim = null;
+  }
+
+  /* ----- Celebration moments ----- */
   _maybeCelebrate(force = false) {
     if (!force && !this.cube.isSolved()) return;
     if (this._isCelebrating) return;
+    this._celebrateSolve();
+  }
+
+  _celebrateSolve() {
     this._isCelebrating = true;
-    if (this.settings.particles) {
-      this.confetti.burst(window.innerWidth / 2, window.innerHeight / 2, 180);
-      setTimeout(() => this.confetti.burst(window.innerWidth * 0.3, window.innerHeight * 0.4, 90), 200);
-      setTimeout(() => this.confetti.burst(window.innerWidth * 0.7, window.innerHeight * 0.4, 90), 400);
-    }
     if (this.settings.sound) this.sound.success();
     if (this.settings.haptics && 'vibrate' in navigator) navigator.vibrate([100, 60, 100, 60, 200]);
+    if (this.settings.particles) {
+      fireBurst({ origin: { x: 0.5, y: 0.55 }, particleCount: 160, spread: 90 });
+      setTimeout(() => fireBurst({ origin: { x: 0.2, y: 0.5 }, particleCount: 80, spread: 60, startVelocity: 32 }), 220);
+      setTimeout(() => fireBurst({ origin: { x: 0.8, y: 0.5 }, particleCount: 80, spread: 60, startVelocity: 32 }), 380);
+    }
 
     const cel = document.getElementById('celebration');
     if (cel) {
       cel.classList.add('show');
-      setTimeout(() => { cel.classList.remove('show'); this._isCelebrating = false; }, 2400);
+      // animate the SOLVED letters with motion stagger
+      const motion = window.motion;
+      const chars = cel.querySelectorAll('.ch');
+      if (motion && motion.animate) {
+        // Show the card first
+        motion.animate(
+          cel.querySelector('.celebration-card'),
+          { scale: [0, 1.05, 1], rotate: [-12, 4, -3], opacity: [0, 1, 1] },
+          { duration: 0.55, easing: motion.easeOut || 'ease-out' }
+        );
+        chars.forEach((ch, i) => {
+          motion.animate(
+            ch,
+            { y: [40, -8, 0], opacity: [0, 1, 1] },
+            { duration: 0.55, delay: 0.18 + i * 0.06, easing: motion.easeOut || 'ease-out' }
+          );
+        });
+      } else {
+        cel.querySelector('.celebration-card').style.transform = 'scale(1) rotate(-3deg)';
+        cel.querySelector('.celebration-card').style.opacity = '1';
+        chars.forEach(c => { c.style.transform = 'translateY(0)'; c.style.opacity = '1'; });
+      }
+      setTimeout(() => {
+        cel.classList.remove('show');
+        const card = cel.querySelector('.celebration-card');
+        if (card) { card.style.transform = ''; card.style.opacity = ''; }
+        chars.forEach(c => { c.style.transform = ''; c.style.opacity = ''; });
+        this._isCelebrating = false;
+      }, 2600);
     } else {
       this._isCelebrating = false;
     }
   }
+
+  _celebratePB(deltaMs) {
+    if (this.settings.particles) fireStars({ x: 0.5, y: 0.3 });
+    if (this.settings.sound) this.sound.go();
+    const el = document.getElementById('pbBurst');
+    if (!el) return;
+    const deltaEl = el.querySelector('.delta');
+    if (deltaEl) deltaEl.textContent = deltaMs > 0 ? `−${SpeedTimer.formatMs(deltaMs)}` : '';
+    const motion = window.motion;
+    if (motion && motion.animate) {
+      motion.animate(
+        el,
+        { opacity: [0, 1, 1, 0], y: [-30, 0, 0, -10], scale: [0.7, 1.05, 1, 0.95] },
+        { duration: 2.2, easing: motion.easeOut || 'ease-out' }
+      );
+    } else {
+      el.style.opacity = '1';
+      el.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+      setTimeout(() => { el.style.opacity = '0'; }, 1800);
+    }
+  }
+
+  _celebrateStage(idx) {
+    if (this.settings.sound) this.sound.tap();
+    const dot = document.querySelector(`.learn-step-dot[data-idx="${idx}"]`);
+    if (!dot) return;
+    dot.classList.add('celebrate');
+    dot.classList.add('flash');
+    setTimeout(() => dot.classList.remove('celebrate'), 800);
+    setTimeout(() => dot.classList.remove('flash'), 800);
+    if (this.settings.particles) {
+      const r = dot.getBoundingClientRect();
+      fireBurst({
+        origin: { x: (r.left + r.width / 2) / window.innerWidth,
+                  y: (r.top + r.height / 2) / window.innerHeight },
+        particleCount: 50,
+        spread: 60,
+        startVelocity: 28,
+        scalar: 0.8,
+      });
+    }
+  }
 }
 
-// Boot
+// Boot — waits for motion to be ready (or the shim) so animations work from t=0
 window.addEventListener('DOMContentLoaded', () => {
-  // Initialise Kociemba solver in idle time (it precomputes lookup tables)
-  if (typeof Cube !== 'undefined' && Cube.initSolver) {
-    requestIdleCallback ? requestIdleCallback(() => Cube.initSolver()) : setTimeout(() => Cube.initSolver(), 1500);
-  }
-  window.app = new App();
+  const start = () => {
+    if (typeof Cube !== 'undefined' && Cube.initSolver) {
+      requestIdleCallback ? requestIdleCallback(() => Cube.initSolver()) : setTimeout(() => Cube.initSolver(), 1500);
+    }
+    window.app = new App();
+  };
+  if (window.motion) start();
+  else window.addEventListener('motion:ready', start, { once: true });
+  // belt-and-braces: start anyway after 2s if motion never loaded
+  setTimeout(() => { if (!window.app) start(); }, 2000);
 });
