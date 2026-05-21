@@ -234,10 +234,11 @@ class CubeRenderer {
       const dy = p.y - ly;
       lx = p.x; ly = p.y;
       if (this._grab.gesture === 'orbit') {
-        // "Grab and turn" feel: drag right → cube spins right (camera orbits left).
-        // theta increases on +dx, phi increases on +dy (drag down → see bottom).
+        // Horizontal: drag right → cube spins right (camera orbits left).
+        // Vertical: drag down → tilt cube toward viewer (top face comes into
+        // view). Matches Three.js OrbitControls — the desktop 3D-viewer norm.
         this._spherical.theta += dx * 0.008;
-        this._spherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, this._spherical.phi + dy * 0.008));
+        this._spherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, this._spherical.phi - dy * 0.008));
         this._updateCamera();
       }
       // face-grab: we don't preview the rotation in v1; decide on release
