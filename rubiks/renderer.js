@@ -159,20 +159,10 @@ class CubeRenderer {
       }
     }
 
-    // subtle entrance — drop in
-    this.cubeGroup.scale.set(0, 0, 0);
-    this.cubeGroup.rotation.y = Math.PI * 0.1;
-    const t0 = performance.now();
-    const animateIn = () => {
-      const dt = (performance.now() - t0) / 700;
-      const e = Math.min(1, dt);
-      const ease = 1 - Math.pow(1 - e, 3);
-      const s = ease;
-      this.cubeGroup.scale.setScalar(s);
-      if (e < 1) requestAnimationFrame(animateIn);
-      else this.cubeGroup.scale.setScalar(1);
-    };
-    animateIn();
+    // Note: previous versions did an entrance scale animation on cubeGroup,
+    // but the singular matrix during scale=0 collapsed every cubie to (0,0,0)
+    // when _snapMove ran the initial scramble. Cube appears at full size from
+    // t=0 — the cinematic scramble itself provides the satisfying motion.
   }
 
   _initInteraction() {
@@ -244,8 +234,10 @@ class CubeRenderer {
       const dy = p.y - ly;
       lx = p.x; ly = p.y;
       if (this._grab.gesture === 'orbit') {
-        this._spherical.theta -= dx * 0.008;
-        this._spherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, this._spherical.phi - dy * 0.008));
+        // "Grab and turn" feel: drag right → cube spins right (camera orbits left).
+        // theta increases on +dx, phi increases on +dy (drag down → see bottom).
+        this._spherical.theta += dx * 0.008;
+        this._spherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, this._spherical.phi + dy * 0.008));
         this._updateCamera();
       }
       // face-grab: we don't preview the rotation in v1; decide on release
