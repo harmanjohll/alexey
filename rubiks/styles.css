@@ -91,7 +91,6 @@ body {
 .memphis-shape {
   position: absolute;
   opacity: 0.5;
-  animation: drift 28s ease-in-out infinite;
 }
 
 .memphis-shape.s1 { top: 8%; left: -3%; width: 140px; transform: rotate(-12deg); animation-delay: 0s; }
@@ -102,10 +101,11 @@ body {
 .memphis-shape.s6 { top: 50%; left: 88%; width: 70px; transform: rotate(-22deg); animation-delay: -20s; }
 
 @keyframes drift {
-  0%, 100% { transform: translate(0, 0) rotate(var(--r, 0deg)); }
-  25% { transform: translate(20px, -15px) rotate(calc(var(--r, 0deg) + 4deg)); }
-  50% { transform: translate(-10px, 18px) rotate(calc(var(--r, 0deg) - 3deg)); }
-  75% { transform: translate(15px, 10px) rotate(calc(var(--r, 0deg) + 6deg)); }
+  /* Retained for safety in case other elements reference it.
+     The decorative memphis shapes no longer use it — their static
+     transform: rotate() was being snapped to 0deg by the keyframes,
+     which read as a blink every 28s. */
+  0%, 100% { transform: translate(0, 0); }
 }
 
 /* =========================================================
