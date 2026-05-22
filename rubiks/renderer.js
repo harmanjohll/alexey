@@ -194,10 +194,16 @@ class CubeRenderer {
         .intersectObjects(this.cubies, true)
         .filter(h => h.object && h.object.userData && h.object.userData.isSticker);
 
+      // Route by input: left-mouse = orbit camera, right-mouse = rotate face.
+      // Touch has no buttons, so it falls back to the old heuristic
+      // (sticker → face turn, empty space → orbit).
+      const isMouse = e.button !== undefined && !(e.touches || e.changedTouches);
+      const wantsFace = isMouse ? (e.button === 2) : (hits.length > 0);
+
       dragging = true;
       lx = ndc.clientX; ly = ndc.clientY;
 
-      if (hits.length > 0) {
+      if (wantsFace && hits.length > 0) {
         // start face-grab
         const hit = hits[0];
         const sticker = hit.object;
@@ -222,6 +228,10 @@ class CubeRenderer {
         this._grab.axisCandidates = axisCandidates;
         this._grab.screenStart = { x: ndc.clientX, y: ndc.clientY };
         this._grab.hitPoint = hit.point.clone();
+      } else if (wantsFace) {
+        // Right-click off the cube — do nothing.
+        dragging = false;
+        this._grab.gesture = 'idle';
       } else {
         this._grab.gesture = 'orbit';
       }
@@ -291,6 +301,8 @@ class CubeRenderer {
     this.canvas.addEventListener('mousedown', start);
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', end);
+    // Suppress the browser context menu so right-click drag works on the cube.
+    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     this.canvas.addEventListener('touchstart', (e) => { start(e); e.preventDefault(); }, { passive: false });
     window.addEventListener('touchmove', (e) => { move(e); }, { passive: true });
     window.addEventListener('touchend', end);
