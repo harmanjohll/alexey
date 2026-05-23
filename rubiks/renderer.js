@@ -653,17 +653,24 @@ class CubeRenderer {
     const animations = [];
 
     matches.forEach((m, i) => {
-      // Use a per-material RAF loop directly — works whether motion is present or not,
-      // and avoids depending on motion's object-property animation behaviour for Three.js materials.
+      // Pulse for a couple of cycles to draw the eye, then hold at a steady
+      // soft glow so the piece stays marked without blinking forever.
       const start = performance.now() + i * o.stagger;
       const period = o.duration;
       const intensityMax = o.intensity;
+      const pulseCycles = 2;
+      const holdIntensity = intensityMax * 0.3;
       let alive = true;
       const tick = () => {
         if (!alive) return;
         const now = performance.now();
         if (now < start) { requestAnimationFrame(tick); return; }
-        const phase = ((now - start) % period) / period; // 0..1
+        const elapsed = now - start;
+        if (elapsed >= period * pulseCycles) {
+          m.material.emissiveIntensity = holdIntensity;
+          return; // settled — stop the RAF loop
+        }
+        const phase = (elapsed % period) / period; // 0..1
         // sine-shaped pulse 0 → max → 0
         m.material.emissiveIntensity = Math.sin(phase * Math.PI) * intensityMax;
         requestAnimationFrame(tick);
