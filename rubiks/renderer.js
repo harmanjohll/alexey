@@ -128,13 +128,19 @@ class CubeRenderer {
           const half = CUBIE_SIZE / 2 + 0.001;
 
           const addSticker = (color, normal, rot, faceKey) => {
+            // Self-emissive baseline at the sticker's own colour locks colour
+            // identity against the warm key / cool fill lights — otherwise
+            // white reads as cream and yellow reads as olive depending on
+            // which light is hitting the face.
             const m = new THREE.MeshStandardMaterial({
               color,
               roughness: 0.45,
               metalness: 0.0,
-              emissive: 0x000000,
-              emissiveIntensity: 0,
+              emissive: color,
+              emissiveIntensity: 0.22,
             });
+            m.userData.baseColor = color;
+            m.userData.baseEmissiveIntensity = 0.22;
             const sticker = new THREE.Mesh(stickerGeo, m);
             sticker.position.set(normal[0] * half, normal[1] * half, normal[2] * half);
             sticker.rotation.set(rot[0], rot[1], rot[2]);
@@ -581,6 +587,14 @@ class CubeRenderer {
           const color = STICKER_COLORS_HEX[c];
           if (color !== undefined && child.material && child.material.color) {
             child.material.color.setHex(color);
+            // Keep the self-emissive baseline in sync with the new colour so
+            // white / yellow stickers don't desaturate after a move. If a
+            // highlight is currently overriding emissive, leave it alone —
+            // clearHighlights restores from baseColor when it ends.
+            if (!this._activeHighlight) {
+              child.material.emissive.setHex(color);
+            }
+            child.material.userData.baseColor = color;
           }
         }
       });
@@ -644,7 +658,11 @@ class CubeRenderer {
       if (!wantKeys.has(keyFor(lp))) return;
       cubie.children.forEach(ch => {
         if (!ch.userData || !ch.userData.isSticker) return;
-        matches.push({ material: ch.material, baseEmissive: ch.material.emissive.getHex() });
+        matches.push({
+          material: ch.material,
+          baseEmissive: (ch.material.userData && ch.material.userData.baseColor) ?? ch.material.emissive.getHex(),
+          baseIntensity: (ch.material.userData && ch.material.userData.baseEmissiveIntensity) ?? 0,
+        });
         ch.material.emissive.setHex(o.color);
       });
     });
@@ -688,8 +706,11 @@ class CubeRenderer {
     const { matches, animations } = this._activeHighlight;
     animations.forEach(a => { try { a.stop && a.stop(); a.cancel && a.cancel(); } catch {} });
     matches.forEach(m => {
-      m.material.emissiveIntensity = 0;
+      // Restore the per-sticker self-emissive baseline (its own colour at low
+      // intensity), not zero — otherwise white/yellow desaturate after the
+      // highlight ends.
       m.material.emissive.setHex(m.baseEmissive);
+      m.material.emissiveIntensity = m.baseIntensity;
     });
     this._activeHighlight = null;
   }
