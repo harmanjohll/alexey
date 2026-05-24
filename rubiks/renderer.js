@@ -333,22 +333,16 @@ class CubeRenderer {
    * how closely a turn about it would move the grabbed point along the drag, so
    * the grabbed surface tracks the cursor.
    *
-   * Candidates = the clicked face's own axis, plus each perpendicular axis on
-   * which this cubie sits in an OUTER layer (coord = ±1). Middle slices (coord 0)
-   * are skipped because the model only represents the six outer face turns —
-   * so grabbing a corner offers 3 turns, an edge 2, and a centre spins its face.
+   * Every cubie sits in one layer per axis, and all three can turn: outer layers
+   * (coord ±1) are face moves, the middle layer (coord 0) is a slice move
+   * (M/E/S). So a corner offers the 3 face turns through it, an edge 2 faces + 1
+   * slice, and a centre its face turn + 2 slices — picked by drag direction.
    */
   _beginLivePivot(tdx, tdy) {
     const g = this._grab;
     const p = g.hitPoint;
     const lp = g.cubie.userData.logicalPos;
-    const axisName = (av) => Math.abs(av.x) > 0.5 ? 'x' : Math.abs(av.y) > 0.5 ? 'y' : 'z';
-
-    const faceAxis = axisName(g.faceWorld);
-    const candidates = [faceAxis];
-    for (const ax of ['x', 'y', 'z']) {
-      if (ax !== faceAxis && Math.abs(lp[ax]) > 0.5) candidates.push(ax);
-    }
+    const candidates = ['x', 'y', 'z'];
 
     // Score each candidate by |drag · screenVelocity|, where screenVelocity is
     // the screen projection of the point's motion (ω × p) under a +rotation.
@@ -439,13 +433,21 @@ class CubeRenderer {
   }
 
   /**
-   * (axis, layer, signed quarter-turns) → move notation via MOVE_TABLE's per-face
-   * base direction. pivot.rotation[axis] = +π/2 is a +quarter turn about +axis.
+   * (axis, layer, signed quarter-turns) → move notation. Outer layers (coord ±1)
+   * map to face moves via MOVE_TABLE; the middle layer (coord 0) maps to a slice
+   * move M/E/S. pivot.rotation[axis] = +π/2 is a +quarter turn about +axis, and
+   * the slice base directions are taken from cubejs's own x = "R M' L'",
+   * y = "U E' D'", z = "F S B'" definitions so the model stays in sync.
    */
   _notationFromTurn(axis, layer, snapped) {
     let letter = null, dir = 1;
-    for (const [L, [ax, lay, d]] of Object.entries(MOVE_TABLE)) {
-      if (ax === axis && lay === layer) { letter = L; dir = d; break; }
+    if (Math.abs(layer) < 0.5) {
+      const SLICE = { x: ['M', +1], y: ['E', +1], z: ['S', -1] };
+      [letter, dir] = SLICE[axis];
+    } else {
+      for (const [L, [ax, lay, d]] of Object.entries(MOVE_TABLE)) {
+        if (ax === axis && lay === layer) { letter = L; dir = d; break; }
+      }
     }
     if (!letter) return null;
     // k unprimed turns = k·dir quarters; solve k·dir ≡ snapped (mod 4).
