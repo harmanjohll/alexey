@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#FFF8EC">
 <title>Cubelab · Learn the Rubik's Cube</title>
-<link rel="stylesheet" href="styles.css?v=2026052401">
+<link rel="stylesheet" href="styles.css?v=2026052402">
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="6" fill="%2314110D"/><g><rect x="8" y="8" width="14" height="14" fill="%23DC2626"/><rect x="25" y="8" width="14" height="14" fill="%23FAFAFA"/><rect x="42" y="8" width="14" height="14" fill="%230046AD"/><rect x="8" y="25" width="14" height="14" fill="%23009B48"/><rect x="25" y="25" width="14" height="14" fill="%23FFD500"/><rect x="42" y="25" width="14" height="14" fill="%23FF6F1A"/><rect x="8" y="42" width="14" height="14" fill="%23FAFAFA"/><rect x="25" y="42" width="14" height="14" fill="%230046AD"/><rect x="42" y="42" width="14" height="14" fill="%23DC2626"/></g></svg>'>
 </head>
 <body>
@@ -92,7 +92,7 @@
       <div class="cube-stage">
         <div class="stage-corner-tl">cubelab · 3x3</div>
         <div class="stage-corner-tr"><span id="solvedIndicator" style="color: var(--mint-deep); font-weight: 700; display: none;">● SOLVED</span></div>
-        <div class="stage-corner-bl">drag a sticker: turn it · drag empty space: rotate view · scroll: zoom</div>
+        <div class="stage-corner-bl">drag a sticker the way it should move · empty space: rotate view · scroll: zoom</div>
         <div class="stage-corner-br"><span id="moveCount">0 moves</span></div>
         <canvas class="cube-canvas" id="cubeCanvas"></canvas>
       </div>
@@ -189,7 +189,7 @@
     <div style="font-size:12px; color:var(--ink-soft); line-height:1.65;">
       Built on top of <b>Alexey's flowchart</b>, with two small corrections noted in green inside Learn mode.
       <br><br>
-      Two different motions: <b>drag a sticker</b> to <b>turn that layer</b> — it follows your cursor and snaps when you let go — versus <b>dragging empty space</b> (or off the cube) to <b>rotate the whole view</b> and look around. <b>Scroll</b> to zoom. ⌘/Ctrl-drag or right-drag also turns a layer, and you can <b>click the face buttons</b> or press the <span class="kbd">RLUDFB</span> keys.
+      Two different motions: <b>drag a sticker</b> in the <b>direction you want that piece to move</b> — the layer that follows your drag turns, and snaps when you let go. The <b>direction decides which layer turns</b>, so grabbing a <b>corner</b> gives you the most choices and grabbing a <b>centre</b> spins that whole face. <b>Drag empty space</b> (or off the cube) to <b>rotate the view</b> and look around. <b>Scroll</b> to zoom; you can also <b>click the face buttons</b> or press the <span class="kbd">RLUDFB</span> keys.
     </div>
   </div>
 </div>
@@ -263,12 +263,12 @@
 
 <!-- App scripts (defer so they run after the module above) -->
 <!-- Bump ?v= on every deploy so the GitHub Pages CDN serves fresh JS/CSS -->
-<script defer src="cube-model.js?v=2026052401"></script>
-<script defer src="renderer.js?v=2026052401"></script>
-<script defer src="solver-beginner.js?v=2026052401"></script>
-<script defer src="tutorial.js?v=2026052401"></script>
-<script defer src="timer.js?v=2026052401"></script>
-<script defer src="app.js?v=2026052401"></script>
+<script defer src="cube-model.js?v=2026052402"></script>
+<script defer src="renderer.js?v=2026052402"></script>
+<script defer src="solver-beginner.js?v=2026052402"></script>
+<script defer src="tutorial.js?v=2026052402"></script>
+<script defer src="timer.js?v=2026052402"></script>
+<script defer src="app.js?v=2026052402"></script>
 
 </body>
 </html>
