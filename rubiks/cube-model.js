@@ -53,6 +53,21 @@ class CubeModel {
     this._emit({ kind: 'move', moves, animate: false });
   }
 
+  /**
+   * Update the logical state + history WITHOUT touching the visuals. Used by the
+   * live drag-to-turn: the renderer has already rotated the cubies itself, so it
+   * must not re-animate or snap. We emit a 'sync' event — the renderer ignores it
+   * for animation, but app listeners (move count, solved badge) still refresh.
+   */
+  applyNoAnim(notation) {
+    const moves = this._tokenize(notation);
+    for (const m of moves) {
+      this.cube.move(m);
+      this.history.push({ move: m, t: Date.now() });
+    }
+    this._emit({ kind: 'sync', moves });
+  }
+
   reset() {
     this.cube = new Cube();
     this.history = [];

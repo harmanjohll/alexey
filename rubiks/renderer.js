@@ -30,6 +30,10 @@ const MOVE_TABLE = {
   B:  ['z', -1, +1],
 };
 
+// Live drag-to-turn tuning
+const PX_PER_RAD = 140;     // screen px of drag ≈ 1 radian of layer rotation
+const DRAG_DECIDE_PX = 8;   // drag this far before committing to a turn axis
+
 class CubeRenderer {
   constructor(canvas, model, options = {}) {
     this.canvas = canvas;
@@ -132,19 +136,12 @@ class CubeRenderer {
           const half = CUBIE_SIZE / 2 + 0.001;
 
           const addSticker = (color, normal, rot, faceKey) => {
-            // Self-emissive baseline at the sticker's own colour locks colour
-            // identity against the warm key / cool fill lights — otherwise
-            // white reads as cream and yellow reads as olive depending on
-            // which light is hitting the face.
-            const m = new THREE.MeshStandardMaterial({
-              color,
-              roughness: 0.45,
-              metalness: 0.0,
-              emissive: color,
-              emissiveIntensity: 0.22,
-            });
+            // Stickers are UNLIT (MeshBasicMaterial) so they render their exact
+            // hex regardless of lighting — a lit material tints bright colours
+            // (white → beige, yellow → olive) depending on which light hits the
+            // face. The 3D form comes from the lit dark body + the inset gaps.
+            const m = new THREE.MeshBasicMaterial({ color, toneMapped: false });
             m.userData.baseColor = color;
-            m.userData.baseEmissiveIntensity = 0.22;
             const sticker = new THREE.Mesh(stickerGeo, m);
             sticker.position.set(normal[0] * half, normal[1] * half, normal[2] * half);
             sticker.rotation.set(rot[0], rot[1], rot[2]);
@@ -178,9 +175,10 @@ class CubeRenderer {
   _initInteraction() {
     this._raycaster = new THREE.Raycaster();
     this._grab = { active: false, gesture: 'idle', sticker: null, cubie: null,
-                   faceLocal: null, faceWorld: null, axisCandidates: null,
-                   screenStart: null, hitPoint: null };
-    this._buildFaceLookup();
+                   faceWorld: null, screenStart: null, hitPoint: null,
+                   // live drag-to-turn state
+                   decided: false, axis: null, layer: 0, pivot: null,
+                   affected: null, angle: 0, screenDir: null };
 
     let lx = 0, ly = 0;
     let dragging = false;
@@ -197,125 +195,105 @@ class CubeRenderer {
     };
 
     const start = (e) => {
-      if (this._cinematic) return; // ignore input mid-cinematic
+      if (this._cinematic) return;      // ignore input mid-cinematic
+      if (this._grab.pivot) return;     // a live turn is still resolving
       const ndc = ndcFromEvent(e);
       this._raycaster.setFromCamera({ x: ndc.x, y: ndc.y }, this.camera);
       const hits = this._raycaster
         .intersectObjects(this.cubies, true)
         .filter(h => h.object && h.object.userData && h.object.userData.isSticker);
+      const hitSticker = hits.length > 0;
 
-      // Route by input:
-      //   plain left-drag                 → orbit the camera (look around)
-      //   right-drag, or ⌘/Ctrl + drag    → turn the layer under the pointer
-      // ⌘/Ctrl is the trackpad-friendly alternative to right-drag, which is
-      // hard to perform on a Mac trackpad. Touch has no buttons/modifiers, so
-      // it keeps the heuristic: drag a sticker → turn it, drag empty → orbit.
+      // Routing:
+      //   drag a sticker             → turn that layer (live preview)
+      //   drag empty space / off     → orbit the view
+      //   right-drag or ⌘/Ctrl-drag  → also turn, when over a sticker
+      // While a keyboard/button turn is animating, force orbit so we never grab
+      // cubies that are currently parented to an animation pivot.
       const isMouse = e.button !== undefined && !(e.touches || e.changedTouches);
-      const modifierTurn = !!(e.metaKey || e.ctrlKey);
-      const wantsFace = isMouse ? (e.button === 2 || modifierTurn) : (hits.length > 0);
+      const modifierTurn = isMouse && (e.button === 2 || e.metaKey || e.ctrlKey);
+      const wantsFace = !this._isAnimating &&
+        (isMouse ? (modifierTurn || (e.button === 0 && hitSticker)) : hitSticker);
 
       dragging = true;
       lx = ndc.clientX; ly = ndc.clientY;
 
-      if (wantsFace && hits.length > 0) {
-        // start face-grab
+      // reset live-turn state for this gesture
+      const g = this._grab;
+      g.decided = false; g.pivot = null; g.affected = null; g.angle = 0;
+
+      if (wantsFace && hitSticker) {
         const hit = hits[0];
         const sticker = hit.object;
         const cubie = sticker.parent;
         const ln = sticker.userData.localNormal;
-        // transform local normal to world (cubie's rotation only)
+        // local face normal → world (cubie's rotation only), snapped to ±1 axis
         const v = new THREE.Vector3(ln.x, ln.y, ln.z);
         v.applyQuaternion(cubie.getWorldQuaternion(new THREE.Quaternion()));
-        v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));  // snap to ±1 axis
-        const axisCandidates = [];
-        if (Math.abs(v.x) < 0.5) axisCandidates.push(new THREE.Vector3(1, 0, 0));
-        if (Math.abs(v.y) < 0.5) axisCandidates.push(new THREE.Vector3(0, 1, 0));
-        if (Math.abs(v.z) < 0.5) axisCandidates.push(new THREE.Vector3(0, 0, 1));
+        v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));
 
-        this._grab.active = true;
-        this._grab.gesture = 'face';
-        this._grab.sticker = sticker;
-        this._grab.cubie = cubie;
-        this._grab.faceWorld = v;
-        this._grab.faceLocal = sticker.userData.localNormal;
-        this._grab.faceKey = sticker.userData.faceKey;
-        this._grab.axisCandidates = axisCandidates;
-        this._grab.screenStart = { x: ndc.clientX, y: ndc.clientY };
-        this._grab.hitPoint = hit.point.clone();
-      } else if (wantsFace && e.button === 2) {
-        // Right-click on empty space — do nothing.
+        g.active = true;
+        g.gesture = 'face';
+        g.sticker = sticker;
+        g.cubie = cubie;
+        g.faceWorld = v;
+        g.faceKey = sticker.userData.faceKey;
+        g.screenStart = { x: ndc.clientX, y: ndc.clientY };
+        g.hitPoint = hit.point.clone();
+      } else if (isMouse && e.button === 2) {
+        // right-click on empty space — do nothing
         dragging = false;
-        this._grab.gesture = 'idle';
+        g.gesture = 'idle';
       } else {
-        // Plain left-drag, or a ⌘/Ctrl-drag that missed a sticker → orbit,
-        // so the modifier never leaves the user stuck with a dead drag.
-        this._grab.gesture = 'orbit';
+        // left-drag on empty space, or a ⌘/Ctrl-drag that missed a sticker
+        g.gesture = 'orbit';
       }
     };
 
     const move = (e) => {
       if (!dragging) return;
       const p = this._pointerXY(e);
-      const dx = p.x - lx;
-      const dy = p.y - ly;
-      lx = p.x; ly = p.y;
       if (this._grab.gesture === 'orbit') {
+        const dx = p.x - lx;
+        const dy = p.y - ly;
+        lx = p.x; ly = p.y;
         // Horizontal: drag right → cube spins right (camera orbits left).
-        // Vertical: drag down → tilt cube toward viewer (top face comes into
-        // view). Matches Three.js OrbitControls — the desktop 3D-viewer norm.
+        // Vertical: drag down → tilt the top toward the viewer. Matches the
+        // Three.js OrbitControls desktop norm.
         this._spherical.theta += dx * 0.008;
-        // Clamp the vertical angle just shy of the poles. A small margin (0.05)
-        // lets you look almost straight down/up to inspect the top and bottom
-        // faces, while still avoiding the gimbal flip that happens exactly at
-        // the pole. Horizontal rotation (theta) stays unbounded.
+        // Clamp vertical angle just shy of the poles so you can look almost
+        // straight down/up at the top and bottom faces without a gimbal flip.
         this._spherical.phi = Math.max(0.05, Math.min(Math.PI - 0.05, this._spherical.phi - dy * 0.008));
         this._updateCamera();
+        return;
       }
-      // face-grab: we don't preview the rotation in v1; decide on release
+      if (this._grab.gesture === 'face') {
+        const g = this._grab;
+        const tdx = p.x - g.screenStart.x;
+        const tdy = p.y - g.screenStart.y;
+        if (!g.decided) {
+          if (Math.hypot(tdx, tdy) < DRAG_DECIDE_PX) return;
+          this._beginLivePivot();
+        }
+        if (g.decided && g.pivot) {
+          const along = tdx * g.screenDir.x + tdy * g.screenDir.y;
+          g.angle = along / g.pxPerRad;
+          g.pivot.rotation[g.axis] = g.angle;
+        }
+      }
     };
 
     const end = (e) => {
-      if (!dragging) { return; }
+      if (!dragging) return;
       dragging = false;
-      if (this._grab.gesture !== 'face') {
-        this._grab.gesture = 'idle';
+      const g = this._grab;
+      if (g.gesture === 'face' && g.decided && g.pivot) {
+        this._finishLiveTurn();   // snap, bake, reconcile with the model
         return;
       }
-      const p = this._pointerXY(e);
-      const dx = p.x - this._grab.screenStart.x;
-      const dy = p.y - this._grab.screenStart.y;
-      const mag = Math.hypot(dx, dy);
-      if (mag < 18) {
-        this._grab.gesture = 'idle';
-        return;
-      }
-      // pick best axis by projecting drag into screen
-      const pivot = this._grab.hitPoint;
-      const projectVec = (p) => {
-        const v = p.clone().project(this.camera);
-        return { x: (v.x + 1) * 0.5 * this.canvas.clientWidth,
-                 y: (-v.y + 1) * 0.5 * this.canvas.clientHeight };
-      };
-      const base = projectVec(pivot);
-      let best = null;
-      for (const axis of this._grab.axisCandidates) {
-        const tip = pivot.clone().add(axis.clone().multiplyScalar(0.5));
-        const tipS = projectVec(tip);
-        const sx = tipS.x - base.x;
-        const sy = tipS.y - base.y;
-        const len = Math.hypot(sx, sy) || 1;
-        const score = (dx * sx + dy * sy) / len;
-        if (!best || Math.abs(score) > Math.abs(best.score)) best = { axis, score };
-      }
-      if (best) {
-        const sign = best.score > 0 ? 1 : -1;
-        const notation = this._lookupMove(this._grab.faceWorld, best.axis, sign);
-        if (notation) {
-          if (this.opts.onMove) this.opts.onMove(notation);
-          if (this.model) this.model.apply(notation);
-        }
-      }
-      this._grab.gesture = 'idle';
+      // face-grab that never passed the decide threshold, or orbit/idle
+      g.gesture = 'idle';
+      g.decided = false;
     };
 
     this.canvas.addEventListener('mousedown', start);
@@ -335,67 +313,128 @@ class CubeRenderer {
     }, { passive: false });
   }
 
-  /**
-   * Build the (faceWorld, rotationAxis, dragSign) → move-notation lookup table.
-   * For each of 6 face normals, and 2 perpendicular axes × 2 signs, decide which
-   * face turn (and direction) makes the drag feel natural.
-   *
-   * Heuristic: dragging along axis +A on face +F should rotate the +F-layer
-   * such that the face's local +A direction moves in the drag direction.
-   * The face turn axis is the face normal itself, and the direction depends
-   * on the cross-product sign.
-   */
-  _buildFaceLookup() {
-    const FN = {
-      '+x': { axis: 'x', layer: +1, faceLetter: 'R' },
-      '-x': { axis: 'x', layer: -1, faceLetter: 'L' },
-      '+y': { axis: 'y', layer: +1, faceLetter: 'U' },
-      '-y': { axis: 'y', layer: -1, faceLetter: 'D' },
-      '+z': { axis: 'z', layer: +1, faceLetter: 'F' },
-      '-z': { axis: 'z', layer: -1, faceLetter: 'B' },
-    };
-    // Sign convention for primed moves (matches MOVE_TABLE base direction)
-    const baseDir = { R: -1, L: +1, U: -1, D: +1, F: -1, B: +1 };
-    this._faceLookup = (faceWorld, dragAxisWorld, dragSign) => {
-      const key = (faceWorld.x === 1 ? '+x' : faceWorld.x === -1 ? '-x'
-                 : faceWorld.y === 1 ? '+y' : faceWorld.y === -1 ? '-y'
-                 : faceWorld.z === 1 ? '+z' : '-z');
-      const info = FN[key];
-      if (!info) return null;
-      const turnAxis = info.axis;
-      // drag axis component perpendicular to the face normal — already orthogonal by construction
-      // The rotation direction: if drag direction = +A (one of {+x,+y,+z}\faceNormal),
-      // then we rotate around faceNormal such that the face's surface drags in that direction.
-      // Compute via cross product: face × dragAxis = rotation axis direction at drag point.
-      const f = new THREE.Vector3(faceWorld.x, faceWorld.y, faceWorld.z);
-      const d = dragAxisWorld.clone().multiplyScalar(dragSign);
-      const r = new THREE.Vector3().crossVectors(f, d);
-      // r should be ±axis of rotation; we want a face turn (R/L/U/D/F/B) whose
-      // axis matches |r.dominantAxis|, and direction matches sign(r.dominantAxis component).
-      const components = [['x', r.x], ['y', r.y], ['z', r.z]];
-      components.sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-      const [axisLetter, val] = components[0];
-      // The face we want to turn is `info.faceLetter` (always the clicked face).
-      // Its base direction in MOVE_TABLE is `baseDir[faceLetter]`. If sign(val) matches base
-      // direction along that axis, the move is unprimed; otherwise primed.
-      const desiredDir = Math.sign(val);
-      // Actually we already know info.faceLetter is the face being turned, and its axis is info.axis.
-      // So the rotation is around info.axis. The direction (+1 or -1) we want:
-      //   for face +X (R), base direction -1 around X (=clockwise from outside).
-      // If r is along +info.axis with positive sign, we want a rotation in that direction.
-      // baseDir[faceLetter] tells us what sign the UNPRIMED move uses on its axis.
-      // So if desiredDir === baseDir → unprimed, else primed.
-      // But we need to project `r` onto info.axis.
-      const rOnFaceAxis = info.axis === 'x' ? r.x : info.axis === 'y' ? r.y : r.z;
-      const wantedSign = Math.sign(rOnFaceAxis);
-      if (wantedSign === 0) return null;
-      const notation = (wantedSign === baseDir[info.faceLetter]) ? info.faceLetter : info.faceLetter + "'";
-      return notation;
-    };
+  /* =========================================================
+     LIVE DRAG-TO-TURN — the grabbed layer follows the cursor
+     and snaps to the nearest quarter turn on release.
+     ========================================================= */
+
+  /** True while a face drag is being previewed or resolved. */
+  isFaceDragging() { return !!this._grab.pivot; }
+
+  _projectToScreen(vec3) {
+    const v = vec3.clone().project(this.camera);
+    return { x: (v.x + 1) * 0.5 * this.canvas.clientWidth,
+             y: (-v.y + 1) * 0.5 * this.canvas.clientHeight };
   }
 
-  _lookupMove(faceWorld, axisVec, sign) {
-    return this._faceLookup(faceWorld, axisVec, sign);
+  /**
+   * Called once per face drag, after the pointer passes DRAG_DECIDE_PX. Builds
+   * the rotation pivot for the clicked face's layer and the screen direction in
+   * which dragging yields a +rotation, so the grabbed point tracks the cursor.
+   */
+  _beginLivePivot() {
+    const g = this._grab;
+    const fw = g.faceWorld;
+    const axis = Math.abs(fw.x) > 0.5 ? 'x' : Math.abs(fw.y) > 0.5 ? 'y' : 'z';
+    const layer = g.cubie.userData.logicalPos[axis];
+    const affected = this.cubies.filter(c => Math.abs(c.userData.logicalPos[axis] - layer) < 0.5);
+
+    const pivot = new THREE.Group();
+    this.cubeGroup.add(pivot);
+    affected.forEach(c => pivot.attach(c));
+
+    // Screen-space velocity of the grabbed point under a +rotation about +axis
+    // (v = ω × r, cube centred at the origin). Dragging along it spins the layer
+    // the way the surface visually moves under the finger.
+    const omega = new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
+    const vel = new THREE.Vector3().crossVectors(omega, g.hitPoint);
+    const a = this._projectToScreen(g.hitPoint);
+    const b = this._projectToScreen(g.hitPoint.clone().add(vel.multiplyScalar(0.5)));
+    const sx = b.x - a.x, sy = b.y - a.y;
+    const len = Math.hypot(sx, sy) || 1;
+
+    g.axis = axis;
+    g.layer = layer;
+    g.affected = affected;
+    g.pivot = pivot;
+    g.screenDir = { x: sx / len, y: sy / len };
+    g.pxPerRad = PX_PER_RAD;
+    g.angle = 0;
+    g.decided = true;
+  }
+
+  /**
+   * On release: ease the partial rotation to the nearest quarter turn, bake the
+   * cubies' new logical positions, then reconcile the model WITHOUT re-animating.
+   */
+  _finishLiveTurn() {
+    const g = this._grab;
+    const pivot = g.pivot, axis = g.axis, layer = g.layer, affected = g.affected;
+    const startAngle = g.angle;
+    const snapped = Math.round(startAngle / (Math.PI / 2)); // 0, ±1, ±2
+    const target = snapped * (Math.PI / 2);
+    const t0 = performance.now();
+    const dur = 160;
+
+    const bake = () => {
+      const times = Math.abs(snapped) % 4;
+      const dir = Math.sign(snapped) || 1;
+      affected.forEach(c => {
+        this.cubeGroup.attach(c);
+        if (times !== 0) {
+          c.userData.logicalPos = this._rotateLogical(c.userData.logicalPos, axis, dir, times);
+        }
+        c.position.set(Math.round(c.position.x), Math.round(c.position.y), Math.round(c.position.z));
+      });
+      this.cubeGroup.remove(pivot);
+      // Clear live state BEFORE committing so isFaceDragging() reads false.
+      g.pivot = null; g.affected = null; g.decided = false; g.gesture = 'idle';
+      if (times !== 0) {
+        this._commitMoveToModel(axis, layer, snapped);
+        if (this.onIdle) this.onIdle();   // fires the solve celebration if solved
+      }
+    };
+
+    const tick = () => {
+      const t = Math.min(1, (performance.now() - t0) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      pivot.rotation[axis] = startAngle + (target - startAngle) * eased;
+      if (t < 1) requestAnimationFrame(tick);
+      else { pivot.rotation[axis] = target; bake(); }
+    };
+    tick();
+  }
+
+  /**
+   * Map a baked visual turn (axis + layer + signed quarter-turns) to notation and
+   * push it to the model silently — the visual is already correct, so we only
+   * update logical state + history + move count (no re-animation).
+   */
+  _commitMoveToModel(axis, layer, snapped) {
+    const notation = this._notationFromTurn(axis, layer, snapped);
+    if (!notation) return;
+    if (this.opts.sound) this.opts.sound.click();
+    if (this.opts.haptics && 'vibrate' in navigator) navigator.vibrate(8);
+    if (this.opts.onMove) this.opts.onMove(notation);
+    if (this.model && this.model.applyNoAnim) this.model.applyNoAnim(notation);
+  }
+
+  /**
+   * (axis, layer, signed quarter-turns) → move notation via MOVE_TABLE's per-face
+   * base direction. pivot.rotation[axis] = +π/2 is a +quarter turn about +axis.
+   */
+  _notationFromTurn(axis, layer, snapped) {
+    let letter = null, dir = 1;
+    for (const [L, [ax, lay, d]] of Object.entries(MOVE_TABLE)) {
+      if (ax === axis && lay === layer) { letter = L; dir = d; break; }
+    }
+    if (!letter) return null;
+    // k unprimed turns = k·dir quarters; solve k·dir ≡ snapped (mod 4).
+    const k = (((snapped * dir) % 4) + 4) % 4;
+    if (k === 0) return null;
+    if (k === 1) return letter;
+    if (k === 2) return letter + '2';
+    return letter + "'"; // k === 3
   }
 
   _pointerXY(e) {
@@ -600,14 +639,11 @@ class CubeRenderer {
           const c = stickerStr[FACE_OFFSET[face] + idx];
           const color = STICKER_COLORS_HEX[c];
           if (color !== undefined && child.material && child.material.color) {
+            // NOTE: this method is currently unused — sticker colours are
+            // physical (baked per material, moved only by turns). Kept for a
+            // possible state-driven repaint path; stickers are unlit
+            // MeshBasicMaterial, so set .color only (no emissive).
             child.material.color.setHex(color);
-            // Keep the self-emissive baseline in sync with the new colour so
-            // white / yellow stickers don't desaturate after a move. If a
-            // highlight is currently overriding emissive, leave it alone —
-            // clearHighlights restores from baseColor when it ends.
-            if (!this._activeHighlight) {
-              child.material.emissive.setHex(color);
-            }
             child.material.userData.baseColor = color;
           }
         }
@@ -651,81 +687,51 @@ class CubeRenderer {
   }
 
   /* =========================================================
-     HIGHLIGHTS — pulse specific cubies' stickers
+     HIGHLIGHTS — statically mark specific cubies' stickers
      ========================================================= */
 
   /**
-   * Pulse emissive on the stickers of cubies whose logical position matches.
+   * Mark the stickers of cubies whose logical position matches with a steady
+   * bright outline ring — NO animation. A ring (rather than a colour change) is
+   * used so it's visible on every sticker colour, including white, and keeps the
+   * piece's real colours readable. The rings are children of the stickers, so
+   * they ride along with turns; clearHighlights removes them.
    * @returns {() => void} disposer that clears the highlight
    */
   highlightPieces(pieces, opts = {}) {
     this.clearHighlights();
-    const defaults = { color: 0xFFC83D, duration: 1300, stagger: 80, intensity: 0.9 };
-    const o = { ...defaults, ...opts };
-    const matches = [];
+
+    if (!this._markerGeo) {
+      // ring sized to frame a sticker (sticker side ≈ CUBIE_SIZE - 2*INSET)
+      this._markerGeo = new THREE.RingGeometry(0.30, 0.40, 28);
+      this._markerMat = new THREE.MeshBasicMaterial({
+        color: 0xFFC83D, side: THREE.DoubleSide, transparent: true, opacity: 0.95, toneMapped: false,
+      });
+    }
 
     const keyFor = (p) => `${p.x}|${p.y}|${p.z}`;
     const wantKeys = new Set(pieces.map(keyFor));
+    const markers = [];
 
     this.cubies.forEach(cubie => {
-      const lp = cubie.userData.logicalPos;
-      if (!wantKeys.has(keyFor(lp))) return;
+      if (!wantKeys.has(keyFor(cubie.userData.logicalPos))) return;
       cubie.children.forEach(ch => {
         if (!ch.userData || !ch.userData.isSticker) return;
-        matches.push({
-          material: ch.material,
-          baseEmissive: (ch.material.userData && ch.material.userData.baseColor) ?? ch.material.emissive.getHex(),
-          baseIntensity: (ch.material.userData && ch.material.userData.baseEmissiveIntensity) ?? 0,
-        });
-        ch.material.emissive.setHex(o.color);
+        const ring = new THREE.Mesh(this._markerGeo, this._markerMat);
+        ring.position.set(0, 0, 0.012); // lift just outside the sticker face
+        ring.userData.isHighlightMarker = true;
+        ch.add(ring);
+        markers.push(ring);
       });
     });
 
-    const motion = window.motion;
-    const animations = [];
-
-    matches.forEach((m, i) => {
-      // Pulse for a couple of cycles to draw the eye, then hold at a steady
-      // soft glow so the piece stays marked without blinking forever.
-      const start = performance.now() + i * o.stagger;
-      const period = o.duration;
-      const intensityMax = o.intensity;
-      const pulseCycles = 2;
-      const holdIntensity = intensityMax * 0.3;
-      let alive = true;
-      const tick = () => {
-        if (!alive) return;
-        const now = performance.now();
-        if (now < start) { requestAnimationFrame(tick); return; }
-        const elapsed = now - start;
-        if (elapsed >= period * pulseCycles) {
-          m.material.emissiveIntensity = holdIntensity;
-          return; // settled — stop the RAF loop
-        }
-        const phase = (elapsed % period) / period; // 0..1
-        // sine-shaped pulse 0 → max → 0
-        m.material.emissiveIntensity = Math.sin(phase * Math.PI) * intensityMax;
-        requestAnimationFrame(tick);
-      };
-      tick();
-      animations.push({ stop: () => { alive = false; } });
-    });
-
-    this._activeHighlight = { matches, animations };
+    this._activeHighlight = { markers };
     return () => this.clearHighlights();
   }
 
   clearHighlights() {
     if (!this._activeHighlight) return;
-    const { matches, animations } = this._activeHighlight;
-    animations.forEach(a => { try { a.stop && a.stop(); a.cancel && a.cancel(); } catch {} });
-    matches.forEach(m => {
-      // Restore the per-sticker self-emissive baseline (its own colour at low
-      // intensity), not zero — otherwise white/yellow desaturate after the
-      // highlight ends.
-      m.material.emissive.setHex(m.baseEmissive);
-      m.material.emissiveIntensity = m.baseIntensity;
-    });
+    (this._activeHighlight.markers || []).forEach(m => { if (m.parent) m.parent.remove(m); });
     this._activeHighlight = null;
   }
 
