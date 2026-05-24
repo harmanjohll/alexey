@@ -69,11 +69,15 @@ class CubeRenderer {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(w, h, false);
 
-    // Lighting — bright, slightly warm key, cool fill, rim
-    const ambient = new THREE.AmbientLight(0xffffff, 0.65);
-    const key = new THREE.DirectionalLight(0xfff2dc, 0.9);
+    // Lighting — neutral white from several directions. The cube's depth
+    // comes from the different brightness each face gets by its angle (plus
+    // the dark body between stickers), NOT from coloured light. Tinted lights
+    // were turning white stickers cream/beige and yellow stickers olive
+    // depending on which face pointed at the warm key vs the cool fill.
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    const key = new THREE.DirectionalLight(0xffffff, 0.85);
     key.position.set(6, 8, 6);
-    const fill = new THREE.DirectionalLight(0xc6d8ff, 0.5);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.5);
     fill.position.set(-6, 4, -4);
     const rim = new THREE.DirectionalLight(0xffffff, 0.35);
     rim.position.set(0, -6, 4);
@@ -200,11 +204,15 @@ class CubeRenderer {
         .intersectObjects(this.cubies, true)
         .filter(h => h.object && h.object.userData && h.object.userData.isSticker);
 
-      // Route by input: left-mouse = orbit camera, right-mouse = rotate face.
-      // Touch has no buttons, so it falls back to the old heuristic
-      // (sticker → face turn, empty space → orbit).
+      // Route by input:
+      //   plain left-drag                 → orbit the camera (look around)
+      //   right-drag, or ⌘/Ctrl + drag    → turn the layer under the pointer
+      // ⌘/Ctrl is the trackpad-friendly alternative to right-drag, which is
+      // hard to perform on a Mac trackpad. Touch has no buttons/modifiers, so
+      // it keeps the heuristic: drag a sticker → turn it, drag empty → orbit.
       const isMouse = e.button !== undefined && !(e.touches || e.changedTouches);
-      const wantsFace = isMouse ? (e.button === 2) : (hits.length > 0);
+      const modifierTurn = !!(e.metaKey || e.ctrlKey);
+      const wantsFace = isMouse ? (e.button === 2 || modifierTurn) : (hits.length > 0);
 
       dragging = true;
       lx = ndc.clientX; ly = ndc.clientY;
@@ -234,11 +242,13 @@ class CubeRenderer {
         this._grab.axisCandidates = axisCandidates;
         this._grab.screenStart = { x: ndc.clientX, y: ndc.clientY };
         this._grab.hitPoint = hit.point.clone();
-      } else if (wantsFace) {
-        // Right-click off the cube — do nothing.
+      } else if (wantsFace && e.button === 2) {
+        // Right-click on empty space — do nothing.
         dragging = false;
         this._grab.gesture = 'idle';
       } else {
+        // Plain left-drag, or a ⌘/Ctrl-drag that missed a sticker → orbit,
+        // so the modifier never leaves the user stuck with a dead drag.
         this._grab.gesture = 'orbit';
       }
     };
@@ -254,7 +264,11 @@ class CubeRenderer {
         // Vertical: drag down → tilt cube toward viewer (top face comes into
         // view). Matches Three.js OrbitControls — the desktop 3D-viewer norm.
         this._spherical.theta += dx * 0.008;
-        this._spherical.phi = Math.max(0.15, Math.min(Math.PI - 0.15, this._spherical.phi - dy * 0.008));
+        // Clamp the vertical angle just shy of the poles. A small margin (0.05)
+        // lets you look almost straight down/up to inspect the top and bottom
+        // faces, while still avoiding the gimbal flip that happens exactly at
+        // the pole. Horizontal rotation (theta) stays unbounded.
+        this._spherical.phi = Math.max(0.05, Math.min(Math.PI - 0.05, this._spherical.phi - dy * 0.008));
         this._updateCamera();
       }
       // face-grab: we don't preview the rotation in v1; decide on release
