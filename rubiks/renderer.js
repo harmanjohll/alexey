@@ -273,7 +273,7 @@ class CubeRenderer {
         const tdy = p.y - g.screenStart.y;
         if (!g.decided) {
           if (Math.hypot(tdx, tdy) < DRAG_DECIDE_PX) return;
-          this._beginLivePivot();
+          this._beginLivePivot(tdx, tdy);
         }
         if (g.decided && g.pivot) {
           const along = tdx * g.screenDir.x + tdy * g.screenDir.y;
@@ -328,36 +328,55 @@ class CubeRenderer {
   }
 
   /**
-   * Called once per face drag, after the pointer passes DRAG_DECIDE_PX. Builds
-   * the rotation pivot for the clicked face's layer and the screen direction in
-   * which dragging yields a +rotation, so the grabbed point tracks the cursor.
+   * Called once per face drag, after the pointer passes DRAG_DECIDE_PX. The
+   * drag direction chooses WHICH layer turns: each candidate axis is scored by
+   * how closely a turn about it would move the grabbed point along the drag, so
+   * the grabbed surface tracks the cursor.
+   *
+   * Candidates = the clicked face's own axis, plus each perpendicular axis on
+   * which this cubie sits in an OUTER layer (coord = ±1). Middle slices (coord 0)
+   * are skipped because the model only represents the six outer face turns —
+   * so grabbing a corner offers 3 turns, an edge 2, and a centre spins its face.
    */
-  _beginLivePivot() {
+  _beginLivePivot(tdx, tdy) {
     const g = this._grab;
-    const fw = g.faceWorld;
-    const axis = Math.abs(fw.x) > 0.5 ? 'x' : Math.abs(fw.y) > 0.5 ? 'y' : 'z';
-    const layer = g.cubie.userData.logicalPos[axis];
-    const affected = this.cubies.filter(c => Math.abs(c.userData.logicalPos[axis] - layer) < 0.5);
+    const p = g.hitPoint;
+    const lp = g.cubie.userData.logicalPos;
+    const axisName = (av) => Math.abs(av.x) > 0.5 ? 'x' : Math.abs(av.y) > 0.5 ? 'y' : 'z';
 
+    const faceAxis = axisName(g.faceWorld);
+    const candidates = [faceAxis];
+    for (const ax of ['x', 'y', 'z']) {
+      if (ax !== faceAxis && Math.abs(lp[ax]) > 0.5) candidates.push(ax);
+    }
+
+    // Score each candidate by |drag · screenVelocity|, where screenVelocity is
+    // the screen projection of the point's motion (ω × p) under a +rotation.
+    const a0 = this._projectToScreen(p);
+    let best = null;
+    for (const ax of candidates) {
+      const omega = new THREE.Vector3(ax === 'x' ? 1 : 0, ax === 'y' ? 1 : 0, ax === 'z' ? 1 : 0);
+      const vel = new THREE.Vector3().crossVectors(omega, p);
+      const b = this._projectToScreen(p.clone().add(vel.multiplyScalar(0.5)));
+      const sx = b.x - a0.x, sy = b.y - a0.y;
+      const len = Math.hypot(sx, sy) || 1;
+      const dir = { x: sx / len, y: sy / len };
+      const score = Math.abs(tdx * dir.x + tdy * dir.y);
+      if (!best || score > best.score) best = { axis: ax, dir, score };
+    }
+
+    const axis = best.axis;
+    const layer = lp[axis];
+    const affected = this.cubies.filter(c => Math.abs(c.userData.logicalPos[axis] - layer) < 0.5);
     const pivot = new THREE.Group();
     this.cubeGroup.add(pivot);
     affected.forEach(c => pivot.attach(c));
-
-    // Screen-space velocity of the grabbed point under a +rotation about +axis
-    // (v = ω × r, cube centred at the origin). Dragging along it spins the layer
-    // the way the surface visually moves under the finger.
-    const omega = new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
-    const vel = new THREE.Vector3().crossVectors(omega, g.hitPoint);
-    const a = this._projectToScreen(g.hitPoint);
-    const b = this._projectToScreen(g.hitPoint.clone().add(vel.multiplyScalar(0.5)));
-    const sx = b.x - a.x, sy = b.y - a.y;
-    const len = Math.hypot(sx, sy) || 1;
 
     g.axis = axis;
     g.layer = layer;
     g.affected = affected;
     g.pivot = pivot;
-    g.screenDir = { x: sx / len, y: sy / len };
+    g.screenDir = best.dir; // signed handling lives in move(): angle = (drag·dir)/pxPerRad
     g.pxPerRad = PX_PER_RAD;
     g.angle = 0;
     g.decided = true;
