@@ -237,7 +237,7 @@ class App {
         'KeyR': 'R', 'KeyL': 'L', 'KeyU': 'U', 'KeyD': 'D', 'KeyF': 'F', 'KeyB': 'B',
       };
       const baseFace = moveMap[e.code];
-      if (baseFace && !e.ctrlKey && !e.metaKey) {
+      if (baseFace && !e.ctrlKey && !e.metaKey && !this.renderer.isFaceDragging()) {
         let m = baseFace;
         if (e.shiftKey) m += "'";
         else if (e.altKey) m += '2';
